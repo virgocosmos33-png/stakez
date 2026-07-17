@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+math-sdk/env/
+*.egg-info/
+
+# Node
+node_modules/
+
+# Playwright scratch project (screenshots themselves are kept)
+docs_screenshots/node_modules/
+docs_screenshots/package*.json
+docs_screenshots/mv_crop_*.png
+
+# Rust build artifacts
+**/target/
+
+# OS
+.DS_Store
+Thumbs.db

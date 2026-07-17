@@ -1,0 +1,715 @@
+Thread 0 finished with 31.138 RTP. [baseGame: 25.684, freeGame: 5.454]
+Thread 1 finished with 19.191 RTP. [baseGame: 14.868, freeGame: 4.322]
+Thread 2 finished with 34.824 RTP. [baseGame: 29.286, freeGame: 5.537]
+Thread 3 finished with 9.712 RTP. [baseGame: 4.044, freeGame: 5.668]
+Thread 4 finished with 13.614 RTP. [baseGame: 7.617, freeGame: 5.997]
+Thread 5 finished with 39.978 RTP. [baseGame: 32.855, freeGame: 7.123]
+Thread 6 finished with 20.631 RTP. [baseGame: 11.237, freeGame: 9.394]
+Thread 7 finished with 27.426 RTP. [baseGame: 18.481, freeGame: 8.945]
+Thread 0 finished with 40.083 RTP. [baseGame: 32.809, freeGame: 7.273]
+Thread 1 finished with 14.021 RTP. [baseGame: 7.684, freeGame: 6.337]
+Thread 2 finished with 24.042 RTP. [baseGame: 18.421, freeGame: 5.621]
+Thread 3 finished with 23.655 RTP. [baseGame: 18.449, freeGame: 5.206]
+Thread 4 finished with 21.291 RTP. [baseGame: 11.307, freeGame: 9.984]
+Thread 5 finished with 16.881 RTP. [baseGame: 11.26, freeGame: 5.62]
+Thread 6 finished with 10.006 RTP. [baseGame: 4.25, freeGame: 5.756]
+Thread 7 finished with 42.216 RTP. [baseGame: 36.524, freeGame: 5.692]
+Thread 0 finished with 11.521 RTP. [baseGame: 4.007, freeGame: 7.513]
+Thread 1 finished with 19.001 RTP. [baseGame: 11.215, freeGame: 7.786]
+Thread 3 finished with 26.314 RTP. [baseGame: 14.866, freeGame: 11.448]
+Thread 2 finished with 15.032 RTP. [baseGame: 7.642, freeGame: 7.39]
+Thread 4 finished with 7.109 RTP. [baseGame: 4.066, freeGame: 3.043]
+Thread 6 finished with 20.598 RTP. [baseGame: 14.858, freeGame: 5.74]
+Thread 5 finished with 17.058 RTP. [baseGame: 11.254, freeGame: 5.804]
+Thread 7 finished with 26.15 RTP. [baseGame: 18.49, freeGame: 7.661]
+Thread 0 finished with 0.51 RTP. [baseGame: 0.005, freeGame: 0.505]
+Thread 2 finished with 0.372 RTP. [baseGame: 0.005, freeGame: 0.367]
+Thread 1 finished with 0.463 RTP. [baseGame: 0.005, freeGame: 0.458]
+Thread 3 finished with 0.361 RTP. [baseGame: 0.006, freeGame: 0.356]
+Thread 4 finished with 0.366 RTP. [baseGame: 0.005, freeGame: 0.361]
+Thread 5 finished with 0.366 RTP. [baseGame: 0.005, freeGame: 0.361]
+Thread 7 finished with 0.499 RTP. [baseGame: 0.005, freeGame: 0.494]
+Thread 6 finished with 0.414 RTP. [baseGame: 0.006, freeGame: 0.408]
+Thread 7 finished with 0.214 RTP. [baseGame: 0.001, freeGame: 0.213]
+Thread 0 finished with 0.221 RTP. [baseGame: 0.001, freeGame: 0.22]
+Thread 1 finished with 0.216 RTP. [baseGame: 0.001, freeGame: 0.215]
+Thread 4 finished with 0.18 RTP. [baseGame: 0.001, freeGame: 0.179]
+Thread 3 finished with 0.215 RTP. [baseGame: 0.001, freeGame: 0.214]
+Thread 5 finished with 0.181 RTP. [baseGame: 0.001, freeGame: 0.18]
+Thread 2 finished with 0.191 RTP. [baseGame: 0.001, freeGame: 0.19]
+Thread 6 finished with 0.205 RTP. [baseGame: 0.001, freeGame: 0.204]
+Thread 0 finished with 1.648 RTP. [baseGame: 0.0, freeGame: 1.648]
+Thread 1 finished with 1.496 RTP. [baseGame: 0.0, freeGame: 1.496]
+Thread 3 finished with 1.588 RTP. [baseGame: 0.0, freeGame: 1.588]
+Thread 2 finished with 1.561 RTP. [baseGame: 0.0, freeGame: 1.561]
+Thread 4 finished with 1.499 RTP. [baseGame: 0.0, freeGame: 1.499]
+Thread 5 finished with 1.523 RTP. [baseGame: 0.0, freeGame: 1.523]
+Thread 6 finished with 1.567 RTP. [baseGame: 0.0, freeGame: 1.567]
+Thread 7 finished with 1.579 RTP. [baseGame: 0.0, freeGame: 1.579]
+
+Creating books...
+
+Creating books for 0_1_madam_mirror in base
+Batch 1 of 3
+Started thread 0
+Started thread 1
+Started thread 2
+Started thread 3
+Started thread 4
+Started thread 5
+Started thread 6
+Started thread 7
+All threads are online.
+Finished joining threads.
+Batch 2 of 3
+Started thread 0
+Started thread 1
+Started thread 2
+Started thread 3
+Started thread 4
+Started thread 5
+Started thread 6
+Started thread 7
+All threads are online.
+Finished joining threads.
+Batch 3 of 3
+Started thread 0
+Started thread 1
+Started thread 2
+Started thread 3
+Started thread 4
+Started thread 5
+Started thread 6
+Started thread 7
+All threads are online.
+Finished joining threads.
+Saving books for  0_1_madam_mirror in base
+Saving force files for 0_1_madam_mirror in base
+Saving LUTs for 0_1_madam_mirror in base
+Wrote verification file: C:\Users\Emex33\Desktop\stakez\math-sdk\games\0_1_madam_mirror\library\configs\books_base.verification.json
+
+Creating books for 0_1_madam_mirror in bonus1
+Batch 1 of 1
+Started thread 0
+Started thread 1
+Started thread 2
+Started thread 3
+Started thread 4
+Started thread 5
+Started thread 6
+Started thread 7
+All threads are online.
+Finished joining threads.
+Saving books for  0_1_madam_mirror in bonus1
+Saving force files for 0_1_madam_mirror in bonus1
+Saving LUTs for 0_1_madam_mirror in bonus1
+Wrote verification file: C:\Users\Emex33\Desktop\stakez\math-sdk\games\0_1_madam_mirror\library\configs\books_bonus1.verification.json
+
+Creating books for 0_1_madam_mirror in bonus2
+Batch 1 of 1
+Started thread 0
+Started thread 1
+Started thread 2
+Started thread 3
+Started thread 4
+Started thread 5
+Started thread 6
+Started thread 7
+All threads are online.
+Finished joining threads.
+Saving books for  0_1_madam_mirror in bonus2
+Saving force files for 0_1_madam_mirror in bonus2
+Saving LUTs for 0_1_madam_mirror in bonus2
+Wrote verification file: C:\Users\Emex33\Desktop\stakez\math-sdk\games\0_1_madam_mirror\library\configs\books_bonus2.verification.json
+
+Creating books for 0_1_madam_mirror in bonus3
+Batch 1 of 1
+Started thread 0
+Started thread 1
+Started thread 2
+Started thread 3
+Started thread 4
+Started thread 5
+Started thread 6
+Started thread 7
+All threads are online.
+Finished joining threads.
+Saving books for  0_1_madam_mirror in bonus3
+Saving force files for 0_1_madam_mirror in bonus3
+Saving LUTs for 0_1_madam_mirror in bonus3
+Wrote verification file: C:\Users\Emex33\Desktop\stakez\math-sdk\games\0_1_madam_mirror\library\configs\books_bonus3.verification.json
+
+Finished creating books in 117.33141613006592 seconds.
+
+Running optimization for mode: base
+Running Simulations: 0_1_madam_mirror - Mode: base
+../games/0_1_madam_mirror\library\forces\force_record_base.json
+json force path: ../games/0_1_madam_mirror\library\forces\force_record_base.json
+
+Creating wincap Fence
+
+
+Creating 0 Fence
+
+
+Creating freegame Fence
+
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+
+Creating basegame Fence
+
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Thread 0: 50% done
+Thread 3: 50% done
+Thread 19: 50% done
+Thread 9: 50% done
+Thread 18: 50% done
+Thread 12: 50% done
+Thread 4: 50% done
+Thread 8: 50% done
+Thread 16: 50% done
+Thread 14: 50% done
+Thread 2: 50% done
+Thread 10: 50% done
+Thread 5: 50% done
+Thread 15: 50% done
+Thread 17: 50% done
+Thread 1: 50% done
+Thread 11: 50% done
+Thread 13: 50% done
+Thread 6: 50% done
+Thread 7: 50% done
+Thread 0: 100% done
+Thread 18: 100% done
+Thread 12: 100% done
+Thread 3: 100% done
+Thread 19: 100% done
+Thread 9: 100% done
+Thread 16: 100% done
+Thread 10: 100% done
+Thread 2: 100% done
+Thread 14: 100% done
+Thread 13: 100% done
+Thread 4: 100% done
+Thread 17: 100% done
+Thread 8: 100% done
+Thread 5: 100% done
+Thread 7: 100% done
+Thread 6: 100% done
+Thread 15: 100% done
+Thread 11: 100% done
+Thread 1: 100% done
+Printing info for Distribution 1
+Printing info for Distribution 2
+Printing info for Distribution 7
+Printing info for Distribution 3
+Printing info for Distribution 4
+Printing info for Distribution 5
+Printing info for Distribution 9
+Printing info for Distribution 8
+Printing info for Distribution 10
+Printing info for Distribution 6
+time taken 42ms
+
+Running optimization for mode: bonus1
+Running Simulations: 0_1_madam_mirror - Mode: bonus1
+../games/0_1_madam_mirror\library\forces\force_record_bonus1.json
+json force path: ../games/0_1_madam_mirror\library\forces\force_record_bonus1.json
+
+Creating wincap Fence
+
+
+Creating freegame Fence
+
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Thread 7: 50% done
+Thread 15: 50% done
+Thread 6: 50% done
+Thread 3: 50% done
+Thread 13: 50% done
+Thread 12: 50% done
+Thread 14: 50% done
+Thread 18: 50% done
+Thread 2: 50% done
+Thread 0: 50% done
+Thread 19: 50% done
+Thread 10: 50% done
+Thread 4: 50% done
+Thread 11: 50% done
+Thread 17: 50% done
+Thread 8: 50% done
+Thread 16: 50% done
+Thread 9: 50% done
+Thread 1: 50% done
+Thread 5: 50% done
+Thread 15: 100% done
+Thread 13: 100% done
+Thread 6: 100% done
+Thread 7: 100% done
+Thread 3: 100% done
+Thread 10: 100% done
+Thread 4: 100% done
+Thread 12: 100% done
+Thread 14: 100% done
+Thread 17: 100% done
+Thread 0: 100% done
+Thread 11: 100% done
+Thread 8: 100% done
+Thread 19: 100% done
+Thread 1: 100% done
+Thread 5: 100% done
+Thread 16: 100% done
+Thread 2: 100% done
+Thread 18: 100% done
+Thread 9: 100% done
+Printing info for Distribution 1
+Printing info for Distribution 3
+Printing info for Distribution 10
+Printing info for Distribution 2
+Printing info for Distribution 8
+Printing info for Distribution 7
+Printing info for Distribution 4
+Printing info for Distribution 9
+Printing info for Distribution 5
+Printing info for Distribution 6
+time taken 19ms
+C:\Users\Emex33\Desktop\stakez\math-sdk\utils\rgs_verification.py:188: UserWarning: 
+Mode [bonus1] fails 3-star volatility limits:
+
+  warnings.warn(f"\nMode [{name}] fails 3-star volatility limits:\n")
+C:\Users\Emex33\Desktop\stakez\math-sdk\utils\rgs_verification.py:188: UserWarning: 
+Mode [bonus2] fails 3-star volatility limits:
+
+  warnings.warn(f"\nMode [{name}] fails 3-star volatility limits:\n")
+C:\Users\Emex33\Desktop\stakez\math-sdk\utils\rgs_verification.py:188: UserWarning: 
+Mode [bonus3] fails 3-star volatility limits:
+
+  warnings.warn(f"\nMode [{name}] fails 3-star volatility limits:\n")
+
+Running optimization for mode: bonus2
+Running Simulations: 0_1_madam_mirror - Mode: bonus2
+../games/0_1_madam_mirror\library\forces\force_record_bonus2.json
+json force path: ../games/0_1_madam_mirror\library\forces\force_record_bonus2.json
+
+Creating wincap Fence
+
+
+Creating freegame Fence
+
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Thread 19: 50% done
+Thread 9: 50% done
+Thread 2: 50% done
+Thread 18: 50% done
+Thread 7: 50% done
+Thread 14: 50% done
+Thread 8: 50% done
+Thread 10: 50% done
+Thread 17: 50% done
+Thread 12: 50% done
+Thread 3: 50% done
+Thread 11: 50% done
+Thread 6: 50% done
+Thread 5: 50% done
+Thread 4: 50% done
+Thread 1: 50% done
+Thread 16: 50% done
+Thread 0: 50% done
+Thread 13: 50% done
+Thread 15: 50% done
+Thread 18: 100% done
+Thread 19: 100% done
+Thread 2: 100% done
+Thread 9: 100% done
+Thread 8: 100% done
+Thread 10: 100% done
+Thread 3: 100% done
+Thread 14: 100% done
+Thread 7: 100% done
+Thread 11: 100% done
+Thread 17: 100% done
+Thread 12: 100% done
+Thread 5: 100% done
+Thread 6: 100% done
+Thread 4: 100% done
+Thread 1: 100% done
+Thread 0: 100% done
+Thread 13: 100% done
+Thread 16: 100% done
+Thread 15: 100% done
+Printing info for Distribution 1
+Printing info for Distribution 3
+Printing info for Distribution 7
+Printing info for Distribution 6
+Printing info for Distribution 4
+Printing info for Distribution 8
+Printing info for Distribution 2
+Printing info for Distribution 5
+Printing info for Distribution 9
+Printing info for Distribution 10
+time taken 26ms
+
+Running optimization for mode: bonus3
+Running Simulations: 0_1_madam_mirror - Mode: bonus3
+../games/0_1_madam_mirror\library\forces\force_record_bonus3.json
+json force path: ../games/0_1_madam_mirror\library\forces\force_record_bonus3.json
+
+Creating wincap Fence
+
+
+Creating freegame Fence
+
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Creating Initial Random Distributions...
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Combining Criteria Distributions....
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Creating Initial Distributions
+Thread 0: 50% done
+Thread 13: 50% done
+Thread 1: 50% done
+Thread 17: 50% done
+Thread 5: 50% done
+Thread 9: 50% done
+Thread 19: 50% done
+Thread 2: 50% done
+Thread 15: 50% done
+Thread 16: 50% done
+Thread 14: 50% done
+Thread 7: 50% done
+Thread 11: 50% done
+Thread 3: 50% done
+Thread 10: 50% done
+Thread 4: 50% done
+Thread 18: 50% done
+Thread 6: 50% done
+Thread 8: 50% done
+Thread 12: 50% done
+Thread 16: 100% done
+Thread 9: 100% done
+Thread 13: 100% done
+Thread 4: 100% done
+Thread 5: 100% done
+Thread 19: 100% done
+Thread 17: 100% done
+Thread 15: 100% done
+Thread 0: 100% done
+Thread 3: 100% done
+Thread 6: 100% done
+Thread 18: 100% done
+Thread 7: 100% done
+Thread 1: 100% done
+Thread 10: 100% done
+Thread 2: 100% done
+Thread 12: 100% done
+Thread 14: 100% done
+Thread 8: 100% done
+Thread 11: 100% done
+Printing info for Distribution 3
+Printing info for Distribution 1
+Printing info for Distribution 8
+Printing info for Distribution 2
+Printing info for Distribution 6
+Printing info for Distribution 4
+Printing info for Distribution 5
+Printing info for Distribution 9
+Printing info for Distribution 7
+Printing info for Distribution 10
+time taken 52ms
+
+Successfully loaded PAR-sheet information.
+[FAST PATH] Using verification sidecar for base
+[FAST PATH] base: SHA-256 OK, payout hash OK, entries=199992
+[FAST PATH] Using verification sidecar for bonus1
+[FAST PATH] bonus1: SHA-256 OK, payout hash OK, entries=50000
+	VIOLATED: cvar  VALUE:1390.1526 --- LIMIT: 800
+
+
+
+[FAST PATH] Using verification sidecar for bonus2
+[FAST PATH] bonus2: SHA-256 OK, payout hash OK, entries=50000
+	VIOLATED: etl40b  VALUE:4.2418 --- LIMIT: 0.9
+	VIOLATED: etl10k  VALUE:5.356 --- LIMIT: 0.8
+	VIOLATED: cvar  VALUE:8023.9327 --- LIMIT: 800
+
+
+
+[FAST PATH] Using verification sidecar for bonus3
+[FAST PATH] bonus3: SHA-256 OK, payout hash OK, entries=50000
+	VIOLATED: prob5k  VALUE:0.0142 --- LIMIT: 0.01
+	VIOLATED: prob10k  VALUE:0.0074 --- LIMIT: 0.005
+	VIOLATED: etl10k  VALUE:188.9173 --- LIMIT: 0.8
+	VIOLATED: cvar  VALUE:30000.0 --- LIMIT: 800
+
+
+
