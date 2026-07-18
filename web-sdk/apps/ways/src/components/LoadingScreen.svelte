@@ -3,8 +3,8 @@
 	import { FadeContainer, LoadingProgress } from 'components-pixi';
 
 	import { getContext } from '../game/context';
-	import TransitionAnimation from './TransitionAnimation.svelte';
-	import PressToContinue from './PressToContinue.svelte';
+	import IntroVideo from './IntroVideo.svelte';
+	import IntroCarousel from './IntroCarousel.svelte';
 
 	type Props = {
 		onloaded: () => void;
@@ -54,12 +54,12 @@
 	</Container>
 </FadeContainer>
 
-<!-- press to continue -->
+<!-- feature walkthrough carousel, shown once everything is loaded -->
 <FadeContainer show={loadingType === 'start' && context.stateApp.loaded}>
-	<PressToContinue onpress={() => (loadingType = 'transition')} />
+	<IntroCarousel oncontinue={() => (loadingType = 'transition')} />
 </FadeContainer>
 
-<!-- transition between the loading screen and the game -->
+<!-- "enter the mirror" intro video bridging the loading screen and the game -->
 <FadeContainer show={loadingType === 'transition'}>
-	<TransitionAnimation oncomplete={props.onloaded} />
+	<IntroVideo oncomplete={props.onloaded} />
 </FadeContainer>

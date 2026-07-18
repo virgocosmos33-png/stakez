@@ -18,7 +18,8 @@
 
 	const context = getContext();
 
-	// warm glow that sweeps left-to-right across the connecting symbols of a win
+	// green plasma surge that sweeps left-to-right across the connecting
+	// symbols of a win, selling the LINK as the liner ignites behind it
 	type SweepCell = { key: string; reel: number; cx: number; cy: number };
 
 	const REEL_STAGGER = 0.22; // sweep offset per reel, in normalized progress units
@@ -62,15 +63,15 @@
 	const drawWinGlow = (graphics: import('pixi.js').Graphics, alpha: number) => {
 		if (alpha <= 0) return;
 		const s = SYMBOL_SIZE;
-		// warm wash over the symbol
+		// spectral green wash over the symbol (the surge that ignites the liner)
 		graphics.roundRect(-s / 2 + 2, -s / 2 + 2, s - 4, s - 4, 9);
-		graphics.fill({ color: 0xfff3b0, alpha: 0.22 * alpha });
-		// wide golden halo
+		graphics.fill({ color: 0xead9ff, alpha: 0.2 * alpha });
+		// wide plasma halo
 		graphics.roundRect(-s / 2 - 3, -s / 2 - 3, s + 6, s + 6, 12);
-		graphics.stroke({ color: 0xffd75e, width: 9, alpha: 0.55 * alpha });
-		// hot white-gold edge
+		graphics.stroke({ color: 0xb887ff, width: 9, alpha: 0.5 * alpha });
+		// hot white-green edge
 		graphics.roundRect(-s / 2 + 1, -s / 2 + 1, s - 2, s - 2, 9);
-		graphics.stroke({ color: 0xfffbe8, width: 3, alpha: 0.95 * alpha });
+		graphics.stroke({ color: 0xf3ecff, width: 3, alpha: 0.95 * alpha });
 	};
 </script>
 

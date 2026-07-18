@@ -9,11 +9,12 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
-	import { BitmapText, Container, Rectangle, Sprite } from 'pixi-svelte';
+	import { BitmapText, Container, Graphics, Rectangle, Sprite } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { drawGlassPill } from '../game/glassChrome';
 
 	const context = getContext();
 
@@ -69,13 +70,13 @@
 	const panelHeight = $derived(panelWidth * PANEL_RATIO);
 </script>
 
+<!-- pixi appends children on mount, so the dim and the panel must mount
+	together (dim first) or the dim lands on top of the panel -->
 {#if show}
 	<Container alpha={alpha.current}>
 		<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.78} />
 	</Container>
-{/if}
-<MainContainer>
-	{#if show}
+	<MainContainer>
 		<Container
 			x={context.stateGameDerived.boardLayout().x}
 			y={context.stateGameDerived.boardLayout().y}
@@ -107,19 +108,11 @@
 				style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.17, align: 'center' }}
 			/>
 			<Container y={panelHeight * 0.58} scale={continuePulse}>
-				<Rectangle
-					anchor={0.5}
-					width={SYMBOL_SIZE * 2.4}
-					height={SYMBOL_SIZE * 0.56}
-					borderRadius={SYMBOL_SIZE * 0.28}
-					backgroundColor={0x0a0503}
-					backgroundAlpha={0.94}
-					borderColor={0x2bff66}
-					borderWidth={3}
-					borderAlpha={0.9}
+				<Graphics
 					eventMode="static"
 					cursor="pointer"
 					onpointerup={() => oncontinue()}
+					draw={(g) => drawGlassPill(g, { width: SYMBOL_SIZE * 2.4, height: SYMBOL_SIZE * 0.56 })}
 				/>
 				<BitmapText
 					anchor={0.5}
@@ -129,5 +122,5 @@
 				/>
 			</Container>
 		</Container>
-	{/if}
-</MainContainer>
+	</MainContainer>
+{/if}

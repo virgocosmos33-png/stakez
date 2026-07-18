@@ -25,6 +25,8 @@ class GameConfig(Config):
     def __init__(self):
         super().__init__()
         self.game_id = "0_1_madam_mirror"
+        self.provider_name = "dramastudios"
+        self.game_name = "madam_mirror"
         self.provider_number = 0
         self.working_name = "Madam Mirror"
         self.wincap = 30000.0
@@ -39,11 +41,15 @@ class GameConfig(Config):
         # Paytable: pays per way (x bet), multiplied by the ways count.
         # All values are multiples of 0.1 - the RGS requires payout integers
         # in increments of 10 (win = pay x integer ways, so pays must comply).
+        # Highs are the five characters, lows the playing-card ranks:
+        #   H1 Lady Mirror, H2 The Wife, H3 The Man, H4 The Little Girl, H5 The Dog
+        #   L1 Ace, L2 King, L3 Queen, L4 Jack, L5 Ten
         self.paytable = {
             (5, "H1"): 10, (4, "H1"): 3.0, (3, "H1"): 1.0,
             (5, "H2"): 5.0, (4, "H2"): 1.5, (3, "H2"): 0.6,
             (5, "H3"): 4.0, (4, "H3"): 1.2, (3, "H3"): 0.5,
             (5, "H4"): 3.0, (4, "H4"): 1.0, (3, "H4"): 0.4,
+            (5, "H5"): 2.5, (4, "H5"): 0.8, (3, "H5"): 0.3,
             (5, "L1"): 1.2, (4, "L1"): 0.4, (3, "L1"): 0.2,
             (5, "L2"): 1.2, (4, "L2"): 0.4, (3, "L2"): 0.2,
             (5, "L3"): 0.8, (4, "L3"): 0.3, (3, "L3"): 0.1,

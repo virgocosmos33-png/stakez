@@ -23,7 +23,12 @@ from PIL import Image, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__))
 ATLAS_DIR = os.path.normpath(os.path.join(HERE, "..", "static", "assets", "sprites", "symbolsStatic"))
 BACKUP_DIR = os.path.join(ATLAS_DIR, "backup_original")
-ICON_DIR = r"C:\Users\Emex33\.cursor\projects\c-Users-Emex33-Desktop-stakez\assets"
+# NOTE: for the current Madam Mirror symbol schema (10 J Q K A lows + the five
+# character highs) the canonical repacker is repack_madam_symbols.py, which
+# preserves the w/s/hm frames from the live atlas. This script is kept for the
+# original full-pipeline (source art -> atlas) and now reads generated cards
+# from the local tools/symbol_art/ directory.
+ICON_DIR = os.path.join(HERE, "symbol_art")
 
 CELL = 300          # cell size; full-bleed card art benefits from the extra resolution
 CONTENT = 292       # max icon size inside the cell for keyed (cut-out) icons
@@ -33,25 +38,23 @@ COLUMNS = 4
 # generated icon file -> frame name expected by SYMBOL_INFO_MAP / atlas json
 # card_* art is full-bleed (fills the whole square, Mental-style plates):
 # no keying, just resize to the cell.
+# New symbol schema: H1-H5 are the five characters, L1-L5 the playing-card ranks.
 FULL_BLEED_ICONS = {
-    "card_h1_madam.png": "h1.webp",
-    "card_h2_twins.png": "h2.webp",
-    "card_h3_client.png": "h3.webp",
-    "card_h4_cat.png": "h4.webp",
-    "card_l1_tower.png": "l1.webp",
-    "card_l2_candelabra.png": "l2.webp",
-    "card_l3_crystalball.png": "l3.webp",
-    "card_l4_locket.png": "l4.webp",
-    "card_l5_absinthe.png": "l5.webp",
-    "card_w_wild.png": "w.png",
-    "card_s_scatter.png": "s.png",
-    "card_hm_intact.png": "hm_intact.png",
-    "card_hm_cracked.png": "hm_cracked.png",
+    "card_h1_lady_mirror.png": "h1.webp",
+    "card_h2_wife.png": "h2.webp",
+    "card_h3_man.png": "h3.webp",
+    "card_h4_little_girl.png": "h4.webp",
+    "card_h5_dog.png": "h5.webp",
+    "card_l1_ace.png": "l1.webp",
+    "card_l2_king.png": "l2.webp",
+    "card_l3_queen.png": "l3.webp",
+    "card_l4_jack.png": "l4.webp",
+    "card_l5_ten.png": "l5.webp",
 }
 NEW_ICONS: dict[str, str] = {}
 
 # frames not being replaced, carried over from the original atlas unchanged
-LEGACY_FRAMES = ["explodedW.png", "h5.webp"]
+LEGACY_FRAMES = ["explodedW.png"]
 
 
 def is_background(px):

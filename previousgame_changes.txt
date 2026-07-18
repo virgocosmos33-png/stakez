@@ -1,0 +1,429 @@
+# PROJECT CHIMERA — Comprehensive Replacement & Change Audit
+
+> **Purpose:** Exhaustive record of everything replaced, rethemed, edited, or newly added while building PROJECT CHIMERA (sci-fi horror biotech slot) from the Stake Engine `ways` template.
+>
+> **Workspace:** `c:\Users\xheih\OneDrive\Documents\DEC2025 WIN BUILDZ\WinBuildsBackup1\dramastudios`
+>
+> **Last audited:** 2026-07-17
+>
+> **Legend — Status:** `complete` | `partial` | `pending`
+>
+> **Legend — How:** Scenario API | PIL postprocess | code edit | scaffold copy | spec/doc only | validation run
+
+---
+
+## 1. Project scaffolding
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 1.1 | Frontend app cloned from `ways` sample → **PROJECT CHIMERA** app | `web-sdk/apps/chimera/` (from `web-sdk/apps/ways/`) | scaffold copy + rebrand | complete |
+| 1.2 | Math game cloned from `0_0_ways` → **project_chimera** | `math-sdk/games/project_chimera/` (from `math-sdk/games/0_0_ways/`) | scaffold copy | complete |
+| 1.3 | Game IDs / names rebranded | `web-sdk/apps/chimera/src/game/config.ts` (`gameName`, `gameID` = `project_chimera`); `math-sdk/games/project_chimera/game_config.py` (`game_id`, `game_name`, `provider_name` = dramastudios) | code edit | complete |
+| 1.4 | On-screen title **PROJECT CHIMERA** | `web-sdk/apps/chimera/src/components/Game.svelte` (`UiGameName`) | code edit | complete |
+| 1.5 | Storybook port **6007** (vs ways 6001) | `web-sdk/apps/chimera/package.json` | scaffold copy | complete |
+| 1.6 | Dev server port **3002** | `web-sdk/apps/chimera/package.json` | scaffold copy | complete |
+| 1.7 | Stake Engine repo clones (web-sdk, math-sdk, ts-client, docs, integration) | workspace root sibling folders | user setup | complete |
+| 1.8 | Original reel strips preserved under `_originals/` | `math-sdk/games/project_chimera/reels/_originals/` | backup during math work | complete |
+
+---
+
+## 2. Design documents & living checklists (added)
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 2.1 | Game Design Document — theme, symbols, features, asset checklist | `PROJECT-CHIMERA.md` | added | complete |
+| 2.2 | Phase 2 mechanics plan — CONTAINMENT BREACH, MUTATION PROTOCOL, gap analysis | `MECHANICS-PLAN.md` | added | complete |
+| 2.3 | NLC-inspired mechanics adaptation — MITOSIS, SPECIMEN SHIFT | `NLC-MECHANICS-ADAPTATION.md` | added | complete |
+| 2.4 | Win celebration / tier ladder spec (NLC reference study) | `WIN-CELEBRATION-SPEC.md` | added | complete |
+| 2.5 | User chat request tracker (priorities, frustrations, blockers) | `USERCHATREQUESTS.txt` | added | complete |
+| 2.6 | Math pipeline runbook | `math-sdk/games/project_chimera/RUNBOOK.md` | added | complete |
+| 2.7 | Audio coverage checklist (category → cue mapping) | `igame audio sprite - Sheet1.csv` | user file, used as checklist | complete |
+| 2.8 | This audit document | `replacements.txt` | added | complete |
+
+---
+
+## 3. Symbol art (H1–H5, L1–L4, W, S)
+
+### 3.1 Generation (Scenario API → assets-raw)
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 3.1.1 | H1 mining premium → **CERBERUS** (wolf-human hybrid bust) | `assets-raw/H1/` | `tools/generate_chimera_batch.py` + Scenario P-Image | complete |
+| 3.1.2 | H2 → **HARPY** (raven-human hybrid bust) | `assets-raw/H2/` | Scenario batch | complete |
+| 3.1.3 | H3 → **GOLIATH** (gorilla-human brute bust) | `assets-raw/H3/` | Scenario batch | complete |
+| 3.1.4 | H4 → **BASILISK** (crocodile-human hybrid bust) | `assets-raw/H4/` | Scenario batch | complete |
+| 3.1.5 | H5 → **MANTIS** (mantis-human hybrid bust) | `assets-raw/H5/` | Scenario batch | complete |
+| 3.1.6 | W mining wild → **Dr. Grimm / Subject Ω** (mid-transformation bust) | `assets-raw/W/` | Scenario batch | complete |
+| 3.1.7 | S scatter → **Containment Chamber** (cylindrical specimen tank) | `assets-raw/S/` | Scenario batch | complete |
+| 3.1.8 | L1 → **DNA Helix** (holographic icon) | `assets-raw/L1/` | Scenario batch | complete |
+| 3.1.9 | L2 → **Biohazard Symbol** (metallic badge) | `assets-raw/L2/` | Scenario batch | complete |
+| 3.1.10 | L3 → **Laboratory Flask** (glowing green serum) | `assets-raw/L3/` | Scenario batch | complete |
+| 3.1.11 | L4 → **Security Keycard** | `assets-raw/L4/` | Scenario batch | complete |
+
+### 3.2 Background removal
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 3.2.1 | Nobg cutouts for all 12 symbols | `assets-raw/_nobg/{H1,H2,…,W,S,L1,L2,L3,L4}.png` | `tools/rembg_batch.py` (Scenario 851-labs remover + local luma-key for L1/H1) | complete |
+
+### 3.3 Integrated into game (static blur sheet)
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 3.3.1 | `symbolsStatic` atlas — all symbol blur/spin frames | `web-sdk/apps/chimera/static/assets/sprites/symbolsStatic/symbolsStatic.{json,webp,png}` | `tools/integrate_chimera.py` — 200×200 cells, template M-multiplier frames kept | complete |
+| 3.3.2 | **explodedW** variant — red-shifted Grimm for post-explosion wild state | same atlas (`explodedW.png`) | PIL color grade in `integrate_chimera.py` | complete |
+| 3.3.3 | `SYMBOL_INFO_MAP` — all H/L/W/S states route to **static themed sprites** (bypasses mining spine win anims) | `web-sdk/apps/chimera/src/game/constants.ts` | code edit | complete |
+
+### 3.4 Symbol spine rigs (template geometry, art status)
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 3.4.1 | Spine skeleton JSONs (h1–h5, l1–l4) | `web-sdk/apps/chimera/static/assets/spines/symbols/` | unchanged template rigs | partial — gameplay uses static art |
+| 3.4.2 | W, S, M spine rigs | `web-sdk/apps/chimera/static/assets/spines/symbols3/W.json`, `symbols2/{S,M}.json` | unchanged template | partial |
+| 3.4.3 | `symbols.atlas` / `symbols2.atlas` / `symbols3.atlas` page images | same spine folders | **not repainted** — still carry Mining Mayhem texture pages | pending — masked by static routing |
+| 3.4.4 | M slot → **Mutagen Catalyst** (MITOSIS) — math adds `M` to reels; FE asset slot exists | `spines/symbols2/M.json` + atlas | spec + math; art re-skin pending | partial |
+
+---
+
+## 4. Environment & board chrome
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 4.1 | Base game background — crystal mine → **Genetics Laboratory** (specimen tanks, fog, emergency lighting) | `assets-raw/BG/` → integrated into `spines/foregroundAnimation/mm_bg.{webp,png}` | Scenario Seedream 4.5 + `integrate_chimera.py` (paste into `bg_base` rect, blank mining props) | complete |
+| 4.2 | Free-spins background — crystal bonus mine → **MUTATION PROTOCOL lockdown lab** (red alarm, cracked tanks, green mutation fluid) | `assets-raw/anim/FSBG_cand1_00.jpg` → `spines/foregroundFeatureAnimation/mm_bg_feature.{webp,png}` | `tools/gen_feature_bg.py` (Seedream edit) + `tools/retheme_bg_anim.py` | complete |
+| 4.3 | Reels frame — mining frame → **industrial blast-door frame** + dark synth panel | `assets-raw/FRAME/` → `sprites/reelsFrame/reels_frame.{json,png}` | Scenario + `integrate_chimera.py` | complete |
+| 4.4 | Procedural animated ambience overlay (fog drift, tank glow flicker, emergency pulse, motes) | `web-sdk/apps/chimera/src/components/BackgroundAmbience.svelte` | code edit (Pixi procedural textures + tweens) | complete — layered on spine bg |
+| 4.5 | Background component wires ambience for base + feature variants | `web-sdk/apps/chimera/src/components/Background.svelte` | code edit | complete |
+| 4.6 | `payFrame`, `reelhouse_glow`, `progressBar`, `pressToContinueText` | respective `static/assets/` paths | **SDK reuse** — not re-skinned | pending (P2/P3 in GDD) |
+| 4.7 | `bigwin` spine presentation | `static/assets/spines/bigwin/` | atlas **retinted** via `tools/retheme_ui.py bigwin` | partial |
+
+---
+
+## 5. Spine animation repaints (purple rocks → lab debris)
+
+### 5.1 Wave 3 — animated background regions
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 5.1.1 | `mm_bg` dust1–4 purple mining dust → **cyan lab steam / fog** | `spines/foregroundAnimation/` | `tools/retheme_bg_anim.py` | complete |
+| 5.1.2 | `mm_bg` fireflies, lantern glow, cart/shovel props → **cyan bio-lum motes, tank glow, machinery glints** (synthesized) | same | `retheme_bg_anim.py` | complete |
+| 5.1.3 | `mm_bg_feature` full bonus art → lockdown lab painting | `spines/foregroundFeatureAnimation/mm_bg_feature.*` | Scenario FSBG + `retheme_bg_anim.py` | complete |
+| 5.1.4 | `mm_bg_feature` dust, particles, glow bands → alarm fog / embers / red floor glow | same | `retheme_bg_anim.py` | complete |
+| 5.1.5 | `mm_bg_feature.json` dust slot tints warm smoke | same JSON | JSON tint edit in `retheme_bg_anim.py` | complete |
+
+### 5.2 Wave 4 — anticipation / transition / loader debris
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 5.2.1 | `anticipation` rock1–8 → **cyan glass shards + green serum droplets** | `spines/anticipation/anticipation.{atlas,webp,png}` | `tools/retheme_purple_rocks.py` | complete |
+| 5.2.2 | `anticipation` dust1–4 → **synthesized cool fog** (not recolored rocks) | same | `retheme_purple_rocks.py` | complete |
+| 5.2.3 | `transition` rock1–8 + dust1–4 → same glass/fog treatment | `spines/transition/transition.*` | `retheme_purple_rocks.py` | complete |
+| 5.2.4 | `mm_bg` + `mm_bg_feature` dust regions (again, cross-pass) | foreground spine folders | `retheme_purple_rocks.py` | complete |
+| 5.2.5 | `fsIntro` slot tints orange/purple → **cyan/red lab lockdown palette** | `spines/fsIntro/fs_screen.json` + radial atlas | JSON tint + atlas left-white in `retheme_purple_rocks.py` | complete |
+| 5.2.6 | Fix log | `assets-raw/anim/purple_rocks_fix_log.txt` | generated by retheme pass | complete |
+| 5.2.7 | **Loader spine** purple rock chunks | `spines/loader/loader.*` | `retheme_ui.py loader` subcommand | partial — user reports rocks may still appear in some views |
+| 5.2.8 | Verification screenshots | `assets-raw/_verify/` | `tools/verify_wave4.py` (Playwright Storybook captures) | complete |
+
+---
+
+## 6. UI chrome, fonts, logo, favicon
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 6.1 | Favicon — generic → **biohazard Ω mark** (cyan trefoil + green omega) | `web-sdk/apps/chimera/static/favicon.svg` | SVG code edit | complete |
+| 6.2 | Logo sprite — mining logo → **PROJECT CHIMERA sign** (from hero render) | `static/assets/sprites/` (logo key in assets) | `tools/hero_integrate.py` + `retheme_ui.py logo` | complete |
+| 6.3 | Loading hero — flat plate → **Dr. Grimm + PROJECT CHIMERA sign** (landscape + portrait) | `static/assets/sprites/loadingHero/hero_{landscape,portrait}.webp` | Scenario (`tools/hero_generate.py`) + `hero_integrate.py` | complete — user wanted fresher gen; art exists |
+| 6.4 | **goldFont** — amber mining numerals → **Xyric Nocturne toxic-green BMFont** | `static/assets/fonts/goldFont/mm_gold.{xml,json,webp,png}` | `tools/build_bmfont.py` + `xyric-nocturne-regular.ttf` | complete |
+| 6.5 | **goldBlur** — gold → green hue remap | `static/assets/fonts/goldBlur/` | `build_bmfont.py` / `retheme_ui.py` | complete |
+| 6.6 | **purpleFont** — purple → green accent remap | `static/assets/fonts/purpleFont/` | `build_bmfont.py` | complete |
+| 6.7 | **silverFont** | `static/assets/fonts/silverFont/` | SDK reuse (backup preserved) | pending re-skin |
+| 6.8 | Win-small plaques localized art | `sprites/winSmall/MM_Localisation_winsmall.*` | `retheme_ui.py winsmall` | complete |
+| 6.9 | Free-spins counter art | `sprites/freeSpins/freeSpins.*` | `retheme_ui.py freespins` | complete |
+| 6.10 | UI bespoke button sprites (turbo, autospin, etc.) | `sprites/uiSlotsAssetsBespoke/` | `retheme_ui.py buttons` + `ui_generate.py` | partial |
+| 6.11 | Loader spine UI chrome | `spines/loader/` | `retheme_ui.py loader` | partial |
+| 6.12 | App-level HTML UI theme (cyan/red/green CSS vars, glass panels) | `web-sdk/apps/chimera/src/chimera-theme.css` | code edit | complete |
+| 6.13 | Theme imported in layout + Storybook preview | `src/routes/+layout.svelte`, `.storybook/preview.ts` | code edit | complete |
+| 6.14 | Shared Pixi UI skin constants (near-black glass, cyan hairlines) | `web-sdk/packages/components-ui-pixi/src/constants.ts` | code edit | complete |
+| 6.15 | `UiSprite.svelte` glass fill styling | `packages/components-ui-pixi/src/components/UiSprite.svelte` | code edit | complete |
+| 6.16 | `BaseIcon.svelte` dark glass defaults | `packages/components-ui-html/src/components/BaseIcon.svelte` | code edit | complete |
+
+---
+
+## 7. Coin shower → serum vial particles
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 7.1 | 12-frame coin flipbook → **glowing serum vial** flipbook (same JSON frame layout) | `static/assets/sprites/coin/SD2_Coin.{json,png,webp}` | `tools/retheme_ui.py coin` using `assets-raw/ui/vial/vial_00_nobg_00.png` | complete |
+| 7.2 | Big-win spine gold nugget slot → vial art | `spines/bigwin/` atlas regions | `retheme_ui.py` (`right_gold_nugget`) | complete |
+| 7.3 | `sfx_bigwin_coinloop` audio → glass/ember shimmer loop | audio sprite cue | Scenario MM Audio 2 via `tools/audio_gen.py` | complete |
+
+---
+
+## 8. Buy-bonus / bet-mode hero cards
+
+| # | What (original → new) | Where | How | Status |
+|---|------------------------|-------|-----|--------|
+| 8.1 | **MUTAGEN BOOST** hero — syringe injecting green serum into machinery | `static/assets/sprites/betModes/mutagen_boost.{webp,png}` | Scenario (`assets-raw/betmode_cards/gen_betmodes_v2.py`) + `postprocess_betmodes.py` | complete |
+| 8.2 | **VIRAL SURGE** hero — green infection spreading from specimen tank | `betModes/viral_surge.*` | same pipeline | complete |
+| 8.3 | **SPECIMEN SPIN** hero — Cerberus lunging at cracking glass | `betModes/specimen_spin.*` | same pipeline | complete |
+| 8.4 | **CONTAINMENT BREACH** hero — blast doors failing, clawed creature | `betModes/containment_breach.*` | same pipeline | complete |
+| 8.5 | **OMEGA PROTOCOL** hero — Grimm mid-transformation under Ω symbol | `betModes/omega_protocol.*` | same pipeline | complete |
+| 8.6 | Manifest + 3:2 alpha-fade spec | `betModes/manifest.json` | added | complete |
+| 8.7 | Bet-mode copy rethemed (MUTAGEN BOOST, VIRAL SURGE, SPECIMEN SPIN, CONTAINMENT BREACH, OMEGA PROTOCOL) | `web-sdk/packages/state-shared/src/constants.ts` | code edit | complete |
+| 8.8 | `BonusCard.svelte` — dark glass card chrome | `packages/components-ui-html/src/components/BonusCard.svelte` | code edit | complete |
+| 8.9 | `BonusCards.svelte` — hero stem mapping + card layout | `packages/components-ui-html/src/components/BonusCards.svelte` | code edit | partial — wiring in progress per USERCHATREQUESTS |
+| 8.10 | **`BonusCardImage.svelte`** — loads `/assets/sprites/betModes/{stem}.webp` | `packages/components-ui-html/src/components/BonusCardImage.svelte` | added | complete |
+| 8.11 | Storybook static dir fix so bet-mode heroes resolve | `web-sdk/apps/chimera/.storybook/main.ts` (`staticDirs: ../static`) | code edit | complete |
+| 8.12 | v1 bet-mode art backup | `assets-backup/betModes_v1/manifest.json` | backup | complete |
+
+---
+
+## 9. Win / connect FX sprites
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 9.1 | `win_highlight_ring.png` — plasma ring on winning symbols | `static/assets/sprites/winFx/` | Scenario P-Image + PIL black-key (`manifest.json`) | complete |
+| 9.2 | `win_streak_h.png` — horizontal plasma streak (ways connect) | same | Scenario | complete |
+| 9.3 | `win_streak_v.png` — vertical plasma streak | same | Scenario | complete |
+| 9.4 | `land_flash.png` — cyan land spark | same | Scenario | complete |
+| 9.5 | **`WinFxOverlay.svelte`** — per-symbol win/land FX overlay | `web-sdk/apps/chimera/src/components/WinFxOverlay.svelte` | added | complete |
+| 9.6 | **`WinConnectFx.svelte`** — streak overlays between winning cells | `web-sdk/apps/chimera/src/components/WinConnectFx.svelte` | added | complete |
+| 9.7 | Wired into **`Symbol.svelte`** and **`Board.svelte`** | same app `src/components/` | code edit | complete |
+
+---
+
+## 10. Intro carousel & idle Dr. Grimm
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 10.1 | Intro card atlas (scatter, wild multipliers, Mutation Protocol, max win copy + art) | `static/assets/sprites/introCards/introCards.{json,png,webp}` | `tools/gen_intro_assets.py` (Xyric text + reused symbol nobg art) | complete |
+| 10.2 | **`IntroCarousel.svelte`** — arrows, dots, CONTINUE (Made Men pattern) | `web-sdk/apps/chimera/src/components/IntroCarousel.svelte` | added | complete |
+| 10.3 | Wired into loading flow | `LoadingScreen.svelte` | code edit | complete |
+| 10.4 | Idle Grimm flipbook sheet (~5s loop frames) | `static/assets/sprites/idleGrimm/grimm_idle_sheet.{json,png,webp}` | `tools/gen_idle_grimm.py`, `prep_idle_grimm.py`, `build_idle_flipbook.py` | complete |
+| 10.5 | **`IdleGrimm.svelte`** — right-side character beside board | `web-sdk/apps/chimera/src/components/IdleGrimm.svelte` | added | partial — user wants better grounding / true video loop |
+| 10.6 | Mounted in **`Game.svelte`** behind board frame | `Game.svelte` | code edit | complete |
+| 10.7 | Intro verification | `tools/verify_intro.py` | added | complete |
+
+---
+
+## 11. Audio — full custom sprite (52 cues)
+
+**Output bundle:** `web-sdk/apps/chimera/static/assets/audio/sounds.{json,mp3,ogg,m4a,ac3}`
+**Pipeline:** `tools/rebuild_audio_sprite.py` (+ `tools/audio_gen.py` for Scenario-generated cues)
+**Backup:** `assets-backup/web-sdk/apps/chimera/static/assets/audio/`
+**Work library:** `tools/audio_work/segments/` (per-cue WAVs, re-runnable swaps)
+
+### 11.1 User-supplied replacements
+
+| # | Cue | Source file | Status |
+|---|-----|-------------|--------|
+| 11.1.1 | `bgm_main` | `Hidden Path(loop - dark - lurking).mp3` (workspace root) | complete |
+| 11.1.2 | `bgm_freespin` | `Ritual(loop - dark - drone).mp3` (workspace root) | complete |
+| 11.1.3 | User SFX batch (9 files) | workspace root Fantasy_UI / progressive assets | complete — mapped to template cue names |
+
+### 11.2 Progressive win ladder (NLC-style contiguous track)
+
+| # | What | How | Status |
+|---|------|-----|--------|
+| 11.2.1 | `bgm_winlevel_big`, `_superwin`, `_mega`, `_epic`, `_max` chained into **one continuous composition** with tier boundaries at sprite offsets | `rebuild_audio_sprite.py --chain …` | complete |
+| 11.2.2 | Skip/bust advances audio forward (spec) | `WIN-CELEBRATION-SPEC.md` § audio | spec complete; FE handler pending |
+
+### 11.3 Scenario MM Audio 2 generated cues (remaining stock slots)
+
+All 52 cue keys in `sounds.json` now carry custom audio. Generated stems logged in `assets-raw/audio_gen/COSTS.md` via `tools/audio_gen.py` batch plan (`tools/audio_work/gen_plan.json`). Categories:
+
+| Category | Cue keys (count) |
+|----------|------------------|
+| BGM loops | `bgm_main`, `bgm_freespin`, `bgm_winlevel_big/superwin/mega/epic/max` (7) |
+| UI | `sfx_btn_general`, `sfx_btn_spin` (2) |
+| Reels | `sfx_reel_stop_1–5`, `sfx_symbols_landing`, `sfx_royals_landing` (7) |
+| Scatter / FS | `sfx_scatter_stop_1–5`, `sfx_scatter_reveal`, `sfx_scatter_win`, `sfx_scatter_win_v2`, `jng_intro_fs`, `sfx_fs_respins`, `sfx_superfreespin` (11) |
+| Multipliers | `sfx_multiplier_combine_a/b`, `sfx_multiplier_explosion_a/b/c`, `sfx_multiplier_landing`, `sfx_multiplier_reset`, `sfx_multiplier_up`, `sfx_multiplier_update`, `sfx_multiplier_win` (10) |
+| Wins | `sfx_winlevel_small/standard/nice/substantial/end`, `sfx_youwon_panel`, `sfx_bigwin_coinloop`, `sfx_wild_explode` (7) |
+| Anticipation | `sfx_anticipation`, `sfx_anticipation_start` (2) |
+| Unused ways tumble keys (retained, re-authored) | `tumble_win_1–5` (5) |
+| **Total** | **52** |
+
+---
+
+## 12. Control bar redesign (Made Men reference)
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 12.1 | **`ControlBarBand.svelte`** — structural bottom bar (buy bonus left, balance/bet pills, spin, turbo/autospin stack) | `packages/components-ui-pixi/src/components/ControlBarBand.svelte` | added | partial — user rejects current alignment vs reference |
+| 12.2 | **`ControlBarBandPortrait.svelte`** — portrait variant | same package | added | partial |
+| 12.3 | **`controlBarGeometry.ts`** — preset metrics (desktop/tablet/landscape/portrait) | `packages/components-ui-pixi/src/controlBarGeometry.ts` | added | partial |
+| 12.4 | **`LabelBalance.svelte`** — grouped balance pill | `packages/components-ui-pixi/src/components/LabelBalance.svelte` | added/edited | partial |
+| 12.5 | **`LabelBet.svelte`** — bet pill with integrated steppers | `packages/components-ui-pixi/src/components/LabelBet.svelte` | edited | partial |
+| 12.6 | Layout files wired to ControlBarBand | `LayoutDesktop/Tablet/Landscape/Portrait.svelte` | code edit | partial |
+| 12.7 | Pre-redesign backup snapshot | `assets-backup/control-bar-redesign-20260717-041242/` | backup | complete |
+| 12.8 | Bar verification script | `tools/verify_bar.py` | added | complete |
+
+---
+
+## 13. Frontend code — chimera app–specific
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 13.1 | `assets.ts` — loading hero sprite keys, asset URL map | `src/game/assets.ts` | code edit | complete |
+| 13.2 | `assets.ts.bak` | same dir | backup | complete |
+| 13.3 | `Symbol.svelte` — WinFxOverlay integration | `src/components/Symbol.svelte` | code edit | complete |
+| 13.3b | `Symbol.svelte.bak` | same | backup | complete |
+| 13.4 | `Board.svelte` — WinConnectFx for ways win positions | `src/components/Board.svelte` | code edit | complete |
+| 13.4b | `Board.svelte.bak` | same | backup | complete |
+| 13.5 | `LoadingScreen.svelte` — hero sprites + intro carousel | `src/components/LoadingScreen.svelte` | code edit | complete |
+| 13.6 | **`bookEventHandlerMap.ts`** — new math events (breach, mutation, tank, mitosis) | `src/game/bookEventHandlerMap.ts` | **not yet added** | pending |
+| 13.7 | NLC-style tiered win celebration / juice (shake, hit-stop, bust-through) | Win.svelte + new components per spec | spec only | pending |
+| 13.8 | `wincap` book event handler | FE handlers | spec in MECHANICS-PLAN | pending |
+| 13.9 | Hide Storybook debug overlay (`I18nTest`) | `Game.svelte` | pending per USERCHATREQUESTS | pending |
+| 13.10 | Storybook data samples for new events | `src/stories/data/` | pending | pending |
+
+---
+
+## 14. Math model (`math-sdk/games/project_chimera/`)
+
+### 14.1 Validation baseline (template math unchanged)
+
+| # | What | Where | How | Status |
+|---|------|-------|-----|--------|
+| 14.1.1 | End-to-end sim + optimize pipeline on **unchanged ways math** | `library/publish_files/`, `RUNBOOK.md` § Validation 2026-07-16 | `run.py` + `run_optimize_only.py` | complete |
+| 14.1.2 | RTP 0.967 both modes @ 10k sims | stats outputs | validation run | complete |
+| 14.1.3 | `run_optimize_only.py` added | game root | added | complete |
+| 14.1.4 | Theme annotations in config (symbol codenames in comments) | `game_config.py` | code edit | complete |
+
+### 14.2 Phase 2 mechanics (implemented in math — FE pending)
+
+| # | Feature | Key files | How | Status |
+|---|---------|-----------|-----|--------|
+| 14.2.1 | **MITOSIS** — `M` catalyst on reels 2–4, split twins, wild mult double, M→W | `game_config.py`, `game_executables.py`, `reels/BR0.csv`+FR* | code edit | complete (math) |
+| 14.2.2 | **SPECIMEN SHIFT** — oversized tank wild injection, PRESSURE mult | `game_executables.py`, `game_events.py` | code edit | complete (math) |
+| 14.2.3 | **MUTATION PROTOCOL** — meter charges, stages II–IV, FR1/FR2 strips, symbol upgrades | `game_config.py`, `gamestate.py`, `game_override.py`, `reels/FR1.csv`, `FR2.csv` | code edit | complete (math) |
+| 14.2.4 | **CONTAINMENT BREACH** — reveal-style pick sequence events | `game_events.py`, `game_executables.py` | code edit | complete (math) |
+| 14.2.5 | New book events: `breachStart`, `breachPick`, `breachEnd`, `mutationCharge`, `mutationStage`, `symbolUpgrade`, `specimenShift`, `cellDivision` | `game_events.py` | added | complete (math) |
+| 14.2.6 | Extra bet modes: `mutagen`, `viralsurge`, `specimen`, `superbonus` (+ template `base`, `bonus`) | `game_config.py`, `library/books/books_{mode}.json` | code edit | complete (math) |
+| 14.2.7 | Original reel strips archived | `reels/_originals/{BR0,FR0,FRWCAP}.csv` | backup | complete |
+| 14.2.8 | Math QA tools | `tools/validate_books.py`, `smoke_run.py`, `build_reels.py`, `pool_stats.py` | added | complete |
+
+### 14.3 Production math (still outstanding)
+
+| # | What | Status |
+|---|------|--------|
+| 14.3.1 | Production sim counts (≥100k/mode) | pending |
+| 14.3.2 | Paytable / volatility rebalance per GDD | pending |
+| 14.3.3 | Optimizer target splits retune after features | pending |
+
+---
+
+## 15. Mechanic / celebration tier art (assets-raw/mech_tier_art)
+
+Generated for future NLC-style win ladder & mechanic presentation (Scenario scripts):
+
+| # | Asset set | Scripts | Status |
+|---|-----------|---------|--------|
+| 15.1 | Win tier cleanplates + titles | `gen_cleanplates.py`, `gen_titles.py`, `gen_tiers.py` | complete (raw) |
+| 15.2 | Mutagen catalyst (`M`) art iterations | `gen_catalyst_v2–v7.py` | complete (raw) |
+| 15.3 | Containment tank strips (SPECIMEN SHIFT) | `gen_tanks_base.py`, `gen_tanks_strips_v2.py`, `finalize_tanks.py` | complete (raw) |
+| 15.4 | Mechanic FX sheets | `gen_fx.py` | complete (raw) |
+| 15.5 | Cost tracking | `assets-raw/mech_tier_art/COSTS.md` | complete |
+
+*(Not yet integrated into live FE win celebration — spec in `WIN-CELEBRATION-SPEC.md`.)*
+
+---
+
+## 16. Tools & automation scripts (added)
+
+| # | Script | Purpose |
+|---|--------|---------|
+| 16.1 | `tools/scenario_pipeline.py` | Core Scenario.com API (generate, rembg, download, models) |
+| 16.2 | `tools/scenario_pipeline_anim.py` | Animation-oriented Scenario helpers (upload, Seedream) |
+| 16.3 | `tools/scenario_pipeline_ui.py` | UI asset Scenario batch helpers |
+| 16.4 | `tools/generate_chimera_batch.py` | P1 symbol + BG + frame batch generation |
+| 16.5 | `tools/rembg_batch.py` | Symbol background removal batch |
+| 16.6 | `tools/integrate_chimera.py` | Integrate nobg symbols, BG, reels frame into chimera static |
+| 16.7 | `tools/retheme_purple_rocks.py` | Wave 4 glass/fog spine debris fix |
+| 16.8 | `tools/retheme_bg_anim.py` | Wave 3 animated background region retheme |
+| 16.9 | `tools/retheme_ui.py` | Wave 2 UI atlas retheme (coin, loader, bigwin, buttons, …) |
+| 16.10 | `tools/build_bmfont.py` | Xyric Nocturne BMFont rebuild |
+| 16.11 | `tools/chimera_text.py` | Shared themed text rendering styles |
+| 16.12 | `tools/rebuild_audio_sprite.py` | Howler sprite rebuild / swap / chain |
+| 16.13 | `tools/audio_gen.py` | Scenario MM Audio 2 batch driver |
+| 16.14 | `tools/gen_betmodes.py` / `gen_betmodes_v2.py` | Bet-mode hero generation |
+| 16.15 | `assets-raw/betmode_cards/postprocess_betmodes.py` | Hero alpha fade + webp/png export |
+| 16.16 | `tools/hero_generate.py` / `hero_integrate.py` | Loading screen hero + logo |
+| 16.17 | `tools/ui_generate.py` | Logo, emblem, vial generation |
+| 16.18 | `tools/gen_feature_bg.py` | Free-spins background Scenario edit |
+| 16.19 | `tools/gen_intro_assets.py` | Intro carousel atlas builder |
+| 16.20 | `tools/gen_idle_grimm.py` / `prep_idle_grimm.py` / `build_idle_flipbook.py` | Idle character pipeline |
+| 16.21 | `tools/extract_atlas.py` / `extract_atlas_regions.py` | Template atlas extraction helpers |
+| 16.22 | `tools/inspect_spine.py` / `spine_world_positions.py` | Spine debugging |
+| 16.23 | `tools/scan_purple_regions.py` | Purple rock region audit |
+| 16.24 | `tools/verify_wave4.py` / `verify_intro.py` / `verify_bar.py` | Visual verification captures |
+| 16.25 | `tools/contact_sheet.py` | Asset review contact sheets |
+| 16.26 | `tools/rembg_batch.py` | Batch rembg |
+| 16.27 | `assets-raw/mech_tier_art/_scripts/runner.py` (+ gen_* scripts) | Mechanic/tier art orchestration |
+
+---
+
+## 17. Backups & raw asset locations
+
+| Location | Contents |
+|----------|----------|
+| `assets-backup/web-sdk/apps/chimera/` | Pre-integration chimera static + src snapshots (audio, fonts, spines, Game.svelte, constants, LoadingScreen, Background) |
+| `assets-backup/control-bar-redesign-20260717-041242/` | Control bar + BonusCards snapshot before redesign pass |
+| `assets-backup/betModes_v1/` | First bet-mode hero manifest |
+| `assets-backup/packages/components-ui-*` | Shared UI component backups (BonusCard, constants, buttons, layouts) |
+| `assets-backup/Game.svelte.bak`, `assets.ts.bak`, `LoadingScreen.svelte.bak` | Root-level component backups |
+| `web-sdk/apps/chimera/src/components/*.bak`, `src/game/assets.ts.bak` | In-app `.bak` files |
+| `assets-raw/` | All Scenario generation output (~297 files): per-symbol folders, `betmode_cards/`, `anim/`, `ui/`, `mech_tier_art/`, `_api_logs/`, `_verify/` |
+| `assets-raw/_api_logs/` | Scenario API response logs (no credentials stored in logs) |
+| `assets-raw/reference/nlc/` | Internal-only NLC win celebration reference video + frames |
+| `math-sdk/games/project_chimera/reels/_originals/` | Pre-mechanics reel CSVs |
+
+---
+
+## 18. Known pending / partial items (from USERCHATREQUESTS.txt)
+
+| Priority | Item | Status |
+|----------|------|--------|
+| CRITICAL | Purple rock shapes still visible in some loader/anticipation views | partial |
+| CRITICAL | Control bar — full structural match to Made Men reference | partial |
+| CRITICAL | Background — user wants stronger cinematic loop (video or richer anim) | partial (BackgroundAmbience added) |
+| HIGH | Symbol win/connect FX — Scenario quality pass | partial (4 FX sprites wired) |
+| HIGH | Idle Grimm — alpha crop, feet grounding, true 5s video loop | partial |
+| MEDIUM | Intro carousel + bet-mode hero wiring polish | partial |
+| MEDIUM | Full A–Z FE handlers for Phase 2 math events | pending |
+| MEDIUM | NLC-style win celebration ladder + juice kit | pending (spec complete) |
+| MEDIUM | Max win **EVOLUTION COMPLETE** scripted finale | pending |
+| LOW | Hide Storybook `I18nTest` debug overlay | pending |
+| LOW | Optional L5 Research Files symbol | pending (design decision) |
+| LOW | Paytable / compliance copy pass | pending |
+
+---
+
+## 19. Summary counts
+
+| Section | Documented items |
+|---------|----------------|
+| 1. Scaffolding | 8 |
+| 2. Docs | 8 |
+| 3. Symbols | 22 |
+| 4. Environment | 7 |
+| 5. Spine repaints | 8 |
+| 6. UI / fonts / favicon | 16 |
+| 7. Coin → vial | 3 |
+| 8. Bet-mode heroes | 12 |
+| 9. Win FX | 7 |
+| 10. Intro & idle | 7 |
+| 11. Audio cues | 52 (+ 3 user-source rows) |
+| 12. Control bar | 8 |
+| 13. Frontend code | 10 |
+| 14. Math | 15 |
+| 15. Mech tier raw art | 5 |
+| 16. Tools | 27 |
+| 17. Backup locations | 9 |
+| 18. Pending tracker | 12 |
+| **Total line items documented** | **~226** |
+
+---
+
+*End of audit. For live status updates see `USERCHATREQUESTS.txt`. For feature specs see `MECHANICS-PLAN.md`, `NLC-MECHANICS-ADAPTATION.md`, and `WIN-CELEBRATION-SPEC.md`.*

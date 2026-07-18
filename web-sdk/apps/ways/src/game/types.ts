@@ -20,6 +20,10 @@ export const SYMBOL_STATES = [
 	'spin',
 	'land',
 	'win',
+	// looping mesh-deform ripple of the card's own art; the winner keeps
+	// undulating (haunted "living photo") while the board rests after a win
+	'postWin',
+	// deterministic crisp card frame (used by the apparition pane slicing)
 	'postWinStatic',
 	'explosion',
 ] as const;

@@ -18,9 +18,11 @@ NUM_REELS = 5
 HERE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reels")
 
 # per-reel symbol weights
-BASE_WEIGHTS = {"H1": 4, "H2": 5, "H3": 6, "H4": 7, "L1": 12, "L2": 13, "L3": 14, "L4": 14, "L5": 15}
-FREE_WEIGHTS = {"H1": 6, "H2": 7, "H3": 8, "H4": 8, "L1": 11, "L2": 12, "L3": 12, "L4": 12, "L5": 12}
-WCAP_WEIGHTS = {"H1": 14, "H2": 12, "H3": 8, "H4": 6, "L1": 6, "L2": 6, "L3": 5, "L4": 5, "L5": 5}
+# Highs: H1 Lady Mirror, H2 The Wife, H3 The Man, H4 The Little Girl, H5 The Dog
+# Lows:  L1 Ace, L2 King, L3 Queen, L4 Jack, L5 Ten (H5 is the most common high)
+BASE_WEIGHTS = {"H1": 4, "H2": 5, "H3": 6, "H4": 7, "H5": 8, "L1": 12, "L2": 13, "L3": 14, "L4": 14, "L5": 15}
+FREE_WEIGHTS = {"H1": 6, "H2": 7, "H3": 8, "H4": 8, "H5": 9, "L1": 11, "L2": 12, "L3": 12, "L4": 12, "L5": 12}
+WCAP_WEIGHTS = {"H1": 14, "H2": 12, "H3": 8, "H4": 6, "H5": 5, "L1": 6, "L2": 6, "L3": 5, "L4": 5, "L5": 5}
 
 # scatters per base reel: rich on 0/2/4 (anticipation reels), rare on 1/3
 BASE_SCATTERS_PER_REEL = [8, 2, 8, 2, 8]

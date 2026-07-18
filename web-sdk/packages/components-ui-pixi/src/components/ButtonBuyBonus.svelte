@@ -1,24 +1,26 @@
 <script lang="ts">
-	import { Text } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
+	import { Graphics } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived } from 'state-shared';
 
 	import UiSprite from './UiSprite.svelte';
-	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
+	import { UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
-	import { i18nDerived } from '../i18n/i18nDerived';
+	import { drawIcon } from '../icons';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const { stateXstateDerived, eventEmitter } = getContext();
 	const sizes = { width: UI_BASE_SIZE, height: UI_BASE_SIZE };
 	const disabled = $derived(!stateXstateDerived.isIdle());
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
+	const iconSize = $derived(sizes.width * 0.5);
+	const shadowOffset = $derived(iconSize * 0.06);
 
 	const openModal = () => (stateModal.modal = { name: 'buyBonus' });
 	const disableActiveBetMode = () => (stateBet.activeBetModeKey = 'BASE');
 	const onpress = () => {
 		eventEmitter.broadcast({ type: 'soundPressGeneral' });
-
 		if (active) {
 			disableActiveBetMode();
 		} else {
@@ -26,61 +28,34 @@
 		}
 	};
 
-	const getState = (value: {
-		active: boolean;
-		disabled: boolean;
-		hovered: boolean;
-		pressed: boolean;
-	}) => {
-		if (value.disabled) return 'disabled' as const;
-		if (value.pressed) return 'pressed' as const;
-		if (value.hovered) return 'hovered' as const;
-		if (value.active) return 'active' as const;
-		return 'default' as const;
-	};
+	const iconColor = $derived(disabled ? 0x6a6a70 : active ? 0xffc12e : 0xf1f1f4);
 </script>
 
 <Button {...props} {sizes} {disabled} {onpress}>
 	{#snippet children({ center, hovered, pressed })}
-		{@const state = getState({
-			active,
-			disabled,
-			hovered,
-			pressed,
-		})}
-
 		<UiSprite
-			key="buyBonus"
 			{...center}
 			anchor={0.5}
+			tone="dark"
+			shape="medallion"
 			width={sizes.width}
 			height={sizes.height}
-			{...disabled
-				? {
-						backgroundColor: 0xaaaaaa,
-					}
-				: {}}
-			{...active
-				? {
-						borderWidth: 10,
-						borderColor: 0xffffff,
-					}
-				: {}}
+			{hovered}
+			{pressed}
+			{active}
+			{...disabled ? { backgroundColor: 0xaaaaaa } : {}}
 		/>
 
-		<Text
+		<Graphics
 			{...center}
-			anchor={0.5}
-			text={state === 'active' ? i18nDerived.disable() : i18nDerived.buyBonus()}
-			style={{
-				align: 'center',
-				wordWrap: true,
-				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
-				fontWeight: '600',
-				fontSize: UI_BASE_FONT_SIZE * 0.9,
-				fill: 0xffffff,
-			}}
+			y={center.y + shadowOffset}
+			alpha={0.4}
+			draw={(g: PIXI.Graphics) => drawIcon(g, 'crown', { size: iconSize, color: 0x000000 })}
+		/>
+		<Graphics
+			{...center}
+			alpha={disabled ? 0.6 : 1}
+			draw={(g: PIXI.Graphics) => drawIcon(g, 'crown', { size: iconSize, color: iconColor })}
 		/>
 	{/snippet}
 </Button>

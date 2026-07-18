@@ -1,13 +1,15 @@
 <script lang="ts">
 	import { cubicInOut } from 'svelte/easing';
 
+	import * as PIXI from 'pixi.js';
 	import { stateUi } from 'state-shared';
-	import { Text } from 'pixi-svelte';
+	import { Graphics } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 
 	import UiSprite from './UiSprite.svelte';
-	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
+	import { UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
+	import { drawIcon } from '../icons';
 	import { Tween } from 'svelte/motion';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
@@ -65,20 +67,11 @@
 			width={sizes.width}
 			height={sizes.height}
 		/>
-		<Text
+		<Graphics
 			{...center}
-			anchor={0.5}
-			text="↓"
-			style={{
-				align: 'center',
-				wordWrap: true,
-				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
-				fontWeight: '600',
-				fontSize: UI_BASE_FONT_SIZE * 0.9,
-				fill: 0xffffff,
-			}}
 			rotation={rotationTween.current}
+			draw={(g: PIXI.Graphics) =>
+				drawIcon(g, 'chevron', { size: UI_BASE_SIZE * 0.5, color: 0xf3e6c8 })}
 		/>
 	{/snippet}
 </Button>

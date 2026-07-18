@@ -29,17 +29,21 @@ Gothic horror re-theme of the dynamic-ways concept. Same mechanics core (they're
 
 ## 3. Symbols (all art to be generated — horror set, no ninja assets reused)
 
+Five character high symbols and five playing-card low ranks (A K Q J 10),
+all painted as haunted daguerreotype cards in a shared ornate filigree frame.
+
 | ID | Symbol | Art direction |
 |---|---|---|
-| H1 | **Madam Mirror** | veiled woman in black lace, glowing white eyes behind the veil — the shady-lady lead, top pay under the scroll... top regular pay |
-| H2 | **The Twins** | two identical porcelain-faced girls holding hands, one smiling wrong |
-| H3 | **The Client** | dead aristocrat in a top hat, séance rope burns on his neck |
-| H4 | **The Familiar** | black cat with a human iris |
-| L1 | tarot card (The Tower, burning) | |
-| L2 | melted candelabra, still lit | |
-| L3 | crystal ball with a face inside | |
-| L4 | mourning locket, portrait scratched out | |
-| L5 | poison-green absinthe glass | |
+| H1 | **Lady Mirror** | veiled Victorian medium in black lace, faintly glowing white eyes behind the veil, a cracked hand mirror at her chest — the shady-lady lead, top regular pay |
+| H2 | **The Wife** | mournful widow in a high-collared black mourning gown, wedding ring on a chain, thin tears of dark ichor |
+| H3 | **The Man** | stern gentleman in a top hat and frock coat, séance rope burn around his neck, cold hollow eyes |
+| H4 | **The Little Girl** | pale child in a lace dress holding a cracked porcelain doll, blank black eyes, unsettling smile |
+| H5 | **The Dog** | gaunt spectral black hound, glowing absinthe-green eyes, bared teeth, antique Victorian collar — the lowest character |
+| L1 | **Ace (A)** | large gothic silver serif "A" over a carved spade, engraved filigree |
+| L2 | **King (K)** | large gothic silver serif "K" under a tarnished crown |
+| L3 | **Queen (Q)** | large gothic silver serif "Q" with a mourning-veil / tiara motif |
+| L4 | **Jack (J)** | large gothic silver serif "J" over crossed daggers |
+| L5 | **Ten (10)** | large gothic silver serif "10", engraved filigree |
 | W | **The Entity** — tall shadow silhouette filling the frame, "WILD" carved into it | substitutes all but S/HM; reflected wilds multiply ways through |
 | S | **Ouija planchette** on "SCATTER" letters | 3+ triggers The Other Side |
 | HM | **Haunted Mirror** — ornate cracked Victorian mirror, something moving in it | the xMirror trigger; doesn't pay, reflects neighbors, then resolves |
@@ -81,15 +85,16 @@ Scatter count picks the level; each level is a strictly nastier version of the l
 
 Each buy mode is its own `BetMode` with its own books, lookup table, and 96.5% RTP — the level differences live in the *distribution conditions* (forced scatter counts) plus level-aware free-spin logic in `run_freespin`.
 
-### 4.4 Paytable draft (per way, ×bet — optimizer tunes frequency)
+### 4.4 Paytable (per way, ×bet — optimizer tunes frequency)
 | Symbol | 3 | 4 | 5 |
 |---|---|---|---|
-| H1 | 1.0 | 3.0 | 10.0 |
-| H2 | 0.6 | 1.5 | 5.0 |
-| H3 | 0.5 | 1.2 | 4.0 |
-| H4 | 0.4 | 1.0 | 3.0 |
-| L1–L2 | 0.15 | 0.4 | 1.2 |
-| L3–L5 | 0.1 | 0.25 | 0.8 |
+| H1 Lady Mirror | 1.0 | 3.0 | 10.0 |
+| H2 The Wife | 0.6 | 1.5 | 5.0 |
+| H3 The Man | 0.5 | 1.2 | 4.0 |
+| H4 The Little Girl | 0.4 | 1.0 | 3.0 |
+| H5 The Dog | 0.3 | 0.8 | 2.5 |
+| L1 Ace / L2 King | 0.2 | 0.4 | 1.2 |
+| L3 Queen / L4 Jack / L5 Ten | 0.1 | 0.3 | 0.8 |
 
 ## 5. Book event contract
 

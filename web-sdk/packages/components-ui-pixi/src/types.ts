@@ -28,6 +28,8 @@ export type ButtonIcon =
 	| 'menu'
 	| 'turbo'
 	| 'autoSpin'
+	| 'play'
+	| 'coins'
 	| 'payTable'
 	| 'info'
 	| 'settings'

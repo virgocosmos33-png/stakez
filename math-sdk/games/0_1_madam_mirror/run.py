@@ -12,10 +12,13 @@ from src.write_data.write_configs import generate_configs
 if __name__ == "__main__":
 
     # bonus books are event-heavy: small batches keep the per-process JSON
-    # buffer modest (large batches OOM during zstd compression)
-    num_threads = 8
-    rust_threads = 20
-    batching_size = 8000
+    # buffer modest (large batches OOM during zstd compression).
+    # Tuned for a 16GB machine: 8 threads x 8000-book batches OOMed in
+    # write_json (each worker buffers its whole batch as JSON before
+    # compressing), 4 x 2000 stays well inside memory.
+    num_threads = 4
+    rust_threads = 10
+    batching_size = 2000
     compression = True
     profiling = False
 

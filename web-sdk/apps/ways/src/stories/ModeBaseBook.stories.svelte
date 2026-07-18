@@ -22,6 +22,7 @@
 	import books from './data/base_books';
 	import mirrorBooks from './data/mirror_books';
 	import maxwinBook from './data/maxwin_book';
+	import twoWaysBook from './data/two_ways_book';
 
 	setContext();
 
@@ -53,6 +54,19 @@
 			const data = books[index];
 			console.log('Running a book at index', index);
 			await playBet({ ...data, state: data.events });
+		},
+	})}
+	{template}
+/>
+
+<Story
+	name="twoSymbolWays"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			console.log('Running the TWO-SYMBOL WAYS demo (H1 x3 + L1 x4)');
+			await playBet({ ...twoWaysBook, state: twoWaysBook.events });
 		},
 	})}
 	{template}

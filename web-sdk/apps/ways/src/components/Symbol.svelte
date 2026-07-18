@@ -58,29 +58,14 @@
 		y={props.y}
 		oncomplete={props.oncomplete}
 	/>
-	{#if isHigh}
-		<Container x={props.x ?? 0} y={props.y ?? 0}>
-			<Graphics draw={drawHighBorder} />
-		</Container>
-	{/if}
-	{#if glassed}
-		<Container x={props.x ?? 0} y={props.y ?? 0}>
-			<Sprite
-				key="glassIntact"
-				anchor={0.5}
-				width={SYMBOL_SIZE}
-				height={SYMBOL_SIZE}
-				alpha={0.92}
-			/>
-		</Container>
-	{/if}
 {:else}
+	<!-- win/land run once and report complete; postWin is the looping mesh
+	ripple that keeps the winning card alive while it rests -->
 	<SymbolSpine
-		loop={props.loop}
+		loop={props.loop || props.state === 'postWin'}
 		{symbolInfo}
 		x={props.x}
 		y={props.y}
-		showWinFrame={props.state === 'win' && !['S', 'M'].includes(props.rawSymbol.name)}
 		listener={{
 			complete: props.oncomplete,
 			event: (_, event) => {
@@ -90,4 +75,23 @@
 			},
 		}}
 	/>
+{/if}
+
+<!-- frame chrome sits on top of both render paths so highs keep their gold
+	frame and glassed cells their pane during spine states (win/land/idle) -->
+{#if isHigh}
+	<Container x={props.x ?? 0} y={props.y ?? 0}>
+		<Graphics draw={drawHighBorder} />
+	</Container>
+{/if}
+{#if glassed}
+	<Container x={props.x ?? 0} y={props.y ?? 0}>
+		<Sprite
+			key="glassIntact"
+			anchor={0.5}
+			width={SYMBOL_SIZE}
+			height={SYMBOL_SIZE}
+			alpha={0.92}
+		/>
+	</Container>
 {/if}

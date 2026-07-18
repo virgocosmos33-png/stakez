@@ -1,0 +1,331 @@
+# TO BE FIXED — Madam Mirror / ways game (Storybook screenshot review)
+# Date: 2026-07-17
+# Evaluated + fixed: 2026-07-18 (see qa-reports/QA-REPORT-2026-07-18-0013.md)
+# Context: COMPONENTS/<Game> story in Storybook (apps/ways)
+#
+# STATUS LEGEND: [FIXED] code changed & verified · [FALSE POSITIVE] not a bug
+#                [NO ACTION] expected behavior · [FOLLOW-UP] real, deferred
+
+================================================================================
+1. DEBUG i18n OVERLAY VISIBLE IN GAME VIEW — [FIXED]
+================================================================================
+Problem:
+  Top-left showed stacked debug text overlapping the board:
+  "TRANSLATIONS TEST" / "SETTINGS (from ui-pixi)" / "MASTER VOLUME (from
+  ui-html)" / "NOT TRANSLATED".
+
+Cause (confirmed):
+  I18nTest.svelte was always mounted in Game.svelte. It is a dev-only
+  translation smoke test inherited from the SDK sample apps.
+
+Fix applied:
+  - Removed <I18nTest /> and its import from Game.svelte.
+  - Component file kept on disk (unused) in case a dedicated i18n story is
+    wanted later.
+
+Files:
+  - web-sdk/apps/ways/src/components/Game.svelte  (edited)
+
+================================================================================
+2. "NOT TRANSLATED" TEXT — [NO ACTION] (expected test behaviour)
+================================================================================
+  i18nDerived.notTranslated() intentionally requests a key with no entry to
+  prove the fallback path. Visible only inside I18nTest, which is no longer
+  mounted. Nothing to fix.
+
+================================================================================
+3. PLACEHOLDER BRANDING — [FIXED]
+================================================================================
+Problem:
+  Chrome showed "WAYS GAME" as the game name and an "ADD YOUR LOGO" text
+  placeholder top-right.
+
+Fix applied:
+  - Game name -> "MADAM MIRROR" (matches the game's logo art and bet modes).
+  - Logo snippet now renders the shipped logo sprite (assets key "mirrorLogo",
+    static/assets/sprites/mirror/logo.png, 1024x641) anchored top-right.
+
+Files:
+  - web-sdk/apps/ways/src/components/Game.svelte  (edited)
+
+================================================================================
+4. REEL-5 MISALIGNED GOLD FRAMES + VERTICAL GLOW — [FIXED]
+   (root cause was different from the original hypothesis)
+================================================================================
+Original hypothesis (WRONG): missing board mask on Anticipations /
+  ApparitionOverlay / payframes. Runtime check showed masks behave as
+  designed and win payframes align with cells on every reel.
+
+Actual root cause (confirmed at runtime + spine data):
+  Anticipation.svelte played the donor skeleton's 'anticipation_*' animations,
+  which display the FIVE-row frame attachment ("frame", 364x1652), squeezed
+  non-uniformly into a 0.56 x 1.6-symbol box (scaleX 0.223 vs scaleY 0.139)
+  at mid-board. On a 4-row board the frame lines could not line up with the
+  cell grid -> "misaligned frames straddling cells" + the glow beam reading
+  as a stray vertical light on the anticipated (rightmost) reels.
+
+Fix applied (Anticipation.svelte rewritten):
+  - Plays the 'anticipation4_*' animations, whose frame4 attachment holds
+    exactly 4 rows of donor content (364x1330, centered +140.92 above the
+    skeleton origin — verified in anticipation.json).
+  - scaleX = SYMBOL_SIZE / 364 (column hugs one reel width)
+  - scaleY = board height / 1288 (4 donor rows -> 4 board rows)
+  - y offset compensates frame4's skeleton-space center so the frame is
+    centered on the board (spine-pixi v8 runs Skeleton.yDown = true).
+  Verified live: column highlight now hugs the full anticipated reel,
+  frame lines coincide with row edges.
+
+Files:
+  - web-sdk/apps/ways/src/components/Anticipation.svelte  (rewritten)
+
+================================================================================
+5. RED / JAGGED SHAPES ON REEL 5 — [FIXED] (2026-07-18 retheme pass)
+================================================================================
+Original hypothesis (WRONG): ApparitionOverlay bleed. The overlay's split
+  panes and dividers align correctly (verified in free-spin runs).
+
+Actual source (confirmed):
+  The red-brown "shapes" are ROCK DEBRIS sprites baked into the donor
+  anticipation spine (Mining Mayhem asset: slots rock1..rock11 + orange glow
+  + sparks). They fly inside the anticipation effect. With #4 fixed they are
+  correctly positioned/scaled, but the mining-rock art is a THEME MISMATCH
+  for a haunted-mirror game.
+
+Fix applied (tools/retheme_mirror_debris.py — region-aware PIL retint):
+  - anticipation atlas: red-brown rocks -> violet mirror-glass shards; orange
+    glow/dust/sparks -> spectral violet; gold reel frames left untouched.
+  - transition atlas: purple mining rocks -> silver-lavender glass shards,
+    red sparks -> green candle embers.
+  - Mining-Mayhem 'loader' spine (miner face + MINING MAYHEM text) removed
+    from assets.ts: never rendered in this app, only wasted preload time.
+  Backups: apps/ways/assets-backup/retheme_mirror_debris/.
+  Verified live in qa-shots/final/ (anticipation columns + transition).
+
+================================================================================
+6. RED NUMBER AT TOP CENTER ("5.750") — [FALSE POSITIVE]
+================================================================================
+  It is the SÉANCE WAYS counter plaque (WaysCounter.svelte): a brass plaque
+  with a dark odometer window showing current total ways (e.g. "5,750") in
+  the red-LED bitmap font. Driven by the 'waysCounterUpdate' book event.
+  Working as designed; not a debug/perf overlay. If legibility bothers you,
+  bump PANEL_WIDTH / fontSize in WaysCounter.svelte.
+
+================================================================================
+7. STORYBOOK CSF WARNINGS + ADDON MISMATCH — [WON'T FIX FOR NOW]
+================================================================================
+  "CSF Parsing error: Expected 'ObjectExpression'..." and the
+  @storybook/addon-svelte-csf 5.0.5 vs Storybook 9.0.15 peer warning are
+  cosmetic; all stories load and run. Bumping either package in this pinned
+  monorepo risks breaking the storybook config inherited from the SDK.
+  Revisit only if stories stop loading.
+
+================================================================================
+8. NEW BUG FOUND DURING QA: MISSING freeSpinRetrigger HANDLER — [FIXED]
+================================================================================
+Problem:
+  Console error while playing Séance/Other Side books:
+  'Missing bookEventHandler in "bookEventHandlerMap" for: {type:
+  freeSpinRetrigger, totalFs: 11/14, positions: [...]}'.
+  Retriggers silently did nothing: no scatter animation, free-spin total
+  not bumped on the counter.
+
+Fix applied:
+  - Added BookEventFreeSpinRetrigger type (typesBookEvent.ts).
+  - Added freeSpinRetrigger handler (bookEventHandlerMap.ts): stops the win
+    cycle, plays the scatter win sfx + symbol animation, updates the
+    free-spin counter total.
+  Verified live: full Séance book (retriggers 8 -> 11 -> 14) runs with no
+  console errors and the counter total updates.
+
+Files:
+  - web-sdk/apps/ways/src/game/typesBookEvent.ts       (edited)
+  - web-sdk/apps/ways/src/game/bookEventHandlerMap.ts  (edited)
+
+================================================================================
+9. HOW TO VERIFY
+================================================================================
+  cd web-sdk
+  pnpm run storybook --filter=ways        # http://localhost:6001/
+  - MODE_BASE/book/bonusLevel1_TheSeance -> Action:
+      first reveal anticipates reels 4-5 (aligned column highlight),
+      retriggers play cleanly, ways plaque ticks up.
+  - COMPONENTS/<Game>: no debug text overlay; MADAM MIRROR name + logo.
+  Evidence screenshots: qa-shots/ (baseline-idle = before; antic-v2-f,
+  antic-fix-7 = after).
+
+
+################################################################################
+# ROUND 3 — user screenshot review (2026-07-18, second pass)
+################################################################################
+
+================================================================================
+R3-1. ROCKS STILL FALLING (transition + reels) — [FIXED]
+================================================================================
+Problem:
+  Recolored rocks were still rock-SHAPED: the base->bonus transition spine
+  rained silver boulders, and the reel anticipation spine carried its own
+  rock debris.
+
+Fix applied:
+  - transition.atlas rock1-8 textures fully REPLACED (not tinted) with drawn
+    faceted mirror-glass crystals: angular shard polygons, lilac->violet
+    gradient, facet shading, white rim, violet glow halo.
+    (tools/retheme_mirror_debris.py :: replace_transition_rocks, run: shards)
+  - Anticipation.svelte REWRITTEN without the donor spine (see R3-3); its
+    rock slots can never render again.
+  - Verified: qa-shots/final/antic-11-t100.png shows violet crystals flying
+    during the transition; no rocks anywhere.
+
+================================================================================
+R3-2. BONUS LEVEL PANEL SHADED BLACK / BEHIND — [FIXED]
+================================================================================
+Problem:
+  The LEVEL banner painting rendered dark and partially covered.
+
+Cause (confirmed):
+  BonusLevelBanner kept its <MainContainer> mounted permanently while the
+  0.78 black dim mounted conditionally on show. Pixi appends children on
+  mount, so the late-mounted dim landed ON TOP of the panel and shaded it.
+  The three intro paintings were also authored very dark (mean lum ~27/255).
+
+Fix applied:
+  - Dim + panel now mount together inside the same {#if show} block (dim
+    first), so the panel always draws above the dim.
+  - Component moved after FreeSpinIntro/Outro in Game.svelte so no free-spin
+    plate can cover it.
+  - intro_seance/otherside/bloodmoon.webp lifted (gamma 0.52, contrast 1.1,
+    saturation 1.3): mean lum 27->69, 44->93, 55->115. Backup in
+    sprites/mirror/backup_intro/.
+  - CONTINUE pill border re-accented violet 0xb887ff (was chimera green).
+  - Verified: qa-shots/final/antic-banner.png — panel bright, in front,
+    readable.
+
+================================================================================
+R3-3. ANTICIPATION MISALIGNED GOLD FRAME + ROCKS — [FIXED]
+================================================================================
+Problem:
+  Donor anticipation4 spine: gold row lines landed mid-symbol (donor rows
+  never matched this 4-row board) and rock debris flew over the reels.
+
+Fix applied:
+  - Anticipation.svelte rewritten as a code-drawn effect sized from the real
+    board metrics (SYMBOL_SIZE x BOARD_DIMENSIONS): violet light column,
+    edge beams exactly on the reel bounds, drifting procedural mirror
+    shards, rising motes; in/loop/out envelope calls oncomplete on reel stop.
+  - No spine asset involved; alignment is exact by construction.
+  - Verified: qa-shots/final/antic-01-t030.png — clean violet column flush
+    with reel 5, zero rocks, zero gold lines.
+
+================================================================================
+R3-4. TEMPLATE AUDIO A-Z REPLACEMENT — [FIXED]
+================================================================================
+Problem: 26 cues still played Mining-Mayhem sample audio.
+
+Constraint: Scenario plan quota exhausted (1474/1500 units, PlanLimitReached
+  on every job; retried tonight). GodMode API is image/sprite only (no audio).
+
+Fix applied:
+  - tools/compose_missing_cues.py builds every remaining cue FROM the 25
+    Scenario-generated seance stems (ffmpeg pitch/layer/reverse):
+    reel stops 1-5 (rising antique-tick ladder), symbols/royals landing,
+    scatter_win, superfreespin (choir+bells+panel swell), wild_explode
+    (mirror crash), winlevel small/standard/nice/substantial/end,
+    multiplier combine_b / explosion a-b-c / reset / update, tumble_win 1-5.
+  - Sprite rebuilt: 57/68 cues are now Madam Mirror audio; the 11 kept are
+    previously customised mirror cues (bgm_main, xways_split, mirror_break,
+    celeb kit). ZERO template cues remain.
+
+================================================================================
+R3-5. CELEBRATION MUSIC: CUE-FORWARD STAGED TRACK — [FIXED]
+================================================================================
+Request: NLC-style progressive track; skipping a scene must cue the music
+  forward to the next section, landing organically on an impact.
+
+Fix applied:
+  - tools/compose_celeb_track.py: one continuous 48s composition
+    (BIG->SUPER->MEGA->EPIC->UNHOLY->MAX) from the generated winlevel stems,
+    impact hit baked on every 8s stage boundary; exported as contiguous
+    slices bgm_celeb_1..6 (looping) in the sprite.
+  - WinCelebration.svelte: plays the slice matching the current scene via
+    the music channel; advancing a scene (natural or skip click) swaps to
+    the next slice = the SAME composition picked up at the next boundary,
+    always opening on the downbeat + sfx_celeb_hit. MAX keeps its slam.
+    On unmount the music hands back to bgm_main / bgm_freespin.
+  - sound.ts: bgm_celeb_1..6 added to MusicName.
+
+================================================================================
+R3-6. FONT -> GHASTLY PANIC — [FIXED]
+================================================================================
+  - make_blood_font.py now renders the gold-face bitmap font from the
+    user-supplied Ghastly Panic.ttf (blood gradient + rim kept). Ink-band
+    fitting added because Ghastly declares huge metrics (glyphs came out
+    microscopic with metric-based fitting). Currency symbols missing from
+    the font fall back to Arial Bold.
+  - Verified in-game: seance2-outro1.png (SUPER WIN \.00), maxwin-t44.png
+    (MAX WIN \,000.00) render in scratchy Ghastly Panic blood lettering.
+
+================================================================================
+R3-7. WINNING COINS -> GLOWING GEMS — [FIXED]
+================================================================================
+  - SD2_Coin flipbook (12 frames) repainted as a spinning faceted violet
+    crystal: marquise silhouette, facet shading, white rim, specular
+    sparkle, violet glow; darker back face on frames 7-12. JSON untouched
+    so WinCoins/particle emitters work unchanged.
+    (tools/make_gem_flipbook.py; backup in assets-backup/gem_flipbook/)
+  - Symbol win animations (h1-h5) also flashed donor GOLD coin discs
+    (t1-t5_coin in symbols.atlas): repainted as round mirror medallions
+    (silver rim, violet glass, specular sweep).
+    (retheme_mirror_debris.py :: retheme_symbol_coins, run: medallions)
+  - Verified: seance2-outro3.png shows glass gems falling on the reels.
+
+================================================================================
+R4-1. RICH SPINE ANIMATIONS FOR EVERY SYMBOL — [FIXED]
+================================================================================
+Request: per-symbol spine animations (old rigs were a single bone that only
+  scaled the card).
+
+Fix applied:
+  - tools/gen_symbol_spines.py rewritten: every symbol (h1-h5, l1-l6, w, s)
+    now has a multi-layer Spine 4.1 rig — aura, card, glow overlay, energy
+    streaks, expanding ring, drifting wisps, glass shards — with class-tinted
+    FX (wild=violet, scatter=green, highs=spectral green-gold, royals=silver).
+  - Three animations per rig: 'win' (card pop + ring burst + streak sweep +
+    shard spray), 'land' (drop settle + sparkle glints), 'static' (idle
+    breathing loop). FX artwork drawn procedurally and packed into
+    mm_symbols.atlas.
+  - Verified in screencast: cast/c0029-c0030 (win rings + streaks pulsing),
+    cast/c0033 + blade/s001 (green land glints on settle).
+
+================================================================================
+R4-2. SPLIT = REAL CUT-LINE TRAIL — [FIXED]
+================================================================================
+Request: the xWays split must read as an actual CUT — blade, trail, impact.
+
+Fix applied:
+  - ApparitionOverlay.svelte runSplit now has a 300ms 'cut sweep' phase:
+    a blade of light travels down each divider line leaving a glowing trail,
+    spraying sparks; whoosh (sfx_celeb_whoosh_hi) on blade start, crack
+    (sfx_xways_split) at pane separation, then panes slide apart.
+  - Verified in screencast: blade/b002 zoom shows the bright blade core
+    mid-travel on the divider with the lit trail above it, panes separated
+    with glowing cut seams.
+
+================================================================================
+R4-3. BACKGROUND: IMAGE -> BAKED-LOOP VIDEO — [FIXED]
+================================================================================
+Request: background must be animated (video/spine), and effects must stay
+  glued to the artwork at ANY screen size (previous code-drawn lights used
+  canvas coordinates = drifted on other aspect ratios).
+
+Fix applied:
+  - tools/build_bg_video.py bakes candle flicker, crystal-ball pulse, lantern
+    glow, dust motes and a breathing vignette INTO the background painting
+    itself -> 10s seamless-loop MP4s (landscape + portrait + freespin).
+    Because effects live in the texture, they scale/position with the
+    painting on every screen size by construction.
+  - Background.svelte rewritten: plays the looping videos (static painting
+    shown only until first video frame is ready); all code-drawn flame/light
+    sprites deleted.
+  - Verified: candle/lantern regions differ frame-to-frame in the screencast
+    (mean abs diff 10-15 vs ~0 for a still), flames visibly move in
+    bg_anim_check.png strip.

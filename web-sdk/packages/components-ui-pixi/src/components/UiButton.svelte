@@ -1,18 +1,19 @@
 <script lang="ts">
-	import { Text } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
+	import { Graphics } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 
 	import UiSprite from './UiSprite.svelte';
 	import type { ButtonIcon } from '../types';
 	import type { Snippet } from 'svelte';
-	import { i18nDerived } from '../i18n/i18nDerived';
-	import { UI_BASE_FONT_SIZE } from '../constants';
+	import { drawIcon } from '../icons';
 
 	type Props = Omit<ButtonProps, 'children'> & {
 		icon: ButtonIcon;
 		sizes: { width: number; height: number };
 		active?: boolean;
 		children?: Snippet;
+		/** light = gilt-brass medallion, dark = tarnished-steel medallion */
 		variant?: 'dark' | 'light';
 	};
 
@@ -23,6 +24,23 @@
 		children: childrenFromParent,
 		...buttonProps
 	}: Props = $props();
+
+	const tone = $derived(variant === 'light' ? 'accent' : 'dark');
+
+	const iconColor = $derived.by(() => {
+		if (buttonProps.disabled) return 0x6a6a70;
+		if (icon === 'soundOn') return 0xffc12e;
+		if (icon === 'turbo') return active ? 0xffc12e : 0xf1f1f4;
+		if (active) return 0xffc12e;
+		return 0xf1f1f4;
+	});
+
+	const iconSize = $derived(Math.min(buttonProps.sizes.width, buttonProps.sizes.height) * 0.5);
+	const shadowOffset = $derived(Math.max(1.5, iconSize * 0.06));
+
+	const drawShadow = (g: PIXI.Graphics) => drawIcon(g, icon, { size: iconSize, color: 0x000000 });
+	const drawFace = (g: PIXI.Graphics) =>
+		drawIcon(g, icon, { size: iconSize, color: iconColor, accent: iconColor });
 </script>
 
 <Button {...buttonProps}>
@@ -32,34 +50,21 @@
 			anchor={0.5}
 			width={buttonProps.sizes.width}
 			height={buttonProps.sizes.height}
-			backgroundColor={variant === 'dark' ? 0x000000 : 0xffffff}
-			{...buttonProps.disabled
-				? {
-						backgroundColor: 0xaaaaaa,
-					}
-				: {}}
-			{...active
-				? {
-						borderWidth: 10,
-						borderColor: variant === 'dark' ? 0xffffff : 0x000000,
-					}
-				: {}}
+			{tone}
+			shape="medallion"
+			{hovered}
+			{pressed}
+			{active}
+			{...buttonProps.disabled ? { backgroundColor: 0xaaaaaa } : {}}
 		/>
 
-		<Text
+		<Graphics
 			{...center}
-			anchor={0.5}
-			text={i18nDerived[icon]()}
-			style={{
-				align: 'center',
-				wordWrap: true,
-				wordWrapWidth: 200,
-				fontFamily: 'proxima-nova',
-				fontWeight: '600',
-				fontSize: UI_BASE_FONT_SIZE * 0.9,
-				fill: variant === 'dark' ? 0xffffff : 0x000000,
-			}}
+			y={center.y + shadowOffset}
+			draw={drawShadow}
+			alpha={buttonProps.disabled ? 0.25 : 0.45}
 		/>
+		<Graphics {...center} draw={drawFace} alpha={buttonProps.disabled ? 0.6 : 1} />
 
 		{@render childrenFromParent?.()}
 	{/snippet}

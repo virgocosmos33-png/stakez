@@ -1,16 +1,35 @@
 <script lang="ts">
-	import { stateUi } from 'state-shared';
+	import { stateUi, stateBet } from 'state-shared';
 	import { BLACK } from 'constants-shared/colors';
 	import { MainContainer } from 'components-layout';
-	import { Container, Rectangle, anchorToPivot } from 'pixi-svelte';
+	import { Container, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
 	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
-	import { DESKTOP_BASE_SIZE, DESKTOP_BACKGROUND_WIDTH_LIST } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+
+	// Tablet is a square (1920x1920) design space; the same reference two-column
+	// structure applies, with the vertical rhythm pulled toward the lower half so
+	// the columns frame the board instead of floating.
+	const width = $derived(context.stateLayoutDerived.mainLayoutStandard().width);
+	const height = $derived(context.stateLayoutDerived.mainLayoutStandard().height);
+
+	const LEFT_X = $derived(width * 0.072);
+	const RIGHT_X = $derived(width * 0.916);
+	const RIGHT_EDGE = $derived(width * 0.94);
+	const PAIR_DX = $derived(width * 0.092);
+	const SPIN_X = $derived(width * 0.908);
+	const BET_X = $derived(width * 0.135);
+	const BALANCE_X = $derived(width * 0.845);
+
+	const Y_TOP = $derived(height * 0.4);
+	const Y_MID = $derived(height * 0.54);
+	const SPIN_Y = $derived(height * 0.57);
+	const Y_ROW = $derived(height * 0.68);
+	const Y_PILL = $derived(height * 0.82);
 </script>
 
 <Container x={20}>
@@ -21,64 +40,60 @@
 	{@render props.logo()}
 </Container>
 
-<MainContainer standard alignVertical="bottom">
-	<Container
-		x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-		y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
-		pivot={anchorToPivot({
-			anchor: { x: 0.5, y: 0 },
-			sizes: {
-				height: DESKTOP_BASE_SIZE,
-				width: DESKTOP_BACKGROUND_WIDTH_LIST.reduce((sum, width) => sum + width, 0),
-			},
-		})}
-	>
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 - 640}>
-			{@render props.amountBalance({ stacked: true })}
-		</Container>
+<MainContainer standard>
+	<!-- LEFT column: crown, menu, (sound + coins), BET pill -->
+	<Container x={LEFT_X} y={Y_TOP} scale={0.95}>
+		{@render props.buttonBuyBonus({ anchor: 0.5 })}
+	</Container>
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880}>
+	<Container x={LEFT_X} y={Y_MID} scale={0.95}>
+		{@render props.buttonMenu({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={LEFT_X} y={Y_ROW} scale={0.95}>
+		{@render props.buttonSoundSwitch({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={LEFT_X + PAIR_DX} y={Y_ROW} scale={0.95}>
+		{@render props.buttonPayTable({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={BET_X} y={Y_PILL} scale={0.72}>
+		{@render props.amountBet({ stacked: true })}
+	</Container>
+
+	<!-- RIGHT column: turbo, SPIN, (autoSpin + settings), BALANCE pill -->
+	<Container x={RIGHT_X} y={Y_TOP} scale={0.95}>
+		{@render props.buttonTurbo({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={SPIN_X} y={SPIN_Y} scale={1.25}>
+		{@render props.buttonBet({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={RIGHT_EDGE - PAIR_DX} y={Y_ROW} scale={0.95}>
+		{@render props.buttonAutoSpin({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={RIGHT_EDGE} y={Y_ROW} scale={0.95}>
+		{@render props.buttonSettings({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={BALANCE_X} y={Y_PILL} scale={0.72}>
+		{@render props.amountBalance({ stacked: true })}
+	</Container>
+
+	{#if stateBet.winBookEventAmount > 0}
+		<Container x={width * 0.5} y={Y_PILL} scale={0.72}>
 			{@render props.amountWin({ stacked: true })}
 		</Container>
+	{/if}
 
-		<Container y={DESKTOP_BASE_SIZE * 0.5 - 220} x={880 + 640}>
-			{@render props.amountBet({ stacked: true })}
+	{#if stateUi.freeSpinCounterShow}
+		<Container x={width * 0.5} y={Y_TOP} scale={0.9}>
+			<LabelFreeSpinCounter />
 		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20}>
-			{@render props.buttonMenu({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={20 + 180}>
-			{@render props.buttonBuyBonus({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 4}>
-			{@render props.buttonAutoSpin({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 5}>
-			{@render props.buttonBet({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={-10 + 180 * 6}>
-			{@render props.buttonTurbo({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560}>
-			{@render props.buttonDecrease({ anchor: 0.5 })}
-		</Container>
-
-		<Container y={DESKTOP_BASE_SIZE * 0.5} x={1560 + 180}>
-			{@render props.buttonIncrease({ anchor: 0.5 })}
-		</Container>
-
-		{#if stateUi.freeSpinCounterShow}
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 320} x={668}>
-				<LabelFreeSpinCounter />
-			</Container>
-		{/if}
-	</Container>
+	{/if}
 </MainContainer>
 
 {#if stateUi.menuOpen}
@@ -95,28 +110,21 @@
 		onpointerup={() => (stateUi.menuOpen = false)}
 	/>
 
-	<MainContainer standard alignVertical="bottom">
-		<Container
-			x={100}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - DESKTOP_BASE_SIZE - 30}
-		>
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 3}>
+	<MainContainer standard>
+		<Container x={LEFT_X} y={Y_MID}>
+			<Container scale={0.9} y={-175 * 3}>
 				{@render props.buttonPayTable({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 2}>
+			<Container scale={0.9} y={-175 * 2}>
 				{@render props.buttonGameRules({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185 - 210 * 1}>
+			<Container scale={0.9} y={-175}>
 				{@render props.buttonSettings({ anchor: 0.5 })}
 			</Container>
 
-			<Container y={DESKTOP_BASE_SIZE * 0.5 - 185}>
-				{@render props.buttonSoundSwitch({ anchor: 0.5 })}
-			</Container>
-
-			<Container y={DESKTOP_BASE_SIZE * 0.5}>
+			<Container scale={0.9}>
 				{@render props.buttonMenuClose({ anchor: 0.5 })}
 			</Container>
 		</Container>

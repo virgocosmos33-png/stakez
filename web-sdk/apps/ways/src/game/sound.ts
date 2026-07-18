@@ -7,7 +7,15 @@ export type MusicName =
 	| 'bgm_winlevel_epic'
 	| 'bgm_winlevel_max'
 	| 'bgm_winlevel_mega'
-	| 'bgm_winlevel_superwin';
+	| 'bgm_winlevel_superwin'
+	// staged big-win composition: contiguous slices of one escalating piece,
+	// the celebration hops slice -> slice so skips cue the music forward
+	| 'bgm_celeb_1'
+	| 'bgm_celeb_2'
+	| 'bgm_celeb_3'
+	| 'bgm_celeb_4'
+	| 'bgm_celeb_5'
+	| 'bgm_celeb_6';
 
 export type SoundEffectName =
 	| 'jng_intro_fs'

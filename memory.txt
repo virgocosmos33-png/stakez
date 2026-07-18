@@ -1,0 +1,350 @@
+QA report: 2026-07-18 - qa-reports/QA-REPORT-2026-07-18-0013.md
+QA report: 2026-07-18 - qa-reports/QA-REPORT-2026-07-18-0450.md (plasma win liner + split detonation)
+Parity pass: 2026-07-18 - MADAM_MIRROR_replacements.txt (chimera-parity audit; rethemes, carousel, audio sprite, provider rebrand, asset-map cleanup; verification shots in web-sdk/qa-shots/final/)
+
+
+--------------------------------------------------------------------------------
+2026-07-18 ~02:45  ROUND 3 (user screenshot review) — all six complaints fixed
+--------------------------------------------------------------------------------
+1 ROCKS: transition rocks REDRAWN as faceted glass crystals (not tinted);
+  anticipation spine dropped entirely.
+2 BANNER: BonusLevelBanner dim mounted after panel (pixi append order) ->
+  dim+panel now mount together; component moved above free-spin plates;
+  intro paintings brightened (backup_intro/). Verified bright + in front.
+3 ANTICIPATION: rewritten code-drawn violet column aligned to reel bounds
+  (no donor spine, no gold row lines, no rocks).
+4 AUDIO A-Z: compose_missing_cues.py rebuilt ALL 26 remaining template cues
+  from Scenario-generated stems (Scenario quota dead: 1474/1500; GodMode API
+  is image-only). Sprite: 57 replaced / 11 kept-custom / 0 template.
+5 CELEB TRACK: compose_celeb_track.py -> one 48s escalating composition,
+  slices bgm_celeb_1..6; WinCelebration cues forward on scene advance/skip,
+  restores bgm on unmount.
+6 FONT: gold bitmap font rebuilt from Ghastly Panic.ttf (ink-band fitting).
+7 COINS: SD2_Coin flipbook -> spinning violet crystal gem
+  (make_gem_flipbook.py); h1-h5 symbol gold coin discs -> mirror medallions.
+QA: qa-shots/final/ antic-*, seance2-*, maxwin-*, burst-* — 0 console errors.
+
+[2026-07-18 03:55] ROUND 4 COMPLETE (symbol spines / cut split / bg video)
+- gen_symbol_spines.py: 13 multi-layer rigs (aura/card/glow/streak/ring/wisps/shards),
+  win+land+static anims, class-tinted FX, packed into mm_symbols.atlas.
+- ApparitionOverlay.svelte: 300ms blade-sweep cut phase before pane separation
+  (light blade travels divider, glowing trail, sparks, whoosh+crack cues).
+- build_bg_video.py: candle flicker/crystal pulse/motes/vignette baked into
+  10s looping MP4s (landscape+portrait); Background.svelte plays videos,
+  code-drawn lights removed -> effects correct at every screen size.
+- All three verified via CDP screencast (qa-shots/round3/cast, /blade) and
+  region-diff analysis (bg_anim_check.png). Lints clean. tobefixed.txt R4-1..3.
+
+[2026-07-18 05:35] UI CHROME REVAMP (buttons / menu / tickers -> gothic mirror-glass)
+- Ref: user wants pro themed UI like Fire in the Hole 3 (every control themed, not flat circles).
+- Core: components-ui-pixi/UiSprite.svelte rewritten from a flat Rectangle into a
+  Graphics-drawn 'scrying-glass' chrome: tarnished antique-silver frame (FillGradient),
+  dark violet glass plate (top-lit gradient), specular sheen, inner rim highlight,
+  hover/press/active violet aura. Tones: dark (controls), accent (spin CTA), plate (tickers).
+  Disabled detected via legacy 0xaaaaaa fill -> desaturated palette, no aura.
+- UiButton/ButtonBet/ButtonBuyBonus: now forward hovered/pressed/active + tone; labels
+  switched to light silver (0xe7d9ff) with drop shadow (dark plate needs light text);
+  spin button = accent tone, always-lit; buy bonus = accent when active.
+- UiLabel: BET/WIN/BALANCE tickers use 'plate' tone; label text silver, value bright.
+- Overlay CONTINUE pills unified via new apps/ways/src/game/glassChrome.ts::drawGlassPill,
+  used by IntroCarousel, WinCelebration, BonusLevelBanner (matches HUD chrome).
+- Verified in Storybook (qa-shots/hud/land-idle.png, port-idle.png): 0 console errors,
+  all controls themed in both orientations. Note: preSpin story has \ balance so
+  BET/AUTOSPIN show correct disabled grey; accent-violet path is code-verified for funded play.
+- Font kept as clean proxima-nova for HUD legibility (Ghastly Panic reserved for win/game text).
+QA report: 2026-07-18 - qa-reports/QA-REPORT-2026-07-18-0605.md (symbol state revamp)
+- Symbol states revamped NLC-style: spin = baked smear frames (make_spin_smears.py,
+  <id>_blur 300x480, sizeRatios h 1.6, fall-in now flips to 'spin' in createReelForCascading);
+  land = bottom-pinned squash+stretch, ring/glow pulse REMOVED; win = green plasma flame
+  STROBE border (fx_flame_a/b/c baked-green in mm_symbols atlas, <id>_flame additive slot,
+  10 swaps ~12fps); NEW postWin state = looping <id>_postwin aftersmoke smolder (border
+  embers + smoke wisps), Board rests winners in postWin; postWinStatic stays crisp sprite
+  for ApparitionOverlay slicing. gen_symbol_spines.py + make_spin_smears.py regenerate all.
+
+[2026-07-18 06:20] SPLIT REWORK + KILLED THE UGLY GREEN WIN FX
+- Complaint: split too slow + super ugly; screenshot showed garish green win borders/sparkles.
+- ApparitionOverlay.svelte: split is now FAST + a real cut.
+  * cut sweep 2000ms -> 140ms (one decisive slash), total sequence ~2.9s -> ~0.5s.
+  * removed crawling green lightning divider (jagged bolt + travelling pulse blobs)
+    -> clean sharp seam: white-hot core + cold violet edge glow.
+  * blade trail/head + seam flare + detonation retinted white/violet; removed rolling
+    plasma smoke and the double chase ring; fewer sparks. Under-glow + non-high pane
+    border switched from green to violet.
+- Root cause of 'ugly green' was NOT the divider: the winning-symbol frame FX were green.
+  Retinted to violet mirror palette (0x2bff66->0xb887ff, 0x8dffab->0xd0a6ff, near-whites->0xf3ecff/0xe6d2ff):
+  * PlasmaLiner.svelte (plasma outline around winning symbols)
+  * WinSweep.svelte (win sweep)
+  * MirrorShatter.svelte
+  * gen_symbol_spines.py: FLAME_BODY/MID/CORE -> violet; l1-l5 tint green->silver
+    (0.86,0.88,1.0); postwin smolder aura + motes -> violet. Regenerated mm_symbols atlas.
+- Verified via CDP screencast (qa-shots/split4/cast): board-green pixels = 0, violet high;
+  base split violet + fast, free-spin wins now violet plasma outline. 0 lint errors.
+
+[2026-07-18 06:40] BURNING POSTWIN + PURE STATIC + MERGED GREEN LINER
+- qa-reports/QA-REPORT-2026-07-18-0640.md. User refs: card burning in green
+  plasma ring = postwin theme for ALL symbols; static = zero shine; liner
+  wraps CONNECTED cells as one contour.
+- make_burn_cards.py (NEW): extracts the green flame layer from the user's
+  ref (tools/burn_ref.png), scales the ring to our medallion, seeded
+  rotations, bloom; 12 <id>_burn frames baked into symbolsStatic (40 frames,
+  backup_pre_burn/). Scenario API DEAD (429: 7790/5000 units) — no img2img.
+- constants: static -> plain card sprite (idle spine anim deleted),
+  postWin -> burn sprite (smolder spine deleted), postWinStatic stays crisp
+  (overlay slicing). gen_symbol_spines.py slimmed: skeletons = win + land
+  (+hm_break); flame strobe art/slot REMOVED from win (liner owns borders).
+- PlasmaLiner rewritten: connected components -> rectilinear boundary trace
+  (rounded convex corners, sharp junction pinches, hole loops ok), wobble
+  layers/tongues/wisps/motes along the merged contour; retinted GREEN from
+  refs (0x3fae4e/0x9dda4a/0xeaffd0). WinSweep still violet (flagged).
+- Verified: sheet_final.png (all 7 state columns), burn_preview3.png,
+  states-video g_0639/0700/0761 (merged outline + resting burn cards live).
+
+[2026-07-18 16:20] FLAMY BORDERS (user: 'gotta be FLAMY, wtf with them white dots')
+- qa-reports/QA-REPORT-2026-07-18-1620.md. Liner + frame border read as smooth
+  neon lines with white dot circles on top. NEW src/game/flameDraw.ts: ragged
+  flame bands (3-octave turbulent height field + gaussian licks w/ drifting
+  centers, 3 exactly-tiling quad-chain heat layers, wobbling white-hot base
+  line). ZERO circle primitives - all dot/ember/smoke circles deleted.
+- PlasmaLiner (green, heights 4-18 licks x2.8) + BoardFramePlasma (violet,
+  7-30 x2.5) both use it. Verified: qa-shots/flames/zoom_liner_tuned.png,
+  zoom_frame.png. Transient 'h1_land not found' in one recording = stale vite
+  cache; traced fetches all hit mm_symbols, no repro. DISK WAS FULL: purged
+  old qa frame dumps (states-video pngs, round3 vids) -> 3GB free.
+
+[2026-07-18 06:45] BOARD-FRAME GLOW: NEON TUBE -> PURPLE FLAMES
+- Complaint: the purple board-frame glow looked like a smooth neon tube / electric
+  lightning; user wants a FLAME look (per green flame example crop).
+- Root: reelhouse_glow spine (BoardFrame) = a smooth purple neon-tube border art,
+  shown during free spins (boardFrameGlowShow on freeSpinTrigger).
+- Fix: removed the spine glow from BoardFrame.svelte (now sprites only). New
+  BoardFramePlasma.svelte draws a code-based ring of purple flame licking outward
+  around the frame perimeter (two passes of tongues + breathing halo + hot core
+  line), driven by the same boardFrameGlowShow/Hide events with a fade envelope.
+  Rendered in Game.svelte AFTER <Board/> so the ring sits on top of the reels/frame
+  (was hidden at zIndex -1 behind the metal frame at first).
+- Palette matches the rest of the retheme (0xb887ff / 0xd0a6ff / 0xf3ecff).
+- Verified via CDP screencast of mode-bonus-book--random (free spins): purple flames
+  rise off the top frame bar (matches the example crop), softer glow on the sides.
+  0 lint errors. reelhouse spine asset now unused (left in assets.ts, harmless).
+- If more intensity/side-flame reach is wanted, bump alphas/reach in drawFrameFire.
+
+[2026-07-18 06:55] FS INTRO 'THE VEIL PARTS' — per-level art + ghost numerals + portrait QA
+- FreeSpinIntro.svelte (rebuilt last round from donor fsIntro spine) extended:
+  freeSpinIntroShow now carries level 1|2|3 (bookEventHandlerMap reads the
+  book's bonusLevel event; fallback = scatter count - 2).
+- Per-level haunted-mirror paintings (GenerateImage -> webp, sprites/mirror/):
+  L1 fs_intro_mirror (seance parlor), L2 fs_intro_mirror_otherside (absinthe
+  green decay), L3 fs_intro_mirror_bloodmoon (blood moon window). Keys:
+  mirrorFsIntro / mirrorFsIntroOtherside / mirrorFsIntroBloodmoon.
+- Apparition count now absinthe-green: new ghostFont (face 'ghost') derived
+  from goldFont by R<->G channel swap (tools/make_ghost_font.py, re-run it
+  after any make_blood_font.py rebuild). Glow/motes tint per level (green /
+  bright green / blood red via LEVEL_THEME).
+- Legibility: dark ellipse halos behind THE VEIL PARTS + FREE SPINS lines
+  (bright L2 glass washed out blood lettering); glass sheen alpha reduced.
+- QA: tools/qa_capture_fsintro.py captures L1/L2/L3 landscape + L1 portrait
+  (optional prefix args filter runs). qa-shots/fsintro/ l1|l2|l3-land-*.png,
+  l1-port-*.png — all 4 runs 0 console errors; portrait composition holds.
+
+[2026-07-18 10:15] +/- BET BUTTONS — geometric glyphs + real disabled state
+- Problem: the +/- were thin proxima-nova TEXT chars (weak, mis-centered "-"
+  floated like a hyphen); disabled bet button fell back to a flat GREY blob.
+- UiButton.svelte: for icon 'increase'/'decrease' now draws the glyph as chunky
+  metallic bars (Graphics) instead of Text — rounded pill bars (len .42*s,
+  thick .12*s) with a carved black drop-shadow + top-lit white->lilac gradient
+  face (0xffffff -> 0xe9dcff/0xf3e6ff active -> 0xc9b3f4). Word-label icons
+  (MENU/TURBO/etc.) still use Text. isGlyph guards the branch.
+- UiSprite.svelte: DISABLED palette changed from grey (0x726c80...) to a dimmed
+  DESATURATED VIOLET glass (frameHi 0x6a5f85, glassTop 0x241a34, rim 0x8c7fb0)
+  so a maxed-out +/- reads as the same mirror button, just muted.
+- QA: tools/qa_capture_plusminus.py -> qa-shots/hud/{port,land}-pm.png. Verified
+  crisp bright + on violet glass (enabled) and dimmed violet - (disabled at min
+  bet) in both orientations. 0 lint errors.
+
+[2026-07-18 16:55] FS OUTRO 'YOU WON' — amethyst reliquary panel (donor plank RIP)
+- FreeSpinOutro.svelte rebuilt (was: donor fsOutroNumber spine + western
+  winsmall/freespins/totalwin localized plates). Emitter contract unchanged
+  (freeSpinOutroShow/Hide/CountUp + WinCountUpProvider skip->settle presses,
+  Space hotkey, WinCoins while counting).
+- New art: sprites/mirror/fs_outro_panel.webp (GenerateImage) — blackened-silver
+  filigree frame, amethyst gems, YOU WON / TOTAL WIN titles BAKED into the
+  painting (matches user's mock); centre band left empty for the runtime amount.
+  Key: mirrorFsOutro. Amount = ResponsiveBitmapText in new 'amethyst' font.
+- amethystFont: tools/make_amethyst_font.py hue-rotates goldFont red->violet
+  (+270deg) and LIFTS SHADOWS (v = 110 + 0.62v, s*0.82) — first pass kept the
+  blood gradient's near-black tail and the amount read as a dark smudge.
+  Re-run after any make_blood_font.py rebuild.
+- Continue affordance = glassChrome pill + PRESS ANYWHERE TO CONTINUE in
+  amethyst (gold/blood was illegible on the dark plate at that size).
+- assets.ts DISK-FULL INCIDENT: a StrReplace hit 'No space left on device' and
+  truncated assets.ts to 0 bytes. Restored via git checkout (single Initial
+  commit had the OLD map) then rebuilt by hand: re-added ghostFont/amethystFont,
+  mm_symbols repoint (scale 1, HM, no M), mirror art incl. fs intro trio +
+  mirrorBgBaseAnim/Portrait mp4s, celeb reels, and re-removed dead template
+  entries (loader/payFrame/goldBlur/bigwin/globalMultiplier/foreground*/
+  tumble_*/clusterWin). NEW this round: fsIntro/fsIntroNumber/fsOutroNumber
+  spines + freeSpins/winSmall plate atlases dropped; FreeSpinAnimation.svelte
+  deleted (orphaned donor wrapper). Verified by grep (no dead keys) and by the
+  QA runs booting the full game off the rebuilt map.
+- QA: tools/qa_capture_fsoutro.py (full seance book, alternating shot/click
+  after t110 so celebrations advance; outro waits for press) + NEW
+  qa_capture_fsoutro_quick.py (mode-base-bookevent--free-spin-end story, ~40s
+  for land+port). qa-shots/fsoutro/ quick-{land,port}-{counting,mid,settled}.png
+  — 0 console errors both orientations.
+
+[2026-07-18 23:55] LOADING INTRO = "ENTER THE MIRROR" VIDEO (replaces falling shards)
+- Replaced the old falling-pieces transition spine (TransitionAnimation, ex
+  Mining-Mayhem rocks) with a cinematic intro video played between the carousel
+  and the game. New IntroVideo.svelte plays a cover-fit mp4 once and calls
+  oncomplete on 'ended' (safety timeout + skip-if-missing). Wired in
+  LoadingScreen.svelte (loadingType==='transition'); Game.svelte unchanged.
+- CONTENT (per user correction) is genuine Scenario TEXT-TO-VIDEO — original
+  generated footage, NOT image-to-video of the loading painting. Camera flies
+  INTO an ornate haunted mirror, the glass SHATTERS, then tumbles into a swirling
+  ROTATING mirror-dimension of spinning glass shards + violet portal/void + fog.
+  Model: model_kling-v2-6-t2v-pro (t2v). 105 cu per 5s clip, 16:9 + 9:16.
+  (Earlier image-to-video attempt from loading art was rejected & replaced; the
+  first t2v probe clip was a gentle fog-push, so landscape was regenerated with
+  a stronger 'plunge THROUGH + rotating shards/kaleidoscope' prompt.)
+- Pipeline: tools/scenario_intro_video.py (now t2v: POST {prompt,aspectRatio,
+  duration} to /generate/custom/<model>, poll, download to qa-shots/intro/;
+  has a 'fetch <jobId> <land|port>' mode too). Post: tools/post_process_intro.py
+  adds fade-in + fades last 0.55s to game dark-violet 0x0A0714, re-encodes H.264
+  yuv420p high/faststart/muted -> static/assets/sprites/mirror/intro_mirror.mp4
+  (landscape) + intro_mirror_portrait.mp4 (3.8 MB each). Assets registered
+  non-preload in assets.ts (introMirror / introMirrorPortrait) so they finish
+  loading before stateApp.loaded -> carousel -> always ready when intro plays.
+  make_intro_startframes.py is now UNUSED (was the old i2v start-frame maker).
+- QA: tools/qa_probe_intro.py (network-based, hang-proof: confirms both mp4s
+  load 206 + canvas renders; screenshots of this heavy WebGL story STALL, and
+  patching document.createElement to catch Pixi's detached <video> elements
+  breaks asset loading — avoid both). Verdict PASS. Final mp4 frames read in
+  qa-shots/intro/final_check_strip.png (mirror -> shatter -> rotating violet
+  shard-void -> fade to dark).
+
+[2026-07-18 23:58] COUNTER PLAQUES (WAYS + FREE SPINS) - FIX CLIPPING + PREMIUM GLASS
+- BUG: the WAYS ("WAYS n") and FREE SPINS ("current / total") plaques rendered
+  their text far too big - "FREE SPINS" clipped on both edges, the "/ total"
+  overlapped and spilled off the panel, and "WAYS n" ran past the pill.
+- ROOT CAUSE: the bitmap fonts (silver/gold/purple/...) declare
+  size/base/lineHeight=97 in their .xml, but the glyph bitmaps are ~165px tall
+  with yoffset=0, so every plain <BitmapText> renders ~1.7x larger (and wider)
+  than its nominal fontSize. Both counters used plain BitmapText with NO width
+  fitting on the label lines, so the strings overflowed the drawGlassPill panel.
+- FIX (scoped to the two counters; the font is left ALONE so Win / FS-intro /
+  BonusLevelBanner numerals that were tuned to the quirk don't shift):
+  WaysCounter.svelte + FreeSpinCounter.svelte now use ResponsiveBitmapText
+  (scales text down to a maxWidth) for EVERY line. WAYS = left-anchored caption
+  zone | right-anchored number zone with a slim engraved silver divider between;
+  FREE SPINS = centered fitted stack (caption over current/total) with an
+  engraved rule. Sizes are panel-relative with padding for the pill's rounded
+  caps; tints 0xd7c7f5 (caption) / 0xf3ecff (value). Dropped the thousands
+  separator on WAYS (the font renders ',' as a high mark). No-overflow is
+  guaranteed by construction; verified worst case 262144 and 15/15.
+- CREATIVE (Scenario): Imagen 4 Ultra (model_imagen4-ultra, aspectRatio 1:1,
+  ~10 cu, 1 unit) -> qa-shots/creatives/counter_texture.png (haunted-mirror
+  scrying glass: occult sigils, violet smoke, cracked-glass star).
+  tools/process_counter_texture.py blurs the sharp cracks into a smoky violet
+  GLOW, keys black->alpha via luminance and bakes a radial vignette ->
+  static/assets/sprites/mirror/counter_glass.png (640^2 transparent RGBA).
+  Registered `mirrorCounterGlass` in assets.ts and laid inside both pills over
+  drawGlassPill (FS alpha 0.85, WAYS alpha 0.4). Panels themselves stay
+  procedural (drawGlassPill) so they scale + match the HUD button chrome.
+- FILES: web-sdk/apps/ways/src/components/WaysCounter.svelte,
+  src/components/FreeSpinCounter.svelte, src/game/assets.ts,
+  src/stories/ComponentsGame.stories.svelte (added QA stories waysCounter +
+  countersMax that broadcast the counter events), tools/gen_counter_panels.py,
+  tools/process_counter_texture.py, tools/qa_capture_counters.py.
+- QA: qa_capture_counters.py loads components-game--ways-counter (600, 1/10) and
+  --counters-max (262144, 15/15) in landscape 1280x720 + portrait 720x1280,
+  waits for the Action button to enable + resolve, dismisses the intro, crops the
+  panels -> qa-shots/counters/{land,landmax,port}-{ways,freespins}.png. Text fits
+  centered with padding, no clip/overlap, 0 console errors. NOTE: the silver FS
+  plaque only mounts in desktop/landscape; portrait's free-spin counter is the
+  proxima-nova LabelFreeSpinCounter (bottom HUD, already fits). WAYS shows in all
+  layouts.
+
+[2026-07-18 ~24:00] HUD PIVOT -> DARK-MATTE + GOLD (reference kit).
+- User replaced the wood/steel/gold direction with a cleaner reference: near-black
+  matte charcoal controls, gold ONLY on accents (sound-on, active turbo) and on
+  the plate VALUES, white icons otherwise; circular medallions for secondaries,
+  rounded-square panel for SPIN (white circular spin arrow), and BET/BALANCE as
+  horizontal PILLS with a thin vertical divider (label light | value gold).
+- UiSprite.svelte rewritten: dropped wood grain / steel gradient / rivets. Now
+  draws medallion|panel|plate in charcoal (BODY_TOP 0x37373d -> BOT 0x18181c),
+  soft drop shadow, subtle top rim (0x53535d) + faint white gloss, press-darken,
+  and a subtle GOLD active ring (0xffc12e) for toggle feedback. Shape still
+  auto-inferred; `tone` kept for compat (all tones read as dark matte).
+- UiLabel.svelte rewritten: horizontal pill [ LABEL | VALUE ]. Widths estimated
+  from string length (no text metrics needed), thin Graphics divider at
+  padX+labelW+gap, label 0xf1f1f4 left / value 0xffc12e right with a soft shadow.
+  Top-center origin kept so layout coords didn't move. Drives Bet/Win/Balance.
+- Icons: added 'crown' (buyBonus, replaces star) + 'coins' to icons.ts. UiButton
+  iconColor -> white default, gold for soundOn / active turbo / active toggles,
+  0x6a6a70 disabled. ButtonBet spin arrow now white; ButtonBuyBonus uses crown
+  (white/gold). Removed the wood cream palette.
+- Layouts: REMOVED the inline +/- bet steppers everywhere (Desktop/Landscape/
+  Portrait/Tablet). BET pill is tap-to-open the existing betAmountMenu modal
+  (ModalBetMenu) = the reference UX. Desktop bottom bar = BET (left) / WIN
+  (center) / BALANCE (right) pills at scale .64; landscape re-spaced to
+  BET/WIN/BALANCE; portrait BET pill centered (scale 1.15) under the button row.
+- FILES: packages/components-ui-pixi/src/components/{UiSprite,UiLabel,UiButton,
+  ButtonBet,ButtonBuyBonus}.svelte, src/icons.ts, and Layout{Desktop,Landscape,
+  Portrait,Tablet}.svelte. QA: tools/qa_shot_hud.py (waits bumped) +
+  tools/qa_shot_desktop.py -> qa-shots/hud/hud-{desktop,portrait,landscape}.png.
+  Verified all 3 viewports render the dark-matte pills + gold values, no steppers,
+  0 fatal console errors (CSF parse warnings are pre-existing story noise).
+
+[2026-07-19 ~00:20] HUD STRUCTURE -> exact reference two-column layout.
+- User: "structure and positioning of each must follow the example". The dark-matte
+  theme was right but the arrangement wasn't. Reference = two edge columns, each
+  reads top->bottom as single / single(or big spin) / 2-button row / corner pill.
+- LayoutDesktop + LayoutLandscape (both 1920x1080 design space) rewritten identically:
+  LEFT col x=0.072w: buyBonus(crown) @0.285h, menu @0.465h, [soundSwitch, payTable]
+  row @0.66h, BET pill bottom-left (x=0.135w, y=0.855h). RIGHT col: turbo(lightning)
+  @0.285h x=0.916w, big SPIN @0.5h x=0.908w scale 1.2, [autoSpin, settings] row
+  @0.66h hugging edge x=0.94w, BALANCE pill bottom-right (x=0.845w). WIN only renders
+  when stateBet.winBookEventAmount>0 (reference keeps the centre clear). Menu drawer
+  opens upward from the menu button.
+- LayoutTablet (1920x1920 square): same columns, vertical rhythm pulled lower
+  (0.4/0.54/0.68/0.82) so the columns frame the board; freeSpinCounter centred top.
+- LayoutPortrait (1080x1920, too narrow for side columns): reference-flavoured bottom
+  instead — foldable control row [crown, autoSpin(play), SPIN big, turbo, menu] +
+  BET/BALANCE pills at the bottom corners; drawer-fold tweens preserved.
+- ICONS/SIZES: added 'play' (triangle) + 'coins' to ButtonIcon + icons.ts. autoSpin
+  now uses 'play', payTable now uses 'coins' (matches the reference's play + coins).
+  Normalised soundSwitch/settings/gameRules/payTable from 195 -> UI_BASE_SIZE(150) so
+  ALL secondary medallions are uniform like the reference. Only deviation from the
+  mock: the reference's 2nd bottom-right icon is a lightning (a decorative duplicate);
+  there is no 2nd turbo function so that slot is settings(gear).
+- FILES: Layout{Desktop,Landscape,Tablet,Portrait}.svelte, types.ts (ButtonIcon),
+  icons.ts, Button{AutoSpin,PayTable,SoundSwitch,Settings,GameRules}.svelte.
+  QA: tools/qa_shot_hud.py (added tablet viewport) + qa_shot_desktop.py. Verified
+  desktop/tablet/portrait match the reference structure; landscape == desktop by
+  construction (shared 1920x1080 layout). 0 fatal console errors.
+
+[2026-07-19 ~01:12] WINNER-HIGHLIGHT / LOSER-DIM + STATIC IDLE (verification pass)
+- Goal: after a win, winning symbols stay bright while every non-winning cell is
+  dimmed; the dim clears on the next spin (board back to normal); resting symbols
+  must NOT morph (kill the idle mesh ripple), keeping land + win anims intact.
+- FOUND both changes already implemented in-tree. Board.svelte + WinDim.svelte were
+  being ACTIVELY edited by a concurrent agent during this session (mtimes moved
+  00:59/01:05/01:06/01:08); did NOT re-edit them to avoid clobbering that work.
+- Root cause of the "morph": winners rested in the looping <id>_postwin mesh-deform
+  ripple ("living photo") AND the old WinDim idle cycle re-played the win anim
+  (scale/shear/rotate) forever. In-tree fix: Board.svelte rests winners in
+  'postWinStatic' (crisp still sprite) after the win anim; WinDim holds a union dim
+  (0x000000 @0.78) over non-winning cells + a masked glass-glint sweep over winners
+  (a glow overlay, not a card morph); clears via winCycleStop on the next reveal.
+- VERIFIED in Storybook (localhost:6001), clipped board crops in web-sdk/qa-shots/dim/:
+  * verify_01514.png: winInfo -> winners (J/J/J/J/K/Q) bright, losers dark. (a)
+  * winInfo rest verify_07000 vs verify_09030 -> pixel-identical (max diff 0):
+    winners rest static, no morph. (b)
+  * reveal (non-winning) revealidle_03000/04531/06000 -> pixel-identical (max 0):
+    a normal resting board is completely still. (b)
+  * clear_1_dimheld.png then clear_3_settled.png: a 2nd spin clears the old dim and
+    re-applies it to the NEW win set -> dim is per-spin, clears on next reveal.
+- NOTE (optional polish for the WinDim owner): task suggested a violet-tinted dark
+  (0x05030a) at 0.55-0.7 alpha; current is pure black at 0.78. No spine regen needed
+  (fix is a symbol-state swap, not an atlas change).
+- QA tools added: web-sdk/apps/ways/tools/{qa_capture_dim,qa_capture_dimclear,qa_probe_postwin}.py

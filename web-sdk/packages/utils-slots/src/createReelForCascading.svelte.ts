@@ -157,6 +157,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 			const bounceDuration = bounceDistance / reelState.spinOptions().symbolFallInBounceSpeed;
 			const landDuration = (distance - bounceDistance) / reelState.spinOptions().symbolFallInSpeed;
 
+			// falling symbols show the 'spin' state (motion smear) until they
+			// hit the row; they start above the board where they are culled,
+			// so flipping the state before the delayed tween is invisible
+			reelSymbol.symbolState = 'spin' as TSymbolState;
 			await reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
 				duration: landDuration,
 				delay,

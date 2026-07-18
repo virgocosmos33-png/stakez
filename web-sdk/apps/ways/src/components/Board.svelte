@@ -35,6 +35,8 @@
 					const reelSymbol = context.stateGame.board[position.reel].reelState.symbols[position.row];
 					reelSymbol.symbolState = 'win';
 					await waitForResolve((resolve) => (reelSymbol.oncomplete = resolve));
+					// rest as a crisp static card (no undulating mesh morph) — the
+					// winner stays lit while WinDim overlays every other cell
 					reelSymbol.symbolState = 'postWinStatic';
 				});
 

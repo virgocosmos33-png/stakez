@@ -1,0 +1,122 @@
+{
+ "bgm_freespin": {
+  "jobId": "job_iKSXTFqajjQHP4FL189qXazH",
+  "file": "bgm_freespin.mp3",
+  "model": "model_elevenlabs-music-v2"
+ },
+ "bgm_winlevel_big": {
+  "jobId": "job_mb9Q7ewJyUwu26ASwwVssfRU",
+  "file": "bgm_winlevel_big.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "jng_intro_fs": {
+  "jobId": "job_K6VGKMeUschtveKLKADdZmx2",
+  "file": "jng_intro_fs.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_youwon_panel": {
+  "jobId": "job_afwnXMkV9aRMUzRzGZi4MYsk",
+  "file": "sfx_youwon_panel.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_bigwin_coinloop": {
+  "jobId": "job_mhJBf7VQdL2pMxTC6FE9NpmY",
+  "file": "sfx_bigwin_coinloop.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_stop_3": {
+  "jobId": "job_dRoMUJbXRbwfoyw1mCQuDCtL",
+  "file": "sfx_scatter_stop_3.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_stop_5": {
+  "jobId": "job_wA9qvodFTd1KtXJrtUa7bEdi",
+  "file": "sfx_scatter_stop_5.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_reveal": {
+  "jobId": "job_su7dNPc5iAA2R7ggEHoEU86A",
+  "file": "sfx_scatter_reveal.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_multiplier_landing": {
+  "jobId": "job_263yUGUZFtTcmpRxgJdVAJfi",
+  "file": "sfx_multiplier_landing.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_multiplier_combine_a": {
+  "jobId": "job_nF6hADCeYhm3aGe2hGy5F469",
+  "file": "sfx_multiplier_combine_a.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_multiplier_win": {
+  "jobId": "job_iVAVjT1AFA6JNpQm2FvAs2K2",
+  "file": "sfx_multiplier_win.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_btn_spin": {
+  "jobId": "job_ZkM8oePu4EfKzkbq4KMhSovv",
+  "file": "sfx_btn_spin.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_btn_general": {
+  "jobId": "job_T4eZ8esH2NVZzATwMqeiPfnm",
+  "file": "sfx_btn_general.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "bgm_winlevel_superwin": {
+  "jobId": "job_73vwXgMzKqQSqhQCr8kn7UJg",
+  "file": "bgm_winlevel_superwin.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "bgm_winlevel_mega": {
+  "jobId": "job_VP9eAPYJh9kidHShkBtH3h9b",
+  "file": "bgm_winlevel_mega.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "bgm_winlevel_epic": {
+  "jobId": "job_1jCYdMhUpQkMyx1ccQ33bSSd",
+  "file": "bgm_winlevel_epic.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "bgm_winlevel_max": {
+  "jobId": "job_TWK8uhAkfrE3FgUvbFkWWBZm",
+  "file": "bgm_winlevel_max.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_anticipation": {
+  "jobId": "job_gM97Y2fJWpAHiokNk52k8kjc",
+  "file": "sfx_anticipation.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_anticipation_start": {
+  "jobId": "job_1rrgue4eosu9PtSCAE7Toc6R",
+  "file": "sfx_anticipation_start.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_stop_1": {
+  "jobId": "job_6xZbQUESpHNUwhJ55t8xDwEj",
+  "file": "sfx_scatter_stop_1.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_stop_2": {
+  "jobId": "job_2j7wkahHGDW8LWTJY95SHQRs",
+  "file": "sfx_scatter_stop_2.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_stop_4": {
+  "jobId": "job_u7kUMt8nE7iomJNKY8gSSZY1",
+  "file": "sfx_scatter_stop_4.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_scatter_win_v2": {
+  "jobId": "job_jaQVG2FdMTpV8DuaJAthidNS",
+  "file": "sfx_scatter_win_v2.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ },
+ "sfx_multiplier_up": {
+  "jobId": "job_pQgkiKRnGeGNTQHv3vvGGh25",
+  "file": "sfx_multiplier_up.mp3",
+  "model": "model_elevenlabs-sound-effects-v2"
+ }
+}

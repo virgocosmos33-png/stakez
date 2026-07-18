@@ -186,25 +186,25 @@
 							const point = pointAt(f);
 							const fade = 1 - k / tailSteps;
 							graphics.circle(point.x, point.y, 8 * fade + 1.5);
-							graphics.fill({ color: 0x2bff66, alpha: 0.1 + 0.2 * fade });
+							graphics.fill({ color: 0xb887ff, alpha: 0.1 + 0.2 * fade });
 							graphics.circle(point.x, point.y, 3.4 * fade + 0.6);
-							graphics.fill({ color: 0x8dffab, alpha: 0.5 * fade });
+							graphics.fill({ color: 0xd0a6ff, alpha: 0.5 * fade });
 						}
 						// comet head: hot white core in a green corona
 						const head = pointAt(headF);
 						graphics.circle(head.x, head.y, 11);
-						graphics.fill({ color: 0x2bff66, alpha: 0.22 });
+						graphics.fill({ color: 0xb887ff, alpha: 0.22 });
 						graphics.circle(head.x, head.y, 6);
-						graphics.fill({ color: 0x8dffab, alpha: 0.65 });
+						graphics.fill({ color: 0xd0a6ff, alpha: 0.65 });
 						graphics.circle(head.x, head.y, 3);
-						graphics.fill({ color: 0xeafff0, alpha: 0.95 });
+						graphics.fill({ color: 0xf3ecff, alpha: 0.95 });
 						// stray sparks flickering off the head
 						const sparkSeed = Math.floor(tt * 30);
 						for (let sparkIndex = 0; sparkIndex < 3; sparkIndex++) {
 							const angle = seeded(sparkSeed * 7 + sparkIndex * 31 + beamIndex) * Math.PI * 2;
 							const dist = 6 + seeded(sparkSeed * 13 + sparkIndex * 43 + beamIndex) * 10;
 							graphics.circle(head.x + Math.cos(angle) * dist, head.y + Math.sin(angle) * dist, 1.4);
-							graphics.fill({ color: 0xcaffdb, alpha: 0.7 });
+							graphics.fill({ color: 0xe6d2ff, alpha: 0.7 });
 						}
 					}
 
@@ -213,7 +213,7 @@
 						const since = Math.min((tt - delay - travel) / 0.2, 1);
 						if (since < 1) {
 							graphics.circle(beam.x2, beam.y2, SYMBOL_SIZE * 0.15 + SYMBOL_SIZE * 0.35 * since);
-							graphics.stroke({ color: 0x2bff66, width: 4 * (1 - since) + 1, alpha: 0.7 * (1 - since) });
+							graphics.stroke({ color: 0xb887ff, width: 4 * (1 - since) + 1, alpha: 0.7 * (1 - since) });
 						}
 					}
 				});
@@ -222,9 +222,9 @@
 				for (const target of telegraphTargets) {
 					const s = SYMBOL_SIZE;
 					graphics.roundRect(target.cx - s / 2 + 3, target.cy - s / 2 + 3, s - 6, s - 6, 10);
-					graphics.stroke({ color: 0x2bff66, width: 6, alpha: 0.22 + 0.5 * telegraphPulse });
+					graphics.stroke({ color: 0xb887ff, width: 6, alpha: 0.22 + 0.5 * telegraphPulse });
 					graphics.roundRect(target.cx - s / 2 + 7, target.cy - s / 2 + 7, s - 14, s - 14, 8);
-					graphics.stroke({ color: 0xeafff0, width: 2, alpha: 0.28 + 0.55 * telegraphPulse });
+					graphics.stroke({ color: 0xf3ecff, width: 2, alpha: 0.28 + 0.55 * telegraphPulse });
 				}
 			}}
 		/>

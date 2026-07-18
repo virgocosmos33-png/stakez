@@ -2,7 +2,7 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicInOut } from 'svelte/easing';
 
-	import { stateUi } from 'state-shared';
+	import { stateUi, stateBet } from 'state-shared';
 	import { BLACK } from 'constants-shared/colors';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
@@ -16,6 +16,9 @@
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
+
+	const W = $derived(context.stateLayoutDerived.mainLayoutStandard().width);
+	const H = $derived(context.stateLayoutDerived.mainLayoutStandard().height);
 
 	const DRAWER_Y = {
 		unfold: 0,
@@ -75,89 +78,51 @@
 </Container>
 
 <MainContainer standard alignVertical="bottom">
-	<!-- drawer container -->
+	<!-- foldable control row: crown | autoSpin | SPIN | turbo | menu -->
 	<Container y={drawerTween.current}>
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonMenu({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
+		<Container x={W * 0.5 - 430} y={H - 360} scale={0.95}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
-			{@render props.buttonBet({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 180}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
+		<Container x={W * 0.5 - 235} y={H - 360} scale={0.95}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 180}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
+		<Container x={W * 0.5} y={H - 360} scale={1.2}>
+			{@render props.buttonBet({ anchor: 0.5 })}
+		</Container>
+
+		<Container x={W * 0.5 + 235} y={H - 360} scale={0.95}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 270}
-		>
-			{@render props.amountBalance({ stacked: true })}
+		<Container x={W * 0.5 + 430} y={H - 360} scale={0.95}>
+			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 	</Container>
 
 	<Container y={Math.min(drawerTween.current, 350)}>
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 670}
-		>
-			{@render props.amountWin({ stacked: true })}
-		</Container>
+		{#if stateBet.winBookEventAmount > 0}
+			<Container x={W * 0.5} y={H - 620}>
+				{@render props.amountWin({ stacked: true })}
+			</Container>
+		{/if}
 	</Container>
 </MainContainer>
 
 <MainContainer standard alignVertical="bottom">
+	<!-- always-visible pills at the bottom corners -->
 	{#if stateUi.freeSpinCounterShow}
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
-		>
+		<Container x={W * 0.5} y={H - 140}>
 			<LabelFreeSpinCounter stacked />
 		</Container>
 	{:else}
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 130}
-		>
+		<Container x={W * 0.5 - 250} y={H - 150} scale={0.95}>
 			{@render props.amountBet({ stacked: true })}
 		</Container>
 
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 390}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-		>
-			{@render props.buttonDecrease({ anchor: 0.5 })}
-		</Container>
-
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 390}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 85}
-		>
-			{@render props.buttonIncrease({ anchor: 0.5 })}
+		<Container x={W * 0.5 + 250} y={H - 150} scale={0.95}>
+			{@render props.amountBalance({ stacked: true })}
 		</Container>
 	{/if}
 
@@ -168,10 +133,7 @@
 		oncomplete={drawerButtonFadeComplete}
 		y={drawerButtonTween.current}
 	>
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 + 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 105}
-		>
+		<Container x={W * 0.5 + 430} y={H - 300}>
 			<ButtonDrawer disabled={!stateUi.drawerButtonShow} anchor={0.5} />
 		</Container>
 	</FadeContainer>
@@ -192,10 +154,7 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
-		<Container
-			x={context.stateLayoutDerived.mainLayoutStandard().width * 0.5 - 440}
-			y={context.stateLayoutDerived.mainLayoutStandard().height - 400}
-		>
+		<Container x={W * 0.5 + 430} y={H - 360}>
 			<Container y={-190 - 210 * 3}>
 				{@render props.buttonPayTable({ anchor: 0.5 })}
 			</Container>

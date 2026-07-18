@@ -1,53 +1,57 @@
 <script lang="ts">
-	import { Container, Text } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
+	import { Graphics } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
 	import { stateBetDerived } from 'state-shared';
 
 	import UiSprite from './UiSprite.svelte';
 	import ButtonBetProvider from './ButtonBetProvider.svelte';
-	import { UI_BASE_FONT_SIZE, UI_BASE_SIZE } from '../constants';
-	import { i18nDerived } from '../i18n/i18nDerived';
+	import { UI_BASE_SIZE } from '../constants';
+	import { drawIcon } from '../icons';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
-	// NLC-style oversized circular spin button
+	// square cabinet panel — the reference's main spin button (square reads
+	// heavier than the old circle, so keep the 1.3x footprint to preserve layout)
 	const sizes = { width: UI_BASE_SIZE * 1.3, height: UI_BASE_SIZE * 1.3 };
+	const iconSize = $derived(sizes.width * 0.5);
+	const shadowOffset = $derived(iconSize * 0.07);
 </script>
 
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
+		{@const isSpin = ['spin_default', 'spin_disabled'].includes(key)}
+		{@const isDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
+		{@const iconColor = isDisabled ? 0x6a6a70 : 0xf3f3f5}
 		<OnHotkey hotkey="Space" {disabled} {onpress} />
 		<Button {...props} {sizes} {onpress} {disabled}>
-			{#snippet children({ center, hovered })}
-				<Container {...center}>
-					<UiSprite
-						key="bet"
-						width={sizes.width}
-						height={sizes.height}
-						anchor={0.5}
-						{...disabled || ['spin_disabled', 'stop_disabled'].includes(key)
-							? {
-									backgroundColor: 0xaaaaaa,
-								}
-							: {}}
-					/>
-					<Text
-						anchor={0.5}
-						text={['spin_default', 'spin_disabled'].includes(key)
-							? i18nDerived.bet()
-							: i18nDerived.stop()}
-						style={{
-							align: 'center',
-							wordWrap: true,
-							wordWrapWidth: 200,
-							fontFamily: 'proxima-nova',
-							fontWeight: '600',
-							fontSize: UI_BASE_FONT_SIZE * 0.9,
-							fill: 0xffffff,
-						}}
-					/>
-				</Container>
+			{#snippet children({ center, hovered, pressed })}
+				<UiSprite
+					{...center}
+					anchor={0.5}
+					tone="dark"
+					shape="panel"
+					width={sizes.width}
+					height={sizes.height}
+					{hovered}
+					{pressed}
+					{...isDisabled ? { backgroundColor: 0xaaaaaa } : {}}
+				/>
+
+				<Graphics
+					{...center}
+					y={center.y + shadowOffset}
+					alpha={0.45}
+					draw={(g: PIXI.Graphics) =>
+						drawIcon(g, isSpin ? 'spin' : 'stop', { size: iconSize, color: 0x000000 })}
+				/>
+				<Graphics
+					{...center}
+					alpha={isDisabled ? 0.6 : 1}
+					draw={(g: PIXI.Graphics) =>
+						drawIcon(g, isSpin ? 'spin' : 'stop', { size: iconSize, color: iconColor })}
+				/>
 			{/snippet}
 		</Button>
 	{/snippet}

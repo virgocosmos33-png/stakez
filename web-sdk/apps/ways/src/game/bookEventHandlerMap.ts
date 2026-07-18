@@ -97,8 +97,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await animateSymbols({ positions: win.positions });
 			eventEmitter.broadcast({ type: 'apparitionsWinRelease' });
 		});
-		// the dim stays on after the win presentation - it lifts when the win
-		// amount (money count) shows, then the idle win cycle takes over
+		// hold EVERY winning cell lit (union) under the overlay through the
+		// money count-up - the glass glint sweep is deferred to the very end
+		// (setWin, after the count-up) so it only plays once the spin settles
+		eventEmitter.broadcast({
+			type: 'winDimShow',
+			positions: bookEvent.wins.flatMap((win) => win.positions),
+		});
 		eventEmitter.broadcast({
 			type: 'winCycleSet',
 			wins: bookEvent.wins.map((win) => win.positions),
@@ -183,7 +188,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+	freeSpinTrigger: async (
+		bookEvent: BookEventOfType<'freeSpinTrigger'>,
+		{ bookEvents }: BookEventContext,
+	) => {
+		// the bonusLevel event follows in the same book; scatter count is the
+		// fallback mapping (3/4/5 scatters -> level 1/2/3)
+		const bonusLevelEvent = bookEvents.find(
+			(event): event is BookEventOfType<'bonusLevel'> => event.type === 'bonusLevel',
+		);
+		const level = (bonusLevelEvent?.level ??
+			Math.min(Math.max(bookEvent.positions.length - 2, 1), 3)) as 1 | 2 | 3;
 		eventEmitter.broadcast({ type: 'winCycleStop' });
 		// animate scatters
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
@@ -192,7 +207,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow' });
+		eventEmitter.broadcast({ type: 'freeSpinIntroShow', level });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
 		await eventEmitter.broadcastAsync({
@@ -218,6 +233,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			type: 'freeSpinCounterUpdate',
 			current: bookEvent.amount,
 			total: bookEvent.total,
+		});
+	},
+	// extra scatters during free spins: animate them and bump the total
+	freeSpinRetrigger: async (bookEvent: BookEventOfType<'freeSpinRetrigger'>) => {
+		eventEmitter.broadcast({ type: 'winCycleStop' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
+		await animateSymbols({ positions: bookEvent.positions });
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: undefined,
+			total: bookEvent.totalFs,
 		});
 	},
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
@@ -249,9 +275,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// the celebration tier is chosen by win amount in bet multiples
 		const celebration = getWinCelebration(bookEvent.amount);
 
-		// the dim stays on and the winning ways keep cycling/flashing while
-		// the win amount counts up, and continue after it hides
-		eventEmitter.broadcast({ type: 'winCycleStart' });
+		// winners stay lit under the overlay while the amount counts up (no glint)
 		eventEmitter.broadcast({ type: 'winShow' });
 		winLevelSoundsPlay({ winLevelData: celebration });
 		await eventEmitter.broadcastAsync({
@@ -260,6 +284,10 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		winLevelSoundsStop();
 		eventEmitter.broadcast({ type: 'winHide' });
+
+		// end of spin: NOW sweep the glass glint across each winning way (loops
+		// through idle until the next spin clears it)
+		eventEmitter.broadcast({ type: 'winCycleStart' });
 	},
 	finalWin: async (bookEvent: BookEventOfType<'finalWin'>) => {
 		// Do nothing

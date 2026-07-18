@@ -10,7 +10,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { backOut, cubicOut } from 'svelte/easing';
+	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, Graphics, Rectangle } from 'pixi-svelte';
 
@@ -19,6 +19,7 @@
 	import { getContext } from '../game/context';
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE, HIGH_SYMBOLS } from '../game/constants';
+	import { stateShake, shakeBoard } from '../game/stateShake.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 
 	const context = getContext();
@@ -53,6 +54,14 @@
 	// split animation: 0 = whole symbol, 1 = fully split into panes
 	const splitProgress = new Tween(1);
 	let splittingKeys = $state<Set<string>>(new Set());
+	// cut sweep: a blade head travels top -> bottom carving the cut line
+	// (0 = above the symbol, 1 = blade has fully passed through)
+	const cutSweep = new Tween(0);
+	// detonation payoff: seams flare white during the hit-stop, then the cell
+	// blows apart with a flash, shockwave rings, seam sparks and smoke
+	const seamFlare = new Tween(0);
+	const detonation = new Tween(0);
+	let detonatingKeys = $state<Set<string>>(new Set());
 
 	const rand = (seed: number) => {
 		const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
@@ -97,19 +106,34 @@
 		show = found.length > 0;
 	};
 
-	// the cell shows as one whole symbol, holds a beat, then cracks apart into
-	// its panes - the split sfx transient fires exactly when the crack starts
+	// the cut sequence: a blade of light sweeps down through the symbol
+	// carving glowing cut lines (with sparks flying off the blade head).
+	// When the blade exits, time holds for a beat while the carved seams
+	// flare white-hot (hit-stop), then the cell DETONATES: flash, expanding
+	// shockwave rings, sparks spraying off the seams, smoke, a board kick,
+	// and the panes slamming apart with a slight overshoot.
 	const runSplit = async (keys: Set<string>) => {
 		splittingKeys = keys;
 		splitProgress.set(0, { duration: 0 });
-		// fire the sfx slightly before the crack: the clip ramps ~50ms to its
-		// peak and audio output adds latency, so the impact lands on the split
-		await new Promise((resolve) => setTimeout(resolve, 100));
+		cutSweep.set(0, { duration: 0 });
+		seamFlare.set(0, { duration: 0 });
+		detonation.set(0, { duration: 0 });
+		// one fast decisive slash: the blade rips straight down the seam
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_whoosh_hi' });
+		await cutSweep.set(1, { duration: 140, easing: cubicIn });
+
+		// impact lands the instant the blade clears: crack + white seam flash,
+		// a hard board kick, and the panes snap apart with overshoot - all at once
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_xways_split' });
-		await new Promise((resolve) => setTimeout(resolve, 50));
-		// cubicOut: no overshoot, so the panes slide straight to their final
-		// spots without wiggling back inward
-		await splitProgress.set(1, { duration: 400, easing: cubicOut });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_explosion_b' });
+		detonatingKeys = keys;
+		seamFlare.set(1, { duration: 20 });
+		seamFlare.set(0, { duration: 150 });
+		shakeBoard({ intensity: Math.min(10 + keys.size * 2.5, 18), duration: 240 });
+		const fx = detonation.set(1, { duration: 300, easing: cubicOut });
+		await splitProgress.set(1, { duration: 130, easing: backOut });
+		await fx;
+		detonatingKeys = new Set();
 		splittingKeys = new Set();
 	};
 
@@ -166,7 +190,7 @@
 	const drawUnderGlow = (graphics: import('pixi.js').Graphics) => {
 		const s = SYMBOL_SIZE;
 		graphics.roundRect(-s / 2 - 2, -s / 2 - 2, s + 4, s + 4, 10);
-		graphics.fill({ color: 0x050d07, alpha: 0.92 });
+		graphics.fill({ color: 0x0a0714, alpha: 0.92 });
 	};
 
 	// per-pane card border so every split copy still reads as a framed symbol
@@ -186,14 +210,14 @@
 			graphics.stroke({ color: 0xf0e3c0, width: 1, alpha: 0.55 });
 		} else {
 			graphics.roundRect(-w / 2, -s / 2, w, s, 6);
-			graphics.stroke({ color: 0x0c1a10, width: 3, alpha: 0.8 });
+			graphics.stroke({ color: 0x0c0a16, width: 3, alpha: 0.8 });
 			graphics.roundRect(-w / 2 + 1.5, -s / 2 + 1.5, w - 3, s - 3, 5);
-			graphics.stroke({ color: 0x67d98a, width: 1.5, alpha: 0.55 });
+			graphics.stroke({ color: 0xb887ff, width: 1.5, alpha: 0.6 });
 		}
 	};
 
-	// energy divider between panes: a slim green lightning spindle - thickest
-	// in the middle, tapering and fading toward the ends, with a jagged core
+	// the settled cut seam: a clean, sharp line of light between panes -
+	// a white-hot core with a cold violet edge glow (no crawling lightning)
 	const drawDivider = (
 		graphics: import('pixi.js').Graphics,
 		cell: HauntCell,
@@ -203,80 +227,161 @@
 		const s = SYMBOL_SIZE;
 		const half = s / 2;
 		const intensity = Math.min((cell.count - 1) / 3, 1);
-		const flicker =
-			0.8 + 0.2 * Math.sin(timeValue * 27 + cell.seed * 3 + dividerIndex * 1.7);
-		const steps = 16;
+		const flicker = 0.9 + 0.1 * Math.sin(timeValue * 14 + cell.seed * 3 + dividerIndex * 1.7);
 
-		// nested spindles: faint aura -> narrow hot core (kept tight)
-		const layers = [
-			{ maxWidth: 6 + 2 * intensity, color: 0x2bff66, alpha: 0.18 * flicker },
-			{ maxWidth: 3.5 + intensity, color: 0x2bff66, alpha: 0.42 * flicker },
-			{ maxWidth: 1.8, color: 0xdfffe8, alpha: 0.9 * flicker },
-		];
-		for (const layer of layers) {
-			const left: [number, number][] = [];
-			const right: [number, number][] = [];
-			for (let i = 0; i <= steps; i++) {
-				const y = -half + (i / steps) * s;
-				const taper = Math.pow(Math.max(1 - Math.pow(y / half, 2), 0), 0.75);
-				const halfWidth = (layer.maxWidth / 2) * taper;
-				left.push([-halfWidth, y]);
-				right.push([halfWidth, y]);
-			}
-			graphics.poly([...left, ...right.reverse()].flat());
-			graphics.fill({ color: layer.color, alpha: layer.alpha });
+		// soft violet edge glow
+		graphics.roundRect(-4 - 1.5 * intensity, -half, 8 + 3 * intensity, s, 4);
+		graphics.fill({ color: 0xb887ff, alpha: 0.16 * flicker });
+		// inner violet
+		graphics.roundRect(-1.8, -half, 3.6, s, 1.8);
+		graphics.fill({ color: 0xe6d2ff, alpha: 0.5 * flicker });
+		// white-hot core
+		graphics.roundRect(-0.7, -half, 1.4, s, 0.7);
+		graphics.fill({ color: 0xffffff, alpha: 0.92 * flicker });
+	};
+
+	// the cut blade: a hot head that sweeps top -> bottom carving a glowing
+	// trail behind it, spraying sparks off the contact point. sweepValue < 0
+	// means the blade hasn't reached this divider yet (staggered multi-cuts).
+	const drawCutBlade = (
+		graphics: import('pixi.js').Graphics,
+		cell: HauntCell,
+		dividerIndex: number,
+		sweepValue: number,
+		timeValue: number,
+	) => {
+		if (sweepValue <= 0) return;
+		const s = SYMBOL_SIZE;
+		const half = s / 2;
+		const margin = 22;
+		const travel = s + margin * 2;
+		const headY = -half - margin + Math.min(sweepValue, 1) * travel;
+		const trailTop = -half - margin;
+
+		// carved trail: a crisp white core inside a violet glow, hottest
+		// right behind the head and cooling further back
+		const segments = 8;
+		const trailEnd = Math.min(headY, half + margin);
+		for (let i = 0; i < segments; i++) {
+			const y0 = trailTop + ((trailEnd - trailTop) / segments) * i;
+			const y1 = trailTop + ((trailEnd - trailTop) / segments) * (i + 1);
+			const heat = (i + 1) / segments;
+			graphics.rect(-3, y0, 6, y1 - y0);
+			graphics.fill({ color: 0xb887ff, alpha: 0.14 * heat });
+			graphics.rect(-0.9, y0, 1.8, y1 - y0);
+			graphics.fill({ color: 0xffffff, alpha: 0.95 * heat });
 		}
 
-		// jagged lightning core crawling inside the spindle
-		const jagSeed = Math.floor(timeValue * 24);
-		const jagX = (y: number) => {
-			const i = Math.round(((y + half) / s) * steps);
-			const taper = Math.max(1 - Math.pow(y / half, 2), 0);
-			const noise = rand(jagSeed * 89 + i * 37 + dividerIndex * 53 + cell.seed);
-			return (noise - 0.5) * 4.5 * taper;
-		};
-		let started = false;
-		for (let i = 0; i <= steps; i++) {
-			const y = -half + (i / steps) * s;
-			if (!started) {
-				graphics.moveTo(jagX(y), y);
-				started = true;
-			} else {
-				graphics.lineTo(jagX(y), y);
-			}
-		}
-		graphics.stroke({ color: 0xffffff, width: 1.1, alpha: 0.85 * flicker });
+		if (sweepValue < 1) {
+			// blade head: a sharp downward sliver of light with a violet flare
+			graphics.poly([0, headY + 16, 3.4, headY + 2, 0, headY - 22, -3.4, headY + 2]);
+			graphics.fill({ color: 0xffffff, alpha: 0.98 });
+			graphics.circle(0, headY, 8);
+			graphics.fill({ color: 0xb887ff, alpha: 0.5 });
+			// horizontal flare where the blade bites the glass
+			graphics.ellipse(0, headY, 16, 2);
+			graphics.fill({ color: 0xffffff, alpha: 0.55 });
 
-		// travelling energy pulse riding the bolt: direction (up/down) and
-		// speed are random per divider, with a fading tail behind the head
-		const direction = rand(cell.seed * 7 + dividerIndex * 13) > 0.5 ? 1 : -1;
-		const travelSpeed = 0.55 + 0.35 * rand(cell.seed * 3 + dividerIndex * 17);
-		const phase = rand(cell.seed * 11 + dividerIndex * 23);
-		const headP = ((timeValue * travelSpeed + phase) % 1 + 1) % 1;
-		const headY = direction === 1 ? -half + headP * s : half - headP * s;
-		for (let j = 0; j < 7; j++) {
-			const y = headY - direction * j * 5;
-			if (y < -half || y > half) continue;
-			const taper = Math.max(1 - Math.pow(y / half, 2), 0.15);
-			const fade = 1 - j / 7;
-			const x = jagX(y);
-			// glow halo
-			graphics.circle(x, y, (5.5 - j * 0.5) * taper + 1.5);
-			graphics.fill({ color: 0x2bff66, alpha: 0.22 * fade });
-			// hot core
-			graphics.circle(x, y, (2.4 - j * 0.28) * taper + 0.4);
-			graphics.fill({ color: j === 0 ? 0xffffff : 0xdfffe8, alpha: 0.9 * fade });
+			// a few sharp sparks flicking off the contact point
+			for (let i = 0; i < 4; i++) {
+				const sparkSeed = cell.seed * 13 + dividerIndex * 29 + i * 7;
+				const life = (timeValue * (3 + rand(sparkSeed) * 2) + rand(sparkSeed + 1)) % 1;
+				const angle = -Math.PI / 2 + (rand(sparkSeed + 2) - 0.5) * 2.2;
+				const dist = 5 + life * (14 + rand(sparkSeed + 3) * 14);
+				const x = Math.cos(angle) * dist;
+				const y = headY + Math.sin(angle) * dist * 0.8;
+				const tail = 3 + rand(sparkSeed + 4) * 4;
+				graphics.moveTo(x, y);
+				graphics.lineTo(x - Math.cos(angle) * tail, y - Math.sin(angle) * tail * 0.8);
+				graphics.stroke({
+					color: i % 2 === 0 ? 0xffffff : 0xe6d2ff,
+					width: 1.2,
+					alpha: 0.85 * (1 - life),
+				});
+			}
 		}
 	};
+
+	// hit-stop seam flare: the instant the blade exits, the carved line burns
+	// white-hot for a frozen beat - a vertical bar of light with a lens flare
+	// at its waist - before the panes blow apart
+	const drawSeamFlare = (graphics: import('pixi.js').Graphics, flare: number) => {
+		if (flare <= 0.01) return;
+		const s = SYMBOL_SIZE;
+		const half = s / 2;
+		graphics.roundRect(-7, -half, 14, s, 7);
+		graphics.fill({ color: 0xb887ff, alpha: 0.4 * flare });
+		graphics.roundRect(-2.4, -half, 4.8, s, 2.4);
+		graphics.fill({ color: 0xffffff, alpha: 0.98 * flare });
+		// horizontal lens flare across the waist of the seam
+		graphics.ellipse(0, 0, 30 * flare + 6, 2.5);
+		graphics.fill({ color: 0xffffff, alpha: 0.7 * flare });
+	};
+
+	// the detonation payoff (kept tight): a fast white flash, one crisp
+	// shockwave ring with a violet halo, and a short burst of sparks flung
+	// off the parting seams - no rolling smoke, all gone in a beat
+	const drawDetonation = (
+		graphics: import('pixi.js').Graphics,
+		cell: HauntCell,
+		d: number,
+		split: number,
+	) => {
+		if (d <= 0 || d >= 1) return;
+		const s = SYMBOL_SIZE;
+		const half = s / 2;
+		const fade = 1 - d;
+
+		// flash wash over the whole cell, hottest at the first instant
+		graphics.roundRect(-half - 5, -half - 5, s + 10, s + 10, 13);
+		graphics.fill({ color: 0xf3e9ff, alpha: 0.8 * fade * fade });
+		graphics.roundRect(-half, -half, s, s, 10);
+		graphics.fill({ color: 0xb887ff, alpha: 0.25 * fade });
+
+		// single crisp shockwave: white core ring inside a soft violet halo
+		const ringRadius = s * (0.22 + 0.9 * d);
+		graphics.circle(0, 0, ringRadius * 0.92);
+		graphics.stroke({ color: 0xb887ff, width: 8 * fade + 1, alpha: 0.4 * fade });
+		graphics.circle(0, 0, ringRadius);
+		graphics.stroke({ color: 0xffffff, width: 3 * fade + 0.5, alpha: 0.8 * fade });
+
+		// sparks flung sideways off each parting seam
+		for (let seamIndex = 0; seamIndex < cell.count - 1; seamIndex++) {
+			const seamX = (-half + ((seamIndex + 1) / cell.count) * s) * split;
+			for (let k = 0; k < 6; k++) {
+				const sparkSeed = cell.seed * 17 + seamIndex * 71 + k * 13;
+				const side = rand(sparkSeed) > 0.5 ? 1 : -1;
+				const y0 = (rand(sparkSeed + 1) - 0.5) * s * 0.8;
+				const speed = 35 + rand(sparkSeed + 2) * 55;
+				const vx = side * speed;
+				const vy = (rand(sparkSeed + 3) - 0.5) * 24 + 70 * d;
+				const x = seamX + vx * d;
+				const y = y0 + vy * d * 0.5;
+				const vlen = Math.sqrt(vx * vx + vy * vy) || 1;
+				const tail = (6 + rand(sparkSeed + 4) * 8) * fade;
+				graphics.moveTo(x, y);
+				graphics.lineTo(x - (vx / vlen) * tail, y - (vy / vlen) * tail);
+				graphics.stroke({
+					color: k % 3 === 0 ? 0xffffff : 0xe6d2ff,
+					width: 1.4,
+					alpha: 0.85 * fade,
+				});
+			}
+		}
+	};
+
 </script>
 
 <MainContainer>
 	{#if show}
+		<Container x={stateShake.x} y={stateShake.y}>
 		{#each cells as cell (cell.key)}
 			{@const sliceWidth = SYMBOL_SIZE / cell.count}
 			{@const symbolInfo = getSymbolInfo({
+				// postWinStatic is the guaranteed-sprite card state (static now
+				// routes to the looping Spine idle, which panes can't slice)
 				rawSymbol: { name: cell.name },
-				state: 'static',
+				state: 'postWinStatic',
 			})}
 			{@const isHigh = HIGH_SYMBOLS.includes(cell.name)}
 			<!-- split = 0: all panes stack centered with a full-width mask, reading
@@ -311,7 +416,38 @@
 						<Graphics draw={(graphics) => drawDivider(graphics, cell, i, time)} />
 					</Container>
 				{/each}
+				<!-- cut blades sweep down the future seam lines while the symbol is
+					still whole, then the carved trails dissolve as the panes part -->
+				{#if splittingKeys.has(cell.key)}
+					{@const nDividers = cell.count - 1}
+					{#each Array.from({ length: nDividers }) as _, i (i)}
+						{@const sweep = Math.min(
+							Math.max(cutSweep.current * (1 + 0.15 * (nDividers - 1)) - 0.15 * i, 0),
+							1,
+						)}
+						<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth} alpha={1 - split * 0.9}>
+							<Graphics
+								draw={(graphics) => drawCutBlade(graphics, cell, i, sweep, time)}
+							/>
+						</Container>
+					{/each}
+					<!-- hit-stop: the carved seams burn white-hot for a frozen beat -->
+					{#each Array.from({ length: nDividers }) as _, i (i)}
+						<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth}>
+							<Graphics draw={(graphics) => drawSeamFlare(graphics, seamFlare.current)} />
+						</Container>
+					{/each}
+				{/if}
+				<!-- detonation: flash + shockwaves + seam sparks + plasma smoke -->
+				{#if detonatingKeys.has(cell.key)}
+					<Container>
+						<Graphics
+							draw={(graphics) => drawDetonation(graphics, cell, detonation.current, split)}
+						/>
+					</Container>
+				{/if}
 			</Container>
 		{/each}
+		</Container>
 	{/if}
 </MainContainer>

@@ -4,7 +4,7 @@
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
-	import { App, Text, REM } from 'pixi-svelte';
+	import { App, Sprite, REM } from 'pixi-svelte';
 	import { stateModal, stateMeta } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
@@ -19,6 +19,7 @@
 	import Background from './Background.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import BoardFrame from './BoardFrame.svelte';
+	import BoardFramePlasma from './BoardFramePlasma.svelte';
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
@@ -26,13 +27,13 @@
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
-	import I18nTest from './I18nTest.svelte';
 	import ApparitionOverlay from './ApparitionOverlay.svelte';
 	import WaysCounter from './WaysCounter.svelte';
 	import BonusLevelBanner from './BonusLevelBanner.svelte';
 	import MirrorShatter from './MirrorShatter.svelte';
 	import WinSweep from './WinSweep.svelte';
 	import WinDim from './WinDim.svelte';
+	import PlasmaLiner from './PlasmaLiner.svelte';
 
 	const context = getContext();
 
@@ -76,28 +77,29 @@
 			<Anticipations />
 		</MainContainer>
 
+		<!-- purple mirror-fire ring around the frame (free spins), above the reels -->
+		<BoardFramePlasma />
+
 		<ApparitionOverlay />
 		<WinDim />
+		<!-- green plasma liner burns around the linked symbols, above the dim -->
+		<PlasmaLiner />
 		<WinSweep />
 		<MirrorShatter />
 		<WaysCounter />
-		<BonusLevelBanner />
 
 		<UI>
 			{#snippet gameName()}
-				<UiGameName name="WAYS GAME" />
+				<UiGameName name="MADAM MIRROR" />
 			{/snippet}
 			{#snippet logo()}
-				<Text
+				<!-- logo art is 1024x641; anchored to the top-right corner of the canvas -->
+				<Sprite
+					key="mirrorLogo"
 					anchor={{ x: 1, y: 0 }}
-					text="ADD YOUR LOGO"
-					style={{
-						fontFamily: 'proxima-nova',
-						fontSize: REM * 1.5,
-						fontWeight: '600',
-						lineHeight: REM * 2,
-						fill: 0xffffff,
-					}}
+					y={REM * 0.5}
+					width={REM * 8}
+					height={REM * 8 * (641 / 1024)}
 				/>
 			{/snippet}
 		</UI>
@@ -107,9 +109,10 @@
 			<FreeSpinCounter />
 		{/if}
 		<FreeSpinOutro />
+		<!-- mounted after the free-spin panels so the level banner is never
+			covered by their dim/plate layers -->
+		<BonusLevelBanner />
 		<Transition />
-
-		<I18nTest />
 	{/if}
 </App>
 

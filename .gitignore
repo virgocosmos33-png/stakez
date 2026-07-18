@@ -18,3 +18,17 @@ docs_screenshots/mv_crop_*.png
 # OS
 .DS_Store
 Thumbs.db
+
+# API credentials — never commit
+scenariocrd.txt
+godmodeapi.txt
+
+# QA capture output (screenshots/videos, regenerable via tools/qa_*.py)
+qa-shots/
+qa-reports/
+web-sdk/qa-shots/
+
+# scratch backups of donor/intermediate art
+web-sdk/apps/ways/assets-backup/
+web-sdk/apps/ways/static/assets/sprites/mirror/backup_intro/
+web-sdk/apps/ways/static/assets/sprites/symbolsStatic/backup_pre_*/

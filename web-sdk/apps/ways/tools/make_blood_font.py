@@ -1,7 +1,7 @@
 """Bake a dripping-blood bitmap font atlas that replaces the gold font.
 
-Renders the same charset as the original mm_gold atlas using Nosifer
-(a horror dripping typeface), colored with a blood gradient + dark rim,
+Renders the same charset as the original mm_gold atlas using Ghastly Panic
+(the user-supplied horror typeface), colored with a blood gradient + dark rim,
 and writes mm_gold.png/webp/xml in place (face stays "gold" so every
 component keeps working untouched).
 """
@@ -15,7 +15,7 @@ from PIL import Image, ImageDraw, ImageFont, ImageFilter
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
 FONT_DIR = os.path.join(APP, "static", "assets", "fonts", "goldFont")
-NOSIFER = os.path.join(HERE, "Nosifer-Regular.ttf")
+NOSIFER = os.path.join(HERE, "GhastlyPanic.ttf")
 FALLBACK = r"C:\Windows\Fonts\arialbd.ttf"
 
 CELL_H = 105  # matches original metrics (lineHeight/base/height all 105)
@@ -34,32 +34,47 @@ def charset() -> list[int]:
     return sorted(ids)
 
 
-def pick_size(font_path: str, chars: str, target_h: int) -> ImageFont.FreeTypeFont:
-    """Largest size whose tallest glyph (ascent->drip bottom) fits target_h."""
-    size = target_h
-    while size > 8:
-        font = ImageFont.truetype(font_path, size)
-        ascent, descent = font.getmetrics()
-        if ascent + descent <= target_h:
-            return font
-        size -= 1
-    return ImageFont.truetype(font_path, 8)
+def ink_band(big_font: ImageFont.FreeTypeFont, chars: list[str]) -> tuple[int, int]:
+    """Real ink extents (min top, max bottom) across the charset.
+
+    Ghastly Panic declares enormous ascent/descent, so metrics-based fitting
+    renders microscopic glyphs; measuring actual ink keeps the letterforms
+    filling the cell while every glyph still shares one baseline.
+    """
+    top: int | None = None
+    bottom: int | None = None
+    for char in chars:
+        bbox = big_font.getbbox(char)
+        if not bbox or bbox[2] <= bbox[0] or bbox[3] <= bbox[1]:
+            continue
+        top = bbox[1] if top is None else min(top, bbox[1])
+        bottom = bbox[3] if bottom is None else max(bottom, bbox[3])
+    if top is None or bottom is None:
+        return 0, 1
+    return top, bottom
 
 
-def render_glyph(char: str, font: ImageFont.FreeTypeFont, cell_h: int) -> Image.Image:
-    """Render one glyph at supersampled resolution, blood styled, baseline-aligned."""
+def render_glyph(
+    char: str,
+    font: ImageFont.FreeTypeFont,
+    cell_h: int,
+    band: tuple[int, int],
+) -> Image.Image:
+    """Render one glyph at supersampled resolution, blood styled, band-aligned."""
     s = SUPER
     big = font.font_variant(size=font.size * s)
-    ascent, descent = big.getmetrics()
     pad = 14 * s
+    band_top, band_bottom = band
+    band_h = band_bottom - band_top
     bbox = big.getbbox(char)
+    if not bbox or bbox[2] <= bbox[0]:
+        bbox = (0, band_top, 6 * s, band_bottom)
     width = max(bbox[2] - bbox[0], 6 * s) + pad * 2
 
-    canvas = Image.new("L", (width, cell_h * s + pad * 2), 0)
+    canvas = Image.new("L", (width, band_h + pad * 2), 0)
     draw = ImageDraw.Draw(canvas)
-    # baseline sits so ascent+descent are centered in the cell
-    top = (cell_h * s - (ascent + descent)) // 2 + pad
-    draw.text((pad - bbox[0], top), char, font=big, fill=255)
+    # anchor the shared ink band; all glyphs keep one baseline
+    draw.text((pad - bbox[0], pad - band_top), char, font=big, fill=255)
 
     mask = canvas
     solid_bbox = mask.getbbox()
@@ -105,9 +120,15 @@ def render_glyph(char: str, font: ImageFont.FreeTypeFont, cell_h: int) -> Image.
     shine.putalpha(hl)
     layered.alpha_composite(shine)
 
-    # downsample to target cell height, keep full cell (baseline consistent)
-    cell = layered.crop((0, pad, layered.width, pad + cell_h * s))
-    cell = cell.resize((max(cell.width // s, 1), cell_h), Image.LANCZOS)
+    # scale the styled band into the cell (small margin so drips survive)
+    band_crop = layered.crop((0, pad, layered.width, pad + band_h))
+    target_h = int(cell_h * 0.94)
+    scale = target_h / band_h
+    scaled = band_crop.resize(
+        (max(int(band_crop.width * scale), 1), target_h), Image.LANCZOS
+    )
+    cell = Image.new("RGBA", (scaled.width, cell_h), (0, 0, 0, 0))
+    cell.paste(scaled, (0, (cell_h - target_h) // 2))
 
     # trim horizontal whitespace only
     alpha_bbox = cell.getbbox()
@@ -118,20 +139,32 @@ def render_glyph(char: str, font: ImageFont.FreeTypeFont, cell_h: int) -> Image.
 
 def main() -> None:
     ids = charset()
-    nosifer = pick_size(NOSIFER, "", CELL_H - 6)
-    fallback = pick_size(FALLBACK, "", CELL_H - 14)
-    nosifer_cmap = set()
+    ghastly = ImageFont.truetype(NOSIFER, CELL_H)
+    fallback = ImageFont.truetype(FALLBACK, CELL_H)
     from fontTools.ttLib import TTFont
 
-    nosifer_cmap = set(TTFont(NOSIFER).getBestCmap().keys())
+    ghastly_cmap = set(TTFont(NOSIFER).getBestCmap().keys())
+
+    def assigned_font(code: int) -> ImageFont.FreeTypeFont:
+        # Ghastly Panic maps some non-ASCII codes to a decorative notdef ring;
+        # use the fallback for currency symbols so amounts stay legible
+        return ghastly if code in ghastly_cmap and code <= 122 else fallback
+
+    # one shared ink band per font keeps a common baseline across its glyphs
+    bands: dict[ImageFont.FreeTypeFont, tuple[int, int]] = {}
+    for font in (ghastly, fallback):
+        chars = [chr(code) for code in ids if code != 32 and assigned_font(code) is font]
+        if chars:
+            big = font.font_variant(size=font.size * SUPER)
+            bands[font] = ink_band(big, chars)
 
     glyphs: dict[int, Image.Image] = {}
     for code in ids:
         char = chr(code)
         if code == 32:
             continue
-        font = nosifer if code in nosifer_cmap else fallback
-        glyphs[code] = render_glyph(char, font, CELL_H)
+        font = assigned_font(code)
+        glyphs[code] = render_glyph(char, font, CELL_H, bands[font])
         print(f"rendered {code} w={glyphs[code].width}")
 
     # pack into rows max 1500px wide, 1px spacing

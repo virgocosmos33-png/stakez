@@ -111,36 +111,75 @@ const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 1, hei
 const hmIntactStatic = { type: 'sprite', assetKey: 'hm_intact.png', sizeRatios: { width: 1, height: 1 } };
 const hmCrackedStatic = { type: 'sprite', assetKey: 'hm_cracked.png', sizeRatios: { width: 1, height: 1 } };
 
-// All symbol states use our full-bleed card art; win/land motion is handled
-// by SymbolSprite (pulse/pop) instead of the old sample spine animations.
-const cardStates = (card: { type: string; assetKey: string; sizeRatios: { width: number; height: number } }) => ({
+// Symbol states:
+//   static  -> the PURE static card sprite (no idle shimmer/sheen/breathe)
+//   spin    -> baked SMEAR frame (vertical motion blur, 300x480) so the
+//              falling reels streak; board mask clips at board edges
+//   land    -> '<id>_land' spine: weighty bottom-pinned squash-and-stretch
+//   win     -> '<id>' spine: punch + wobble + glow flash + sheen + shards
+//              (the green plasma border around the connected combination is
+//              drawn by PlasmaLiner as ONE merged outline, not per symbol)
+//   postWin -> '<id>_postwin' spine: a LOOPING mesh-deform ripple of the
+//              card's own artwork (the symbol itself gently undulates like a
+//              living/haunted photograph) - winners keep animating while they
+//              rest, no green overlay or baked fire ring.
+// postWinStatic stays the crisp card sprite (the apparition pane slicing
+// needs a deterministic plain frame).
+// Spine asset keys match assets.ts (e.g. 'H1'), animations the skeleton ids.
+const spineState = (assetKey: string, animationName: string) => ({
+	type: 'spine',
+	assetKey,
+	animationName,
+	sizeRatios: { width: 1, height: 1 },
+});
+
+// smear frames bleed above/below the cell so a spinning reel reads as one
+// continuous streak (board mask clips the top/bottom board edges)
+const blurState = (cardAssetKey: string) => ({
+	type: 'sprite',
+	assetKey: cardAssetKey.replace('.', '_blur.'),
+	sizeRatios: { width: 1, height: 1.6 },
+});
+
+const cardStates = (
+	card: { type: string; assetKey: string; sizeRatios: { width: number; height: number } },
+	spineKey: string,
+	id: string,
+) => ({
 	explosion,
-	win: card,
+	win: spineState(spineKey, id),
+	postWin: spineState(spineKey, `${id}_postwin`),
 	postWinStatic: card,
 	static: card,
-	spin: card,
-	land: card,
+	spin: blurState(card.assetKey),
+	land: spineState(spineKey, `${id}_land`),
 });
 
 export const SYMBOL_INFO_MAP = {
-	H1: cardStates(h1Static),
-	H2: cardStates(h2Static),
-	H3: cardStates(h3Static),
-	H4: cardStates(h4Static),
-	H5: cardStates(h5Static),
-	L1: cardStates(l1Static),
-	L2: cardStates(l2Static),
-	L3: cardStates(l3Static),
-	L4: cardStates(l4Static),
-	L5: cardStates(l5Static),
-	W: cardStates(wStatic),
-	S: cardStates(sStatic),
-	// Haunted Mirror: intact on the reels, cracked once it bursts and resolves
+	H1: cardStates(h1Static, 'H1', 'h1'),
+	H2: cardStates(h2Static, 'H2', 'h2'),
+	H3: cardStates(h3Static, 'H3', 'h3'),
+	H4: cardStates(h4Static, 'H4', 'h4'),
+	H5: cardStates(h5Static, 'H5', 'h5'),
+	L1: cardStates(l1Static, 'L1', 'l1'),
+	L2: cardStates(l2Static, 'L2', 'l2'),
+	L3: cardStates(l3Static, 'L3', 'l3'),
+	L4: cardStates(l4Static, 'L4', 'l4'),
+	L5: cardStates(l5Static, 'L5', 'l5'),
+	W: cardStates(wStatic, 'W', 'w'),
+	S: cardStates(sStatic, 'S', 's'),
+	// Haunted Mirror: intact on the reels, cracked once it bursts and resolves.
+	// HM keeps deterministic sprite states because the burst visuals are owned
+	// by MirrorShatter/ApparitionOverlay and the intact->cracked swap must be
+	// frame-exact with them. Its Spine (assetKey 'HM', anims hm/hm_land/
+	// hm_break) ships in the mm_symbols atlas for future use. No burn frame:
+	// HM always resolves to its revealed symbol before a win can rest.
 	HM: {
 		explosion,
+		postWin: hmCrackedStatic,
 		postWinStatic: hmCrackedStatic,
 		static: hmIntactStatic,
-		spin: hmIntactStatic,
+		spin: blurState('hm_intact.png'),
 		win: hmCrackedStatic,
 		land: hmIntactStatic,
 	},

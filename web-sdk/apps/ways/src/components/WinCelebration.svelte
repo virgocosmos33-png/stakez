@@ -9,8 +9,9 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { drawGlassPill } from '../game/glassChrome';
 	import { getTiersPassed } from '../game/winCelebrationMap';
-	import type { SoundEffectName } from '../game/sound';
+	import type { MusicName, SoundEffectName } from '../game/sound';
 
 	type Props = {
 		finalAmount: number; // book amount (100 = 1x bet)
@@ -85,12 +86,6 @@
 	type TearBand = { v: number; height: number; offset: number; speed: number };
 	let tearBands = $state<TearBand[]>([]);
 
-	const TIER_ENTRY_SOUND: Record<string, SoundEffectName> = {
-		superwin: 'sfx_celeb_swell',
-		mega: 'sfx_celeb_swell',
-		epic: 'sfx_celeb_wobble',
-	};
-
 	// reverse whooshes ride the first second of every scene, pitch rotating
 	// per scene: 0ms one pitch, ~620ms the complementary pitch
 	const WHOOSH_SETS: [SoundEffectName, SoundEffectName][] = [
@@ -106,10 +101,21 @@
 		}, 620);
 	};
 
+	// One escalating composition, cut into contiguous 8s stage slices
+	// (bgm_celeb_1..6 = BIG..MAX). Each scene plays the slice at its own
+	// stage boundary, so advancing a scene - naturally or via skip click -
+	// jumps the music forward to the next boundary, which always opens on an
+	// impact downbeat. Skips land on a hit instead of killing the music.
+	const stageCue = (target: number): MusicName => {
+		const tier = tiers[target]?.tier ?? 2;
+		return `bgm_celeb_${Math.min(Math.max(tier - 1, 1), 6)}` as MusicName;
+	};
+
 	const showTier = (target: number) => {
 		if (target === displayedIndex) return;
-		// the hit fires synchronously so a skip click is heard the same instant
+		// hit + stage jump fire synchronously so a skip click lands the same instant
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_hit', forcePlay: true });
+		context.eventEmitter.broadcast({ type: 'soundMusic', name: stageCue(target) });
 		const token = ++fadeToken;
 		// screen tear bands regenerate per transition
 		tearBands = Array.from({ length: 7 }, (_, i) => ({
@@ -129,14 +135,9 @@
 			zoom.set(1, { duration: 0 });
 			zoom.set(1.09, { duration: 8000, easing: cubicOut });
 			sceneSounds(target);
-			const alias = tiers[target]?.alias ?? '';
-			const entry = TIER_ENTRY_SOUND[alias];
-			if (tiers[target]?.title === 'UNHOLY WIN') {
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_buildup' });
-			} else if (alias === 'max') {
+			// the staged music carries the escalation; only MAX WIN keeps its slam accent
+			if (tiers[target]?.alias === 'max') {
 				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_maxslam' });
-			} else if (entry) {
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: entry });
 			}
 			await reelAlpha.set(1, { duration: 90 });
 		})();
@@ -195,7 +196,8 @@
 
 	let time = $state(0);
 	onMount(() => {
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_swell' });
+		// the takeover owns the music: stage 1 of the celebration composition
+		context.eventEmitter.broadcast({ type: 'soundMusic', name: stageCue(0) });
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_hit', forcePlay: true });
 		sceneSounds(0);
 		let raf = 0;
@@ -227,7 +229,14 @@
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
-		return () => cancelAnimationFrame(raf);
+		return () => {
+			cancelAnimationFrame(raf);
+			// hand the music back to the room the player is actually in
+			context.eventEmitter.broadcast({
+				type: 'soundMusic',
+				name: context.stateGame.gameType === 'freegame' ? 'bgm_freespin' : 'bgm_main',
+			});
+		};
 	});
 
 	const rand = (seed: number) => {
@@ -303,7 +312,7 @@
 			const y = (rand(chunk * 17 + i * 11) - 0.5) * h;
 			graphics.rect(-w / 2, y, w, 1 + rand(chunk + i) * 2.5);
 			graphics.fill({
-				color: rand(chunk * 5 + i) > 0.5 ? 0xffffff : 0x2bff66,
+				color: rand(chunk * 5 + i) > 0.5 ? 0xffffff : 0xb887ff,
 				alpha: 0.14 * amount + rand(chunk * 3 + i) * 0.2 * amount,
 			});
 		}
@@ -462,19 +471,11 @@
 		lower part of the film frame so it is always on screen -->
 	{#if waitContinue}
 		<Container y={frameH / 2 - SYMBOL_SIZE * 0.62} scale={continuePulse}>
-			<Rectangle
-				anchor={0.5}
-				width={SYMBOL_SIZE * 2.6}
-				height={SYMBOL_SIZE * 0.62}
-				borderRadius={SYMBOL_SIZE * 0.31}
-				backgroundColor={0x0a0503}
-				backgroundAlpha={0.92}
-				borderColor={0x2bff66}
-				borderWidth={3}
-				borderAlpha={0.9}
+			<Graphics
 				eventMode="static"
 				cursor="pointer"
 				onpointerup={() => props.oncomplete()}
+				draw={(g) => drawGlassPill(g, { width: SYMBOL_SIZE * 2.6, height: SYMBOL_SIZE * 0.62 })}
 			/>
 			<BitmapText
 				anchor={0.5}
