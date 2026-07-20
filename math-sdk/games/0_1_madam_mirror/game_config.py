@@ -62,7 +62,18 @@ class GameConfig(Config):
         # in ways evaluation a symbol with multiplier=m counts as m symbols on
         # its reel (engine behaviour, multiplier_strategy="symbol").
         # "HM" is the Haunted Mirror; it never pays and resolves after the burst.
-        self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": [], "mirror": ["HM"]}
+        # "ME" is the Madam's Eye; it never pays and resolves after conversion.
+        # "ttl" is not a symbol - listing it makes the reveal serializer include
+        # the remaining-lifetime attribute on persistent haunted cells
+        # (2+ = reveals left, -1 = sticky for the whole bonus).
+        self.special_symbols = {
+            "wild": ["W"],
+            "scatter": ["S"],
+            "multiplier": [],
+            "mirror": ["HM"],
+            "eye": ["ME"],
+            "ttl": [],
+        }
 
         # Three bonus levels keyed by scatter count (base game),
         # retriggers award a flat +3 inside any level.
@@ -104,6 +115,16 @@ class GameConfig(Config):
             "split_count_weights": {1: 52, 2: 26, 3: 12, 4: 6, 5: 3, 6: 1},
             # apparition count rolled per reflected neighbor cell
             "apparition_weights": {2: 60, 3: 30, 4: 10},
+        }
+
+        # The Madam's Eye ("ME"): a rare symbol that only drops on spins that
+        # will have split symbols in play (a fresh mirror burst this spin, or
+        # haunted cells carried over by persistence). When it lands, EVERY
+        # split symbol on the board turns WILD for that spin, keeping its
+        # apparition count; the eye itself resolves into a wild too. Haunted
+        # cell persistence is untouched - the conversion lasts one spin only.
+        self.eye_config = {
+            "probability": {self.basegame_type: 0.05, self.freegame_type: 0.08},
         }
 
         # Reels
@@ -168,11 +189,43 @@ class GameConfig(Config):
 
         mode_maxwin = 30000
 
+        # per-mode RTP tilt: buying a bonus returns more than base spinning.
+        # Stake verification bounds: every mode in 90.0-96.7%, spread <= 0.5%
+        self.mode_rtps = {
+            "base": 0.962,
+            "bonus1": 0.965,
+            "bonus2": 0.966,
+            "bonus3": 0.9665,
+            # ante: same per-cost RTP as base; the 0.25x surcharge buys DOUBLE
+            # the bonus trigger rate (1 in 109 vs 1 in 218), paid for by both
+            # the surcharge and a ~33% thinner base-spin win contribution
+            "ante": 0.962,
+            # feature spins: guaranteed mirrors, priced off the measured
+            # conditional EVs (8.26x / 19.87x / 38.84x at 96.5%)
+            "feature1": 0.965,
+            "feature2": 0.965,
+            "feature3": 0.965,
+        }
+
+        # ANTE: every base spin shows a scatter on reel 1 (game_override
+        # injects it post-draw). Trigger then needs just 2+ scatters elsewhere.
+        def ante_condition(base_condition):
+            condition = dict(base_condition)
+            condition["force_scatter_reel"] = 0
+            return condition
+
+        # FEATURE SPINS: the base spin is guaranteed to land N+ mirrors
+        # (mirror count still drawn from the natural weights, truncated at N).
+        def mirror_condition(base_condition, min_mirrors):
+            condition = dict(base_condition)
+            condition["force_mirror_min"] = min_mirrors
+            return condition
+
         self.bet_modes = [
             BetMode(
                 name="base",
                 cost=1.0,
-                rtp=self.rtp,
+                rtp=self.mode_rtps["base"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
                 is_feature=True,
@@ -195,9 +248,126 @@ class GameConfig(Config):
                 ],
             ),
             BetMode(
+                name="ante",
+                cost=1.25,
+                rtp=self.mode_rtps["ante"],
+                max_win=mode_maxwin,
+                auto_close_disabled=False,
+                is_feature=True,
+                is_buybonus=False,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.001,
+                        win_criteria=mode_maxwin,
+                        conditions=ante_condition(base_wincap_condition),
+                    ),
+                    # double trigger rate: more freegame books in the pool,
+                    # weighted to land at 1-in-109 by the optimizer
+                    Distribution(
+                        criteria="freegame",
+                        quota=0.14,
+                        conditions=ante_condition(freegame_condition({3: 100, 4: 25, 5: 6})),
+                    ),
+                    Distribution(
+                        criteria="0",
+                        quota=0.539,
+                        win_criteria=0.0,
+                        conditions=ante_condition(zero_condition),
+                    ),
+                    Distribution(
+                        criteria="basegame",
+                        quota=0.32,
+                        conditions=ante_condition(basegame_condition),
+                    ),
+                ],
+            ),
+            BetMode(
+                name="feature1",
+                cost=10.0,
+                rtp=self.mode_rtps["feature1"],
+                max_win=mode_maxwin,
+                auto_close_disabled=False,
+                is_feature=False,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.001,
+                        win_criteria=mode_maxwin,
+                        conditions=mirror_condition(base_wincap_condition, 1),
+                    ),
+                    # natural bonus triggers still happen on mirror spins (~1.2%)
+                    Distribution(
+                        criteria="freegame",
+                        quota=0.02,
+                        conditions=mirror_condition(freegame_condition({3: 100, 4: 25, 5: 6}), 1),
+                    ),
+                    Distribution(
+                        criteria="basegame",
+                        quota=0.979,
+                        conditions=mirror_condition(basegame_condition, 1),
+                    ),
+                ],
+            ),
+            BetMode(
+                name="feature2",
+                cost=20.0,
+                rtp=self.mode_rtps["feature2"],
+                max_win=mode_maxwin,
+                auto_close_disabled=False,
+                is_feature=False,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.001,
+                        win_criteria=mode_maxwin,
+                        conditions=mirror_condition(base_wincap_condition, 2),
+                    ),
+                    Distribution(
+                        criteria="freegame",
+                        quota=0.02,
+                        conditions=mirror_condition(freegame_condition({3: 100, 4: 25, 5: 6}), 2),
+                    ),
+                    Distribution(
+                        criteria="basegame",
+                        quota=0.979,
+                        conditions=mirror_condition(basegame_condition, 2),
+                    ),
+                ],
+            ),
+            BetMode(
+                name="feature3",
+                cost=40.0,
+                rtp=self.mode_rtps["feature3"],
+                max_win=mode_maxwin,
+                auto_close_disabled=False,
+                is_feature=False,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.001,
+                        win_criteria=mode_maxwin,
+                        conditions=mirror_condition(base_wincap_condition, 3),
+                    ),
+                    Distribution(
+                        criteria="freegame",
+                        quota=0.02,
+                        conditions=mirror_condition(freegame_condition({3: 100, 4: 25, 5: 6}), 3),
+                    ),
+                    Distribution(
+                        criteria="basegame",
+                        quota=0.979,
+                        conditions=mirror_condition(basegame_condition, 3),
+                    ),
+                ],
+            ),
+            BetMode(
                 name="bonus1",
                 cost=100.0,
-                rtp=self.rtp,
+                rtp=self.mode_rtps["bonus1"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
                 is_feature=False,
@@ -215,7 +385,7 @@ class GameConfig(Config):
             BetMode(
                 name="bonus2",
                 cost=400.0,
-                rtp=self.rtp,
+                rtp=self.mode_rtps["bonus2"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
                 is_feature=False,
@@ -233,7 +403,7 @@ class GameConfig(Config):
             BetMode(
                 name="bonus3",
                 cost=1000.0,
-                rtp=self.rtp,
+                rtp=self.mode_rtps["bonus3"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
                 is_feature=False,

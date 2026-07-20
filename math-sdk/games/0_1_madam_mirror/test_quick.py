@@ -132,10 +132,54 @@ def inspect_mode(mode, books, config):
     return level_counter, stack_hits_total, persisted_total
 
 
+def verify_madams_eye(mode, books, config):
+    """Validate Madam's Eye events: the ME symbol appears on the reveal at the
+    event position, and the converted set is exactly the split (multiplier>1)
+    cells of that spin that were not already wild."""
+    eyes = 0
+    for book in books:
+        splits = {}  # padded (reel, row) -> apparitions for the current spin
+        wild_cells = set()
+        eye_pos = None
+        for ev in book["events"]:
+            if ev["type"] == "reveal":
+                splits, wild_cells, eye_pos = {}, set(), None
+                for reel, column in enumerate(ev["board"]):
+                    for row, sym in enumerate(column):
+                        if sym.get("multiplier", 1) > 1:
+                            splits[(reel, row)] = sym["multiplier"]
+                        if sym["name"] == "W":
+                            # already-wild cells (even plain reel wilds later
+                            # reflected by a burst) are never converted
+                            wild_cells.add((reel, row))
+                        if sym["name"] == "ME":
+                            assert eye_pos is None, (book["id"], "more than one eye on a reveal")
+                            eye_pos = (reel, row)
+            elif ev["type"] == "mirrorBurst":
+                for m in ev["mirrors"]:
+                    for cell in m["reflected"]:
+                        splits[(cell["reel"], cell["row"])] = cell["apparitions"]
+            elif ev["type"] == "madamsEye":
+                eyes += 1
+                assert eye_pos == (ev["eye"]["reel"], ev["eye"]["row"]), (book["id"], ev["eye"], eye_pos)
+                expected = {cell: n for cell, n in splits.items() if cell not in wild_cells}
+                got = {(c["reel"], c["row"]): c["apparitions"] for c in ev["converted"]}
+                assert got == expected, (book["id"], got, expected)
+                eye_pos = None
+        # an eye on the reveal must always resolve within the same spin
+        assert eye_pos is None, (book["id"], "eye revealed but never resolved")
+    print(f"madamsEye events verified: {eyes}")
+    return eyes
+
+
 def verify_ways_math(books, config, samples=200):
-    """Recheck win = paytable[(kind, symbol)] * ways for winInfo entries."""
+    """Recheck win = paytable[(kind, symbol)] * ways for winInfo entries.
+    Books that hit the wincap are skipped: their wins are clamped to the cap,
+    so paytable * ways no longer holds."""
     checked = 0
     for book in books:
+        if book["payoutMultiplier"] / 100 >= config.wincap:
+            continue
         for ev in book["events"]:
             if ev["type"] != "winInfo":
                 continue
@@ -185,12 +229,15 @@ if __name__ == "__main__":
 
     all_levels = Counter()
     mode_stats = {}
+    total_eyes = 0
     for mode in NUM_SIMS:
         books = load_books(mode)
         levels, stack_hits, persisted = inspect_mode(mode, books, config)
         all_levels.update(levels)
         mode_stats[mode] = (stack_hits, persisted)
         verify_ways_math(books, config)
+        total_eyes += verify_madams_eye(mode, books, config)
+    assert total_eyes > 0, "no Madam's Eye events generated across all modes"
 
     # level semantics: L1 never carries cells across reveals and never stacks;
     # L2/L3 must show both carried-over reveals and stacking re-hits

@@ -43,6 +43,7 @@ class Symbol:
         "multiplier",
         "has_prize",
         "prize",
+        "ttl",
     )
 
     def __init__(self, defn: SymbolDefinition):
@@ -53,6 +54,7 @@ class Symbol:
         self.scatter = False
         self.multiplier = None
         self.prize = None
+        self.ttl = None
         self.assign_default_attribute()
 
     @property

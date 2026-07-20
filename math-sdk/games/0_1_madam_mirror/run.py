@@ -12,27 +12,32 @@ from src.write_data.write_configs import generate_configs
 if __name__ == "__main__":
 
     # bonus books are event-heavy: small batches keep the per-process JSON
-    # buffer modest (large batches OOM during zstd compression).
-    # Tuned for a 16GB machine: 8 threads x 8000-book batches OOMed in
-    # write_json (each worker buffers its whole batch as JSON before
-    # compressing), 4 x 2000 stays well inside memory.
-    num_threads = 4
-    rust_threads = 10
+    # buffer modest (large batches OOM during zstd compression). Peak RAM in
+    # the book-gen phase ~= num_threads x batching_size x avg_book_size, so
+    # this scales with FREE memory, not core count.
+    # Tuned for an i9-14900HX / 32GB box with ~17GB free (Storybook + IDE up):
+    # 6 x 2000 buffers stay inside that headroom. Close other apps to push
+    # num_threads to 8. rust_threads is the CPU-bound, memory-light optimizer
+    # phase, so it uses most of the 32 logical cores.
+    num_threads = 6
+    rust_threads = 24
     batching_size = 2000
     compression = True
     profiling = False
 
     # Stake math verification wants 100k-1M sims per mode for outcome diversity;
     # we max out the range so every mode has a deep pool of distinct outcomes
+    # RE-OPTIMIZE FEATURE MODES ONLY: their books are valid, but the first
+    # optimization pass used two hr="x" fences and landed 0.865/0.915/0.940
+    # instead of 0.965. Books/LUTs for base/ante/bonus1-3 stay untouched.
     num_sim_args = {
-        "base": int(1e6),
-        "bonus1": int(2.5e5),
-        "bonus2": int(2.5e5),
-        "bonus3": int(2.5e5),
+        "feature1": int(2.5e5),
+        "feature2": int(2.5e5),
+        "feature3": int(2.5e5),
     }
 
     run_conditions = {
-        "run_sims": True,
+        "run_sims": False,  # books already exist from the full run
         "run_optimization": True,
         "run_analysis": True,
         "run_format_checks": True,

@@ -37,7 +37,7 @@ export default {
 	},
 	// Paytable mirrors math-sdk game_config.py (pays per way x bet).
 	// High symbols are the five characters, low symbols the playing-card ranks:
-	//   H1 Lady Mirror, H2 The Wife, H3 The Man, H4 The Little Girl, H5 The Dog
+	//   H1 Lady Mirror, H2 The Wife, H3 The Man, H4 The Maiden, H5 The Dog
 	//   L1 Ace, L2 King, L3 Queen, L4 Jack, L5 Ten
 	symbols: {
 		W: {
@@ -47,6 +47,10 @@ export default {
 		HM: {
 			paytable: null,
 			special_properties: ['mirror'],
+		},
+		ME: {
+			paytable: null,
+			special_properties: ['eye'],
 		},
 		S: {
 			paytable: null,

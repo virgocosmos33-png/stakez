@@ -58,7 +58,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			recordBookEvent({ bookEvent });
 		}
 
-		eventEmitter.broadcast({ type: 'apparitionsHide' });
+		// free spins: surviving split cells keep a ghost frame on the field while
+		// the reels spin, and whatever lands there arrives already split
+		eventEmitter.broadcast({
+			type: 'apparitionsHide',
+			keepPersistent: bookEvent.gameType === 'freegame',
+		});
 		eventEmitter.broadcast({ type: 'winCycleStop' });
 		stateGame.gameType = bookEvent.gameType;
 
@@ -140,6 +145,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				newBoard[cell.reel][cell.row] = {
 					...newBoard[cell.reel][cell.row],
 					multiplier: cell.apparitions,
+					// remaining lifetime rides along so the overlay can show
+					// which split cells survive into the next spin
+					ttl: cell.ttl,
 				};
 			});
 		});
@@ -166,6 +174,40 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		await waitForTimeout(350);
 	},
+	// customised: the Madam's Eye opens - every split symbol turns wild for the spin
+	madamsEye: async (bookEvent: BookEventOfType<'madamsEye'>) => {
+		// the eye flares awake with its cinematic boom
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_madams_eye' });
+		await animateSymbols({ positions: [bookEvent.eye] });
+
+		// conversion: every split cell turns WILD (apparition count and remaining
+		// lifetime kept - persistence is untouched, the wild lasts this spin only),
+		// and the eye itself resolves into a plain wild
+		const newBoard = stateGameDerived
+			.boardRaw()
+			.map((reel) => reel.map((rawSymbol) => ({ ...rawSymbol })));
+		bookEvent.converted.forEach((cell) => {
+			newBoard[cell.reel][cell.row] = {
+				...newBoard[cell.reel][cell.row],
+				name: 'W',
+				multiplier: cell.apparitions,
+			};
+		});
+		newBoard[bookEvent.eye.reel][bookEvent.eye.row] = { name: 'W' };
+		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
+
+		// the split panes re-crack as wilds: the transformation punch
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
+		if (bookEvent.converted.length > 0) {
+			await eventEmitter.broadcastAsync({
+				type: 'apparitionsPulse',
+				positions: bookEvent.converted,
+			});
+		} else {
+			eventEmitter.broadcast({ type: 'apparitionsRefresh' });
+		}
+		await waitForTimeout(250);
+	},
 	// customised: levels 2/3 - wins through haunted cells deepen the haunting
 	hauntDeepen: async (bookEvent: BookEventOfType<'hauntDeepen'>) => {
 		const newBoard = stateGameDerived
@@ -188,34 +230,19 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	setTotalWin: async (bookEvent: BookEventOfType<'setTotalWin'>) => {
 		stateBet.winBookEventAmount = bookEvent.amount;
 	},
-	freeSpinTrigger: async (
-		bookEvent: BookEventOfType<'freeSpinTrigger'>,
-		{ bookEvents }: BookEventContext,
-	) => {
-		// the bonusLevel event follows in the same book; scatter count is the
-		// fallback mapping (3/4/5 scatters -> level 1/2/3)
-		const bonusLevelEvent = bookEvents.find(
-			(event): event is BookEventOfType<'bonusLevel'> => event.type === 'bonusLevel',
-		);
-		const level = (bonusLevelEvent?.level ??
-			Math.min(Math.max(bookEvent.positions.length - 2, 1), 3)) as 1 | 2 | 3;
+	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		// the bonusLevel event follows in the same book and shows the level banner
 		eventEmitter.broadcast({ type: 'winCycleStop' });
 		// animate scatters
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await animateSymbols({ positions: bookEvent.positions });
-		// show free spin intro
+		// go straight to the bonus level banner (the old mirror intro screen was removed)
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_superfreespin' });
 		await eventEmitter.broadcastAsync({ type: 'uiHide' });
 		await eventEmitter.broadcastAsync({ type: 'transition' });
-		eventEmitter.broadcast({ type: 'freeSpinIntroShow', level });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'jng_intro_fs' });
 		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_freespin' });
-		await eventEmitter.broadcastAsync({
-			type: 'freeSpinIntroUpdate',
-			totalFreeSpins: bookEvent.totalFs,
-		});
 		stateGame.gameType = 'freegame';
-		eventEmitter.broadcast({ type: 'freeSpinIntroHide' });
 		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		eventEmitter.broadcast({

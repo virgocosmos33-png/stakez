@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
 	import { OnHotkey } from 'components-shared';
+	import { stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { drawGlassPill } from '../game/glassChrome';
@@ -11,7 +12,7 @@
 
 	type Card = {
 		headline: string;
-		art: 'scatter' | 'mirror' | 'hauntings' | 'maxwin';
+		art: 'scatter' | 'mirror' | 'eye' | 'hauntings' | 'maxwin';
 	};
 
 	const props: Props = $props();
@@ -23,8 +24,13 @@
 	const CARDS: Card[] = [
 		{ headline: 'LAND 3+ SCATTERS TO\nBEGIN THE SEANCE', art: 'scatter' },
 		{ headline: 'HAUNTED MIRRORS SHATTER\nINTO APPARITIONS FOR\nTHOUSANDS OF WAYS', art: 'mirror' },
+		{ headline: 'THE MADAMS EYE TURNS\nEVERY SPLIT SYMBOL WILD\nFOR THE SPIN', art: 'eye' },
 		{ headline: 'SURVIVE 3 HAUNTINGS\nSEANCE / THE OTHER SIDE\nBLOOD MOON', art: 'hauntings' },
-		{ headline: 'WIN UP TO\n30,000X YOUR BET', art: 'maxwin' },
+		{
+			// stake.us social mode prohibits "bet" wording
+			headline: stateUrlDerived.social() ? 'WIN UP TO\n30,000X YOUR PLAY' : 'WIN UP TO\n30,000X YOUR BET',
+			art: 'maxwin',
+		},
 	];
 
 	let index = $state(0);
@@ -118,6 +124,11 @@
 		<!-- intact mirror flanked by the cracked one: before/after of the burst -->
 		<Sprite key="hm_intact.png" anchor={0.5} x={-artSize * 0.55} width={artSize * 0.92} height={artSize * 0.92} />
 		<Sprite key="hm_cracked.png" anchor={0.5} x={artSize * 0.55} width={artSize * 0.92} height={artSize * 0.92} />
+	{:else if CARDS[index].art === 'eye'}
+		<!-- the eye between two wilds: what the conversion produces -->
+		<Sprite key="w.png" anchor={0.5} x={-artSize * 0.58} width={artSize * 0.8} height={artSize * 0.8} />
+		<Sprite key="me.png" anchor={0.5} width={artSize} height={artSize} />
+		<Sprite key="w.png" anchor={0.5} x={artSize * 0.58} width={artSize * 0.8} height={artSize * 0.8} />
 	{:else if CARDS[index].art === 'hauntings'}
 		<!-- the three bonus-level plates as a triptych -->
 		<Sprite key="mirrorIntroSeance" anchor={0.5} x={-artSize * 0.78} width={artSize * 0.72} height={artSize * 0.72} />

@@ -9,8 +9,7 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
-	import { BitmapText, Container, Graphics, Rectangle, Sprite } from 'pixi-svelte';
-	import { ResponsiveBitmapText } from 'components-pixi';
+	import { Container, Graphics, Sprite, Text } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
@@ -26,9 +25,9 @@
 	} as const;
 	// how each level plays, compared to the base game
 	const LEVEL_RULES = {
-		1: 'MORE MIRRORS. EACH SPLITS 1-6 SYMBOLS.\nHAUNTINGS LAST ONE SPIN.',
+		1: 'INCREASED CHANCE TO LAND MIRROR SYMBOL',
 		2: 'HAUNTINGS SURVIVE ONE EXTRA SPIN\nAND STACK WHEN HIT AGAIN.',
-		3: 'HAUNTINGS ARE STICKY AND STACK\nENDLESSLY, ALL BONUS LONG.',
+		3: 'HAUNTINGS ARE STICKY AND STACK ENDLESSLY,\nUNTIL THE END OF THE FREE SPINS.',
 	} as const;
 	const PANEL_RATIO = 1024 / 1536;
 
@@ -84,41 +83,40 @@
 			alpha={alpha.current}
 		>
 			<Sprite key={LEVEL_PANELS[level]} anchor={0.5} width={panelWidth} height={panelHeight} />
-			<BitmapText
+			<!-- mechanics vs base game, centred in the empty glass of the painting -->
+			<Text
 				anchor={0.5}
-				text={`LEVEL ${level}`}
-				y={panelHeight * 0.3}
-				style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.34, align: 'center' }}
-			/>
-			<!-- mechanics vs base game, shown on a dark strip under the painting -->
-			<Rectangle
-				anchor={0.5}
-				y={panelHeight * 0.44}
-				width={panelWidth}
-				height={SYMBOL_SIZE * 0.66}
-				backgroundColor={0x050302}
-				backgroundAlpha={0.88}
-				borderRadius={8}
-			/>
-			<ResponsiveBitmapText
-				anchor={0.5}
-				y={panelHeight * 0.44}
-				maxWidth={panelWidth * 0.94}
+				y={panelHeight * 0.02}
 				text={LEVEL_RULES[level]}
-				style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.17, align: 'center' }}
+				style={{
+					fontFamily: 'Arial',
+					fontWeight: '700',
+					fontSize: SYMBOL_SIZE * 0.15,
+					fill: 0xffffff,
+					stroke: { color: 0x000000, width: 4 },
+					align: 'center',
+					lineHeight: SYMBOL_SIZE * 0.22,
+				}}
 			/>
-			<Container y={panelHeight * 0.58} scale={continuePulse}>
+			<Container y={panelHeight * 0.32} scale={continuePulse}>
 				<Graphics
 					eventMode="static"
 					cursor="pointer"
 					onpointerup={() => oncontinue()}
 					draw={(g) => drawGlassPill(g, { width: SYMBOL_SIZE * 2.4, height: SYMBOL_SIZE * 0.56 })}
 				/>
-				<BitmapText
+				<Text
 					anchor={0.5}
 					text="CONTINUE"
 					eventMode="none"
-					style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.28, letterSpacing: 2 }}
+					style={{
+						fontFamily: 'Arial',
+						fontWeight: '900',
+						fontSize: SYMBOL_SIZE * 0.24,
+						fill: 0xffffff,
+						stroke: { color: 0x000000, width: 4 },
+						letterSpacing: 2,
+					}}
 				/>
 			</Container>
 		</Container>

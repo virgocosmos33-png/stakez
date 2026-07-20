@@ -13,6 +13,7 @@
 		type TemplateArgs,
 		templateArgs,
 	} from 'components-storybook';
+	import { stateBet, stateModal } from 'state-shared';
 
 	import { stateGame, stateGameDerived } from '../game/stateGame.svelte';
 	import Game from '../components/Game.svelte';
@@ -63,6 +64,21 @@
 		data: {},
 		action: async () => {
 			eventEmitter.broadcast({ type: 'boardHide' });
+		},
+	})}
+	{template}
+/>
+
+<!-- QA: buy menu with EXTRA BET + feature spins + bonus buys (horizontal strip) -->
+<Story
+	name="buyMenu"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			stateBet.balanceAmount = 100000;
+			stateBet.betAmount = 1;
+			stateModal.modal = { name: 'buyBonus' };
 		},
 	})}
 	{template}

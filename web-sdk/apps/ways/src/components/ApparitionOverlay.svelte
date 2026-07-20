@@ -1,7 +1,9 @@
 <script lang="ts" module>
 	export type EmitterEventApparition =
 		| { type: 'apparitionsRefresh' }
-		| { type: 'apparitionsHide' }
+		// keepPersistent (free spins): surviving split cells stay on the field as
+		// ghost markers while the reels spin, so the haunting never visually drops
+		| { type: 'apparitionsHide'; keepPersistent?: boolean }
 		| { type: 'apparitionsPulse'; positions: Position[] }
 		| { type: 'apparitionsWinGrow'; positions: Position[] }
 		| { type: 'apparitionsWinRelease' };
@@ -12,7 +14,7 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Rectangle } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle, Text } from 'pixi-svelte';
 
 	import type { Position } from '../game/types';
 	import type { RawSymbol } from '../game/types';
@@ -33,6 +35,9 @@
 		row: number; // padded row index
 		count: number;
 		name: RawSymbol['name'];
+		// reveals the cell survives: 1/undefined = this spin only, 2+ = carries
+		// over into the next spin(s), -1 = sticky for the whole bonus
+		ttl?: number;
 		cx: number;
 		cy: number;
 		scale: number;
@@ -45,6 +50,9 @@
 	const WIN_GROW = 1.1;
 
 	let cells = $state<HauntCell[]>([]);
+	// ghost markers: split cells that survive into the next spin keep their
+	// haunt frame + count on the field WHILE the reels spin beneath them
+	let ghosts = $state<HauntCell[]>([]);
 	let show = $state(false);
 	let time = $state(0);
 	const pulseScale = new Tween(1);
@@ -90,6 +98,7 @@
 						row: rowIndex,
 						count: multiplier,
 						name: reelSymbol.rawSymbol.name,
+						ttl: reelSymbol.rawSymbol.ttl,
 						cx: originX + SYMBOL_SIZE * (reelIndex + 0.5) + (rand(seed + 1) - 0.5) * 5,
 						cy: originY + SYMBOL_SIZE * (rowIndex - 0.5) + (rand(seed + 2) - 0.5) * 5,
 						scale: 1 + (rand(seed + 3) - 0.5) * 0.05,
@@ -148,15 +157,19 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		// persistent haunted cells arriving with the reveal (free games) also
-		// crack apart on landing so the split is always seen and heard
+		// persistent haunted cells arrive with the reveal ALREADY split: the
+		// symbol lands pre-carved into its panes (no re-crack animation - the
+		// crack only ever plays once, on the mirror burst that created the cell)
 		apparitionsRefresh: () => {
 			refresh();
-			if (cells.length > 0) {
-				runSplit(new Set(cells.map((cell) => cell.key)));
-			}
+			ghosts = [];
 		},
-		apparitionsHide: () => {
+		apparitionsHide: (emitterEvent) => {
+			// free spins: surviving cells leave a ghost frame on the field during
+			// the spin, telegraphing that whatever lands there is already split
+			ghosts = emitterEvent.keepPersistent
+				? cells.filter((cell) => cell.ttl === -1 || (cell.ttl !== undefined && cell.ttl >= 2))
+				: [];
 			show = false;
 			cells = [];
 		},
@@ -191,6 +204,41 @@
 		const s = SYMBOL_SIZE;
 		graphics.roundRect(-s / 2 - 2, -s / 2 - 2, s + 4, s + 4, 10);
 		graphics.fill({ color: 0x0a0714, alpha: 0.92 });
+	};
+
+	// haunt frame: split cells always carry an absinthe-green outline so the
+	// split state is unmistakable. Cells that SURVIVE into the next spin
+	// (bonus levels 2/3: ttl >= 2 or sticky -1) burn steady and bright with a
+	// wide halo; one-spin splits only get a faint dying flicker.
+	const drawHauntFrame = (
+		graphics: import('pixi.js').Graphics,
+		cell: HauntCell,
+		timeValue: number,
+	) => {
+		const s = SYMBOL_SIZE;
+		const persistent = cell.ttl !== undefined && (cell.ttl === -1 || cell.ttl >= 2);
+		const pulse = persistent
+			? 0.8 + 0.2 * Math.sin(timeValue * 2.4 + cell.seed)
+			: 0.5 + 0.5 * rand(Math.floor(timeValue * 16) * 11 + cell.seed);
+		graphics.roundRect(-s / 2 - 3, -s / 2 - 3, s + 6, s + 6, 11);
+		graphics.stroke({
+			color: 0x2bff66,
+			width: persistent ? 3 : 1.6,
+			alpha: (persistent ? 0.85 : 0.35) * pulse,
+		});
+		if (persistent) {
+			// wide soft halo marks the cell as held for coming spins
+			graphics.roundRect(-s / 2 - 7, -s / 2 - 7, s + 14, s + 14, 14);
+			graphics.stroke({ color: 0x2bff66, width: 7, alpha: 0.16 * pulse });
+		}
+	};
+
+	// apparition count badge backing (the xN text renders on top of it)
+	const drawBadge = (graphics: import('pixi.js').Graphics, persistent: boolean) => {
+		graphics.circle(0, 0, 21);
+		graphics.fill({ color: 0x0a0714, alpha: 0.92 });
+		graphics.circle(0, 0, 21);
+		graphics.stroke({ color: persistent ? 0x2bff66 : 0x1a7a3c, width: 2, alpha: 0.95 });
 	};
 
 	// per-pane card border so every split copy still reads as a framed symbol
@@ -373,6 +421,30 @@
 </script>
 
 <MainContainer>
+	<!-- ghost markers during the spin: surviving haunted cells keep their frame
+		and count on the field while the reels spin beneath them, so the next
+		symbol visibly drops INTO an already-split position -->
+	{#if !show && ghosts.length > 0}
+		{#each ghosts as ghost (ghost.key)}
+			<Container x={ghost.cx} y={ghost.cy} alpha={0.75}>
+				<Graphics draw={(graphics) => drawHauntFrame(graphics, ghost, time)} />
+				<Container x={SYMBOL_SIZE / 2 - 21} y={-SYMBOL_SIZE / 2 + 21}>
+					<Graphics draw={(graphics) => drawBadge(graphics, true)} />
+					<Text
+						anchor={0.5}
+						text={`X${ghost.count}`}
+						style={{
+							fontFamily: 'Arial',
+							fontWeight: '900',
+							fontSize: 20,
+							fill: 0xffffff,
+							stroke: { color: 0x000000, width: 3 },
+						}}
+					/>
+				</Container>
+			</Container>
+		{/each}
+	{/if}
 	{#if show}
 		<Container x={stateShake.x} y={stateShake.y}>
 		{#each cells as cell (cell.key)}
@@ -438,6 +510,27 @@
 						</Container>
 					{/each}
 				{/if}
+				<!-- persistent-haunt frame + apparition count badge: the split state
+					stays readable at rest, and cells that survive into the next
+					spin (bonus 2/3) visibly burn instead of flickering out -->
+				{@const persistent = cell.ttl !== undefined && (cell.ttl === -1 || cell.ttl >= 2)}
+				<Container alpha={split}>
+					<Graphics draw={(graphics) => drawHauntFrame(graphics, cell, time)} />
+					<Container x={SYMBOL_SIZE / 2 - 21} y={-SYMBOL_SIZE / 2 + 21}>
+						<Graphics draw={(graphics) => drawBadge(graphics, persistent)} />
+						<Text
+							anchor={0.5}
+							text={`X${cell.count}`}
+							style={{
+								fontFamily: 'Arial',
+								fontWeight: '900',
+								fontSize: 20,
+								fill: 0xffffff,
+								stroke: { color: 0x000000, width: 3 },
+							}}
+						/>
+					</Container>
+				</Container>
 				<!-- detonation: flash + shockwaves + seam sparks + plasma smoke -->
 				{#if detonatingKeys.has(cell.key)}
 					<Container>

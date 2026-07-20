@@ -20,9 +20,11 @@
 
 	let contentRect = $state({ width: 0, height: 0, left: 0, top: 0 } as ContentRect);
 
+	// benchmark at most 3 columns: longer lists scroll horizontally instead
+	// of shrinking into unreadable cards
 	const horizontalScale = $derived(
-		stateLayoutDerived.canvasSizes().width / (240 * (props.maxListLength || 1)),
-	); // {maxListLength} columns, 240 is the width benchmark
+		stateLayoutDerived.canvasSizes().width / (240 * Math.min(props.maxListLength || 1, 3)),
+	);
 	const verticalScale = $derived(
 		(stateLayoutDerived.canvasSizes().height - 250) / (contentRect?.height || 0),
 	);
@@ -41,7 +43,7 @@
 				{@render props.bonusCardsActivate()}
 			</BaseScrollable>
 
-			<BaseScrollable type="row" noScroll>
+			<BaseScrollable type="row">
 				{@render props.bonusCardsBuy()}
 			</BaseScrollable>
 		</div>

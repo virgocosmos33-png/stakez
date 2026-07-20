@@ -7,6 +7,7 @@
 	import type { ButtonIcon } from '../types';
 	import type { Snippet } from 'svelte';
 	import { drawIcon } from '../icons';
+	import { HUD_THEME as T } from '../hudTheme';
 
 	type Props = Omit<ButtonProps, 'children'> & {
 		icon: ButtonIcon;
@@ -27,18 +28,13 @@
 
 	const tone = $derived(variant === 'light' ? 'accent' : 'dark');
 
-	const iconColor = $derived.by(() => {
-		if (buttonProps.disabled) return 0x6a6a70;
-		if (icon === 'soundOn') return 0xffc12e;
-		if (icon === 'turbo') return active ? 0xffc12e : 0xf1f1f4;
-		if (active) return 0xffc12e;
-		return 0xf1f1f4;
-	});
+	// warm ivory by default; turns gold when the button is active (e.g. turbo on)
+	const iconColor = $derived(
+		buttonProps.disabled ? T.disabledIcon : active ? T.accent : T.textPrimary,
+	);
 
-	const iconSize = $derived(Math.min(buttonProps.sizes.width, buttonProps.sizes.height) * 0.5);
-	const shadowOffset = $derived(Math.max(1.5, iconSize * 0.06));
+	const iconSize = $derived(Math.min(buttonProps.sizes.width, buttonProps.sizes.height) * 0.46);
 
-	const drawShadow = (g: PIXI.Graphics) => drawIcon(g, icon, { size: iconSize, color: 0x000000 });
 	const drawFace = (g: PIXI.Graphics) =>
 		drawIcon(g, icon, { size: iconSize, color: iconColor, accent: iconColor });
 </script>
@@ -58,12 +54,6 @@
 			{...buttonProps.disabled ? { backgroundColor: 0xaaaaaa } : {}}
 		/>
 
-		<Graphics
-			{...center}
-			y={center.y + shadowOffset}
-			draw={drawShadow}
-			alpha={buttonProps.disabled ? 0.25 : 0.45}
-		/>
 		<Graphics {...center} draw={drawFace} alpha={buttonProps.disabled ? 0.6 : 1} />
 
 		{@render childrenFromParent?.()}

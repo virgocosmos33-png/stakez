@@ -90,10 +90,20 @@ type BookEventMirrorBurst = {
 	type: 'mirrorBurst';
 	mirrors: {
 		mirror: Position;
-		reflected: (Position & { apparitions: number })[];
+		// ttl (free spins only): reveals the split cell survives
+		// (1 = this spin only, 2+ = carries over, -1 = sticky all bonus)
+		reflected: (Position & { apparitions: number; ttl?: number })[];
 		mirrorBecomes: { name: SymbolName };
 	}[];
 	totalWays: number;
+};
+
+// customised: the Madam's Eye - every split symbol turns wild for the spin
+type BookEventMadamsEye = {
+	index: number;
+	type: 'madamsEye';
+	eye: Position;
+	converted: (Position & { apparitions: number })[];
 };
 
 type BookEventHauntDeepen = {
@@ -123,6 +133,7 @@ export type BookEvent =
 	| BookEventFreeSpinEnd
 	// customised
 	| BookEventMirrorBurst
+	| BookEventMadamsEye
 	| BookEventHauntDeepen
 	| BookEventBonusLevel;
 

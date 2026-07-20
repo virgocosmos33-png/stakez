@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { type Snippet } from 'svelte';
 	import { GlobalStyle } from 'components-ui-html';
-	import { Authenticate, LoaderStakeEngine, LoaderExample, LoadI18n } from 'components-shared';
+	import { Authenticate, LoaderStakeEngine, LoaderBase, LoadI18n } from 'components-shared';
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 
@@ -30,9 +30,8 @@
 <LoaderStakeEngine src={loaderUrlStakeEngine} oncomplete={() => (showYourLoader = true)} />
 
 {#if showYourLoader}
-	<LoaderExample src={loaderUrl} />
-	<!-- '/loader.gif' is served from static folder of sveltekit -->
-	<!-- File location: apps/scatter/static/loader.gif -->
+	<!-- Drama Studios logo loader on black (static/loader.gif) -->
+	<LoaderBase maxWidth={360} backgroundColor={'#000000'} timeout={2000} src={loaderUrl} />
 {/if}
 
 {@render props.children()}

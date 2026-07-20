@@ -2,7 +2,7 @@
 
 New symbol schema (internal IDs kept, art/theme replaced):
   Highs (characters):  H1 Lady Mirror, H2 The Wife, H3 The Man,
-                       H4 The Little Girl, H5 The Dog
+                       H4 The Maiden, H5 The Dog
   Lows (playing cards): L1 Ace, L2 King, L3 Queen, L4 Jack, L5 Ten
 
 Specials W / S / HM are left untouched by default.
@@ -53,10 +53,11 @@ SYMBOLS: dict[str, tuple[str, str]] = {
            "portrait of The Man, a stern Victorian gentleman in a black frock coat "
            "and top hat, cold hollow eyes, faint seance rope burn on his neck, "
            "aristocratic and sinister"),
-    "h4": ("card_h4_little_girl.png",
-           "portrait of The Little Girl, a pale Victorian child in a lace dress "
-           "holding a cracked porcelain doll, blank black eyes, unsettling faint "
-           "smile, eerie and delicate"),
+    "h4": ("card_h4_young_woman.png",
+           "portrait of The Maiden, a beautiful blonde adult Victorian woman in "
+           "her early twenties, updo of pale golden curls, off-shoulder black "
+           "lace gown, black rose held to her chest, blank black eyes, "
+           "unsettling faint smile, alluring and sinister"),
     "h5": ("card_h5_dog.png",
            "portrait of The Dog, a gaunt spectral black hound with glowing "
            "absinthe-green eyes and bared teeth, wispy shadow fur, a Victorian "

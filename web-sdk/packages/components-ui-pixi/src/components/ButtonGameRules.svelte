@@ -12,7 +12,9 @@
 
 	const onpress = () => {
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });
-		stateModal.modal = { name: 'gameRules' };
+		// the full-page pay table menu carries the complete game rules;
+		// the bare gameRules modal is an unfinished placeholder
+		stateModal.modal = { name: 'payTable' };
 	};
 </script>
 

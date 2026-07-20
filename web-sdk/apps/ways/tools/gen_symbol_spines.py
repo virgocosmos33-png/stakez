@@ -69,7 +69,7 @@ SYMBOLS = {
     "h1": ("card", "card_h1_lady_mirror.png"),
     "h2": ("card", "card_h2_wife.png"),
     "h3": ("card", "card_h3_man.png"),
-    "h4": ("card", "card_h4_little_girl.png"),
+    "h4": ("card", "card_h4_young_woman.png"),
     "h5": ("card", "card_h5_dog.png"),
     "l1": ("card", "card_l1_ace.png"),
     "l2": ("card", "card_l2_king.png"),

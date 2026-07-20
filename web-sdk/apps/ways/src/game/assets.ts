@@ -304,6 +304,12 @@ export default {
 		src: new URL('../../assets/sprites/mirror/logo.png', import.meta.url).href,
 		preload: true,
 	},
+	// emblem shown on the in-HUD BONUS button (shared ButtonBuyBonus reads the
+	// `buyBonusLogo` key). Placeholder art — swap this file for the final logo.
+	buyBonusLogo: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/buy_bonus_logo.webp', import.meta.url).href,
+	},
 	mirrorWaysPanel: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/ways_panel.png', import.meta.url).href,

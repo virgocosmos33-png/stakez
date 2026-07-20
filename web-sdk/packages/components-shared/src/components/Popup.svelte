@@ -33,10 +33,6 @@
 	});
 </script>
 
-<div>
-	{@render props.children()}
-</div>
-
 <OnHotkey hotkey="Escape" onpress={closeModal} />
 
 <div class="pop-up-wrap" class:disabled style={`z-index: ${props.zIndex};`}>
@@ -60,7 +56,9 @@
 				<button class="close-button" data-test="close-button" onclick={closeModal}>×</button>
 			</div>
 		{/if}
-		{@render props.children()}
+		<div class="content-layer" style="--zIndex: {zIndexInternal.contentLayer}">
+			{@render props.children()}
+		</div>
 	</div>
 </div>
 
@@ -101,16 +99,35 @@
 		z-index: var(--zIndex);
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		justify-content: center;
+		align-items: stretch;
+		justify-content: stretch;
+		position: relative;
+		overflow: hidden;
 	}
 
 	.click-to-close-layer {
 		z-index: var(--zIndex);
-
 		position: absolute;
+		inset: 0;
+	}
+
+	/* sits above the click-to-close layer; children re-enable pointer events */
+	.content-layer {
+		position: relative;
+		z-index: var(--zIndex);
 		width: 100%;
 		height: 100%;
+		min-height: 0;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		pointer-events: none;
+
+		:global(> *) {
+			pointer-events: auto;
+		}
 	}
 
 	.close-button-wrap {

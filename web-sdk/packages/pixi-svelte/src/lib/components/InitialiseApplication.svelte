@@ -26,7 +26,12 @@
 			multiView: false,
 			antialias: true,
 			clearBeforeRender: true,
-			preference: 'webgpu',
+			// WebGL, not WebGPU: Pixi v8's WebGPU backend on Windows/Chrome hits a
+			// depth-stencil vs colour attachment size-rounding mismatch (e.g.
+			// 1621 vs 1620px) at fractional devicePixelRatios, which invalidates
+			// the command buffer every frame and leaves the canvas blank. WebGL is
+			// the stable, universally-supported path for the game.
+			preference: 'webgl',
 			powerPreference: 'high-performance',
 			resolution: devicePixelRatio.current,
 			resizeTo: window,

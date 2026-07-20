@@ -52,6 +52,7 @@ export type SoundEffectName =
 	| 'sfx_superfreespin'
 	| 'sfx_symbols_landing'
 	| 'sfx_wild_explode'
+	| 'sfx_madams_eye'
 	| 'sfx_xways_split'
 	| 'sfx_mirror_break'
 	| 'sfx_celeb_whoosh'

@@ -15,20 +15,11 @@
 		/** legacy sprite key (bet/buyBonus/base_ticker...) — kept for call-site compat */
 		key?: string;
 	};
-
-	// Dark-matte + gold theme: near-black charcoal bodies with a soft top sheen,
-	// a subtle light rim and a soft drop shadow. Gold is reserved for accents
-	// (active state ring) and for the plate values (handled in UiLabel).
-	const BODY_TOP = 0x37373d;
-	const BODY_MID = 0x27272c;
-	const BODY_BOT = 0x18181c;
-	const OUTLINE = 0x070708;
-	const RIM = 0x53535d;
-	const GOLD = 0xffc12e;
 </script>
 
 <script lang="ts">
 	import { Graphics, anchorToPivot } from 'pixi-svelte';
+	import { HUD_THEME as T } from '../hudTheme';
 
 	const {
 		tone = 'dark',
@@ -62,91 +53,74 @@
 		return square && round ? 'medallion' : 'panel';
 	});
 
-	const bodyGrad = (g: PIXI.Graphics, x: number, y: number, hh: number) => {
-		const grad = new PIXI.FillGradient(x, y, x, y + hh);
-		grad.addColorStop(0, isDisabled ? 0x2a2a2e : BODY_TOP);
-		grad.addColorStop(0.5, isDisabled ? 0x212125 : BODY_MID);
-		grad.addColorStop(1, isDisabled ? 0x161619 : BODY_BOT);
-		g.fill(grad);
+	// solid glass body colour for the current interaction state (no per-draw
+	// gradient textures — robust + cheap; the metallic bevel gives the depth)
+	const bodyColor = $derived.by(() => {
+		if (isDisabled) return T.disabledBottom;
+		if (pressed) return T.bodyBottomPressed;
+		if (hovered) return T.bodyTopHover;
+		return T.bodyTop;
+	});
+	const edge = $derived(
+		isDisabled ? T.disabledEdge : active ? T.accent : hovered ? T.edgeGoldHover : T.edgeGold,
+	);
+	const bodyAlpha = $derived(tone === 'plate' ? 0.86 : T.bodyAlpha);
+
+	/**
+	 * Draw the shared glass body: solid fill, a dark outer line, a gold bevel
+	 * and a bright inner highlight. `path` re-declares the silhouette (inset
+	 * from the edge) for each layer.
+	 */
+	const drawFramed = (g: PIXI.Graphics, path: (inset: number) => void, ring: number) => {
+		// body
+		path(ring);
+		g.fill({ color: bodyColor, alpha: bodyAlpha });
+
+		// active glow sits just outside the bevel
+		if (active && !isDisabled) {
+			path(ring * 0.4);
+			g.stroke({ color: T.accentGlow, width: ring * 1.6, alpha: 0.35 });
+		}
+
+		// dark outer line for separation from the background
+		path(ring * 0.5);
+		g.stroke({ color: T.edgeDark, width: ring * 1.5, alpha: isDisabled ? 0.4 : 0.85 });
+
+		// metallic gold main edge
+		path(ring);
+		g.stroke({ color: edge, width: ring, alpha: isDisabled ? 0.6 : 1 });
+
+		// inner top-lit highlight (the glass bevel)
+		path(ring * 2.1);
+		g.stroke({ color: T.innerHighlight, width: Math.max(1, ring * 0.4), alpha: isDisabled ? 0.1 : 0.5 });
 	};
 
 	const drawMedallion = (g: PIXI.Graphics) => {
 		const cx = w / 2;
 		const cy = h / 2;
 		const R = Math.min(w, h) / 2;
-
-		// soft drop shadow
-		g.circle(cx, cy + Math.max(2, R * 0.08), R);
-		g.fill({ color: 0x000000, alpha: 0.22 });
-
-		g.circle(cx, cy, R);
-		bodyGrad(g, cx - R, cy - R, R * 2);
-
-		g.circle(cx, cy, R);
-		g.stroke({ color: OUTLINE, width: 1.5, alpha: 0.6 });
-		g.circle(cx, cy, R - 1.2);
-		g.stroke({ color: RIM, width: 1.4, alpha: 0.55 });
-
-		if (active && !isDisabled) {
-			g.circle(cx, cy, R - 2.5);
-			g.stroke({ color: GOLD, width: 1.8, alpha: 0.55 });
-		}
-
-		g.ellipse(cx, cy - R * 0.42, R * 0.68, R * 0.4);
-		g.fill({ color: 0xffffff, alpha: pressed ? 0.03 : hovered ? 0.13 : 0.06 });
-
-		if (pressed) {
-			g.circle(cx, cy, R);
-			g.fill({ color: 0x000000, alpha: 0.16 });
-		}
+		const ring = Math.max(1.5, R * 0.07);
+		drawFramed(g, (inset) => g.circle(cx, cy, R - inset), ring);
 	};
 
 	const drawPanel = (g: PIXI.Graphics) => {
-		const rad = Math.min(w, h) * 0.26;
-		const sh = Math.max(2, Math.min(w, h) * 0.07);
-
-		g.roundRect(0, sh, w, h, rad);
-		g.fill({ color: 0x000000, alpha: 0.22 });
-
-		g.roundRect(0, 0, w, h, rad);
-		bodyGrad(g, 0, 0, h);
-
-		g.roundRect(0, 0, w, h, rad);
-		g.stroke({ color: OUTLINE, width: 1.5, alpha: 0.6 });
-		g.roundRect(1.2, 1.2, w - 2.4, h - 2.4, rad - 1);
-		g.stroke({ color: RIM, width: 1.4, alpha: 0.5 });
-
-		if (active && !isDisabled) {
-			g.roundRect(2.5, 2.5, w - 5, h - 5, rad - 2);
-			g.stroke({ color: GOLD, width: 1.8, alpha: 0.5 });
-		}
-
-		g.ellipse(w / 2, h * 0.24, w * 0.42, h * 0.2);
-		g.fill({ color: 0xffffff, alpha: pressed ? 0.03 : hovered ? 0.13 : 0.06 });
-
-		if (pressed) {
-			g.roundRect(0, 0, w, h, rad);
-			g.fill({ color: 0x000000, alpha: 0.16 });
-		}
+		const rad = Math.min(w, h) * 0.28;
+		const ring = Math.max(1.5, Math.min(w, h) * 0.05);
+		drawFramed(
+			g,
+			(inset) => g.roundRect(inset, inset, w - inset * 2, h - inset * 2, Math.max(1, rad - inset)),
+			ring,
+		);
 	};
 
 	const drawPlate = (g: PIXI.Graphics) => {
 		const rad = h / 2;
-		const sh = Math.max(2, h * 0.09);
-
-		g.roundRect(0, sh, w, h, rad);
-		g.fill({ color: 0x000000, alpha: 0.22 });
-
-		g.roundRect(0, 0, w, h, rad);
-		bodyGrad(g, 0, 0, h);
-
-		g.roundRect(0, 0, w, h, rad);
-		g.stroke({ color: OUTLINE, width: 1.5, alpha: 0.6 });
-		g.roundRect(1.2, 1.2, w - 2.4, h - 2.4, rad - 1);
-		g.stroke({ color: RIM, width: 1.3, alpha: 0.45 });
-
-		g.roundRect(rad * 0.5, h * 0.12, w - rad, h * 0.32, h * 0.16);
-		g.fill({ color: 0xffffff, alpha: 0.05 });
+		const ring = Math.max(1.2, h * 0.06);
+		drawFramed(
+			g,
+			(inset) => g.roundRect(inset, inset, w - inset * 2, h - inset * 2, Math.max(1, rad - inset)),
+			ring,
+		);
 	};
 
 	const drawChrome = (g: PIXI.Graphics) => {

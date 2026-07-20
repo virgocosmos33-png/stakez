@@ -11,7 +11,9 @@
 	import { stateShake } from '../game/stateShake.svelte';
 
 	const context = getContext();
-	const SPRITE_SCALE = { width: 1.25, height: 1.2 };
+	// keep the ornate frame inside the 800-wide portrait canvas (board is
+	// SYMBOL_SIZE*5 = 700; 700*1.10 = 770 leaves a small margin each side)
+	const SPRITE_SCALE = { width: 1.1, height: 1.12 };
 	const POSITION_ADJUSTMENT = 1.01;
 
 	// the frame kicks with the board on split detonations

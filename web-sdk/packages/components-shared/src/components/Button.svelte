@@ -34,6 +34,18 @@
 		border-width: 2px;
 	}
 
+	.button:not(.disabled) {
+		transition:
+			filter 0.12s ease,
+			transform 0.08s ease;
+	}
+	.button:not(.disabled):hover {
+		filter: brightness(1.12);
+	}
+	.button:not(.disabled):active {
+		transform: translateY(1px);
+	}
+
 	.button.disabled {
 		cursor: not-allowed;
 		opacity: 0.5;

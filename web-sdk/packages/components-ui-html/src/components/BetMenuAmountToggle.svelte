@@ -49,4 +49,14 @@
 		align-items: center;
 		gap: 0.5rem;
 	}
+
+	.amount {
+		min-width: 6rem;
+		text-align: center;
+		font-family: 'Cinzel', Georgia, serif;
+		font-weight: 700;
+		font-size: 1.25rem;
+		color: #ffc12e;
+		text-shadow: 0 0 8px rgba(255, 193, 46, 0.35);
+	}
 </style>

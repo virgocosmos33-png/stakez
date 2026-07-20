@@ -6,6 +6,8 @@ import { stateBet } from 'state-shared';
 const NO_LOCALISATION_CURRENCY_MAP: Record<string, string> = {
 	XGC: 'GC',
 	XSC: 'SC',
+	// Stake Euro Cash also displays as SC (see Stake Engine supported currencies)
+	XEC: 'SC',
 };
 
 // bookEventAmount: is the amount or win numbers in the events of books, e.g. the amount in setTotalWin bookEvent

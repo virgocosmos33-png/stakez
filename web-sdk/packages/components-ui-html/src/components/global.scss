@@ -1,5 +1,69 @@
+/* ---------------------------------------------------------------------------
+   Drama Studios house UI theme — shared by every game we ship.
+   Display face: Cinzel (engraved Roman capitals) / body: Cormorant Garamond.
+   Fonts are bundled locally (OFL) — no external requests (Stake XSS policy).
+--------------------------------------------------------------------------- */
+
+@font-face {
+	font-family: 'Cinzel';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url('../fonts/cinzel-400.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cinzel';
+	font-style: normal;
+	font-weight: 700;
+	font-display: block;
+	src: url('../fonts/cinzel-700.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cinzel';
+	font-style: normal;
+	font-weight: 900;
+	font-display: block;
+	src: url('../fonts/cinzel-900.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cinzel Decorative';
+	font-style: normal;
+	font-weight: 700;
+	font-display: block;
+	src: url('../fonts/cinzel-decorative-700.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cinzel Decorative';
+	font-style: normal;
+	font-weight: 900;
+	font-display: block;
+	src: url('../fonts/cinzel-decorative-900.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cormorant Garamond';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url('../fonts/cormorant-garamond-400.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cormorant Garamond';
+	font-style: italic;
+	font-weight: 400;
+	font-display: block;
+	src: url('../fonts/cormorant-garamond-400-italic.woff2') format('woff2');
+}
+@font-face {
+	font-family: 'Cormorant Garamond';
+	font-style: normal;
+	font-weight: 600;
+	font-display: block;
+	src: url('../fonts/cormorant-garamond-600.woff2') format('woff2');
+}
+
 body {
-	font-family: 'proxima-nova', sans-serif;
+	font-family: 'Cormorant Garamond', Georgia, serif;
+	font-size: 1.06rem;
 	cursor: default;
 	-webkit-user-select: none;
 	-moz-user-select: none;
@@ -9,6 +73,18 @@ body {
 :root {
 	--scrollbar-size: 6px;
 	--grey: #cccccc;
+
+	/* Drama Studios UI tokens */
+	--ds-ink: #0b0812; /* deepest background */
+	--ds-panel: #171022; /* raised panel plum */
+	--ds-panel-2: #1f1530; /* hover / selected panel */
+	--ds-gold: #c9a227; /* antique gold chrome */
+	--ds-gold-bright: #e8c15a; /* hover gold */
+	--ds-gold-dim: #7a6420; /* disabled gold */
+	--ds-bone: #f3e6c8; /* parchment text */
+	--ds-bone-dim: #b8a888; /* secondary text */
+	--ds-font-display: 'Cinzel', Georgia, serif;
+	--ds-font-body: 'Cormorant Garamond', Georgia, serif;
 }
 
 .scrollY {

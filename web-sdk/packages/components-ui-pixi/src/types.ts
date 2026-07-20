@@ -40,9 +40,9 @@ export type ButtonIcon =
 export type LayoutUiProps = {
 	gameName: Snippet;
 	logo: Snippet;
-	amountBalance: Snippet<[{ stacked?: boolean }]>;
-	amountWin: Snippet<[{ stacked?: boolean }]>;
-	amountBet: Snippet<[{ stacked?: boolean }]>;
+	amountBalance: Snippet<[{ stacked?: boolean; align?: 'left' | 'center' | 'right' }]>;
+	amountWin: Snippet<[{ stacked?: boolean; align?: 'left' | 'center' | 'right' }]>;
+	amountBet: Snippet<[{ stacked?: boolean; align?: 'left' | 'center' | 'right' }]>;
 	buttonBuyBonus: Snippet<[Partial<ButtonProps>]>;
 	buttonBet: Snippet<[Partial<ButtonProps>]>;
 	buttonTurbo: Snippet<[Partial<ButtonProps>]>;
@@ -52,6 +52,7 @@ export type LayoutUiProps = {
 	buttonMenu: Snippet<[Partial<ButtonProps>]>;
 	buttonMenuClose: Snippet<[Partial<ButtonProps>]>;
 	buttonPayTable: Snippet<[Partial<ButtonProps>]>;
+	buttonBetMenu: Snippet<[Partial<ButtonProps>]>;
 	buttonGameRules: Snippet<[Partial<ButtonProps>]>;
 	buttonSettings: Snippet<[Partial<ButtonProps>]>;
 	buttonSoundSwitch: Snippet<[Partial<ButtonProps>]>;

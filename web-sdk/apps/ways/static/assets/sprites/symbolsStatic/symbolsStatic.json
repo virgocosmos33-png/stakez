@@ -959,6 +959,54 @@
     "x": 0.5,
     "y": 0.5
    }
+  },
+  "me.png": {
+   "frame": {
+    "x": 2,
+    "y": 4044,
+    "w": 300,
+    "h": 300
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 300,
+    "h": 300
+   },
+   "sourceSize": {
+    "w": 300,
+    "h": 300
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   }
+  },
+  "me_blur.png": {
+   "frame": {
+    "x": 304,
+    "y": 4044,
+    "w": 300,
+    "h": 480
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 300,
+    "h": 480
+   },
+   "sourceSize": {
+    "w": 300,
+    "h": 480
+   },
+   "pivot": {
+    "x": 0.5,
+    "y": 0.5
+   }
   }
  },
  "meta": {
@@ -968,7 +1016,7 @@
   "format": "RGBA8888",
   "size": {
    "w": 1210,
-   "h": 4046
+   "h": 4526
   },
   "scale": "1"
  }

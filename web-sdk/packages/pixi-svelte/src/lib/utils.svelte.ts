@@ -1,5 +1,3 @@
-import WebFont from 'webfontloader';
-
 import type { PixiPoint, Sizes } from './types';
 
 export const REM = 16;
@@ -58,26 +56,29 @@ export function detectWebGL() {
 	return -1;
 }
 
-export const preloadFont = () =>
-	new Promise<void>((resolve) => {
-		try {
-			WebFont.load({
-				typekit: {
-					id: 'aba0ebl',
-				},
-				active: () => {
-					resolve();
-				},
-				inactive: () => {
-					console.error('Web font load inactive');
-					resolve();
-				},
-			});
-		} catch (error) {
-			console.error(error);
-			resolve();
-		}
-	});
+// Stake Engine XSS policy: the game build must be fully static and cannot
+// reach external sources (the previous Typekit/webfontloader fetch violated
+// this). The Drama Studios house faces (Cinzel / Cormorant Garamond) are
+// bundled locally via @font-face in components-ui-html/global.scss; here we
+// just force the browser to fetch them before the Pixi canvas rasterizes any
+// text, otherwise the first frames fall back to a system font.
+export const preloadFont = async () => {
+	if (typeof document === 'undefined' || !document.fonts?.load) return;
+	const faces = [
+		'400 16px Cinzel',
+		'700 16px Cinzel',
+		'900 16px Cinzel',
+		'700 16px "Cinzel Decorative"',
+		'400 16px "Cormorant Garamond"',
+		'600 16px "Cormorant Garamond"',
+	];
+	// NEVER let font loading gate app startup: race against a short timeout so a
+	// slow/blocked woff2 can't leave the canvas on a permanent loading screen.
+	// (font-display:block already handles the visual swap once faces arrive.)
+	const load = Promise.all(faces.map((face) => document.fonts.load(face))).catch(() => {});
+	const timeout = new Promise((resolve) => setTimeout(resolve, 1500));
+	await Promise.race([load, timeout]);
+};
 
 export function propsSyncEffect<TProps extends object, TTarget>({
 	props,

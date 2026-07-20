@@ -2,7 +2,7 @@
 	import { SvelteDate } from 'svelte/reactivity';
 
 	import { Text, REM } from 'pixi-svelte';
-	import { WHITE } from 'constants-shared/colors';
+	import { HUD_THEME } from '../hudTheme';
 
 	type Props = {
 		name: string;
@@ -19,11 +19,12 @@
 	);
 	const textProps = {
 		style: {
-			fontFamily: 'proxima-nova',
-			fontSize: REM * 1.5,
-			fontWeight: '600',
-			lineHeight: REM * 2,
-			fill: WHITE,
+			fontFamily: HUD_THEME.fontDisplay,
+			fontSize: REM * 1.05,
+			fontWeight: '700',
+			lineHeight: REM * 1.4,
+			fill: HUD_THEME.textPrimary,
+			letterSpacing: 1,
 		},
 	} as const;
 

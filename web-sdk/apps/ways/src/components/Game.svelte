@@ -5,13 +5,13 @@
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
 	import { App, Sprite, REM } from 'pixi-svelte';
-	import { stateModal, stateMeta } from 'state-shared';
+	import { stateModal, stateMeta, stateUrlDerived } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
 	import { GameVersion, Modals } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
-	import { betModeMeta } from '../game/betModeMeta';
+	import { getBetModeMeta } from '../game/betModeMeta';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -23,7 +23,6 @@
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
-	import FreeSpinIntro from './FreeSpinIntro.svelte';
 	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
@@ -37,8 +36,9 @@
 
 	const context = getContext();
 
-	// Madam Mirror bet modes drive the buy-bonus menu (3 buyable bonus levels)
-	stateMeta.betModeMeta = betModeMeta;
+	// Madam Mirror bet modes drive the buy-bonus menu (3 buyable bonus levels);
+	// social mode rewrites prohibited gambling terms for stake.us
+	stateMeta.betModeMeta = getBetModeMeta(stateUrlDerived.social());
 
 	onMount(() => (context.stateLayout.showLoadingScreen = true));
 
@@ -98,13 +98,12 @@
 					key="mirrorLogo"
 					anchor={{ x: 1, y: 0 }}
 					y={REM * 0.5}
-					width={REM * 8}
-					height={REM * 8 * (641 / 1024)}
+					width={REM * 5.5}
+					height={REM * 5.5 * (641 / 1024)}
 				/>
 			{/snippet}
 		</UI>
 		<Win />
-		<FreeSpinIntro />
 		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
 			<FreeSpinCounter />
 		{/if}

@@ -285,6 +285,10 @@
 			403000,
 			8000.0,
 			true
+		],
+		"sfx_madams_eye": [
+			412000,
+			4500.0
 		]
 	},
 	"src": [
@@ -496,6 +500,9 @@
 			"volume": 1
 		},
 		"bgm_celeb_6": {
+			"volume": 1
+		},
+		"sfx_madams_eye": {
 			"volume": 1
 		}
 	}

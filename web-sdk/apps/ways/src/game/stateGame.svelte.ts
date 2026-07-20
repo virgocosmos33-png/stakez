@@ -29,7 +29,13 @@ const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 		});
 	}
 
-	if (rawSymbol.name === 'W') {
+	if (rawSymbol.name === 'ME') {
+		// the eye drops with its own cinematic boom
+		eventEmitter.broadcast({
+			type: 'soundOnce',
+			name: 'sfx_madams_eye',
+		});
+	} else if (rawSymbol.name === 'W') {
 		eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: 'sfx_multiplier_landing',

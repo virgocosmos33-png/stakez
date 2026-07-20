@@ -34,7 +34,7 @@
 				{@render props.bonusCardsActivate()}
 			</BaseScrollable>
 
-			<BaseScrollable type="row" noScroll>
+			<BaseScrollable type="row">
 				{@render props.bonusCardsBuy()}
 			</BaseScrollable>
 		</div>

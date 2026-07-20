@@ -6,28 +6,22 @@
 
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
+	import { HUD_EDGE_PAD, HUD_PAIR_STEP, HUD_SCALE, stackHudColumn } from '../layoutSpacing';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 
-	// Landscape shares the 1920x1080 design space with desktop, so it uses the
-	// same reference two-column structure.
 	const width = $derived(context.stateLayoutDerived.mainLayoutStandard().width);
 	const height = $derived(context.stateLayoutDerived.mainLayoutStandard().height);
 
-	const LEFT_X = $derived(width * 0.072);
-	const RIGHT_X = $derived(width * 0.916);
-	const RIGHT_EDGE = $derived(width * 0.94);
-	const PAIR_DX = $derived(width * 0.092);
-	const SPIN_X = $derived(width * 0.908);
-	const BET_X = $derived(width * 0.135);
-	const BALANCE_X = $derived(width * 0.845);
+	// same pad on left / right / bottom — columns and BET/BALANCE hug the edges equally
+	const LEFT_EDGE = HUD_EDGE_PAD;
+	const RIGHT_EDGE = $derived(width - HUD_EDGE_PAD);
+	const PAIR_STEP = HUD_PAIR_STEP;
+	const LEFT_ANCHOR = { x: 0, y: 0.5 } as const;
+	const RIGHT_ANCHOR = { x: 1, y: 0.5 } as const;
 
-	const Y_TOP = $derived(height * 0.285);
-	const Y_MID = $derived(height * 0.465);
-	const SPIN_Y = $derived(height * 0.5);
-	const Y_ROW = $derived(height * 0.66);
-	const Y_PILL = $derived(height * 0.855);
+	const stack = $derived(stackHudColumn(height));
 </script>
 
 <Container x={20}>
@@ -39,50 +33,46 @@
 </Container>
 
 <MainContainer standard>
-	<!-- LEFT column: crown, menu, (sound + coins), BET pill -->
-	<Container x={LEFT_X} y={Y_TOP} scale={0.9}>
-		{@render props.buttonBuyBonus({ anchor: 0.5 })}
+	<!-- LEFT column: menu → pair → BET (same gap throughout) -->
+	<Container x={LEFT_EDGE} y={stack.yMenu} scale={HUD_SCALE.menu}>
+		{@render props.buttonMenu({ anchor: LEFT_ANCHOR })}
 	</Container>
 
-	<Container x={LEFT_X} y={Y_MID} scale={0.9}>
-		{@render props.buttonMenu({ anchor: 0.5 })}
+	<Container x={LEFT_EDGE} y={stack.yPair} scale={HUD_SCALE.pair}>
+		{@render props.buttonSoundSwitch({ anchor: LEFT_ANCHOR })}
 	</Container>
 
-	<Container x={LEFT_X} y={Y_ROW} scale={0.9}>
-		{@render props.buttonSoundSwitch({ anchor: 0.5 })}
+	<Container x={LEFT_EDGE + PAIR_STEP} y={stack.yPair} scale={HUD_SCALE.pair}>
+		{@render props.buttonBetMenu({ anchor: LEFT_ANCHOR })}
 	</Container>
 
-	<Container x={LEFT_X + PAIR_DX} y={Y_ROW} scale={0.9}>
-		{@render props.buttonPayTable({ anchor: 0.5 })}
+	<Container x={LEFT_EDGE} y={stack.yLabel} scale={HUD_SCALE.label}>
+		{@render props.amountBet({ stacked: true, align: 'left' })}
 	</Container>
 
-	<Container x={BET_X} y={Y_PILL} scale={0.66}>
-		{@render props.amountBet({ stacked: true })}
+	<!-- RIGHT column: BUY → SPIN → pair → BALANCE (same gap throughout) -->
+	<Container x={RIGHT_EDGE} y={stack.yBuy} scale={HUD_SCALE.buy}>
+		{@render props.buttonBuyBonus({ anchor: RIGHT_ANCHOR })}
 	</Container>
 
-	<!-- RIGHT column: turbo, SPIN, (autoSpin + settings), BALANCE pill -->
-	<Container x={RIGHT_X} y={Y_TOP} scale={0.9}>
-		{@render props.buttonTurbo({ anchor: 0.5 })}
+	<Container x={RIGHT_EDGE} y={stack.ySpin} scale={HUD_SCALE.spin}>
+		{@render props.buttonBet({ anchor: RIGHT_ANCHOR })}
 	</Container>
 
-	<Container x={SPIN_X} y={SPIN_Y} scale={1.2}>
-		{@render props.buttonBet({ anchor: 0.5 })}
+	<Container x={RIGHT_EDGE - PAIR_STEP} y={stack.yPair} scale={HUD_SCALE.pair}>
+		{@render props.buttonAutoSpin({ anchor: RIGHT_ANCHOR })}
 	</Container>
 
-	<Container x={RIGHT_EDGE - PAIR_DX} y={Y_ROW} scale={0.9}>
-		{@render props.buttonAutoSpin({ anchor: 0.5 })}
+	<Container x={RIGHT_EDGE} y={stack.yPair} scale={HUD_SCALE.pair}>
+		{@render props.buttonTurbo({ anchor: RIGHT_ANCHOR })}
 	</Container>
 
-	<Container x={RIGHT_EDGE} y={Y_ROW} scale={0.9}>
-		{@render props.buttonSettings({ anchor: 0.5 })}
-	</Container>
-
-	<Container x={BALANCE_X} y={Y_PILL} scale={0.66}>
-		{@render props.amountBalance({ stacked: true })}
+	<Container x={RIGHT_EDGE} y={stack.yLabel} scale={HUD_SCALE.label}>
+		{@render props.amountBalance({ stacked: true, align: 'right' })}
 	</Container>
 
 	{#if stateBet.winBookEventAmount > 0}
-		<Container x={width * 0.5} y={Y_PILL} scale={0.66}>
+		<Container x={width * 0.5} y={stack.yLabel} scale={HUD_SCALE.label}>
 			{@render props.amountWin({ stacked: true })}
 		</Container>
 	{/if}
@@ -103,21 +93,21 @@
 	/>
 
 	<MainContainer standard>
-		<Container x={LEFT_X} y={Y_MID}>
+		<Container x={LEFT_EDGE} y={stack.yMenu}>
 			<Container scale={0.85} y={-160 * 3}>
-				{@render props.buttonPayTable({ anchor: 0.5 })}
+				{@render props.buttonPayTable({ anchor: LEFT_ANCHOR })}
 			</Container>
 
 			<Container scale={0.85} y={-160 * 2}>
-				{@render props.buttonGameRules({ anchor: 0.5 })}
+				{@render props.buttonGameRules({ anchor: LEFT_ANCHOR })}
 			</Container>
 
 			<Container scale={0.85} y={-160}>
-				{@render props.buttonSettings({ anchor: 0.5 })}
+				{@render props.buttonSettings({ anchor: LEFT_ANCHOR })}
 			</Container>
 
 			<Container scale={0.85}>
-				{@render props.buttonMenuClose({ anchor: 0.5 })}
+				{@render props.buttonMenuClose({ anchor: LEFT_ANCHOR })}
 			</Container>
 		</Container>
 	</MainContainer>

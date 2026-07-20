@@ -38,14 +38,16 @@ def run(cmd: list[str]) -> None:
 
 
 def to_wav(source: Path, dest: Path, start_ms: float | None = None, duration_ms: float | None = None,
-           loudnorm: bool = False) -> None:
+           loudnorm: bool = False, af: str | None = None) -> None:
     cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"]
     if start_ms is not None:
         cmd += ["-ss", f"{start_ms / 1000:.6f}"]
     cmd += ["-i", str(source)]
     if duration_ms is not None:
         cmd += ["-t", f"{duration_ms / 1000:.6f}"]
-    if loudnorm:
+    if af is not None:
+        cmd += ["-af", af]
+    elif loudnorm:
         cmd += ["-af", "loudnorm=I=-16:TP=-1.5:LRA=11"]
     cmd += ["-ar", str(SAMPLE_RATE), "-ac", str(CHANNELS), "-sample_fmt", "s16", str(dest)]
     run(cmd)
@@ -60,6 +62,13 @@ def wav_frames(path: Path) -> bytes:
 # cues that exist only as generated files (not in the shipped sprite yet);
 # value = loop flag
 NEW_CUES = {f"bgm_celeb_{i}": True for i in range(1, 7)}
+NEW_CUES["sfx_madams_eye"] = False  # cinematic boom hit for the Madam's Eye drop
+
+# per-cue loudness overrides: the eye boom is normalized MUCH hotter than the
+# default -16 LUFS bed so it punches through everything, peaks near 0 dBFS
+CUE_FILTERS = {
+    "sfx_madams_eye": "loudnorm=I=-9:TP=-0.1:LRA=5",
+}
 
 
 def main() -> None:
@@ -83,7 +92,7 @@ def main() -> None:
         seg = tmp / f"{cue}.wav"
         gen_file = GEN / f"{cue}.mp3"
         if gen_file.exists():
-            to_wav(gen_file, seg, loudnorm=True)
+            to_wav(gen_file, seg, loudnorm=True, af=CUE_FILTERS.get(cue))
             replaced.append(cue)
         else:
             start, duration = entry[0], entry[1]

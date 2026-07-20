@@ -2,7 +2,10 @@ import _ from 'lodash';
 
 import type { RawSymbol, SymbolState } from './types';
 
-export const SYMBOL_SIZE = 145;
+// 140 keeps the 5-wide board (+ ornate frame) inside the 800-wide portrait
+// canvas without clipping the edge symbols, and reads smaller/comfortable on
+// desktop (was 172, which overflowed portrait and dominated the desktop view).
+export const SYMBOL_SIZE = 140;
 
 export const REEL_PADDING = 0.53;
 
@@ -107,6 +110,8 @@ const l5Static = { type: 'sprite', assetKey: 'l5.webp', sizeRatios: { width: 1, 
 
 const sStatic = { type: 'sprite', assetKey: 's.png', sizeRatios: { width: 1, height: 1 } };
 const wStatic = { type: 'sprite', assetKey: 'w.png', sizeRatios: { width: 1, height: 1 } };
+// Madam's Eye: turns every split symbol wild for the spin, then resolves to a wild
+const meStatic = { type: 'sprite', assetKey: 'me.png', sizeRatios: { width: 1, height: 1 } };
 // Haunted Mirror: intact while on the reels, cracked once it bursts/resolves
 const hmIntactStatic = { type: 'sprite', assetKey: 'hm_intact.png', sizeRatios: { width: 1, height: 1 } };
 const hmCrackedStatic = { type: 'sprite', assetKey: 'hm_cracked.png', sizeRatios: { width: 1, height: 1 } };
@@ -182,6 +187,18 @@ export const SYMBOL_INFO_MAP = {
 		spin: blurState('hm_intact.png'),
 		win: hmCrackedStatic,
 		land: hmIntactStatic,
+	},
+	// Madam's Eye: sprite-only states like HM - the conversion visuals are owned
+	// by the madamsEye book event handler (flash + split cells turning wild),
+	// and ME always resolves into a wild before a win can rest on it.
+	ME: {
+		explosion,
+		postWin: meStatic,
+		postWinStatic: meStatic,
+		static: meStatic,
+		spin: blurState('me.png'),
+		win: meStatic,
+		land: meStatic,
 	},
 } as const;
 

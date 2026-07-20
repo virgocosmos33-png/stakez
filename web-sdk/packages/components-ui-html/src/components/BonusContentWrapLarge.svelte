@@ -17,19 +17,34 @@
 	{@render props.betAmount()}
 
 	<BaseScrollable type="column">
-		<div class="bonuses-wrap">
-			{@render props.bonusCardsActivate()}
-			{@render props.bonusCardsBuy()}
+		<!-- one horizontally scrollable strip: ante + feature spins + bonus buys.
+			The inner row shrink-wraps with auto margins, so it stays centred when
+			everything fits and scrolls from the left edge when it does not. -->
+		<div class="bonuses-strip">
+			<div class="bonuses-row">
+				{@render props.bonusCardsActivate()}
+				{@render props.bonusCardsBuy()}
+			</div>
 		</div>
 	</BaseScrollable>
 </BaseContent>
 
 <style lang="scss">
-	.bonuses-wrap {
+	.bonuses-strip {
+		max-width: min(94vw, 1500px);
+		overflow-x: auto;
+		overflow-y: hidden;
+		padding-bottom: 0.75rem;
+		scrollbar-width: thin;
+		scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+	}
+
+	.bonuses-row {
 		display: flex;
 		flex-direction: row;
+		flex-wrap: nowrap;
 		gap: 1rem;
-		flex-wrap: wrap;
-		justify-content: center;
+		width: max-content;
+		margin: 0 auto;
 	}
 </style>

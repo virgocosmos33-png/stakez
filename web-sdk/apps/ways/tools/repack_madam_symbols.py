@@ -31,7 +31,7 @@ NEW_ICONS = {
     "card_h1_lady_mirror.png": "h1.webp",
     "card_h2_wife.png": "h2.webp",
     "card_h3_man.png": "h3.webp",
-    "card_h4_little_girl.png": "h4.webp",
+    "card_h4_young_woman.png": "h4.webp",
     "card_h5_dog.png": "h5.webp",
     "card_l1_ace.png": "l1.webp",
     "card_l2_king.png": "l2.webp",

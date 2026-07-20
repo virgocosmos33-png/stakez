@@ -11,6 +11,10 @@ export type RawSymbol = {
 	mirror?: boolean;
 	// haunted mirror: the symbol is trapped behind a glass overlay until the burst shatters it
 	glass?: boolean;
+	// the Madam's Eye: converts every split symbol on the board into wilds for the spin
+	eye?: boolean;
+	// reveals a haunted (split) cell survives: 1 = this spin only, 2+ = carries over, -1 = sticky
+	ttl?: number;
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;

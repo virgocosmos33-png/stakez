@@ -23,11 +23,13 @@
 		<BonusCard>
 			{#snippet title()}
 				{#if betModeData.assets.icon}
+					<!-- the bonus name is baked into the card art, so no text title here -->
 					<img class="card-art" src={betModeData.assets.icon} alt={betModeData.text.title} />
+				{:else}
+					<div class="title">
+						{betModeData.text.title}
+					</div>
 				{/if}
-				<div class="title">
-					{betModeData.text.title}
-				</div>
 			{/snippet}
 
 			{#snippet description()}

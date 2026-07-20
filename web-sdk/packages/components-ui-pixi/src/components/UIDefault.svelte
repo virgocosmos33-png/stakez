@@ -13,6 +13,7 @@
 	import LabelWin from './LabelWin.svelte';
 	import LabelBet from './LabelBet.svelte';
 	import ButtonPayTable from './ButtonPayTable.svelte';
+	import ButtonBetMenu from './ButtonBetMenu.svelte';
 	import ButtonGameRules from './ButtonGameRules.svelte';
 	import ButtonSettings from './ButtonSettings.svelte';
 	import ButtonBuyBonus from './ButtonBuyBonus.svelte';
@@ -102,6 +103,10 @@
 
 		{#snippet buttonPayTable(buttonProps)}
 			<ButtonPayTable {...buttonProps} />
+		{/snippet}
+
+		{#snippet buttonBetMenu(buttonProps)}
+			<ButtonBetMenu {...buttonProps} />
 		{/snippet}
 
 		{#snippet buttonGameRules(buttonProps)}

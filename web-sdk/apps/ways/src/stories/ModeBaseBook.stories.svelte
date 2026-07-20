@@ -21,6 +21,7 @@
 	import { playBet } from '../game/utils';
 	import books from './data/base_books';
 	import mirrorBooks from './data/mirror_books';
+	import eyeBooks from './data/eye_books';
 	import maxwinBook from './data/maxwin_book';
 	import twoWaysBook from './data/two_ways_book';
 
@@ -93,6 +94,34 @@
 		action: async () => {
 			const data = mirrorBooks[0];
 			console.log('Running the xMirror showcase book');
+			await playBet({ ...data, state: data.events });
+		},
+	})}
+	{template}
+/>
+
+<Story
+	name="madamsEyeBase"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			const data = eyeBooks[0];
+			console.log("Running the MADAM'S EYE base-game showcase book");
+			await playBet({ ...data, state: data.events });
+		},
+	})}
+	{template}
+/>
+
+<Story
+	name="madamsEyeBonus2"
+	args={templateArgs({
+		skipLoadingScreen: true,
+		data: {},
+		action: async () => {
+			const data = eyeBooks[1];
+			console.log("Running the MADAM'S EYE bonus level 2 showcase book (persistent splits)");
 			await playBet({ ...data, state: data.events });
 		},
 	})}
