@@ -119,8 +119,18 @@
 			body: 'Level 3 free spins. Mirror chance ~50%. Haunted cells are sticky for the entire bonus and stack freely — the longest, densest hauntings in the game.',
 		},
 		{
-			title: 'FEATURE BUYS',
-			body: 'Bonus rounds can be bought directly from the buy-bonus menu:',
+			title: 'EXTRA BET & FEATURE SPINS',
+			body: 'These modes stay active until you turn them off. Every spin is charged at the listed cost and uses the mode rules:',
+			rows: [
+				{ label: 'EXTRA BET — scatter on reel 1 every spin', value: '1.25× bet' },
+				{ label: 'MIRROR SPIN — 1+ Haunted Mirror every spin', value: '10× bet' },
+				{ label: 'TWIN MIRRORS — 2+ Haunted Mirrors every spin', value: '20× bet' },
+				{ label: 'TRIPLE MIRRORS — 3 Haunted Mirrors every spin', value: '40× bet' },
+			],
+		},
+		{
+			title: 'BONUS BUYS',
+			body: 'Bonus rounds can be bought directly from the menu:',
 			rows: [
 				{ label: 'THE SÉANCE (3 Scatters)', value: '100× bet' },
 				{ label: 'THE OTHER SIDE (4 Scatters)', value: '400× bet' },
@@ -132,6 +142,10 @@
 			body: 'Theoretical RTP by mode (long-term expected return):',
 			rows: [
 				{ label: 'Main game', value: '96.20%' },
+				{ label: 'EXTRA BET', value: '96.20%' },
+				{ label: 'MIRROR SPIN', value: '96.50%' },
+				{ label: 'TWIN MIRRORS', value: '96.50%' },
+				{ label: 'TRIPLE MIRRORS', value: '96.50%' },
 				{ label: 'THE SÉANCE buy', value: '96.50%' },
 				{ label: 'THE OTHER SIDE buy', value: '96.60%' },
 				{ label: 'BLOOD MOON buy', value: '96.65%' },
@@ -150,7 +164,7 @@
 				'Arrow (▶) — places a bet and spins the reels. Spacebar does the same.',
 				'Circular arrows — autoplay: choose a number of spins and confirm to start; press again to stop.',
 				'Lightning bolt — toggles turbo mode for faster spins.',
-				'BUY — opens the feature buy menu.',
+				'BONUS — opens the bonus / feature menu (buys and activate modes).',
 				'BET and BALANCE — show the current bet size and your balance.',
 			],
 		},

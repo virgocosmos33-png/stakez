@@ -1,29 +1,37 @@
 <script lang="ts">
-	import { Text } from 'pixi-svelte';
-	import { Sprite, getContextApp } from 'pixi-svelte';
+	import * as PIXI from 'pixi.js';
+	import { BaseSprite, Graphics } from 'pixi-svelte';
 	import { Button, type ButtonProps } from 'components-pixi';
 	import { stateModal, stateBet, stateBetDerived } from 'state-shared';
 
-	import UiSprite from './UiSprite.svelte';
 	import { UI_BASE_SIZE } from '../constants';
-	import { HUD_THEME as T } from '../hudTheme';
 	import { getContext } from '../context';
+	import { BUY_BONUS_LOGO_DATA_URL } from '../assets/buyBonusLogoData';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const { stateXstateDerived, eventEmitter } = getContext();
-	const appContext = getContextApp();
-	const loadedAssets = $derived(appContext?.stateApp?.loadedAssets);
 
-	// same width as the spin (bet) button
-	const sizes = { width: UI_BASE_SIZE * 1.3, height: UI_BASE_SIZE * 0.55 };
+	const D = UI_BASE_SIZE * 1.2;
+	const sizes = { width: D, height: D };
 	const disabled = $derived(!stateXstateDerived.isIdle());
 	const active = $derived(stateBetDerived.activeBetMode()?.type === 'activate');
-	const label = $derived(active ? 'ACTIVE' : 'BONUS');
 
-	// optional studio/game emblem baked by the host app. Swap the art by
-	// registering a `buyBonusLogo` sprite asset — nothing else needs to change.
-	const LOGO_KEY = 'buyBonusLogo';
-	const hasLogo = $derived(Boolean(loadedAssets?.[LOGO_KEY]));
+	let logoTexture = $state<PIXI.Texture | null>(null);
+
+	$effect(() => {
+		let cancelled = false;
+		const img = new Image();
+		img.decoding = 'async';
+		img.onload = () => {
+			if (cancelled) return;
+			logoTexture = PIXI.Texture.from(img);
+		};
+		img.onerror = () => console.error('ButtonBuyBonus logo decode failed');
+		img.src = BUY_BONUS_LOGO_DATA_URL;
+		return () => {
+			cancelled = true;
+		};
+	});
 
 	const openModal = () => (stateModal.modal = { name: 'buyBonus' });
 	const disableActiveBetMode = () => (stateBet.activeBetModeKey = 'BASE');
@@ -36,63 +44,33 @@
 		}
 	};
 
-	// with a logo the text sits to the right of the emblem; without, it centres
-	const logoSize = $derived(sizes.height * 0.72);
+	const logoAlpha = $derived(disabled ? 0.35 : active ? 1 : 0.7);
+	const logoSize = D * 0.78;
+
+	const drawCircle = (g: PIXI.Graphics, hovered: boolean) => {
+		const R = D / 2;
+		const c = R;
+		// face
+		g.circle(c, c, R);
+		g.fill({ color: disabled ? 0x14181f : hovered || active ? 0x161d26 : 0x10161d });
+		// steel ring so the coin reads against the dark game bg
+		g.circle(c, c, R - 1.5);
+		g.stroke({ color: disabled ? 0x2a3542 : hovered || active ? 0x5a6672 : 0x3a4552, width: 3 });
+	};
 </script>
 
 <Button {...props} {sizes} {disabled} {onpress}>
-	{#snippet children({ center, hovered, pressed })}
-		<UiSprite
-			{...center}
-			anchor={0.5}
-			tone="dark"
-			shape="panel"
-			width={sizes.width}
-			height={sizes.height}
-			{hovered}
-			{pressed}
-			active
-			{...disabled ? { backgroundColor: 0xaaaaaa } : {}}
-		/>
-
-		{#if hasLogo}
-			<Sprite
-				key={LOGO_KEY}
+	{#snippet children({ center, hovered })}
+		<Graphics draw={(g: PIXI.Graphics) => drawCircle(g, hovered)} />
+		{#if logoTexture}
+			<BaseSprite
+				texture={logoTexture}
 				anchor={0.5}
-				x={center.x - sizes.width * 0.3}
+				x={center.x}
 				y={center.y}
 				width={logoSize}
 				height={logoSize}
-				alpha={disabled ? 0.55 : 1}
-			/>
-			<Text
-				x={center.x + sizes.width * 0.08}
-				y={center.y}
-				anchor={0.5}
-				text={label}
-				alpha={disabled ? 0.55 : 1}
-				style={{
-					fontFamily: T.fontDisplay,
-					fontWeight: '900',
-					fontSize: sizes.height * 0.34,
-					fill: T.accent,
-					letterSpacing: 2,
-				}}
-			/>
-		{:else}
-			<Text
-				x={center.x}
-				y={center.y}
-				anchor={0.5}
-				text={label}
-				alpha={disabled ? 0.55 : 1}
-				style={{
-					fontFamily: T.fontDisplay,
-					fontWeight: '900',
-					fontSize: sizes.height * 0.42,
-					fill: T.accent,
-					letterSpacing: 3,
-				}}
+				alpha={logoAlpha}
 			/>
 		{/if}
 	{/snippet}

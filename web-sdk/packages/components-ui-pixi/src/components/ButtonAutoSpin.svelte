@@ -27,7 +27,7 @@
 	};
 </script>
 
-<UiButton {...props} {sizes} {active} {onpress} {disabled} icon="play">
+<UiButton {...props} {sizes} {active} {onpress} {disabled} flat iconColor={0xffffff} icon="autoSpin">
 	<Container x={sizes.width * 0.5} y={sizes.height * 0.5}>
 		<ButtonBetAutoSpinsCounter />
 	</Container>

@@ -56,7 +56,7 @@ export const betModeMeta: BetModeMeta = {
 	feature1: {
 		mode: 'feature1',
 		costMultiplier: 10,
-		type: 'buy',
+		type: 'activate',
 		parent: '',
 		children: '',
 		assets: {
@@ -69,11 +69,11 @@ export const betModeMeta: BetModeMeta = {
 		text: {
 			title: 'MIRROR SPIN',
 			dialog:
-				'One spin with a guaranteed Haunted Mirror (or more). The mirror bursts and splits its neighbors into apparitions. Cost: 10x your bet.',
-			description: 'One spin. 1+ Haunted Mirror guaranteed.',
-			button: 'BUY',
+				'Play at 10x your bet: every spin guarantees 1 or more Haunted Mirrors. The mirror bursts and splits its neighbors into apparitions. Stays active until you turn it off.',
+			description: 'Every spin. 1+ Haunted Mirror guaranteed.',
+			button: 'ACTIVATE',
 			betAmountLabel: 'MIRROR SPIN',
-			tickerIdle: 'MIRROR SPIN',
+			tickerIdle: 'MIRROR SPIN IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
 		maxWin: 30000,
@@ -81,7 +81,7 @@ export const betModeMeta: BetModeMeta = {
 	feature2: {
 		mode: 'feature2',
 		costMultiplier: 20,
-		type: 'buy',
+		type: 'activate',
 		parent: '',
 		children: '',
 		assets: {
@@ -94,11 +94,11 @@ export const betModeMeta: BetModeMeta = {
 		text: {
 			title: 'TWIN MIRRORS',
 			dialog:
-				'One spin with 2 or more guaranteed Haunted Mirrors bursting together. Cost: 20x your bet.',
-			description: 'One spin. 2+ Haunted Mirrors guaranteed.',
-			button: 'BUY',
+				'Play at 20x your bet: every spin guarantees 2 or more Haunted Mirrors bursting together. Stays active until you turn it off.',
+			description: 'Every spin. 2+ Haunted Mirrors guaranteed.',
+			button: 'ACTIVATE',
 			betAmountLabel: 'TWIN MIRRORS',
-			tickerIdle: 'TWIN MIRRORS',
+			tickerIdle: 'TWIN MIRRORS IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
 		maxWin: 30000,
@@ -106,7 +106,7 @@ export const betModeMeta: BetModeMeta = {
 	feature3: {
 		mode: 'feature3',
 		costMultiplier: 40,
-		type: 'buy',
+		type: 'activate',
 		parent: '',
 		children: '',
 		assets: {
@@ -119,11 +119,11 @@ export const betModeMeta: BetModeMeta = {
 		text: {
 			title: 'TRIPLE MIRRORS',
 			dialog:
-				'One spin with 3 guaranteed Haunted Mirrors - the full set, the base game path to the biggest wins. Cost: 40x your bet.',
-			description: 'One spin. 3 Haunted Mirrors guaranteed.',
-			button: 'BUY',
+				'Play at 40x your bet: every spin guarantees 3 Haunted Mirrors — the full set. Stays active until you turn it off.',
+			description: 'Every spin. 3 Haunted Mirrors guaranteed.',
+			button: 'ACTIVATE',
 			betAmountLabel: 'TRIPLE MIRRORS',
-			tickerIdle: 'TRIPLE MIRRORS',
+			tickerIdle: 'TRIPLE MIRRORS IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
 		maxWin: 30000,

@@ -83,7 +83,7 @@
 	.description {
 		font-size: 0.75rem;
 		text-align: center;
-		min-height: 4rem;
+		min-height: 0;
 		white-space: pre-line;
 		display: inline-flex;
 		align-items: center;

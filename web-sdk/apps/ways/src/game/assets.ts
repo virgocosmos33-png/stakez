@@ -304,11 +304,11 @@ export default {
 		src: new URL('../../assets/sprites/mirror/logo.png', import.meta.url).href,
 		preload: true,
 	},
-	// emblem shown on the in-HUD BONUS button (shared ButtonBuyBonus reads the
-	// `buyBonusLogo` key). Placeholder art — swap this file for the final logo.
+	// emblem used as the in-HUD BONUS button (ButtonBuyBonus reads `buyBonusLogo`)
 	buyBonusLogo: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/buy_bonus_logo.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/mirror/buy_bonus_logo.png', import.meta.url).href,
+		preload: true,
 	},
 	mirrorWaysPanel: {
 		type: 'sprite',

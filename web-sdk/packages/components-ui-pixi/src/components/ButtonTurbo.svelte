@@ -23,4 +23,4 @@
 	});
 </script>
 
-<UiButton {...props} {sizes} {active} {onpress} {disabled} icon="turbo" />
+<UiButton {...props} {sizes} {active} {onpress} {disabled} flat iconColor={0xffb400} icon="turbo" />

@@ -16,12 +16,18 @@
 		children?: Snippet;
 		/** light = gilt-brass medallion, dark = tarnished-steel medallion */
 		variant?: 'dark' | 'light';
+		/** flat control-bar chrome (dark fill + steel border) */
+		flat?: boolean;
+		/** force the icon colour (overrides the active/disabled defaults) */
+		iconColor?: number;
 	};
 
 	const {
 		icon,
 		active,
 		variant = 'dark',
+		flat = false,
+		iconColor: iconColorProp,
 		children: childrenFromParent,
 		...buttonProps
 	}: Props = $props();
@@ -30,7 +36,13 @@
 
 	// warm ivory by default; turns gold when the button is active (e.g. turbo on)
 	const iconColor = $derived(
-		buttonProps.disabled ? T.disabledIcon : active ? T.accent : T.textPrimary,
+		buttonProps.disabled
+			? T.disabledIcon
+			: iconColorProp != null
+				? iconColorProp
+				: active
+					? T.accent
+					: T.textPrimary,
 	);
 
 	const iconSize = $derived(Math.min(buttonProps.sizes.width, buttonProps.sizes.height) * 0.46);
@@ -47,6 +59,7 @@
 			width={buttonProps.sizes.width}
 			height={buttonProps.sizes.height}
 			{tone}
+			{flat}
 			shape="medallion"
 			{hovered}
 			{pressed}

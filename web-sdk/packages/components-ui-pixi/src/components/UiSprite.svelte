@@ -12,6 +12,8 @@
 		hovered?: boolean;
 		pressed?: boolean;
 		active?: boolean;
+		/** flat control-bar style: dark fill + thin steel border (no gold bevel) */
+		flat?: boolean;
 		/** legacy sprite key (bet/buyBonus/base_ticker...) — kept for call-site compat */
 		key?: string;
 	};
@@ -27,6 +29,7 @@
 		hovered = false,
 		pressed = false,
 		active = false,
+		flat = false,
 		key: _key,
 		anchor,
 		width,
@@ -72,6 +75,24 @@
 	 * from the edge) for each layer.
 	 */
 	const drawFramed = (g: PIXI.Graphics, path: (inset: number) => void, ring: number) => {
+		// flat control-bar style: solid dark body + thin steel border (matches the
+		// slot control-bar mockup — no gold glass bevel)
+		if (flat) {
+			path(ring * 0.5);
+			g.fill({ color: isDisabled ? 0x14181f : hovered ? 0x161d26 : 0x10161d, alpha: 1 });
+			path(ring * 0.5);
+			g.stroke({
+				color: isDisabled ? 0x2a3542 : hovered ? 0x3a4552 : 0x2a3542,
+				width: Math.max(1.5, ring),
+				alpha: 1,
+			});
+			if (active && !isDisabled) {
+				path(ring * 0.5);
+				g.stroke({ color: T.accent, width: ring, alpha: 0.9 });
+			}
+			return;
+		}
+
 		// body
 		path(ring);
 		g.fill({ color: bodyColor, alpha: bodyAlpha });

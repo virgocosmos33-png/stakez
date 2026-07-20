@@ -288,8 +288,9 @@ class GameConfig(Config):
                 rtp=self.mode_rtps["feature1"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
-                is_feature=False,
-                is_buybonus=True,
+                # persistent activate mode (like ante): charged every spin until off
+                is_feature=True,
+                is_buybonus=False,
                 distributions=[
                     Distribution(
                         criteria="wincap",
@@ -316,8 +317,8 @@ class GameConfig(Config):
                 rtp=self.mode_rtps["feature2"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
-                is_feature=False,
-                is_buybonus=True,
+                is_feature=True,
+                is_buybonus=False,
                 distributions=[
                     Distribution(
                         criteria="wincap",
@@ -343,8 +344,8 @@ class GameConfig(Config):
                 rtp=self.mode_rtps["feature3"],
                 max_win=mode_maxwin,
                 auto_close_disabled=False,
-                is_feature=False,
-                is_buybonus=True,
+                is_feature=True,
+                is_buybonus=False,
                 distributions=[
                     Distribution(
                         criteria="wincap",

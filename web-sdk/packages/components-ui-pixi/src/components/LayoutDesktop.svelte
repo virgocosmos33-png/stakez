@@ -6,22 +6,44 @@
 
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
-	import { HUD_EDGE_PAD, HUD_PAIR_STEP, HUD_SCALE, stackHudColumn } from '../layoutSpacing';
+	import { UI_BASE_SIZE } from '../constants';
+	import ControlInfoBar, { INFO_BAR_SIZE } from './ControlInfoBar.svelte';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
 
-	const width = $derived(context.stateLayoutDerived.mainLayoutStandard().width);
-	const height = $derived(context.stateLayoutDerived.mainLayoutStandard().height);
+	const W = $derived(context.stateLayoutDerived.mainLayoutStandard().width);
+	const H = $derived(context.stateLayoutDerived.mainLayoutStandard().height);
 
-	// same pad on left / right / bottom — columns and BET/BALANCE hug the edges equally
-	const LEFT_EDGE = HUD_EDGE_PAD;
-	const RIGHT_EDGE = $derived(width - HUD_EDGE_PAD);
-	const PAIR_STEP = HUD_PAIR_STEP;
-	const LEFT_ANCHOR = { x: 0, y: 0.5 } as const;
-	const RIGHT_ANCHOR = { x: 1, y: 0.5 } as const;
+	// ---- compact centred bottom control cluster ----
+	// buy | menu | [ balance | bet ▲▼ ] | (turbo) SPIN (autoplay)
+	const BAR_SCALE = 0.84;
+	const BUY = UI_BASE_SIZE * 1.2;
+	const SPIN = UI_BASE_SIZE * 1.2;
+	const BADGE_SCALE = 0.6;
+	const BADGE = UI_BASE_SIZE * BADGE_SCALE;
+	const INFO = INFO_BAR_SIZE.width;
+	const G1 = 14;
+	const G2 = 16;
+	const G3 = 22;
+	const SIDE_GAP = 10; // clear gap between turbo/auto badges and spin
+	const spinClusterW = BADGE + SIDE_GAP + SPIN + SIDE_GAP + BADGE;
+	const TW = BUY + G1 + BADGE + G2 + INFO + G3 + spinClusterW;
 
-	const stack = $derived(stackHudColumn(height));
+	// local coords inside the scaled bar (origin = bar centre)
+	const buyC = -TW / 2 + BUY / 2;
+	const menuC = -TW / 2 + BUY + G1 + BADGE / 2;
+	const infoL = -TW / 2 + BUY + G1 + BADGE + G2;
+	const infoC = infoL + INFO / 2;
+	const spinClusterL = infoL + INFO + G3;
+	const turboC = spinClusterL + BADGE / 2;
+	const spinC = turboC + BADGE / 2 + SIDE_GAP + SPIN / 2;
+	const autoC = spinC + SPIN / 2 + SIDE_GAP + BADGE / 2;
+
+	// hug the bottom: leave a small pad under the scaled spin coin
+	const BOTTOM_PAD = 22;
+	const barY = $derived(H - BOTTOM_PAD - (SPIN * BAR_SCALE) / 2);
+	const barX = $derived(W / 2);
 </script>
 
 <Container x={20}>
@@ -33,49 +55,42 @@
 </Container>
 
 <MainContainer standard>
-	<!-- LEFT column: menu → pair → BET (same gap throughout) -->
-	<Container x={LEFT_EDGE} y={stack.yMenu} scale={HUD_SCALE.menu}>
-		{@render props.buttonMenu({ anchor: LEFT_ANCHOR })}
-	</Container>
-
-	<Container x={LEFT_EDGE} y={stack.yPair} scale={HUD_SCALE.pair}>
-		{@render props.buttonSoundSwitch({ anchor: LEFT_ANCHOR })}
-	</Container>
-
-	<Container x={LEFT_EDGE + PAIR_STEP} y={stack.yPair} scale={HUD_SCALE.pair}>
-		{@render props.buttonBetMenu({ anchor: LEFT_ANCHOR })}
-	</Container>
-
-	<Container x={LEFT_EDGE} y={stack.yLabel} scale={HUD_SCALE.label}>
-		{@render props.amountBet({ stacked: true, align: 'left' })}
-	</Container>
-
-	<!-- RIGHT column: BUY → SPIN → pair → BALANCE (same gap throughout) -->
-	<Container x={RIGHT_EDGE} y={stack.yBuy} scale={HUD_SCALE.buy}>
-		{@render props.buttonBuyBonus({ anchor: RIGHT_ANCHOR })}
-	</Container>
-
-	<Container x={RIGHT_EDGE} y={stack.ySpin} scale={HUD_SCALE.spin}>
-		{@render props.buttonBet({ anchor: RIGHT_ANCHOR })}
-	</Container>
-
-	<Container x={RIGHT_EDGE - PAIR_STEP} y={stack.yPair} scale={HUD_SCALE.pair}>
-		{@render props.buttonAutoSpin({ anchor: RIGHT_ANCHOR })}
-	</Container>
-
-	<Container x={RIGHT_EDGE} y={stack.yPair} scale={HUD_SCALE.pair}>
-		{@render props.buttonTurbo({ anchor: RIGHT_ANCHOR })}
-	</Container>
-
-	<Container x={RIGHT_EDGE} y={stack.yLabel} scale={HUD_SCALE.label}>
-		{@render props.amountBalance({ stacked: true, align: 'right' })}
-	</Container>
-
-	{#if stateBet.winBookEventAmount > 0}
-		<Container x={width * 0.5} y={stack.yLabel} scale={HUD_SCALE.label}>
-			{@render props.amountWin({ stacked: true })}
+	<Container x={barX} y={barY} scale={BAR_SCALE}>
+		<!-- buy bonus coin -->
+		<Container x={buyC} y={0}>
+			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
-	{/if}
+
+		<!-- menu badge -->
+		<Container x={menuC} y={0} scale={BADGE_SCALE}>
+			{@render props.buttonMenu({ anchor: 0.5 })}
+		</Container>
+
+		<!-- unified balance / bet panel -->
+		<Container x={infoC} y={0}>
+			<Container x={-INFO / 2} y={-INFO_BAR_SIZE.height / 2}>
+				<ControlInfoBar />
+			</Container>
+		</Container>
+
+		<!-- spin first, then side badges on top -->
+		<Container x={spinC} y={0}>
+			{@render props.buttonBet({ anchor: 0.5 })}
+		</Container>
+		<Container x={turboC} y={0} scale={BADGE_SCALE}>
+			{@render props.buttonTurbo({ anchor: 0.5 })}
+		</Container>
+		<Container x={autoC} y={0} scale={BADGE_SCALE}>
+			{@render props.buttonAutoSpin({ anchor: 0.5 })}
+		</Container>
+
+		<!-- win amount (only while resolving a win) -->
+		{#if stateBet.winBookEventAmount > 0}
+			<Container x={0} y={-140}>
+				{@render props.amountWin({ stacked: true })}
+			</Container>
+		{/if}
+	</Container>
 </MainContainer>
 
 {#if stateUi.menuOpen}
@@ -92,22 +107,22 @@
 		onpointerup={() => (stateUi.menuOpen = false)}
 	/>
 
+	<!-- submenu pops UP from the menu badge -->
 	<MainContainer standard>
-		<Container x={LEFT_EDGE} y={stack.yMenu}>
-			<Container scale={0.85} y={-160 * 3}>
-				{@render props.buttonPayTable({ anchor: LEFT_ANCHOR })}
-			</Container>
-
-			<Container scale={0.85} y={-160 * 2}>
-				{@render props.buttonGameRules({ anchor: LEFT_ANCHOR })}
-			</Container>
-
-			<Container scale={0.85} y={-160}>
-				{@render props.buttonSettings({ anchor: LEFT_ANCHOR })}
-			</Container>
-
-			<Container scale={0.85}>
-				{@render props.buttonMenuClose({ anchor: LEFT_ANCHOR })}
+		<Container x={barX} y={barY} scale={BAR_SCALE}>
+			<Container x={menuC} y={0} scale={BADGE_SCALE}>
+				<Container y={-160 * 3}>
+					{@render props.buttonPayTable({ anchor: 0.5 })}
+				</Container>
+				<Container y={-160 * 2}>
+					{@render props.buttonGameRules({ anchor: 0.5 })}
+				</Container>
+				<Container y={-160}>
+					{@render props.buttonSettings({ anchor: 0.5 })}
+				</Container>
+				<Container>
+					{@render props.buttonMenuClose({ anchor: 0.5 })}
+				</Container>
 			</Container>
 		</Container>
 	</MainContainer>
