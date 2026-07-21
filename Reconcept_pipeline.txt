@@ -1,0 +1,490 @@
+================================================================================
+ RECONCEPT PIPELINE  —  Madam Mirror  (5x4 Ways slot on Stake Engine)
+ A-Z checklist of EVERYTHING that was changed from the starter template
+ so the same game can be re-skinned into a new concept end-to-end.
+================================================================================
+
+HOW TO USE THIS FILE
+--------------------
+This is the master reskin/reconcept map. It lists every layer that had to be
+touched to turn the vanilla Stake `0_0_ways` template into "Madam Mirror".
+When you reskin to a new concept, walk this file top-to-bottom and swap each
+asset / config / string / audio cue for the new theme. Anything marked
+[TEMPLATE-REMOVED] is dead template art we deleted — don't waste time on it.
+
+Two independent halves must BOTH be reskinned and kept in lockstep:
+  1. FRONTEND  -> web-sdk/apps/ways   (Svelte + PixiJS render layer)
+  2. MATH      -> math-sdk/games/0_1_madam_mirror   (Python RGS math + books)
+The frontend reads books/events produced by the math; if you rename symbols or
+modes in one, you MUST mirror it in the other.
+
+Legend:  [ASSET] art/audio file   [CODE] source file   [CFG] config/identity
+         [GEN] generator/tool script   [TEMPLATE-REMOVED] deleted template art
+
+================================================================================
+ A.  APP IDENTITY & GLOBAL CONFIG
+================================================================================
+[CFG] web-sdk/apps/ways/src/game/config.ts
+      - providerName: 'dramastudios'
+      - gameName: 'madam_mirror'
+      - gameID: '0_1_madam_mirror'
+      - rtp 0.965, numReels 5, numRows [4,4,4,4,4]
+      - betModes: base (feature buy off), bonus1/2/3 (buy bonus @ 100/400/1000x)
+      - symbols{} paytable + special_properties (wild/mirror/eye/scatter)
+[CFG] math-sdk/games/0_1_madam_mirror/game_config.py   (must match config.ts)
+[CFG] Game ID string appears in publish files + math config.json — keep in sync.
+NOTE: On a new concept, rename the app folder + gameID + game folder together,
+      then find/replace the old id across configs & publish index.json.
+
+================================================================================
+ B.  SYMBOLS  (the reels artwork — the #1 reskin surface)
+================================================================================
+Three parallel representations of EVERY symbol must be regenerated:
+
+1) ANIMATED SPINE RIGS  (on-reel land/win/postWin animation)
+   [ASSET] static/assets/spines/mm_symbols/  (shared atlas mm_symbols.atlas/.png)
+           per-symbol skeletons: h1..h5, l1..l5, w, s, hm .json
+   [CODE]  assets.ts keys H1..H5, L1..L5, W, S, HM (type 'spine', scale 1)
+   [GEN]   tools/gen_symbol_spines.py, tools/repack_madam_symbols.py,
+           tools/repack_add_eye.py, tools/gen_symbols_mirror.py
+   Each rig authored 1:1 with win / land / postWin anims + class-tinted FX.
+   The card face is a deformable mesh so postWin ripples the artwork.
+
+2) STATIC SYMBOL SHEET  (spin-blur / resting frames)
+   [ASSET] static/assets/sprites/symbolsStatic/symbolsStatic.{json,png,webp}
+   [CODE]  assets.ts key symbolsStatic
+   [GEN]   tools/make_spin_smears.py, tools/repack_symbols.py
+           (backup_* folders hold pre-burn/pre-reskin/pre-smear snapshots)
+
+3) PAYTABLE ICONS  (info screen)
+   [ASSET] static/assets/paytable/ : h1..h5, l1..l5, w, s, hm, me .png
+   [GEN]   tools/extract_paytable_symbols.py, tools/patch_h4_young_woman.py
+
+SYMBOL MEANING MAP (rename per concept):
+   H1 Lady Mirror, H2 The Wife, H3 The Man, H4 The Maiden, H5 The Dog
+   L1 Ace, L2 King, L3 Queen, L4 Jack, L5 Ten
+   W Wild, S Scatter, HM Mirror special, ME "Madam's Eye" special
+[TEMPLATE-REMOVED] spines/symbols, symbols2, symbols3 (legacy template rigs),
+   explosion still referenced from symbols3.atlas — keep or reskin if used.
+
+================================================================================
+ C.  BACKGROUNDS  (base game + free-spin/bonus game)
+================================================================================
+[ASSET] static/assets/sprites/mirror/
+   - bg_base.webp / bg_base_portrait.webp            (base game still)
+   - bg_base_anim.mp4 / bg_base_anim_portrait.mp4    (base ambient loop)
+   - bg_freespin.webp                                (bonus game still)
+   - bg_freespin_anim.mp4                            (bonus ambient loop)
+[ASSET] static/assets/sprites/scene/  (single full-scene ambient backdrop)
+   - scene_bg.webp / scene_bg.png
+[CODE]  assets.ts keys: mirrorBgBase(+Portrait), mirrorBgBaseAnim(+Portrait),
+        mirrorBgFreespin, mirrorBgFreespinAnim, sceneBg
+[CODE]  src/components/Background.svelte  (chooses still vs anim, base vs bonus)
+[GEN]   tools/build_bg_video.py (bakes ambient mp4 from stills),
+        tools/prepare_scene_assets.py, tools/prepare_art.py
+[TEMPLATE-REMOVED] spines/foregroundAnimation, foregroundFeatureAnimation
+   (Mining-Mayhem crystal-mine backdrops — replaced by parlor paintings).
+
+================================================================================
+ D.  CHARACTER  (Lady Mirror — the on-screen host / mascot)
+================================================================================
+[ASSET] static/assets/sprites/scene/lady_character.png  (base pose still)
+[ASSET] static/assets/sprites/scene/lady_bonus.png      (bonus/activated pose)
+[ASSET] static/assets/spines/lady/  lady.json + lady_bonus.json (shared atlas)
+   -> deformable mesh: floating idle (bob + breathing + veil/gown sway + aura)
+[CODE]  assets.ts keys: ladyCharacter, ladyBonus, ladySpine, ladyBonusSpine
+[CODE]  src/components/SceneCharacter.svelte (spine if loaded, else still;
+        swaps to bonus pose while gameType === 'freegame')
+[GEN]   tools/gen_lady_spine.py, tools/prepare_scene_assets.py
+
+================================================================================
+ E.  REEL FRAME & BOARD CHROME
+================================================================================
+[ASSET] static/assets/sprites/mirror/
+   - mirror_frame_wide.png        (main ornate reel frame — key art)
+   - frame_bottom_compartments.png(THREE gold wells: WAYS | FREE SPINS | WIN)
+   - root_frame_a.png / root_frame_b.png
+   - mirror_backing.png, glass_intact.png, glass_broken.png
+[CODE]  assets.ts keys: mirrorFrame, mirrorFrameBottomCompartments,
+        rootFrameA/B, glassIntact, glassBroken
+[CODE]  src/components/BoardFrame.svelte      (nine-slice frame dimensions)
+[CODE]  src/components/FrameMorphHud.svelte   (draws the 3 bottom compartments +
+        WAYS/WIN/FREE SPINS text morphed INTO the bottom rail — not overlaid)
+[CODE]  src/components/BoardFramePlasma.svelte, PlasmaLiner.svelte, BoardMask.svelte
+[GEN]   tools/make_wide_frame.py, tools/fix_frame_interior.py,
+        tools/prepare_root_frames.py, tools/generate_backing.py,
+        tools/measure_frame_nineslice.py, tools/profile_frame_depth.py
+[TEMPLATE-REMOVED] sprites/reelsFrame (reels_frame) still loaded for FS counter
+   frame; sprites/payFrame removed (loaded but never referenced).
+NOTE: side_rail_panel.png + FrameSideRail.svelte were the ABANDONED left-rail
+   approach — superseded by FrameMorphHud bottom rail. mirrorSideRail asset key
+   still exists but is not the active HUD path.
+
+================================================================================
+ F.  HUD / COUNTERS  (WAYS, WIN, FREE SPINS, buttons)
+================================================================================
+[ASSET] static/assets/sprites/mirror/
+   - ways_frame.png, fs_frame.png     (ornate counter frames, empty glass window)
+   - counter_glass.png                (cracked-glass texture overlay)
+   - ways_panel.png
+   - logo.png (mirrorLogo), buy_bonus_logo.png (in-HUD BONUS button emblem)
+[ASSET] static/assets/sprites/uiSlotsAssetsBespoke/  (autospin/turbo button art +
+        hover variants)  -> bespoke control-bar buttons
+[ASSET] static/assets/sprites/hud/  spin_rotate.png, drama_masks.png
+[CODE]  assets.ts keys: mirrorWaysFrame, mirrorFsFrame, mirrorCounterGlass,
+        mirrorWaysPanel, mirrorLogo, buyBonusLogo
+[CODE]  components: WaysCounter.svelte, FreeSpinCounter.svelte, FrameMorphHud.svelte,
+        RailPlaque.svelte, WinPlaque.svelte, InfoMarquee.svelte, FittedText.svelte
+[CODE]  ButtonBuyBonus reads buyBonusLogo key.
+[GEN]   tools/process_counter_frames.py, tools/process_counter_texture.py,
+        tools/gen_counter_panels.py, tools/make_spin_icon.py,
+        tools/make_drama_icon.py, tools/build_ui_click_sfx.py, tools/capture_counters.py
+[CODE]  Text overlaid at runtime (never baked) so counts never garble.
+>>> The actual BOTTOM CONTROL BAR (spin/bet/auto/turbo/menu) is NOT in this app —
+    it lives in the SHARED SDK packages. See section T.
+
+================================================================================
+ G.  FONTS  (bitmap fonts for numerals / plates)
+================================================================================
+[ASSET] static/assets/fonts/  each has .xml/.png/.webp
+   - goldFont   (mm_gold)     primary gold numerals
+   - silverFont (mm_silver)
+   - purpleFont (mm_purple)
+   - ghostFont  (mm_ghost)    absinthe-green Ghastly Panic variant (apparitions)
+   - amethystFont(mm_amethyst)violet variant for the "YOU WON" amount
+[CODE]  assets.ts keys: goldFont, silverFont, purpleFont, ghostFont, amethystFont
+[GEN]   tools/make_ghost_font.py, tools/make_amethyst_font.py, tools/make_blood_font.py
+[ASSET] base typeface files at repo root: Ghastly Panic.ttf; tools/Nosifer-Regular.ttf
+[TEMPLATE-REMOVED] fonts/goldBlur (mining blur numerals — never referenced).
+
+================================================================================
+ H.  AUDIO  (main BGM, bonus BGM, HUD clicks, SFX, celebration)
+================================================================================
+One packed sprite drives everything:
+[ASSET] static/assets/audio/sounds.{json,ogg,m4a,mp3,ac3}
+        (backup_original/ holds the untouched template pack)
+[CODE]  assets.ts key: sound  ->  src/game/sound.ts (cue routing)
+[GEN]   tools/gen_audio_mirror.py, tools/rebuild_audio_sprite.py,
+        tools/compose_celeb_track.py, tools/compose_missing_cues.py,
+        tools/build_ui_click_sfx.py
+
+CUE MAP (rename/replace per concept) — sprite keys in sounds.json:
+  MAIN / BONUS MUSIC:
+    bgm_main          base-game loop
+    bgm_freespin      bonus/free-spins loop
+    bgm_celeb_1..6    big-win celebration loops
+    bgm_winlevel_big/superwin/mega/epic/max   win-tier stingers
+  HUD / UI CLICKS:
+    sfx_btn_general   generic button click
+    sfx_btn_spin      spin button
+  REEL / LAND:
+    sfx_reel_stop_1..5, sfx_scatter_stop_1..5, sfx_symbols_landing,
+    sfx_royals_landing, sfx_scatter_reveal, sfx_scatter_win(_v2)
+  ANTICIPATION / TENSION:
+    sfx_anticipation(_start), jng_intro_fs, sfx_fs_respins, sfx_superfreespin
+  FEATURE / MULTIPLIER:
+    sfx_multiplier_* (combine/explosion/landing/reset/up/update/win), sfx_wild_explode
+  WIN LEVELS:
+    sfx_winlevel_small/nice/standard/substantial/end, sfx_bigwin_coinloop
+  CELEBRATION FX:
+    sfx_celeb_whoosh(_hi/_lo), swell, wobble, buildup, maxslam, hit
+  THEME-SPECIFIC (Madam Mirror bespoke):
+    sfx_xways_split   (ways-split telegraph), sfx_mirror_break (glass shatter),
+    sfx_madams_eye    (eye special), sfx_youwon_panel
+NOTE: If you change sprite keys, update sound.ts + winLevelMap.ts references.
+
+================================================================================
+ I.  BONUS / FREE-SPIN SEQUENCES  (the feature flow art + logic)
+================================================================================
+INTRO ("THE VEIL PARTS" — free-spins award reveal):
+[ASSET] mirror/fs_intro_mirror.webp + _otherside + _bloodmoon (one per bonus lvl)
+[CODE]  assets.ts: mirrorFsIntro(+Otherside/+Bloodmoon)
+[CODE]  src/components/FreeSpinIntro.svelte, BonusLevelBanner.svelte
+OUTRO ("YOU WON / TOTAL WIN" panel):
+[ASSET] mirror/fs_outro_panel.webp
+[CODE]  assets.ts: mirrorFsOutro ; src/components/FreeSpinOutro.svelte
+IN-BONUS COUNTER:
+[CODE]  FreeSpinCounter.svelte (+ fs_frame.png)
+BONUS TRIGGER / SPECIAL FX:
+[CODE]  ApparitionOverlay.svelte, Anticipation(s).svelte,
+        Transition.svelte, TransitionAnimation.svelte
+[ASSET] spines/transition/, spines/anticipation/, spines/reelhouse/ (glow)
+[GEN]   tools/prepare_glass_overlays.py, tools/make_gem_flipbook.py
+
+--- GLASS / SHATTER FX SYSTEM  (the bespoke "ways-split" set-piece) ------------
+[CODE]  src/components/MirrorShatter.svelte  — three distinct emitter events,
+        all drawn live with PixiJS Graphics (no sprite for the shards):
+   1) mirrorTelegraph  = the PRE-SPLIT VOLLEY. For each mirror->targets pair it
+      fires 8 tiny glass SPIKES per target (SHARDS_PER_TARGET=8) that stab from
+      the mirror cell into each target cell. Staggered rapid-fire, ease-in "stab
+      punch", elongated spike silhouette pointed along flight, sharp hit-flash +
+      violet core on arrival, plus pulsing target outlines. ~340ms window.
+      >>> THIS is "the ones that shoot the mini small pieces of glass before the
+          split". Tune: SHARDS_PER_TARGET, travel/delay, telegraphProgress dur.
+   2) mirrorShatter    = the SPLIT BURST. 14 glass shards per cell explode
+      outward with velocity + gravity + spin, fading over ~650ms (cubicOut).
+      >>> THIS is "the animated thing we got for the split".
+      Colors: 0xd8ecff (ice) / 0xb887ff (violet). Tune: count=14, duration 650.
+   3) mirrorBreak      = swaps the cell to the cracked-glass overlay (glassBroken
+      sprite) with a quick 130ms pop, ~420ms hold.
+[ASSET] mirror/glass_intact.png, mirror/glass_broken.png  (assets.ts glassIntact/
+        glassBroken) — the cracked-cell overlay art for mirrorBreak.
+[AUDIO] sfx_xways_split (telegraph/split), sfx_mirror_break (shatter) in sounds.json.
+[WIRING] mirrorTelegraph/mirrorShatter/mirrorBreak declared in
+        src/game/typesEmitterEvent.ts + routed via bookEventHandlerMap.ts.
+
+--- FALLING ROCKS -> GLASS SHARDS  (spine debris retheme) ----------------------
+The template's transition + anticipation spines rained PURPLE MINING ROCKS.
+[GEN]   tools/retheme_mirror_debris.py  repaints/redraws every atlas region named
+        "rock*":
+   - transition spine : purple rocks -> silver-lavender faceted glass shards
+     (real angular shard art drawn 4x-supersampled, `shards` arg replaces them
+      outright so nothing rock-shaped survives)
+   - anticipation spine: red-brown rocks / orange glow -> violet mirror glass
+[ASSET] rewrites static/assets/spines/transition/*.png + spines/anticipation/*.png
+        (originals backed up to assets-backup/retheme_mirror_debris)
+        >>> THIS is "them falling rocks that we replaced with pieces of glass".
+BUY-BONUS MENU (buy the feature):
+[ASSET] mirror/buy_seance.webp, buy_otherside.webp, buy_bloodmoon.webp,
+        buy_feature1/2/3.webp, buy_ante.webp, buy_bonus_logo.webp (+_orig backups)
+[GEN]   tools/process_buy_icons.py, tools/process_buycard_alpha.py,
+        tools/make_burn_cards.py
+[CODE]  intro/buy-menu UI in HTML modal (see commit "custom gothic HTML modal UI,
+        ante/feature bet modes")
+[TEMPLATE-REMOVED] spines/fsIntro, globalMultiplier, clusterWin, tumbleWin,
+        bigwin, winMeterExplosion, bonusButton (legacy template feature art).
+
+================================================================================
+ J.  WIN CELEBRATION  (big-win film reels + win tiers)
+================================================================================
+[ASSET] static/assets/sprites/celeb/  celeb_t2..t7 .webp (still) + .mp4 (loop)
+[CODE]  assets.ts: celebT2..T7 (+ *Anim) ; src/components/WinCelebration.svelte,
+        WinAnimation.svelte, WinCoins.svelte, WinSweep.svelte, WinDim.svelte, Win.svelte
+[CODE]  src/game/winCelebrationMap.ts, winLevelMap.ts (tier -> art + audio)
+[GEN]   tools/celeb_remake_batch.py, tools/scenario_celebration_scenes.py,
+        tools/compose_celeb_track.py
+[ASSET] coin flipbook: static/assets/sprites/coin/SD2_Coin.{json,png}
+
+================================================================================
+ K.  INTRO / LOADING / FIRST PAINT
+================================================================================
+[ASSET] mirror/loading.webp (mirrorLoading), logo.png (mirrorLogo)
+[ASSET] mirror/intro_mirror.mp4 + intro_mirror_portrait.mp4 ("enter the mirror")
+[ASSET] mirror/intro_seance.webp, intro_otherside.webp, intro_bloodmoon.webp
+        (carousel key art)
+[CODE]  assets.ts: mirrorLoading, mirrorLogo, introMirror(+Portrait),
+        mirrorIntroSeance/Otherside/Bloodmoon
+LOADING SCREEN:
+[CODE]  src/components/LoadingScreen.svelte (renders mirrorLoading painting +
+        progressBar; the template 'loader' spine is preloaded but NOT drawn here)
+[ASSET] mirror/loading.webp, sprites/progressBar/progressBar.* (assets.ts progressBar)
+CONTINUE / SKIP BUTTONS ("press/tap anywhere to continue", skip intro):
+[CODE]  src/components/PressToContinue.svelte  (post-intro / post-win "continue")
+[CODE]  src/components/TapToSkip.svelte        (skip the intro video/carousel)
+[CODE]  src/components/ResumeBet.svelte        (resume-unfinished-round prompt)
+[ASSET] sprites/pressToContinueText/MM_pressanywhere.* (the press-anywhere plate,
+        assets.ts key pressToContinueText)
+[GEN]   tools/qa_shot_continue.py, tools/qa_tap_skip.py, tools/qa_tap_timing.py (QA)
+CAROUSEL / INTRO VIDEO:
+[CODE]  IntroCarousel.svelte, IntroVideo.svelte
+[GEN]   tools/make_intro_startframes.py, tools/post_process_intro.py,
+        tools/scenario_intro_video.py
+[TEMPLATE-REMOVED] spines/loader (Mining-Mayhem miner face) — preloaded, unused.
+
+================================================================================
+ L.  COMPONENT INVENTORY  (src/components — reskin/verify each)
+================================================================================
+Board/reels: Board, BoardBase, BoardContainer, BoardFrame, BoardFramePlasma,
+   BoardMask, PlasmaLiner, ReelSymbol, Symbol, SymbolWrap, SymbolSprite,
+   SymbolSpine, SymbolSpineMain
+HUD: FrameMorphHud, WaysCounter, FreeSpinCounter, RailPlaque, WinPlaque,
+   InfoMarquee, FittedText, (FrameSideRail = deprecated)
+Scene: Background, SceneCharacter
+Feature/FX: Anticipation(s), ApparitionOverlay, MirrorShatter, Transition,
+   TransitionAnimation, FreeSpinIntro, FreeSpinOutro, BonusLevelBanner
+Win: Win, WinAnimation, WinCelebration, WinCoins, WinDim, WinSweep
+Flow/sys: Game, LoadingScreen, IntroCarousel, IntroVideo, PressToContinue,
+   TapToSkip, ResumeBet, EnableGameActor, EnableSound, Sound, I18nTest
+[CODE]  src/game/ logic: actor.ts, bookEventHandlerMap.ts, eventEmitter.ts,
+   typesBookEvent.ts, typesEmitterEvent.ts, stateGame.svelte.ts, stateLayout.ts,
+   stateShake.svelte.ts, stateApp.ts, stateXstate.ts, betModeMeta.ts, constants.ts,
+   flameDraw.ts, glassChrome.ts, plaqueMount.ts, utils.ts, winLevelMap.ts,
+   winCelebrationMap.ts, sound.ts, context.ts, types.ts
+
+================================================================================
+ M.  MATH-SDK  (Python RGS — must be reskinned/re-run in lockstep)
+================================================================================
+[CODE]  math-sdk/games/0_1_madam_mirror/
+   - game_config.py    identity, symbols, paytable, bet modes (mirror config.ts)
+   - gamestate.py, game_calculations.py, game_events.py, game_executables.py,
+     game_override.py, game_optimization.py
+   - run.py            entry to generate books/lookups
+   - make_reels.py, make_base_books.py, make_mirror_book.py, make_eye_book.py
+   - reels/  BR0.csv, BRWCAP.csv, FR0.csv, FRWCAP.csv  (reel strips)
+   - analyze_compliance.py, smoke_new_modes.py, test_quick.py (verification)
+[OUT]   library/  (regenerated — do NOT hand-edit):
+   - books/books_{base,bonus1,bonus2,bonus3}.json
+   - configs/ (event_config_*, math_config.json, config_fe_0_1_madam_mirror.json)
+   - lookup_tables/, optimization_files/, forces/
+   - publish_files/ (books_*.jsonl.zst, lookUpTable_*, index.json) -> Stake upload
+NOTE: Symbol names, bet-mode names, and gameID MUST match the frontend exactly.
+      After math changes: re-run run.py, re-optimize, re-publish, re-test books.
+
+================================================================================
+ N.  LOCALIZATION / I18N
+================================================================================
+[CODE]  src/i18n/  (translated strings)
+[ASSET] sprites/winSmall/MM_Localisation_winsmall.* (localized WIN plate)
+[ASSET] sprites/freeSpins/freeSpins.* (localized FREE SPINS plate)
+[CODE]  src/components/I18nTest.svelte for QA
+NOTE: prefer runtime bitmap text over baked plates so new languages don't garble.
+
+================================================================================
+ O.  STORYBOOK / QA HARNESS
+================================================================================
+[CODE]  src/stories/  ComponentsGame.stories.svelte (+ ComponentsSymbol,
+        ModeBase*/ModeBonus*/ModeFeature* book stories)
+[GEN]   tools/qa_*.py  (100+ Playwright capture scripts — key ones:)
+        qa_capture_bonus/fsintro/fsoutro/counters/hud/intro/scene/states,
+        qa_morph_bottom, qa_morph_shots, qa_full_shot, qa_boot_check, qa_capture.py
+        Run pattern: start dev/storybook, run qa_*.py -> writes to qa-shots/
+NOTE: qa-shots/ and qa-reports/ are gitignored (regenerable).
+
+================================================================================
+ P.  DOCS / COMPLIANCE  (keep updated per concept)
+================================================================================
+[DOC]  GAME_CONCEPT_MADAM_MIRROR.md   design bible (rename/rewrite per concept)
+[DOC]  GAME_ARCHITECTURE.md           system architecture
+[DOC]  ASSET_CHECKLIST_MADAM_MIRROR.md asset tracking
+[DOC]  STAKE_ENGINE_COMPLIANCE.md     Stake submission requirements
+[DOC]  MADAM_MIRROR_replacements.txt  template->theme replacement log
+[DOC]  memory.txt, previousgame_changes.txt, tobefixed.txt  working notes
+[DOC]  docs/ , docs_screenshots/
+
+================================================================================
+ Q.  RUN / BUILD / SERVE
+================================================================================
+Frontend (from web-sdk/apps/ways):
+   pnpm install            (root: web-sdk — pnpm workspace)
+   pnpm dev                -> http://localhost:3001   (live game)
+   pnpm storybook          -> http://localhost:6001   (component QA)
+   pnpm build              -> production bundle
+Math (from math-sdk):
+   pip install -r requirements.txt ; python games/0_1_madam_mirror/run.py
+
+================================================================================
+ R.  RESKIN ORDER OF OPERATIONS  (recommended sequence for next concept)
+================================================================================
+ 1. Decide concept, rewrite GAME_CONCEPT + symbol meaning map (section B).
+ 2. Rename identity: config.ts + game_config.py + gameID + app/game folders (A).
+ 3. MATH first: reels, paytable, bet modes -> run.py -> books/publish (M).
+ 4. Symbols: spine rigs + static sheet + paytable icons (B).
+ 5. Backgrounds base+bonus (stills + ambient loops) (C).
+ 6. Character/mascot spine + poses (D).
+ 7. Frame + bottom HUD compartments + counters (E, F).
+ 8. Shared HUD: retheme accent/icons + control bar; rewrite gameInfo copy;
+    verify social-casino text (T).
+ 9. Fonts (G).
+10. Audio pack: edit assets-raw stems -> rebuild sprite: BGM/UI/SFX/celeb (H, V).
+11. Bonus sequences: intro/outro/buy-menu/shatter FX + rocks->glass (I).
+12. Win celebration films + tiers (J).
+13. Intro/loading/logo/carousel + app shell (title/favicon/loader) (K, U).
+14. i18n strings + localized plates (N).
+15. (Art/video via AI: Scenario/Seedance generate -> post-process -> pack) (W).
+16. QA sweep via Storybook + qa_*.py, update docs/compliance (O, P).
+17. Build, test books, publish to Stake (M, Q).
+
+================================================================================
+ S.  DEAD TEMPLATE ART ALREADY REMOVED  (don't reskin these)
+================================================================================
+spines: loader, symbols, symbols2, symbols3(except explosion), fsIntro,
+   globalMultiplier, clusterWin, tumbleWin, bigwin, winMeterExplosion,
+   foregroundAnimation, foregroundFeatureAnimation, bonusButton
+sprites: payFrame ; fonts: goldBlur
+(These were Mining-Mayhem starter assets loaded-but-unused; safe to ignore.)
+
+================================================================================
+ T.  SHARED SDK PACKAGE CUSTOMIZATIONS  (web-sdk/packages — the HUD & chrome!)
+================================================================================
+CRITICAL: a large part of the reskin lives OUTSIDE apps/ways, in shared packages.
+These are the bottom control bar, every HUD button/icon, the house style, the
+info/paytable copy, and social-casino compliance. They affect ALL games on the
+SDK, so change the ACCENT/theme + copy per game and keep the plumbing.
+
+BOTTOM CONTROL BAR + HUD BUTTONS + ICONS:
+[CODE]  packages/components-ui-pixi/src/hudTheme.ts  — Drama Studios HUD "house
+        style" (dark-glass bodies, metallic steel/slate bevels, gold text,
+        accent hue). Per-game theming = the `accent`/`accentGlow` hue + fonts.
+[CODE]  packages/components-ui-pixi/src/hudDraw.ts   — draws the button/plate
+        chrome (gradient bodies, bevels, hover/pressed/disabled states).
+[CODE]  packages/components-ui-pixi/src/icons.ts     — bespoke vector control
+        icons: decrease, increase, menu, turbo, autoSpin, payTable, info,
+        settings, soundOn/Off, menuExit, spin, stop, star, crown, coins, play,
+        chevron. (Reskin icon shapes/weights to match new theme.)
+[CODE]  packages/components-ui-pixi/src/types.ts, package.json
+[CODE]  packages/state-shared/src/stateUi.svelte.ts — added `boardFrameWidth` so
+        the shared control row fits the reel-frame width at any screen size
+        (BoardFrame publishes it; HUD layouts consume it).
+[CODE]  packages/pixi-svelte/src/lib/utils.svelte.ts — layout/util tweaks.
+
+GAME INFO / PAYTABLE COPY (feeds info modal + InfoMarquee):
+[CODE]  packages/components-ui-html/src/data/gameInfo.ts  — game info / rules /
+        paytable copy (source of truth). Re-exported from components-ui-html/index.ts.
+        >>> Rewrite this text per concept (symbol names, rules, feature descriptions).
+
+SOCIAL-CASINO LANGUAGE COMPLIANCE (stake.us):
+[CODE]  packages/utils-shared/socialText.ts — socializeText(): when loaded with
+        ?social=true, rewrites prohibited gambling terms (bet->play, buy->get,
+        cash->coins, wager->play, etc.), preserving ALL-CAPS. Required by Stake
+        Engine US jurisdiction rules. Keep as-is; verify new copy passes it.
+[CODE]  packages/utils-shared/amount.ts — currency formatting tweak.
+NOTE: HTML modals / global styles also live in components-ui-html (Modals,
+      GlobalStyle, GameVersion, i18n messagesMap).
+
+================================================================================
+ U.  APP SHELL & BROWSER BRANDING
+================================================================================
+[CODE]  web-sdk/apps/ways/src/app.html  — page shell. IMPORTANT: Stake Engine XSS
+        policy forbids external stylesheets/fonts, so all fonts must be bundled
+        locally (no Google Fonts link). Set <title>/meta per concept here.
+[CODE]  web-sdk/apps/ways/src/routes/+layout.svelte — global layout wrapper.
+[CODE]  web-sdk/apps/ways/src/hooks.server.ts
+[ASSET] web-sdk/apps/ways/static/favicon.svg   — browser tab icon (rebrand).
+[ASSET] web-sdk/apps/ways/static/loader.gif     — pre-boot HTML loader spinner
+        (shown before the Pixi app mounts — rebrand per concept).
+
+================================================================================
+ V.  RAW / SOURCE ASSETS  (pre-pack sources — keep for re-editing)
+================================================================================
+[SRC]   web-sdk/apps/ways/assets-raw/audio_gen/  — the individual mp3 STEMS that
+        get packed into the audio sprite (one file per cue + manifest.json).
+        Includes source-only cues (e.g. sfx_ui_click, sfx_ui_click_heavy) that
+        get merged. Edit stems here -> re-run rebuild_audio_sprite.py.
+[SRC]   web-sdk/apps/ways/tools/symbol_art/  — the master symbol paintings:
+        card_h1_lady_mirror, h2_wife, h3_man, h4_little_girl/young_woman, h5_dog,
+        l1_ace..l5_ten, me_madams_eye .png -> feed the spine/static/paytable gens.
+[SRC]   *_orig.webp / *_orig.png and backup_* folders across static/assets — the
+        untouched donor/intermediate art (safe to delete on a fresh concept).
+[SRC]   assets-backup/ (gitignored) — retheme backups (e.g. retheme_mirror_debris).
+NOTE: assets-raw sources are the START of every art/audio chain — reskin these
+      first, then run the matching tools/ generator to (re)build the packed asset.
+
+================================================================================
+ W.  AI ASSET-GENERATION PIPELINE  (how the art/video was actually produced)
+================================================================================
+Most stills/videos were generated via AI (Scenario + Seedance) then post-processed.
+[GEN]   tools/scenario_api.py            — Scenario API client (auth/key)
+        tools/scenario_generate.py       — image generation
+        tools/scenario_intro_video.py    — image->video intro
+        tools/scenario_video(_batch).py  — video generation
+        tools/scenario_celebration_scenes.py, scenario_seedance_* , seedance_vec_batch.py
+        tools/scenario_find_models.py, scenario_probe_video.py
+[CFG]   API key/creds: godmodeapi.txt, scenariocrd.txt (gitignored — never commit)
+[OUT]   tools/scenario_out/ (gitignored intermediate renders)
+FLOW: generate (Scenario/Seedance) -> post_process_intro / prepare_* / retheme_*
+      -> pack (repack_* / rebuild_audio_sprite / build_bg_video) -> register in
+      assets.ts. Reuse this chain to mass-produce a new concept's art set.
+
+================================================================================
+ END — regenerate this file whenever a new asset layer or feature is added.
+================================================================================
