@@ -55,7 +55,10 @@ const SPECIAL_SYMBOL_SIZE = 1;
 const SPIN_OPTIONS_SHARED = {
 	reelFallInDelay: 80,
 	reelPaddingMultiplierNormal: 1.25,
-	reelPaddingMultiplierAnticipated: 18,
+	// was 18 (an ~18x drawn-out scatter tension hang). Kept short so the
+	// scatter "anticipation" is a quick beat, not a slow crawl — and it's now
+	// fully skippable with a tap / space.
+	reelPaddingMultiplierAnticipated: 4,
 	reelFallOutDelay: 145,
 };
 
@@ -71,11 +74,12 @@ export const SPIN_OPTIONS_DEFAULT = {
 
 export const SPIN_OPTIONS_FAST = {
 	...SPIN_OPTIONS_SHARED,
-	symbolFallInSpeed: 7,
+	// turbo drops: much snappier fall + near-instant settle (hacksaw-style)
+	symbolFallInSpeed: 12,
 	symbolFallInInterval: 0,
-	symbolFallInBounceSpeed: 0.3,
-	symbolFallInBounceSizeMulti: 0.25,
-	symbolFallOutSpeed: 7,
+	symbolFallInBounceSpeed: 0.6,
+	symbolFallInBounceSizeMulti: 0.2,
+	symbolFallOutSpeed: 12,
 	symbolFallOutInterval: 0,
 };
 

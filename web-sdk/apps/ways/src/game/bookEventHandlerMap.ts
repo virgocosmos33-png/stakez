@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
-import { stateBet } from 'state-shared';
+import { stateBet, stateBetDerived } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
 import { waitForTimeout } from 'utils-shared/wait';
 
@@ -11,6 +11,7 @@ import { winLevelMap, type WinLevel, type WinLevelData } from './winLevelMap';
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
+import { isMegaWin } from './winConnection';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position } from './types';
 
@@ -91,7 +92,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'apparitionsRefresh' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		const betCost = stateBetDerived.betCost();
+		const megaWin = bookEvent.wins.find((win) => isMegaWin(win.win, betCost));
+
+		if (!megaWin) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
+		}
+
 		await sequence(bookEvent.wins, async (win) => {
 			// non-winning symbols dim so only the connecting combination pops;
 			// a golden sweep runs left-to-right over it while any haunted cells
@@ -102,6 +109,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			await animateSymbols({ positions: win.positions });
 			eventEmitter.broadcast({ type: 'apparitionsWinRelease' });
 		});
+
+		// mega-win lightning telegraph — after symbol anims, before money celebration (setWin)
+		if (megaWin) {
+			await eventEmitter.broadcastAsync({
+				type: 'winLightning',
+				winGroups: bookEvent.wins.map((win) => win.positions),
+				winAmount: megaWin.win,
+			});
+		}
+
 		// hold EVERY winning cell lit (union) under the overlay through the
 		// money count-up - the glass glint sweep is deferred to the very end
 		// (setWin, after the count-up) so it only plays once the spin settles

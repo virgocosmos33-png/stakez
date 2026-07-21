@@ -32,7 +32,7 @@
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 	let ways = $state(BASE_WAYS);
 	const waysPop = new Tween(1);
-	const waysText = $derived(ways.toLocaleString('en-US').replaceAll(',', ' '));
+	const waysText = $derived(String(ways));
 
 	const winText = $derived(bookEventAmountToCurrencyString(stateBet.winBookEventAmount));
 	const winPop = new Tween(1);

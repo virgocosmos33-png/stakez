@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { MainContainer } from 'components-layout';
+	import { OnHotkey } from 'components-shared';
 	import { Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
@@ -24,6 +25,11 @@
 	// boardLayout() is centered (anchor 0.5) at board.x / board.y.
 	const board = $derived(context.stateGameDerived.boardLayout());
 </script>
+
+<!-- space bar slam-stops too (works even when turbo isn't latched on) -->
+{#if busy}
+	<OnHotkey hotkey="Space" onpress={skip} />
+{/if}
 
 <MainContainer>
 	{#if busy}

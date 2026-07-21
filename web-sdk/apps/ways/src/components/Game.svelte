@@ -32,6 +32,7 @@
 	import MirrorShatter from './MirrorShatter.svelte';
 	import WinSweep from './WinSweep.svelte';
 	import WinDim from './WinDim.svelte';
+	import WinLightning from './WinLightning.svelte';
 	import PlasmaLiner from './PlasmaLiner.svelte';
 	import TapToSkip from './TapToSkip.svelte';
 
@@ -92,6 +93,9 @@
 		<PlasmaLiner />
 		<WinSweep />
 		<MirrorShatter />
+
+		<!-- mega-win FX: full-canvas prismatic + board lightning (must sit above board FX) -->
+		<WinLightning />
 
 		<!-- tap/click anywhere over the reels to slam-stop / skip the spin
 			(NLC-style); only active while a spin/animation is in progress -->
