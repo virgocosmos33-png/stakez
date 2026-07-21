@@ -268,27 +268,56 @@ BUY-BONUS MENU (buy the feature):
 ================================================================================
  K.  INTRO / LOADING / FIRST PAINT
 ================================================================================
-[ASSET] mirror/loading.webp (mirrorLoading), logo.png (mirrorLogo)
-[ASSET] mirror/intro_mirror.mp4 + intro_mirror_portrait.mp4 ("enter the mirror")
-[ASSET] mirror/intro_seance.webp, intro_otherside.webp, intro_bloodmoon.webp
-        (carousel key art)
-[CODE]  assets.ts: mirrorLoading, mirrorLogo, introMirror(+Portrait),
-        mirrorIntroSeance/Otherside/Bloodmoon
-LOADING SCREEN:
-[CODE]  src/components/LoadingScreen.svelte (renders mirrorLoading painting +
-        progressBar; the template 'loader' spine is preloaded but NOT drawn here)
-[ASSET] mirror/loading.webp, sprites/progressBar/progressBar.* (assets.ts progressBar)
-CONTINUE / SKIP BUTTONS ("press/tap anywhere to continue", skip intro):
-[CODE]  src/components/PressToContinue.svelte  (post-intro / post-win "continue")
-[CODE]  src/components/TapToSkip.svelte        (skip the intro video/carousel)
-[CODE]  src/components/ResumeBet.svelte        (resume-unfinished-round prompt)
-[ASSET] sprites/pressToContinueText/MM_pressanywhere.* (the press-anywhere plate,
-        assets.ts key pressToContinueText)
-[GEN]   tools/qa_shot_continue.py, tools/qa_tap_skip.py, tools/qa_tap_timing.py (QA)
-CAROUSEL / INTRO VIDEO:
-[CODE]  IntroCarousel.svelte, IntroVideo.svelte
+The boot order is:  PRE-BOOT LOADERS -> LOADING SCREEN (progress) -> ENTRY
+CAROUSEL (feature walkthrough) -> game.  ("enter the mirror" intro video is
+intentionally SKIPPED — CONTINUE jumps straight into the game.)
+
+--- PRE-BOOT HTML LOADERS  (shown before the Pixi app mounts) ------------------
+[CODE]  src/routes/+layout.svelte — renders TWO stacked loaders on black:
+   1) <LoaderStakeEngine src=stake-engine-loader.gif>  — Stake Engine's MANDATORY
+      loader (keep for compliance).
+   2) <LoaderBase src=loader.gif> — >>> THE DRAMA STUDIOS LOGO LOADER <<< on a
+      black background (maxWidth 360, ~2s), shown after the Stake loader completes.
+[ASSET] static/loader.gif             — the studio logo animation (rebrand per game)
+[ASSET] static/stake-engine-loader.gif — Stake's loader (leave as-is)
+        >>> THIS is "the studio logo we add on the loader".
+
+--- LOADING SCREEN  (Pixi, with progress bar) ---------------------------------
+[CODE]  src/components/LoadingScreen.svelte — cover-fits the mirrorLoading painting
+        and shows LoadingProgress until stateApp.loaded, then reveals the carousel.
+[ASSET] mirror/loading.webp (assets.ts mirrorLoading)
+[ASSET] sprites/progressBar/progressBar.* — 3 parts used: progressBarBackground.png,
+        progressBar.png, progressBarFrame.png (assets.ts progressBar).
+
+--- ENTRY CAROUSEL  (feature walkthrough shown on load) -----------------------
+[CODE]  src/components/IntroCarousel.svelte — >>> "the carousel on entry showing
+        the game details" <<< . 5 swipeable cards, each with headline copy + art:
+   1) LAND 3+ SCATTERS TO BEGIN THE SEANCE            (scatter symbol)
+   2) HAUNTED MIRRORS SHATTER INTO APPARITIONS ...    (hm intact + cracked)
+   3) THE MADAMS EYE TURNS EVERY SPLIT SYMBOL WILD    (wild + eye + wild)
+   4) SURVIVE 3 HAUNTINGS: SEANCE / OTHER SIDE / BLOOD MOON (bonus-level triptych)
+   5) WIN UP TO 30,000X YOUR BET  (auto-swaps to "...YOUR PLAY" in social mode)
+   Chrome: game logo (mirrorLogo) up top, 'silver' bitmap font, prev/next chevrons,
+   page dots, glass-pill CONTINUE button (glassChrome.drawGlassPill), Space/Arrow
+   hotkeys. Card art keys: s.png, hm_intact.png, hm_cracked.png, w.png, me.png,
+   mirrorIntroSeance/Otherside/Bloodmoon.
+   >>> Rewrite the 5 card headlines + swap art per concept. Uses only glyphs in the
+       'silver' font (no accents) — keep copy within that glyph set.
+[ASSET] assets.ts: mirrorLogo, mirrorIntroSeance/Otherside/Bloodmoon
 [GEN]   tools/make_intro_startframes.py, tools/post_process_intro.py,
         tools/scenario_intro_video.py
+
+--- CONTINUE / SKIP / RESUME BUTTONS ------------------------------------------
+[CODE]  src/components/PressToContinue.svelte  (post-win "continue")
+[CODE]  src/components/TapToSkip.svelte        (skip intro)
+[CODE]  src/components/ResumeBet.svelte        (resume-unfinished-round prompt)
+[ASSET] sprites/pressToContinueText/MM_pressanywhere.* (assets.ts pressToContinueText)
+[GEN]   tools/qa_shot_continue.py, tools/qa_tap_skip.py, tools/qa_tap_timing.py (QA)
+
+--- OPTIONAL "ENTER THE MIRROR" INTRO VIDEO  (currently skipped) ---------------
+[CODE]  src/components/IntroVideo.svelte
+[ASSET] mirror/intro_mirror.mp4 + intro_mirror_portrait.mp4 (assets.ts introMirror
+        (+Portrait)) — built but NOT in the active flow (carousel CONTINUE skips it).
 [TEMPLATE-REMOVED] spines/loader (Mining-Mayhem miner face) — preloaded, unused.
 
 ================================================================================
@@ -450,8 +479,10 @@ NOTE: HTML modals / global styles also live in components-ui-html (Modals,
 [CODE]  web-sdk/apps/ways/src/routes/+layout.svelte — global layout wrapper.
 [CODE]  web-sdk/apps/ways/src/hooks.server.ts
 [ASSET] web-sdk/apps/ways/static/favicon.svg   — browser tab icon (rebrand).
-[ASSET] web-sdk/apps/ways/static/loader.gif     — pre-boot HTML loader spinner
-        (shown before the Pixi app mounts — rebrand per concept).
+[ASSET] web-sdk/apps/ways/static/loader.gif    — the DRAMA STUDIOS logo loader
+        (pre-boot, on black; rendered by routes/+layout.svelte). See section K.
+[ASSET] web-sdk/apps/ways/static/stake-engine-loader.gif — Stake's mandatory
+        pre-boot loader (leave as-is). See section K for the boot sequence.
 
 ================================================================================
  V.  RAW / SOURCE ASSETS  (pre-pack sources — keep for re-editing)
