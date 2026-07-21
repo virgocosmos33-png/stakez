@@ -37,7 +37,7 @@
 
 			<BaseButtonWrap type="full-width">
 				<Button data-test="confirm-button" onclick={confirm}>
-					<BaseIcon width="100%" height="3rem" />
+					<BaseIcon width="100%" height="3rem" border="2px solid white" />
 					<BaseButtonContent>
 						<span class="confirm-label">{i18nDerived.confirm()}</span>
 					</BaseButtonContent>
@@ -62,26 +62,25 @@
 		width: 100%;
 		padding: 0.5rem 1rem;
 		border-radius: 12px;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.35));
-		border: 1px solid rgba(201, 154, 63, 0.4);
-		box-shadow: inset 0 1px 0 rgba(246, 228, 166, 0.15);
+		background: var(--mono-bg, #10161d);
+		border: 1px solid var(--mono-hairline, #2a3542);
 	}
 
 	.section-label {
-		font-family: 'Cinzel', Georgia, serif;
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		font-size: 0.78rem;
-		color: #b9b1a4;
+		color: var(--mono-fg-dim, #8b96a3);
 	}
 
 	.confirm-label {
-		font-family: 'Cinzel', Georgia, serif;
-		font-weight: 800;
-		letter-spacing: 0.08em;
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
 		font-size: 1.05rem;
-		color: #ffedb8;
-		text-shadow: 0 0 8px rgba(255, 193, 46, 0.4);
+		color: var(--mono-fg, #ffffff);
 	}
 </style>

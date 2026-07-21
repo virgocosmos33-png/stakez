@@ -37,11 +37,11 @@
 		padding: 1.1rem 0.8rem 1rem;
 		margin: 0.5rem;
 		border-radius: 16px;
-		background: linear-gradient(180deg, rgba(26, 23, 32, 0.96), rgba(9, 8, 12, 0.98));
-		border: 1px solid rgba(201, 154, 63, 0.55);
+		background: linear-gradient(180deg, #131a22, #0b0f14);
+		border: 1px solid var(--mono-hairline, #2a3542);
 		box-shadow:
 			0 12px 44px rgba(0, 0, 0, 0.7),
-			inset 0 1px 0 rgba(246, 228, 166, 0.15);
+			inset 0 1px 0 rgba(255, 255, 255, 0.04);
 	}
 
 	.bet-row {
@@ -50,8 +50,8 @@
 		justify-content: center;
 		padding: 0.35rem 0.5rem;
 		border-radius: 12px;
-		background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(0, 0, 0, 0.35));
-		border: 1px solid rgba(201, 154, 63, 0.35);
+		background: var(--mono-bg, #10161d);
+		border: 1px solid var(--mono-hairline, #2a3542);
 	}
 
 	.cards-scroll {
@@ -63,13 +63,13 @@
 		overscroll-behavior: contain;
 		padding: 0.15rem 0.1rem 0.35rem;
 		scrollbar-width: thin;
-		scrollbar-color: #c99a3f rgba(255, 255, 255, 0.06);
+		scrollbar-color: var(--mono-edge, #33414f) rgba(255, 255, 255, 0.06);
 
 		&::-webkit-scrollbar {
 			width: 6px;
 		}
 		&::-webkit-scrollbar-thumb {
-			background: linear-gradient(180deg, #e9c877, #c99a3f);
+			background: var(--mono-edge, #33414f);
 			border-radius: 999px;
 		}
 	}

@@ -18,6 +18,8 @@
 	const value = $derived(numberToCurrencyString(stateBetDerived.betCost()));
 	const disabled = $derived(!context.stateXstateDerived.isIdle());
 
+	// tap the amount to open the bet menu; the flanking −/+ steppers (added by the
+	// portrait/tablet layouts) sit outside this label's bounds and only step.
 	const onpress = () => {
 		if (disabled) return;
 		context.eventEmitter.broadcast({ type: 'soundPressGeneral' });

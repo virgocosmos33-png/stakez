@@ -348,3 +348,252 @@ QA report: 2026-07-18 - qa-reports/QA-REPORT-2026-07-18-0605.md (symbol state re
   (0x05030a) at 0.55-0.7 alpha; current is pure black at 0.78. No spine regen needed
   (fix is a symbol-state swap, not an atlas change).
 - QA tools added: web-sdk/apps/ways/tools/{qa_capture_dim,qa_capture_dimclear,qa_probe_postwin}.py
+
+[2026-07-21 ~00:20] RESTORE BET-MENU MODAL on the amount (keep the −/+ steppers)
+- User: bring back "click the bet amount to open the bet menu modal" that was
+  recently replaced by −/+ stepper buttons. Both must coexist: tapping the BET
+  amount opens ModalBetMenu; the −/+ buttons ONLY step and never open the modal;
+  no overlap between amount / steppers / hit target; no underline hint.
+- Recovered the original trigger from git HEAD (it had been removed as an
+  uncommitted working-tree change) and re-applied it on top of the current
+  stepper layout — did not guess the mechanism.
+- Mechanism (canonical, same as ButtonBetMenu.svelte): broadcast soundPressGeneral
+  then set stateModal.modal = { name: 'betAmountMenu' }; gated on isIdle (cursor
+  pointer/not-allowed). Modals.svelte -> ModalBetMenu -> Popup renders .pop-up-wrap
+  containing the unique .bet-menu node (used for DOM assertion in QA).
+- ControlInfoBar.svelte (desktop + landscape, shared component): wrapped the BET
+  label+value in <Container eventMode="static" onpointerup={openBetMenu}> over a
+  transparent hit Rectangle: betHitX=dividerX+6 (242) .. ends 8px before the −
+  button's left edge (386) -> hit area 242..378, clear of the steppers. Re-added
+  Container + stateModal imports. −/+ steppers unchanged. No underline (per req).
+- LabelBet.svelte (portrait + tablet): restored the exact HEAD wrapper —
+  <Container eventMode="static" cursor=... onpointerup={onpress}> around UiLabel;
+  re-added getContext + stateModal. The flanking −/+ steppers are separate layout
+  siblings (Layout{Portrait,Tablet}), so they never overlap the label hit bounds.
+- FILES: components-ui-pixi/src/components/{ControlInfoBar,LabelBet}.svelte.
+  QA: web-sdk/apps/ways/tools/qa_betmodal.py (new; adapts qa_probe_betstepper.py).
+- VERIFIED all 4 layouts in Storybook via Playwright (mode-base-book--random);
+  shots in web-sdk/qa-shots/hud/betmodal-*  (OVERALL PASS each):
+  * amount click -> .bet-menu modal renders (betMenu/popup/confirm=1): desktop,
+    landscape, portrait, tablet all PASS (betmodal-<layout>-open.png show BET MENU).
+  * + then − step the value ($1.00 <-> $1,000.00) and do NOT open the modal
+    (betMenu=0 after each click): all PASS.
+  * widest value $1,000.00 never overlaps the steppers
+    (betmodal-<layout>-d-max.png): all PASS.
+  - Coord note: perfect-fit viewports (desktop 1600x900, portrait 540x960, tablet
+    1200x1200) map standard*cs directly; landscape 900x440 is letterboxed, so the
+    scr() transform must add the centred-MainContainer offset (fixed in the script;
+    amount x 394->453 after fix).
+- ModalBetMenu.svelte left untouched (as required). Nothing committed.
+
+[2026-07-21 ~00:45] MONO RESTYLE of Bonus Buy modal + all HTML modals (kill gold)
+- Goal: make the HTML modals (esp. Bonus Buy) match the dark "mono" pixi HUD
+  (ControlInfoBar.svelte): panel #10161d, hairline #2a3542, muted label #8b96a3,
+  white values, stepper face #1c2732 / border #33414f / white glyphs, ~10px radius,
+  Segoe UI + tabular-nums. Replace ALL gothic-gold (#ffc12e/#c9a227/#c99a3f/etc).
+- Followed the untracked brief docs/compui-brief-mono-hud.md and the repo's own QA
+  expectations (qa_verify_modal*_mono.py probe --mono-bg/--mono-line/--mono-fill).
+- SHARED TOKENS: global.scss now defines a --mono-* layer (bg/floor/surface/
+  surface-2/hover/pressed/hairline/edge/edge-hover/line/fill/fg/fg-dim/on-fill/
+  radius/font) mirroring the HUD; repointed legacy --ds-gold*/--ds-bone*/--ds-font*
+  to mono aliases; body font Cormorant serif -> var(--mono-font) system sans.
+- SHARED SKIN: BaseIcon.svelte -> flat mono (face #1c2732, hairline #33414f, 10px,
+  no glass sheen/glow); selected -> inverted WHITE fill (primary/active). This
+  themes EVERY modal button at once (steppers, CTAs, auto-spin, bet grid, etc.).
+- Bonus Buy pieces: BetMenuAmountToggle (white tabular $ value + mono -/+ glyphs,
+  44px targets), BonusCard (mono frame #10161d + hairline), BonusCards (mono
+  price/desc/btn type + floating art), BaseContent + BonusContentWrap{Portrait,
+  Landscape} (mono chrome/sheets/bet-plate/scrollbars), BaseTitle (white uppercase),
+  ModalBuyBonusConfirm (mono + white-outline primary CONFIRM).
+- Consistency (no regressions): ModalSettingsSound (switch=white ON + dark knob,
+  white slider fill/thumb, white value), ModalPayTable (active tab -> inverted
+  white, values -> white), ModalBetMenu + BetMenuAmountGrid (mono plate/labels/
+  scrollbar; selected chip = white fill + dark glyphs). grep: ZERO gold hex left
+  in components-ui-html/src (only unused @font-face defs remain).
+- AFFORDABILITY GREYING (new req): BonusCards computes per-card affordable =
+  betAmount>0 && balance >= betAmount*costMultiplier (reactive); passes to
+  BonusCard which greys the WHOLE card (filter:grayscale(1); opacity:.45;
+  pointer-events:none) + button stays disabled. $0 -> all grey; partial balance ->
+  affordable in colour, rest grey.
+- FLOATING ART (new req): .card-art now drop-shadow + no box frame/border (ready
+  for transparent cutouts). BUT investigation (tools/qa_analyze_icons.py + PIL/Read
+  previews + tools/qa_key_demo.py) shows ALL 7 feature icons are OPAQUE 1536x1024
+  webp on a BLACK bg with a BAKED ORNATE FRAME + BAKED GOTHIC NAME -> NOT cleanly
+  separable (keying leaves the frame+title and swiss-cheeses the art). ACTION FOR
+  COORDINATOR: generate fresh clean TRANSPARENT PNG cutouts (no frame, no baked
+  name) for: ante=EXTRA BET, feature1=MIRROR SPIN, feature2=TWIN MIRRORS,
+  feature3=TRIPLE MIRRORS, bonus1=THE SEANCE, bonus2=THE OTHER SIDE,
+  bonus3=BLOOD MOON. Files: apps/ways/static/assets/sprites/mirror/buy_*.webp.
+  Once dropped in, the float+drop-shadow + mono title ribbon can be finished.
+- STORIES (apps/ways/src/stories/ComponentsGame.stories.svelte): added payTable,
+  buyMenuGreyed ($0 balance), buyMenuMixed (balance 50 @ bet 1 -> ante/feature1-3
+  colour, bonus1-3 grey). Existing buy-menu reused for desktop/portrait/landscape.
+- VERIFIED via Playwright (Storybook :6001), shots in web-sdk/qa-shots/hud/:
+  buybonus-{desktop,portrait,landscape}.png (mono stepper/cards/CTAs, no gold),
+  buybonus-confirm.png (mono confirm), buybonus-greyed.png (all cards grey at $0),
+  buybonus-mixed.png (4 colour + 3 grey), paytable-mono.png + settings-mono.png
+  (mono, not regressed). DOM probe confirms --mono-bg #10161d / --mono-line #fff /
+  --mono-fill #fff live. Icon analysis previews in qa-shots/hud/_icons/.
+- Constraints honoured: no edits under components-ui-pixi/ (ControlInfoBar etc.
+  only READ for palette); edits confined to components-ui-html + one stories file;
+  new QA tools under apps/ways/tools/qa_*.py. Nothing committed.
+
+[2026-07-21 ~01:15] RESPONSIVE NINE-SLICE reel FRAME (border-image) + slim restyle
+- Bug: BoardFrame.svelte drew mirror_frame_wide.png as ONE fixed-aspect sprite
+  (FRAME_ASPECT=1213/892, height derived from width only) so the gold frame never
+  hugged the board vertically across portrait/landscape/square. Wanted: image-based
+  bordering (CSS border-image semantics) responsive to board width AND height.
+- APPROACH A (chosen): single-texture PIXI.NineSliceSprite (pixi.js v8.8.1 ships it;
+  pixi-svelte has NO NineSlice component). Attached a RAW PIXI.NineSliceSprite via
+  the pixi-svelte escape hatch: getContextParent().addToParent(node) (same onMount
+  addChild/destroy path <Graphics>/<Sprite> use), driven by a $effect. Corners stay
+  crisp/undistorted; top/bottom + left/right moldings stretch; centre (flat black
+  panel that's baked into the art) stretches. No pre-slicing (approach B) needed.
+- INSETS from the art (tools/measure_frame_nineslice.py, profile_frame_depth.py,
+  measure_fast.py, probe_frame.py): texture 1213x892; interior is opaque near-black
+  (13,13,15); outer corners transparent; side rail gold depth ~58px, top/bottom rail
+  ~101px, ornate CORNER turn reaches ~130-140px. leftWidth=topHeight=rightWidth=
+  bottomHeight = INSET 140 fully contains every corner (undistorted) leaving only the
+  flat panel to stretch. Debug overlay qa-shots/reelframe/_insets_thr90.png.
+- SLIM + CONTAINED (user follow-up: frame was too thick + clipping): render the
+  nine-slice UNIFORMLY downscaled FRAME_SCALE=0.34 (corner ~48px, side trim ~20px in
+  board-space) so it reads as elegant thin gold trim, reels dominate. Responsive
+  math: s=FRAME_SCALE; outerW=bw+2*GAP+2*58*s, outerH=bh+2*GAP+2*101*s (rendered px,
+  GAP=6); geoW=outerW/s, geoH=outerH/s (nine-slice needs LOCAL size, scale set
+  separately); pos = board centre - rendered half-size. Because both live board w AND
+  h drive it, gold hugs all 4 sides at any aspect; fixed small outward extent
+  (~GAP+gold*s = 26-40px) keeps the whole frame on-screen (no clipping).
+- KEPT the dark recess matte (Graphics roundRect #0a090c behind reels, sized to board)
+  so nothing leaks through the opening. Frame zIndex -3, matte -2, both in BoardFrame's
+  own <MainContainer> (shares the reels' scaled coord space).
+- Files: apps/ways/src/components/BoardFrame.svelte (rewritten). assets.ts UNCHANGED
+  (mirrorFrame key already points at mirror_frame_wide.png; no new textures). New QA/
+  measure tools under apps/ways/tools/: measure_frame_nineslice.py, profile_frame_
+  depth.py, measure_fast.py, probe_frame.py, qa_nineslice.py.
+- VERIFIED via Playwright (Storybook :6001, mode-base-book--random), shots in
+  qa-shots/reelframe/nineslice-*.png at 5 distinct aspects: square 1200x1200 (1.00,
+  LayoutTablet), tall 800x1400 (0.57), desktop 1600x900 (1.78), portrait 540x960
+  (0.56), wide 1440x600 (2.40; captured smaller since swiftshader starves the big
+  1920x800 canvas on the loading screen). All: thin/elegant, fully on-screen (no clip),
+  tightly hugging reels on all 4 sides, corners crisp/undistorted. NOTE: swiftshader
+  loads the video-heavy game slowly; a single long-lived context starves on the loading
+  screen, so qa_nineslice.py uses a FRESH browser per view (optional 2nd arg filters
+  views; keep canvases modest so the load completes).
+- Constraints honoured: no edits under components-ui-pixi/ or components-ui-html/;
+  edits confined to apps/ways/. Nothing committed.
+
+[2026-07-21 ~01:35] TRANSPARENT BUY-ICON SWAP -> ATTEMPTED THEN REVERTED
+- Coordinator supplied 7 "transparent cutout" PNGs in workspace assets/
+  (mirror_buy_{extrabet,mirrorspin,twinmirrors,triplemirrors,seance,otherside,
+  bloodmoon}.png) to replace the opaque gothic plaques and asked to (1) PIL-process
+  into buy_*.webp slots, (2) add a mono title ribbon under each card (baked name gone),
+  (3) keep mono theme + affordability greying.
+- BLOCKER FOUND: the supplied PNGs are NOT transparent — they are flat 1024x1024
+  RGB (mode=RGB, no alpha; alpha extrema 255/255) with a light-gray CHECKERBOARD
+  pattern BAKED into the background (corner pixels alternate ~231 / ~254, zero
+  saturation). PIL convert('RGBA') therefore yields a fully-opaque square, so the
+  cards rendered as WHITE/opaque boxes; MIRROR SPIN also showed as a broken image
+  mid-process (partial/failed webp write). Real cutouts would need me to key out the
+  baked checkerboard (edge flood-fill) — not what "already transparent" implied.
+- PER USER: fully REVERTED the icon swap + title ribbon; KEPT the mono theme and the
+  affordability greying (those were not the problem).
+  * Assets: git checkout -- the 7 buy_*.webp (byte-identical to HEAD; git diff --stat
+    empty). The originals were only ever git-tracked, so no leftover files.
+  * BonusCards.svelte: title snippet back to baked-name form (img when icon, else
+    text .title; removed the always-on ribbon). .card-art back to original
+    (width:100%; height:auto; border-radius:6px; dropped the drop-shadow/object-fit/
+    max-height float styling). .title back to plain mono (weight 600, 1rem, white).
+    KEPT: {@const affordable=...}, <BonusCard {affordable}>, disabled={!affordable}.
+  * BonusCard.svelte greyed state untouched (still greys whole card when unaffordable).
+- Left the workspace assets/mirror_buy_*.png in place (unused by the game) per request.
+  Processing script apps/ways/tools/process_buy_icons.py kept for reference (note:
+  webp lossless method=6 HANGS in this Pillow build; use method<=4).
+- VERIFIED via Playwright (Storybook :6001), fresh browser per shot (headless
+  chromium crashed when reusing one context across many WebGL reloads). Shots in
+  qa-shots/hud/: buybonus-reverted-{mixed,greyed}-{desktop,portrait}.png — all
+  imgs_ok=True broken=0. Original plaques (with baked names) render correctly, no
+  white boxes / no broken MIRROR SPIN, mono stepper+cards intact, greying still
+  correct (mixed = ante+feature1-3 colour, bonus1-3 grey; $0 = all 7 grey). Nothing
+  committed.
+
+[2026-07-21 ~02:00] SCENE RAIL + CENTERED WIN (CRITICAL CORRECTION)
+- FINAL ARCHITECTURE (supersedes earlier "put count-up on the rail" work):
+  * LEFT RAIL = FrameSideRail.svelte � ONE tall amethyst side_rail_panel.png flush
+    to the gold reel frame on wide layouts. Always-on WAYS + WIN text (SPINS when
+    free spins). Same silver FittedText style; WIN shows $0.00 idle / live amount.
+  * CENTER WIN = Win.svelte RESTORED HEAD � ResponsiveBitmapText fontFamily 'gold'
+    at board center for normal wins; big-win stays full-screen celebration.
+  * HUD gold LabelWin pill STAYS REMOVED (layouts already stripped; do not re-add
+    amountWin / touch components-ui-pixi).
+- plaqueMount.ts: getSideRailLayout() � wide mounts panel left of frame; narrow
+  skips tall panel (would shrink unreadably) and stacks WAYS/WIN text above board.
+- PressToContinue.svelte: silver bitmap "PRESS ANYWHERE TO CONTINUE" just below
+  the board (above HUD), not template PNG at screen bottom.
+- Lady Mirror: SceneCharacter faces reels (pre-flipped); ladyBonus when freegame.
+- Z-order: FrameSideRail after FX; Win after UI so center horror font + plaques
+  sit above ambient FX.
+- VERIFIED Storybook :6001 ? qa-shots/scene/: ways-base-{desktop,portrait},
+  winplaque-{desktop,portrait}, bigwin-{desktop,portrait}, winways-left-*.
+  Desktop: side panel WAYS+WIN, centered red $12.34, no gold HUD pill, PTC clear.
+  Portrait: crest text WAYS+WIN above board + centered red win; character hidden
+  (narrow). Nothing committed.
+
+--- Lady Mirror idle: proper SPINE rig (was static) [subagent] ---
+Complaint: SceneCharacter (Lady Mirror, right of reels) was a static PNG; the
+*Anim video swap point was never filled. User wanted her FLOATING via a proper
+spine animation / atlas (not a breathing sprite; not a keyed video - a lace
+veil can't be chroma-keyed so an alpha video was rejected).
+Fix:
+- tools/gen_lady_spine.py: packs her existing cutouts (lady_character.png +
+  lady_bonus.png, trimmed, scaled to 1100h) into a shared atlas
+  static/assets/spines/lady/lady.atlas(+.webp/.png) with regions lady_base,
+  lady_bonus, and writes lady.json + lady_bonus.json (Spine 4.1, runtime
+  spine-pixi-v8 4.2.74). Rig: lady_body = the artwork as a deformable grid
+  MESH (6x9) + lady_aura = additive violet ghost copy behind. Looping 'idle':
+  float bob (body translate y) + breathing (body scale) + slow sway (rotate) +
+  veil/gown cloth-sway (mesh deform, ~0 at head growing to hem, seamless) +
+  pulsing ghost aura (scale + alpha).
+- assets.ts: registered ladySpine / ladyBonusSpine (type spine, shared atlas).
+- SceneCharacter.svelte: renders the floating SpineProvider/SpineTrack('idle')
+  when loaded (centered beside board), falls back to the still + code idle
+  otherwise. isBonus swaps to ladyBonusSpine in free spins.
+- VERIFIED Storybook :6001 (qa_probe_lady_spine.py, mode-base-book--random):
+  she renders on the right, 0 console errors, 0 spine key-not-found. Headless
+  rAF throttling makes frame-diff motion numbers unreliable (bg video also
+  reads 0 between throttled frames), but skeleton+idle load and apply cleanly.
+  Shots in web-sdk/qa-shots/lady/. Nothing committed.
+
+--- Lady Mirror idle PIVOT: articulated weighted-mesh spine rig [subagent] ---
+Upgraded the Lady Mirror scene char from a single-texture deform idle to a
+professional ARTICULATED spine rig, still from her EXISTING cutouts (no regen).
+tools/gen_lady_spine.py rewritten:
+- Full-figure WEIGHTED MESH (8x14 grid, 112 verts) driven by a real bone
+  hierarchy root->hips->spine->chest->neck->head, plus hips->gown, head->veil,
+  chest->armR (hand-mirror arm), + aura bone. Each vertex bone-weighted by
+  region (vertical spine-chain blend + arm/mirror + veil overrides), so veil/
+  gown/hair BEND like cloth and head/arm articulate -- with NO cut seams/holes
+  (chose a unified skinned mesh over multi-texture cutouts precisely to avoid
+  the holes/seams that auto-segmenting an AI illustration would cause).
+- Per-variant pivots + arm/veil weight boxes (base: mirror held low-center;
+  bonus: glowing mirror raised upper-left).
+- Animations: 'idle' (loop ~4.6s, seamless: float bob + breathing + head tilt +
+  mirror-arm raise + gown sway + veil billow + light cloth deform + pulsing
+  violet additive ghost-aura slot) and 'idle_flat' (committed FALLBACK = the
+  earlier whole-figure mesh-deform ripple + aura, bones at rest).
+- Shared atlas static/assets/spines/lady/lady.atlas(+.webp/.png), regions
+  lady_base/lady_bonus, skeletons lady.json/lady_bonus.json (Spine 4.1.23,
+  runtime spine-pixi-v8 4.2.74).
+assets.ts: ladySpine/ladyBonusSpine already registered (unchanged).
+SceneCharacter.svelte: plays SpineTrack 'idle' loop, floating centered beside
+the board (FLOAT_HEIGHT_SCALE 1.0, cyFloat board.y+3%), bonus spine in freegame,
+still PNG + code idle as last-resort fallback.
+VERIFIED Storybook :6001 (qa_probe_lady_spine.py, mode-base-book--random):
+JSON valid (112 verts, weights sum 1, no bad bone idx); 0 console errors, 0
+spine errors; motion confirmed -- HER region changed (9-10) while the bg
+reference strip was static (0.0), proving the rig animates her, not just the bg
+video; face/outfit undistorted (web-sdk/qa-shots/lady/spine_*.png). Nothing
+committed.
+Caveat: onion-free single-mesh means articulation is via bone-weighted deform,
+not separate limb textures; large limb moves would shear, so idle amplitudes are
+deliberately small. Multi-texture cutout remains possible if bigger motion is
+ever needed.

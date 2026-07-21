@@ -81,8 +81,9 @@
 			path(ring * 0.5);
 			g.fill({ color: isDisabled ? 0x14181f : hovered ? 0x161d26 : 0x10161d, alpha: 1 });
 			path(ring * 0.5);
+			// dark steel rim (menu/burger, turbo, autoplay) — no gold on the HUD
 			g.stroke({
-				color: isDisabled ? 0x2a3542 : hovered ? 0x3a4552 : 0x2a3542,
+				color: isDisabled ? 0x55555f : hovered ? 0x3a4552 : 0x2a3542,
 				width: Math.max(1.5, ring),
 				alpha: 1,
 			});
@@ -107,7 +108,7 @@
 		path(ring * 0.5);
 		g.stroke({ color: T.edgeDark, width: ring * 1.5, alpha: isDisabled ? 0.4 : 0.85 });
 
-		// metallic gold main edge
+		// metallic steel main edge
 		path(ring);
 		g.stroke({ color: edge, width: ring, alpha: isDisabled ? 0.6 : 1 });
 

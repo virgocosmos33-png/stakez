@@ -7,36 +7,29 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
-	import { MainContainer } from 'components-layout';
-	import { FadeContainer } from 'components-pixi';
-	import { Container, Sprite, Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
-	import { drawWindowShade } from '../game/glassChrome';
-	import FittedText from './FittedText.svelte';
+	import { getRailLayout } from '../game/plaqueMount';
+	import config from '../game/config';
+	import RailPlaque from './RailPlaque.svelte';
 
 	const context = getContext();
 
-	// Ornate amethyst haunted-mirror nameplate (generated art, mirrorWaysFrame)
-	// with a dedicated dark-glass display window. "WAYS" + the live count are
-	// rendered as FittedText INSIDE that window so they always fit and never
-	// collide with each other or the ornate frame.
-	const FRAME_RATIO = 827 / 1505; // processed ways_frame.png h/w
-	const FRAME_W = SYMBOL_SIZE * 2.4;
-	const FRAME_H = FRAME_W * FRAME_RATIO;
+	// WAYS nameplate: mounted on the LEFT RAIL of the reel frame (stacked ABOVE
+	// the matching WIN plaque, balancing Lady Mirror on the right). On narrow
+	// layouts (tablet / portrait) the stack sits ABOVE the board crest so plaques
+	// never cover symbols. Styling is the shared RailPlaque so WIN matches.
+	const rail = $derived(getRailLayout());
+	const frameW = $derived(rail.frameW);
 
-	// glass window, measured from the art (fractions of the frame), then a safe
-	// inner inset so text keeps clear of the ornate lip
-	const WIN = { cx: 0.517, cy: 0.495, w: 0.789, h: 0.352 };
-	const winX = (WIN.cx - 0.5) * FRAME_W;
-	const winY = (WIN.cy - 0.5) * FRAME_H;
-	const winW = WIN.w * FRAME_W;
-	const winH = WIN.h * FRAME_H;
-	const textH = winH * 0.66;
+	// canonical full-board ways = product of the rows on each reel (this game:
+	// 4^5 = 1024). Shown persistently in the base game; the live count from
+	// waysCounterUpdate (bookEvent.totalWays) overrides it during splits/bonus.
+	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 
-	let show = $state(false);
-	let ways = $state(1024);
+	// the plaque is ALWAYS mounted/visible during gameplay (never pops in/out);
+	// only the value changes, with a little pop on live updates
+	let ways = $state(BASE_WAYS);
 	const popScale = new Tween(1);
 
 	const pop = async () => {
@@ -47,65 +40,26 @@
 	context.eventEmitter.subscribeOnMount({
 		waysCounterUpdate: (emitterEvent) => {
 			ways = emitterEvent.ways;
-			show = true;
 			pop();
 		},
-		waysCounterHide: () => (show = false),
+		// don't hide — revert to the base-board ways so the plaque stays mounted
+		waysCounterHide: () => (ways = BASE_WAYS),
 	});
 
-	// on the crest of the reels, mostly above the board top
-	const position = $derived({
-		x: context.stateGameDerived.boardLayout().x,
-		y:
-			context.stateGameDerived.boardLayout().y -
-			context.stateGameDerived.boardLayout().height * 0.5 -
-			FRAME_H * 0.34,
-	});
+	// geometry always comes from plaqueMount (left rail OR crest stack)
+	const position = $derived({ x: rail.ways.cx, y: rail.ways.cy });
 
 	// comma renders as a floating high tick in the silver atlas, so group
 	// thousands with a plain space instead ("15 360")
 	const waysText = $derived(ways.toLocaleString('en-US').replaceAll(',', ' '));
 </script>
 
-<MainContainer>
-	<FadeContainer {show} {...position}>
-		<Container scale={popScale.current}>
-			<!-- soft recess so the silver number lifts off the glass -->
-			<Container x={winX} y={winY}>
-				<Graphics
-					draw={(g) => drawWindowShade(g, { width: winW * 0.98, height: winH * 0.9, radius: winH * 0.32 })}
-				/>
-				<Sprite
-					key="mirrorCounterGlass"
-					anchor={0.5}
-					width={winW * 0.98}
-					height={winH * 0.92}
-					alpha={0.22}
-				/>
-			</Container>
-
-			<Sprite key="mirrorWaysFrame" anchor={0.5} width={FRAME_W} height={FRAME_H} />
-
-			<!-- WAYS caption (left third) -->
-			<FittedText
-				x={winX - winW * 0.31}
-				y={winY}
-				maxWidth={winW * 0.32}
-				maxHeight={textH * 0.62}
-				tint={0xcdb8f5}
-				text="WAYS"
-				style={{ fontFamily: 'silver', fontSize: (textH * 0.62) / 1.69, letterSpacing: 2 }}
-			/>
-			<!-- live count (hero, right two-thirds) -->
-			<FittedText
-				x={winX + winW * 0.17}
-				y={winY}
-				maxWidth={winW * 0.6}
-				maxHeight={textH}
-				tint={0xf6f0ff}
-				text={waysText}
-				style={{ fontFamily: 'silver', fontSize: textH / 1.69, letterSpacing: 1 }}
-			/>
-		</Container>
-	</FadeContainer>
-</MainContainer>
+<RailPlaque
+	caption="WAYS"
+	value={waysText}
+	{frameW}
+	x={position.x}
+	y={position.y}
+	show={true}
+	pop={popScale.current}
+/>

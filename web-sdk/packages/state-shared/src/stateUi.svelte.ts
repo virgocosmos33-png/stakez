@@ -65,6 +65,12 @@ export const stateUi = $state({
 	menuOpen: false,
 	drawerFold: false,
 	drawerButtonShow: false,
+	// Outer width of the reel frame, in the game's main-layout design px, as
+	// published by the game (e.g. BoardFrame). 0 = not published yet. The HUD
+	// layouts read this to fit the bottom control row to the frame's width so
+	// they always line up at any screen size. Kept here (shared UI state) so the
+	// shared components-ui-pixi layouts can consume it without importing the app.
+	boardFrameWidth: 0,
 	config: {
 		mode: 'default' as UIConfigMode,
 	}

@@ -17,4 +17,4 @@
 	};
 </script>
 
-<UiButton {...props} {sizes} {onpress} flat iconColor={0xc7d0d9} icon="menu" />
+<UiButton {...props} {sizes} {onpress} flat iconColor={0xf0e6d0} icon="menu" />

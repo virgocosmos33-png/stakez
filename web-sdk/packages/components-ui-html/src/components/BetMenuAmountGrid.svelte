@@ -49,7 +49,7 @@
 
 		// themed scrollbar
 		scrollbar-width: thin;
-		scrollbar-color: #c99a3f rgba(255, 255, 255, 0.06);
+		scrollbar-color: var(--mono-edge, #33414f) rgba(255, 255, 255, 0.06);
 
 		&::-webkit-scrollbar {
 			width: 8px;
@@ -59,25 +59,25 @@
 			border-radius: 999px;
 		}
 		&::-webkit-scrollbar-thumb {
-			background: linear-gradient(180deg, #e9c877, #c99a3f);
+			background: var(--mono-edge, #33414f);
 			border-radius: 999px;
 			border: 1px solid rgba(0, 0, 0, 0.4);
 		}
 		&::-webkit-scrollbar-thumb:hover {
-			background: linear-gradient(180deg, #ffe9a8, #d9a949);
+			background: var(--mono-edge-hover, #3d4f63);
 		}
 	}
 
 	.opt-label {
-		font-family: 'Cinzel', Georgia, serif;
-		font-weight: 700;
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-weight: 600;
 		font-size: 0.85rem;
-		color: #e9dcc0;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+		color: var(--mono-fg, #ffffff);
+		font-variant-numeric: tabular-nums;
 
+		// on the selected (inverted white) chip the glyphs flip to dark ink
 		&.selected {
-			color: #ffc12e;
-			text-shadow: 0 0 8px rgba(255, 193, 46, 0.45);
+			color: var(--mono-on-fill, #0a0e14);
 		}
 	}
 </style>

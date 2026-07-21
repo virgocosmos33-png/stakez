@@ -43,7 +43,7 @@
 		fontFamily: T.fontDisplay,
 		fontWeight: '700',
 		fontSize: labelFs,
-		fill: T.textSecondary,
+		fill: 0xf0e6d0,
 		letterSpacing: 1.5,
 	} as const;
 

@@ -53,7 +53,7 @@
 		// face
 		g.circle(c, c, R);
 		g.fill({ color: disabled ? 0x14181f : hovered || active ? 0x161d26 : 0x10161d });
-		// steel ring so the coin reads against the dark game bg
+		// steel ring so it matches the rest of the HUD (no gold anywhere)
 		g.circle(c, c, R - 1.5);
 		g.stroke({ color: disabled ? 0x2a3542 : hovered || active ? 0x5a6672 : 0x3a4552, width: 3 });
 	};

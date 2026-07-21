@@ -53,10 +53,6 @@
 </div>
 
 <style lang="scss">
-	$gold: #c99a3f;
-	$gold-lt: #ffe9a8;
-	$accent: #ffc12e;
-
 	.setting {
 		display: flex;
 		flex-direction: column;
@@ -64,13 +60,12 @@
 	}
 
 	.label {
-		font-family: 'Cinzel', Georgia, serif;
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
 		font-weight: 700;
-		letter-spacing: 0.06em;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		font-size: 0.82rem;
-		color: #e9dcc0;
-		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7);
+		color: var(--mono-fg-dim, #8b96a3);
 	}
 
 	.controls {
@@ -89,17 +84,17 @@
 		border-radius: 999px;
 		cursor: pointer;
 		padding: 0;
-		border: 1px solid rgba(0, 0, 0, 0.6);
-		background: linear-gradient(180deg, #2a2a33, #141419);
-		box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.7);
-		transition: background 0.2s ease;
+		border: 1px solid var(--mono-edge, #33414f);
+		background: var(--mono-surface, #141b23);
+		box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+		transition:
+			background 0.2s ease,
+			border-color 0.2s ease;
 	}
 	.switch.on {
-		border-color: rgba(201, 154, 63, 0.9);
-		background: linear-gradient(180deg, #7a5a1c, #b8892f);
-		box-shadow:
-			inset 0 1px 2px rgba(255, 233, 168, 0.4),
-			0 0 10px rgba(255, 193, 46, 0.35);
+		border-color: var(--mono-fill, #ffffff);
+		background: var(--mono-fill, #ffffff);
+		box-shadow: none;
 	}
 
 	.knob {
@@ -110,13 +105,15 @@
 		height: 1.35rem;
 		border-radius: 50%;
 		transform: translateY(-50%);
-		background: radial-gradient(circle at 35% 30%, #fdfdfd, #cfcfcf 60%, #8a8a8a);
+		background: #c3ccd6;
 		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
-		transition: left 0.18s ease;
+		transition:
+			left 0.18s ease,
+			background 0.18s ease;
 	}
 	.switch.on .knob {
 		left: calc(100% - 1.5rem);
-		background: radial-gradient(circle at 35% 30%, #{$gold-lt}, #{$gold} 60%, #6b4e1c);
+		background: var(--mono-on-fill, #0a0e14);
 	}
 
 	.state {
@@ -134,7 +131,7 @@
 	}
 	.switch.on .state {
 		left: 0.5rem;
-		color: #2a1c05;
+		color: var(--mono-on-fill, #0a0e14);
 	}
 
 	/* ---------- slider ---------- */
@@ -146,11 +143,11 @@
 		border-radius: 999px;
 		outline: none;
 		cursor: pointer;
-		border: 1px solid rgba(0, 0, 0, 0.55);
+		border: 1px solid var(--mono-hairline, #2a3542);
 		background: linear-gradient(
 			90deg,
-			#{$accent} 0%,
-			#{$gold-lt} var(--pct),
+			var(--mono-fill, #ffffff) 0%,
+			var(--mono-fill, #ffffff) var(--pct),
 			rgba(255, 255, 255, 0.08) var(--pct),
 			rgba(255, 255, 255, 0.08) 100%
 		);
@@ -161,17 +158,15 @@
 		box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
 	}
 
-	// webkit thumb – a gold gem
+	// webkit thumb – a flat white disc
 	.range::-webkit-slider-thumb {
 		-webkit-appearance: none;
 		width: 1.15rem;
 		height: 1.15rem;
 		border-radius: 50%;
-		background: radial-gradient(circle at 35% 30%, #{$gold-lt}, #{$gold} 58%, #5f4417);
-		border: 1px solid #3a2a0e;
-		box-shadow:
-			0 0 6px rgba(255, 193, 46, 0.7),
-			0 2px 3px rgba(0, 0, 0, 0.6);
+		background: var(--mono-fill, #ffffff);
+		border: 1px solid var(--mono-edge, #33414f);
+		box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
 		cursor: pointer;
 	}
 	// firefox thumb + progress
@@ -179,11 +174,9 @@
 		width: 1.15rem;
 		height: 1.15rem;
 		border-radius: 50%;
-		background: radial-gradient(circle at 35% 30%, #{$gold-lt}, #{$gold} 58%, #5f4417);
-		border: 1px solid #3a2a0e;
-		box-shadow:
-			0 0 6px rgba(255, 193, 46, 0.7),
-			0 2px 3px rgba(0, 0, 0, 0.6);
+		background: var(--mono-fill, #ffffff);
+		border: 1px solid var(--mono-edge, #33414f);
+		box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
 		cursor: pointer;
 	}
 	.range::-moz-range-track {
@@ -194,7 +187,7 @@
 	.range::-moz-range-progress {
 		height: 0.5rem;
 		border-radius: 999px;
-		background: linear-gradient(90deg, #{$accent}, #{$gold-lt});
+		background: var(--mono-fill, #ffffff);
 	}
 
 	/* ---------- value ---------- */
@@ -202,10 +195,10 @@
 		flex: 0 0 auto;
 		min-width: 2.2rem;
 		text-align: right;
-		font-family: 'Cinzel', Georgia, serif;
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
 		font-weight: 700;
 		font-size: 1rem;
-		color: #{$accent};
-		text-shadow: 0 0 8px rgba(255, 193, 46, 0.35);
+		color: var(--mono-fg, #ffffff);
+		font-variant-numeric: tabular-nums;
 	}
 </style>

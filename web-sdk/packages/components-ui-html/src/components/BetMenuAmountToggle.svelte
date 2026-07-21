@@ -10,7 +10,7 @@
 
 	const { eventEmitter } = getContextEventEmitter<EmitterEventModal>();
 
-	const iconSize = '2.5rem';
+	const iconSize = '2.75rem';
 </script>
 
 <OptionsToggle
@@ -26,7 +26,7 @@
 			<Button data-test="down-button" disabled={disabledDown} onclick={toggleDown}>
 				<BaseIcon width={iconSize} height={iconSize} />
 				<BaseButtonContent>
-					<span style="font-size: 2rem;">-</span>
+					<span class="glyph">&#8722;</span>
 				</BaseButtonContent>
 			</Button>
 
@@ -35,7 +35,7 @@
 			<Button data-test="up-button" disabled={disabledUp} onclick={toggleUp}>
 				<BaseIcon width={iconSize} height={iconSize} />
 				<BaseButtonContent>
-					<span style="font-size: 2rem;">+</span>
+					<span class="glyph">+</span>
 				</BaseButtonContent>
 			</Button>
 		</div>
@@ -53,10 +53,19 @@
 	.amount {
 		min-width: 6rem;
 		text-align: center;
-		font-family: 'Cinzel', Georgia, serif;
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
 		font-weight: 700;
-		font-size: 1.25rem;
-		color: #ffc12e;
-		text-shadow: 0 0 8px rgba(255, 193, 46, 0.35);
+		font-size: 1.35rem;
+		letter-spacing: 0.3px;
+		color: var(--mono-fg, #ffffff);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.glyph {
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-size: 1.6rem;
+		font-weight: 400;
+		line-height: 1;
+		color: var(--mono-fg, #ffffff);
 	}
 </style>

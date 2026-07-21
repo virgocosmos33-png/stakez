@@ -236,6 +236,50 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/bg_base_anim_portrait.mp4', import.meta.url).href,
 	},
+	// --- Lady-Mirror ambient SCENE ------------------------------------------
+	// ONE full-scene backdrop (candles/crystal-ball/mirror/lamp ambience baked
+	// in) that cover-scales to the viewport as a single unit, plus a right-side
+	// Lady-Mirror character. Source-agnostic layers: the *Anim video keys below
+	// are registered ONLY once the looping files exist (tools drop mp4/webm into
+	// assets/sprites/scene/); until then Background.svelte / SceneCharacter.svelte
+	// fall back to these stills. Stills built by tools/prepare_scene_assets.py.
+	sceneBg: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/scene_bg.webp', import.meta.url).href,
+		preload: true,
+	},
+	ladyCharacter: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/lady_character.png', import.meta.url).href,
+		preload: true,
+	},
+	// activated bonus/free-spins pose (dramatic stance, glowing violet hand-mirror)
+	// swapped in by SceneCharacter while gameType === 'freegame'
+	ladyBonus: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/lady_bonus.png', import.meta.url).href,
+		preload: true,
+	},
+	// Lady Mirror as a real Spine rig: her cutout is a deformable mesh with a
+	// floating idle (bob + breathing + veil/gown cloth-sway + pulsing ghost
+	// aura). SceneCharacter renders this when loaded and falls back to the
+	// stills above otherwise. Built by tools/gen_lady_spine.py (shared atlas).
+	ladySpine: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/lady/lady.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/lady/lady.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
+	ladyBonusSpine: {
+		type: 'spine',
+		src: {
+			atlas: new URL('../../assets/spines/lady/lady.atlas', import.meta.url).href,
+			skeleton: new URL('../../assets/spines/lady/lady_bonus.json', import.meta.url).href,
+			scale: 1,
+		},
+	},
 	// win celebration film reels: grindhouse artwork stills + animated loops
 	celebT2: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t2.webp', import.meta.url).href },
 	celebT3: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t3.webp', import.meta.url).href },
@@ -314,6 +358,19 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/ways_panel.png', import.meta.url).href,
 	},
+	// Tall left gold side-rail (crystal ball baked in) — flush to the reel frame.
+	// Normal: WAYS / WIN. Bonus: FREE SPINS / WAYS / WIN.
+	mirrorSideRail: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/side_rail_panel.png', import.meta.url).href,
+		preload: true,
+	},
+	// (split telegraph now draws tiny glass shards in MirrorShatter — no knife sprite)
+	mirrorSplitKnife: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/split_knife.png', import.meta.url).href,
+		preload: false,
+	},
 	// Ornate amethyst/silver haunted-mirror counter frames (empty dark-glass
 	// display window in the centre; text is overlaid at runtime so nothing is
 	// ever baked/garbled). Generated art keyed to transparent PNGs by
@@ -338,7 +395,14 @@ export default {
 	},
 	mirrorFrame: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/mirror_frame.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/mirror/mirror_frame_wide.png', import.meta.url).href,
+	},
+	// Bottom morph rail: THREE separated gold compartments (WAYS | FREE SPINS | WIN)
+	// — never a single bar. Wells measured as texture fractions in FrameMorphHud.
+	mirrorFrameBottomCompartments: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/frame_bottom_compartments.png', import.meta.url).href,
+		preload: true,
 	},
 	glassIntact: {
 		type: 'sprite',

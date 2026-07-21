@@ -2,14 +2,13 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicInOut } from 'svelte/easing';
 
-	import { stateUi, stateBet } from 'state-shared';
+	import { stateUi } from 'state-shared';
 	import { BLACK } from 'constants-shared/colors';
 	import { FadeContainer } from 'components-pixi';
 	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle } from 'pixi-svelte';
 	import { waitForResolve } from 'utils-shared/wait';
 
-	import LabelFreeSpinCounter from './LabelFreeSpinCounter.svelte';
 	import ButtonDrawer from './ButtonDrawer.svelte';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
@@ -19,6 +18,25 @@
 
 	const W = $derived(context.stateLayoutDerived.mainLayoutStandard().width);
 	const H = $derived(context.stateLayoutDerived.mainLayoutStandard().height);
+
+	// Fit the bottom control + BET rows to the reel frame's width. BoardFrame
+	// publishes the frame's outer width (main-layout design px); convert it into
+	// this layout's local (standard) px via the two layout scales. The outermost
+	// element centre then sits BTN_HALF inside the frame edge and every horizontal
+	// offset scales proportionally (spacing preserved; element sizes/heights are
+	// untouched). Falls back to the original design offsets until it's published.
+	const frameLocalW = $derived(
+		stateUi.boardFrameWidth > 0
+			? (stateUi.boardFrameWidth * context.stateLayoutDerived.mainLayout().scale) /
+					context.stateLayoutDerived.mainLayoutStandard().scale
+			: 0,
+	);
+	const OUTER_BASE = 430; // original outermost offset (design px from centre)
+	const BTN_HALF = 85; // ~half a control button at scale 0.95 (edge inset)
+	const rowHalf = $derived(
+		frameLocalW > 0 ? Math.max(OUTER_BASE, frameLocalW / 2 - BTN_HALF) : OUTER_BASE,
+	);
+	const fitX = $derived(rowHalf / OUTER_BASE);
 
 	const DRAWER_Y = {
 		unfold: 0,
@@ -78,53 +96,52 @@
 </Container>
 
 <MainContainer standard alignVertical="bottom">
-	<!-- foldable control row: crown | autoSpin | SPIN | turbo | menu -->
+	<!-- foldable control row: crown | autoSpin | SPIN | turbo | menu.
+	     Controls are bumped ~11% bigger and the inner offset is pulled in
+	     (235 → 215) so the wide centre gaps roughly halve, while the outer
+	     offset (430 → 415) keeps the row spanning the frame without overflow. -->
 	<Container y={drawerTween.current}>
-		<Container x={W * 0.5 - 430} y={H - 360} scale={0.95}>
+		<Container x={W * 0.5 - 415 * fitX} y={H - 360} scale={1.06}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5 - 235} y={H - 360} scale={0.95}>
+		<Container x={W * 0.5 - 215 * fitX} y={H - 360} scale={1.06}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5} y={H - 360} scale={1.2}>
+		<Container x={W * 0.5} y={H - 360} scale={1.06}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5 + 235} y={H - 360} scale={0.95}>
+		<Container x={W * 0.5 + 215 * fitX} y={H - 360} scale={1.06}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5 + 430} y={H - 360} scale={0.95}>
+		<Container x={W * 0.5 + 415 * fitX} y={H - 360} scale={1.06}>
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 	</Container>
 
-	<Container y={Math.min(drawerTween.current, 350)}>
-		{#if stateBet.winBookEventAmount > 0}
-			<Container x={W * 0.5} y={H - 620}>
-				{@render props.amountWin({ stacked: true })}
-			</Container>
-		{/if}
-	</Container>
 </MainContainer>
 
 <MainContainer standard alignVertical="bottom">
-	<!-- always-visible pills at the bottom corners -->
-	{#if stateUi.freeSpinCounterShow}
-		<Container x={W * 0.5} y={H - 140}>
-			<LabelFreeSpinCounter stacked />
-		</Container>
-	{:else}
-		<Container x={W * 0.5 - 250} y={H - 150} scale={0.95}>
-			{@render props.amountBet({ stacked: true })}
-		</Container>
+	<!-- BET readout flanked by −/+ steppers. Free-spin tally lives in the game's
+	     RailPlaque (same chrome as WAYS / WIN), not this HUD. -->
+	<Container x={W * 0.5 - (250 + 200) * fitX} y={H - 112} scale={0.5}>
+		{@render props.buttonDecrease({ anchor: 0.5 })}
+	</Container>
 
-		<Container x={W * 0.5 + 250} y={H - 150} scale={0.95}>
-			{@render props.amountBalance({ stacked: true })}
-		</Container>
-	{/if}
+	<Container x={W * 0.5 - 250 * fitX} y={H - 150} scale={0.9}>
+		{@render props.amountBet({ stacked: true })}
+	</Container>
+
+	<Container x={W * 0.5 - (250 - 200) * fitX} y={H - 112} scale={0.5}>
+		{@render props.buttonIncrease({ anchor: 0.5 })}
+	</Container>
+
+	<Container x={W * 0.5 + 250 * fitX} y={H - 150} scale={0.9}>
+		{@render props.amountBalance({ stacked: true })}
+	</Container>
 
 	<!-- drawer button -->
 	<FadeContainer
@@ -133,7 +150,7 @@
 		oncomplete={drawerButtonFadeComplete}
 		y={drawerButtonTween.current}
 	>
-		<Container x={W * 0.5 + 430} y={H - 300}>
+		<Container x={W * 0.5 + 415 * fitX} y={H - 300}>
 			<ButtonDrawer disabled={!stateUi.drawerButtonShow} anchor={0.5} />
 		</Container>
 	</FadeContainer>
@@ -154,7 +171,7 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
-		<Container x={W * 0.5 + 430} y={H - 360}>
+		<Container x={W * 0.5 + 415 * fitX} y={H - 360}>
 			<Container y={-190 - 210 * 3}>
 				{@render props.buttonPayTable({ anchor: 0.5 })}
 			</Container>

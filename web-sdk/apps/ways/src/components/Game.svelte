@@ -23,16 +23,17 @@
 	import Board from './Board.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
-	import FreeSpinCounter from './FreeSpinCounter.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
 	import ApparitionOverlay from './ApparitionOverlay.svelte';
-	import WaysCounter from './WaysCounter.svelte';
+	import SceneCharacter from './SceneCharacter.svelte';
+	import FrameMorphHud from './FrameMorphHud.svelte';
 	import BonusLevelBanner from './BonusLevelBanner.svelte';
 	import MirrorShatter from './MirrorShatter.svelte';
 	import WinSweep from './WinSweep.svelte';
 	import WinDim from './WinDim.svelte';
 	import PlasmaLiner from './PlasmaLiner.svelte';
+	import TapToSkip from './TapToSkip.svelte';
 
 	const context = getContext();
 
@@ -77,6 +78,11 @@
 			<Anticipations />
 		</MainContainer>
 
+		<!-- Lady Mirror mascot standing beside the reels on the right; lives in the
+			board's design space so she scales with it and never drifts, and is
+			positioned clear of the symbols (hidden on layouts too narrow to fit) -->
+		<SceneCharacter />
+
 		<!-- purple mirror-fire ring around the frame (free spins), above the reels -->
 		<BoardFramePlasma />
 
@@ -86,7 +92,14 @@
 		<PlasmaLiner />
 		<WinSweep />
 		<MirrorShatter />
-		<WaysCounter />
+
+		<!-- tap/click anywhere over the reels to slam-stop / skip the spin
+			(NLC-style); only active while a spin/animation is in progress -->
+		<TapToSkip />
+
+		<!-- WAYS / WIN / FREE SPINS morphed into the ONE reel-frame top rail
+			(never a second overlapping side panel) -->
+		<FrameMorphHud />
 
 		<UI>
 			{#snippet gameName()}
@@ -104,9 +117,6 @@
 			{/snippet}
 		</UI>
 		<Win />
-		{#if ['desktop', 'landscape'].includes(context.stateLayoutDerived.layoutType())}
-			<FreeSpinCounter />
-		{/if}
 		<FreeSpinOutro />
 		<!-- mounted after the free-spin panels so the level banner is never
 			covered by their dim/plate layers -->

@@ -1,0 +1,12 @@
+UI click SFX source
+===================
+Pack   : Kenney - Interface Sounds (v1.0)
+URL    : https://kenney.nl/assets/interface-sounds
+License: Creative Commons Zero (CC0 1.0) - public domain
+         http://creativecommons.org/publicdomain/zero/1.0/
+Credit : Kenney (www.kenney.nl) - optional, not required.
+
+Mapping (source .ogg -> sprite cue):
+  select_007.ogg -> sfx_ui_click
+  select_002.ogg -> sfx_ui_click_soft
+  toggle_002.ogg -> sfx_ui_click_heavy

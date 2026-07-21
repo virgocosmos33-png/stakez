@@ -20,7 +20,10 @@
 
 {#each props.list as betModeData}
 	{#if betModeData.type !== 'default'}
-		<BonusCard>
+		{@const affordable =
+			stateBet.betAmount > 0 &&
+			stateBet.balanceAmount >= stateBet.betAmount * betModeData.costMultiplier}
+		<BonusCard {affordable}>
 			{#snippet title()}
 				{#if betModeData.assets.icon}
 					<!-- the bonus name is baked into the card art, so no text title here -->
@@ -53,12 +56,11 @@
 						eventEmitter.broadcast({ type: 'buyBonusConfirm' });
 						eventEmitter.broadcast({ type: 'soundPressGeneral' });
 					}}
-					disabled={stateBet.betAmount <= 0 ||
-						stateBet.balanceAmount < stateBet.betAmount * betModeData.costMultiplier}
+					disabled={!affordable}
 				>
 					<BaseIcon width="100%" height="2rem" border="2px solid white;" />
 					<BaseButtonContent>
-						<span style="font-size: 1rem;">{betModeData.text.button}</span>
+						<span class="btn-label">{betModeData.text.button}</span>
 					</BaseButtonContent>
 				</Button>
 			{/snippet}
@@ -75,18 +77,23 @@
 	}
 
 	.title {
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-weight: 600;
 		font-size: 1rem;
 		line-height: 1rem;
 		text-align: center;
+		color: var(--mono-fg, #ffffff);
 	}
 
 	.description {
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
 		font-size: 0.75rem;
 		text-align: center;
 		min-height: 0;
 		white-space: pre-line;
 		display: inline-flex;
 		align-items: center;
+		color: var(--mono-fg-dim, #8b96a3);
 	}
 
 	.description:empty {
@@ -94,9 +101,22 @@
 	}
 
 	.price {
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-weight: 700;
 		font-size: 1rem;
 		line-height: 1rem;
 		text-align: center;
 		white-space: nowrap;
+		color: var(--mono-fg, #ffffff);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.btn-label {
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-size: 0.9rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--mono-fg, #ffffff);
 	}
 </style>

@@ -103,10 +103,14 @@
 	};
 </script>
 
-{#if glowActive}
-	{@const bw = context.stateGameDerived.boardLayout().width}
-	{@const bh = context.stateGameDerived.boardLayout().height}
-	<MainContainer>
+<!-- MainContainer is ALWAYS mounted (only the flame Graphics is conditional) so
+	this layer keeps its z-order slot below the WIN/WAYS plaques. Wrapping the
+	MainContainer itself in {#if} made it mount LATE on free-spin start, which
+	appended it on top of the gameplay readouts (stable-sort late-mount bug). -->
+<MainContainer>
+	{#if glowActive}
+		{@const bw = context.stateGameDerived.boardLayout().width}
+		{@const bh = context.stateGameDerived.boardLayout().height}
 		<Container x={frameX} y={frameY}>
 			<Graphics
 				draw={(graphics) =>
@@ -119,5 +123,5 @@
 					)}
 			/>
 		</Container>
-	</MainContainer>
-{/if}
+	{/if}
+</MainContainer>

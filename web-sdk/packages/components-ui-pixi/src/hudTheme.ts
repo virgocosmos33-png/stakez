@@ -21,10 +21,11 @@ export const HUD_THEME = {
 	bodyBottomPressed: 0x24242e,
 	bodyAlpha: 0.94,
 
-	// metallic bevel
+	// metallic bevel — DARK STEEL/SLATE rims (no gold anywhere on the HUD).
+	// (names kept as edgeGold* for call-site compat; values are steel/slate.)
 	edgeDark: 0x000000,
-	edgeGold: 0xc99a3f,
-	edgeGoldHover: 0xe9c877,
+	edgeGold: 0x3a4552,
+	edgeGoldHover: 0x5a6672,
 	innerHighlight: 0xf6e4a6,
 
 	// accent (active state, key CTAs). Change per game if desired.
@@ -41,5 +42,6 @@ export const HUD_THEME = {
 	fontDisplay: 'Cinzel, Georgia, serif',
 	textPrimary: 0xf4ecd8,
 	textSecondary: 0xb9b1c4,
-	textValue: 0xffffff,
+	// shared HUD gold (matches WAYS/WIN/FREE-SPINS labels, marquee, action-pod rim)
+	textValue: 0xf0e6d0,
 } as const;

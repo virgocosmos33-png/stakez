@@ -55,9 +55,9 @@
 						stateModal.modal = null;
 					}}
 				>
-					<BaseIcon width="100%" height="3rem" />
+					<BaseIcon width="100%" height="3rem" border="2px solid white" />
 					<BaseButtonContent>
-						<span style="font-size: 1rem;">{i18nDerived.confirm()}</span>
+						<span class="confirm-label">{i18nDerived.confirm()}</span>
 					</BaseButtonContent>
 				</Button>
 			</BaseButtonWrap>
@@ -71,5 +71,14 @@
 		height: auto;
 		display: block;
 		border-radius: 8px;
+	}
+
+	.confirm-label {
+		font-family: var(--mono-font, 'Segoe UI', Arial, sans-serif);
+		font-size: 1rem;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--mono-fg, #ffffff);
 	}
 </style>
