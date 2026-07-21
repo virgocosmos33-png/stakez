@@ -11,6 +11,7 @@ import type { EmitterEventBonusLevelBanner } from '../components/BonusLevelBanne
 import type { EmitterEventMirrorShatter } from '../components/MirrorShatter.svelte';
 import type { EmitterEventWinSweep } from '../components/WinSweep.svelte';
 import type { EmitterEventWinDim } from '../components/WinDim.svelte';
+import type { EmitterEventWinLightning } from '../components/WinLightning.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -25,4 +26,5 @@ export type EmitterEventGame =
 	| EmitterEventBonusLevelBanner
 	| EmitterEventMirrorShatter
 	| EmitterEventWinSweep
-	| EmitterEventWinDim;
+	| EmitterEventWinDim
+	| EmitterEventWinLightning;

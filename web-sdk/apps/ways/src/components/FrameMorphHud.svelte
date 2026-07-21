@@ -93,7 +93,7 @@
 		const wellW = (frac: { x0: number; x1: number }) => (frac.x1 - frac.x0) * railW * 0.92;
 		const wellH = (WELL.y1 - WELL.y0) * railH * 0.72;
 
-		const waysText = `WAYS: ${ways.toLocaleString('en-US').replaceAll(',', ' ')}`;
+		const waysText = `WAYS: ${ways}`;
 		const winText = `WIN: ${bookEventAmountToCurrencyString(stateBet.winBookEventAmount)}`;
 		const spinsText = `FREE SPINS: ${spinsTotal - spinsCurrent}/${spinsTotal}`;
 

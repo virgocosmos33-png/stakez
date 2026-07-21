@@ -133,12 +133,15 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		const waitToStartFallingIn = async () =>
 			await waitForTimeout(reelState.spinOptions().reelFallInDelay * fallInDelayMultiplier);
 
-		// Q: When to skip the waitToStartFallingIn?
-		// A: When stop button is clicked(isTurbo) and is noStop is false
-		if (noStop) {
-			await waitToStartFallingIn();
-		} else if (stateBet.isTurbo) {
+		// Slam-stop / turbo fast-forwards EVERYTHING, including anticipated
+		// (scatter) reels. A tap or space toggles turbo on, so the hang is cut
+		// instantly instead of forcing the player to watch it. Played normally
+		// the hang still shows, but it stays interruptible on every reel so a
+		// click can skip even the 2nd / 3rd scatter anticipation.
+		if (stateBet.isTurbo) {
 			// skip
+		} else if (noStop) {
+			await interruptible.add(waitToStartFallingIn);
 		} else {
 			await interruptible.add(waitToStartFallingIn);
 		}

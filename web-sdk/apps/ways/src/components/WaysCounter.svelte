@@ -49,9 +49,7 @@
 	// geometry always comes from plaqueMount (left rail OR crest stack)
 	const position = $derived({ x: rail.ways.cx, y: rail.ways.cy });
 
-	// comma renders as a floating high tick in the silver atlas, so group
-	// thousands with a plain space instead ("15 360")
-	const waysText = $derived(ways.toLocaleString('en-US').replaceAll(',', ' '));
+	const waysText = $derived(String(ways));
 </script>
 
 <RailPlaque
