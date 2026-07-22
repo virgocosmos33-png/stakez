@@ -26,18 +26,23 @@ if __name__ == "__main__":
     profiling = False
 
     # Stake math verification wants 100k-1M sims per mode for outcome diversity;
-    # we max out the range so every mode has a deep pool of distinct outcomes
-    # RE-OPTIMIZE FEATURE MODES ONLY: their books are valid, but the first
-    # optimization pass used two hr="x" fences and landed 0.865/0.915/0.940
-    # instead of 0.965. Books/LUTs for base/ante/bonus1-3 stay untouched.
+    # we max out the range so every mode has a deep pool of distinct outcomes.
+    # FULL REGENERATION: the ways engine fix (wild on reel 1 now opens every
+    # paytable symbol) invalidates all previously generated books - every mode
+    # must be re-simulated, re-optimized, re-analyzed and re-verified.
     num_sim_args = {
+        "base": int(1e6),
+        "ante": int(1e6),
         "feature1": int(2.5e5),
         "feature2": int(2.5e5),
         "feature3": int(2.5e5),
+        "bonus1": int(2.5e5),
+        "bonus2": int(2.5e5),
+        "bonus3": int(2.5e5),
     }
 
     run_conditions = {
-        "run_sims": False,  # books already exist from the full run
+        "run_sims": True,
         "run_optimization": True,
         "run_analysis": True,
         "run_format_checks": True,

@@ -40,10 +40,10 @@
 
 <ButtonBetProvider>
 	{#snippet children({ key, onpress })}
-		{@const isSpin = ['spin_default', 'spin_disabled'].includes(key)}
-		{@const isDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
-		{@const iconColor = isDisabled ? 0x6a6a70 : 0x12305c}
-		<OnHotkey hotkey="Space" {disabled} {onpress} />
+	{@const isSpin = ['spin_default', 'spin_disabled'].includes(key)}
+	{@const isDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
+	{@const iconColor = isDisabled ? 0x6a6a70 : 0x12305c}
+	<OnHotkey hotkey="Space" disabled={isSpin ? disabled : false} {onpress} />
 		<Button {...props} {sizes} {onpress} {disabled}>
 			{#snippet children({ center, hovered })}
 				<Graphics draw={(g: PIXI.Graphics) => drawCoin(g, isDisabled, hovered)} />

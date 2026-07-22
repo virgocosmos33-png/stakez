@@ -3,7 +3,7 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import type { Texture, VideoSource } from 'pixi.js';
-	import { Container, Graphics, Rectangle, Sprite, BitmapText } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle, Sprite, BitmapText, Text } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
@@ -69,10 +69,10 @@
 	let finished = $state(false);
 	let waitContinue = $state(false);
 	let displayedIndex = $state(0);
-	// the MAX WIN scene recounts from 0: fast start, even faster ending
+	// the MAX WIN scene recounts from 0: a long, savoured roll (unskippable)
 	let maxRecountStart = $state<number | null>(null);
-	const MAX_RECOUNT_DURATION = 3500;
-	const fastFaster = (f: number) => 0.55 * f + 0.45 * Math.pow(f, 4);
+	const MAX_RECOUNT_DURATION = 9000;
+	const maxRecountEase = (f: number) => 1 - Math.pow(1 - f, 2);
 
 	// ------------------------------------------------------------------
 	// transition fx: micro-fade + glitch/screen-tear interference between
@@ -171,20 +171,15 @@
 	});
 
 	// press anywhere: jump the current segment to its end (next reel starts
-	// animating immediately); once on MAX WIN only the CONTINUE button works
+	// animating immediately); the MAX WIN scene itself CANNOT be skipped —
+	// the recount always plays out and only the CONTINUE button exits
 	const skip = () => {
 		if (waitContinue) return;
 		if (finished) {
 			props.oncomplete();
 			return;
 		}
-		if (maxRecountStart !== null) {
-			// clicking during the max recount jumps it to the end
-			countMult = finalMult;
-			finished = true;
-			waitContinue = true;
-			return;
-		}
+		if (maxRecountStart !== null) return;
 		const now = performance.now();
 		if (segIndex + 1 < segments.length) {
 			countMult = segments[segIndex].to;
@@ -208,7 +203,7 @@
 			if (!finished) {
 				if (maxRecountStart !== null) {
 					const f = Math.min((now - maxRecountStart) / MAX_RECOUNT_DURATION, 1);
-					countMult = finalMult * fastFaster(f);
+					countMult = finalMult * maxRecountEase(f);
 					if (f >= 1) {
 						finished = true;
 						waitContinue = true;
@@ -452,19 +447,38 @@
 			}}
 		/>
 	</Container>
+	{@const onMaxScene = tiers[displayedIndex]?.alias === 'max'}
 	<Container y={frameH / 2 + SYMBOL_SIZE * 1.25} scale={amountPulse * slam.current}>
-		<ResponsiveBitmapText
-			anchor={0.5}
-			maxWidth={frameW * 0.85}
-			text={bookEventAmountToCurrencyString(displayAmount)}
-			style={{
-				fontFamily: 'gold',
-				fontSize: SYMBOL_SIZE * 1.05,
-				align: 'center',
-				fontWeight: 'bold',
-				letterSpacing: 0,
-			}}
-		/>
+		<!-- MAX WIN amount rolls in plain white; every other tier is gold. A
+			regular Text is used because the bitmap fonts miss currency glyphs -->
+		{#if onMaxScene}
+			<Text
+				anchor={0.5}
+				text={bookEventAmountToCurrencyString(displayAmount)}
+				style={{
+					fill: 0xffffff,
+					fontSize: SYMBOL_SIZE * 0.85,
+					align: 'center',
+					fontWeight: '700',
+					fontFamily: '"Segoe UI", Arial, Helvetica, sans-serif',
+					letterSpacing: 1,
+					stroke: { color: 0x000000, width: 6 },
+				}}
+			/>
+		{:else}
+			<ResponsiveBitmapText
+				anchor={0.5}
+				maxWidth={frameW * 0.85}
+				text={bookEventAmountToCurrencyString(displayAmount)}
+				style={{
+					fontFamily: 'gold',
+					fontSize: SYMBOL_SIZE * 1.05,
+					align: 'center',
+					fontWeight: 'bold',
+					letterSpacing: 0,
+				}}
+			/>
+		{/if}
 	</Container>
 
 	<!-- MAX WIN gate: the only way out is the CONTINUE button, overlaid on the

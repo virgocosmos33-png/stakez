@@ -77,10 +77,10 @@ const activeBetMode = () => stateMeta.betModeMeta?.[stateBet.activeBetModeKey.to
 	?? null;
 const isContinuousBet = () => stateBet.autoSpinsCounter > 1 || stateBet.isSpaceHold;
 // Two turbo tiers (both fast-forward every tween/spine/count-up that reads
-// timeScale). Turbo = a bit faster; super turbo = full hacksaw-near-instant.
+// timeScale). Turbo = comfortably faster; super turbo = clearly faster again.
 const timeScale = () => {
-	if (stateBet.isSuperTurbo) return 2.5;
-	if (stateBet.isTurbo) return 1.75;
+	if (stateBet.isSuperTurbo) return 2.2;
+	if (stateBet.isTurbo) return 1.35;
 	return 1;
 };
 const betCostMultiplier = () =>

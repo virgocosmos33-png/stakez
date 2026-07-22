@@ -103,10 +103,6 @@
 		<!-- mega-win FX: full-canvas prismatic + board lightning (must sit above board FX) -->
 		<WinLightning />
 
-		<!-- tap/click anywhere over the reels to slam-stop / skip the spin
-			(NLC-style); only active while a spin/animation is in progress -->
-		<TapToSkip />
-
 		<!-- WAYS / WIN / FREE SPINS morphed into the ONE reel-frame top rail
 			(never a second overlapping side panel) -->
 		<FrameMorphHud />
@@ -127,6 +123,9 @@
 			{/snippet}
 		</UI>
 		<Win />
+		<!-- tap/click over the reels or space bar slam-stops the spin; mounted
+			late so HUD layers never eat the pointer events -->
+		<TapToSkip />
 		<FreeSpinOutro />
 		<!-- mounted after the free-spin panels so the level banner is never
 			covered by their dim/plate layers -->

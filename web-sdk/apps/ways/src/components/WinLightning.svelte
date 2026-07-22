@@ -333,6 +333,11 @@
 			strikeGeneration += 1;
 			resetFx();
 		},
+		// slam-stop / space also cuts the lightning telegraph short
+		stopButtonClick: () => {
+			strikeGeneration += 1;
+			resetFx();
+		},
 	});
 
 	onMount(() => {

@@ -25,7 +25,19 @@
 	let show = $state(true);
 
 	context.eventEmitter.subscribeOnMount({
-		stopButtonClick: () => context.stateGameDerived.enhancedBoard.stop(),
+		stopButtonClick: () => {
+			context.stateGameDerived.enhancedBoard.stop();
+			// also fast-forward any playing win animations: resolving oncomplete
+			// unblocks boardWithAnimateSymbols immediately and rests the symbol
+			context.stateGame.board.forEach((reel) =>
+				reel.reelState.symbols.forEach((reelSymbol) => {
+					if (reelSymbol.symbolState === 'win') {
+						reelSymbol.symbolState = 'postWinStatic';
+						reelSymbol.oncomplete();
+					}
+				}),
+			);
+		},
 		boardSettle: ({ board }) => context.stateGameDerived.enhancedBoard.settle(board),
 		boardShow: () => (show = true),
 		boardHide: () => (show = false),

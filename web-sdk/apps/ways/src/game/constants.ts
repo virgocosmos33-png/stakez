@@ -70,9 +70,21 @@ export const SPIN_OPTIONS_DEFAULT = {
 	symbolFallOutInterval: 20,
 };
 
+// turbo (tier 1): noticeably quicker than normal but still readable —
+// symbols visibly drop, just with less hang time
+export const SPIN_OPTIONS_TURBO = {
+	...SPIN_OPTIONS_SHARED,
+	symbolFallInSpeed: 6,
+	symbolFallInInterval: 12,
+	symbolFallInBounceSpeed: 0.3,
+	symbolFallInBounceSizeMulti: 0.35,
+	symbolFallOutSpeed: 6,
+	symbolFallOutInterval: 8,
+};
+
+// super turbo (tier 2): much snappier fall + near-instant settle (hacksaw-style)
 export const SPIN_OPTIONS_FAST = {
 	...SPIN_OPTIONS_SHARED,
-	// turbo drops: much snappier fall + near-instant settle (hacksaw-style)
 	symbolFallInSpeed: 12,
 	symbolFallInInterval: 0,
 	symbolFallInBounceSpeed: 0.6,

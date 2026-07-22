@@ -2,6 +2,7 @@
 	import { MainContainer } from 'components-layout';
 	import { OnHotkey } from 'components-shared';
 	import { Rectangle } from 'pixi-svelte';
+	import { stateBetDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
 
@@ -17,6 +18,7 @@
 
 	const skip = () => {
 		if (context.stateXstateDerived.isIdle()) return;
+		stateBetDerived.updateIsTurbo(true, { persistent: false });
 		context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 	};
 
@@ -37,6 +39,7 @@
 			Graphics) so Pixi actually hit-tests the geometry. A near-zero alpha
 			keeps it invisible while remaining hittable. -->
 		<Rectangle
+			zIndex={200}
 			eventMode="static"
 			cursor="pointer"
 			anchor={0.5}

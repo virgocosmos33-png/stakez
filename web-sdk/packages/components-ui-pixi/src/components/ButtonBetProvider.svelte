@@ -31,10 +31,9 @@
 	};
 
 	const stop = () => {
-		if (!stopDisabled) {
-			if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
-			context.eventEmitter.broadcast({ type: 'stopButtonClick' });
-		}
+		if (stateBetDerived.hasAutoBetCounter()) stateBet.autoSpinsCounter = 0;
+		stateBetDerived.updateIsTurbo(true, { persistent: false });
+		context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 	};
 
 	const onpress = () => {

@@ -32,6 +32,14 @@ class Ways:
         board_mult_count = 0
         potential_wins = defaultdict()
         wilds = [[] for _ in range(len(board))]
+        # Wilds substitute for every paying symbol. A wild on the FIRST reel
+        # must open every paytable symbol as a potential way - otherwise a
+        # symbol hidden behind a reel-1 wild (or a board flooded with wilds)
+        # is never evaluated and visibly-connecting ways pay nothing.
+        if any(sym.name in config.special_symbols[wild_key] for sym in board[0]):
+            for _, sym_name in config.paytable:
+                if sym_name not in potential_wins:
+                    potential_wins[sym_name] = [[] for _ in range(len(board))]
         for reel, _ in enumerate(board):
             for row, _ in enumerate(board[reel]):
                 sym = board[reel][row]

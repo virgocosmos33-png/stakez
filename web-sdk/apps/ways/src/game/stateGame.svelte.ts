@@ -15,6 +15,7 @@ import {
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
+	SPIN_OPTIONS_TURBO,
 	SPIN_OPTIONS_FAST,
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
@@ -59,8 +60,12 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		onSymbolLand,
 	});
 
-	reel.reelState.spinOptions = () =>
-		reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
+	// fast spinType covers both turbo tiers: super turbo gets the near-instant
+	// drop, plain turbo gets a visibly quicker-but-readable drop
+	reel.reelState.spinOptions = () => {
+		if (reel.reelState.spinType !== 'fast') return SPIN_OPTIONS_DEFAULT;
+		return stateBet.isSuperTurbo ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_TURBO;
+	};
 
 	return reel;
 });

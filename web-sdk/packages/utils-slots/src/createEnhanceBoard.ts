@@ -1,3 +1,5 @@
+import { stateBetDerived } from 'state-shared';
+
 import { createEnhanceBoardPreSpin } from './createEnhanceBoardPreSpin';
 import { createEnhanceBoardSpin } from './createEnhanceBoardSpin';
 import type { Reel, GetRawSymbolFromReel } from './types';
@@ -13,7 +15,10 @@ export function createEnhanceBoard() {
 				const rawSymbols = rawBoard?.[reelIndex] || [];
 				reel.setSymbolsWithRawSymbols(rawSymbols);
 			});
-		const stop = () => board.forEach((reel) => reel.stop());
+		const stop = () => {
+			stateBetDerived.updateIsTurbo(true, { persistent: false });
+			board.forEach((reel) => reel.stop());
+		};
 		const readyToSpinEffect = () => {
 			board.forEach((reel) => reel.readyToSpinEffect());
 		};
