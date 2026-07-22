@@ -63,11 +63,14 @@ def wav_frames(path: Path) -> bytes:
 # value = loop flag
 NEW_CUES = {f"bgm_celeb_{i}": True for i in range(1, 7)}
 NEW_CUES["sfx_madams_eye"] = False  # cinematic boom hit for the Madam's Eye drop
+NEW_CUES["sfx_thunder"] = False  # mega-win lightning thunder clap
 
 # per-cue loudness overrides: the eye boom is normalized MUCH hotter than the
 # default -16 LUFS bed so it punches through everything, peaks near 0 dBFS
 CUE_FILTERS = {
     "sfx_madams_eye": "loudnorm=I=-9:TP=-0.1:LRA=5",
+    # thunder should hit hard alongside the lightning burst
+    "sfx_thunder": "loudnorm=I=-10:TP=-0.3:LRA=6",
 }
 
 

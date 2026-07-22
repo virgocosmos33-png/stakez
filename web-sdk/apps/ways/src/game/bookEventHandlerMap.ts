@@ -51,6 +51,10 @@ const animateSymbols = async ({ positions }: { positions: Position[] }) => {
 	});
 };
 
+// track the running free-spin total so a retrigger can announce the delta
+// ("+N SPINS") — the book only sends the new grand total, never the increment
+let lastFreeSpinTotal = 0;
+
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
@@ -112,6 +116,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		// mega-win lightning telegraph — after symbol anims, before money celebration (setWin)
 		if (megaWin) {
+			// thunder clap fired with the lightning burst so the visual has impact
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' });
 			await eventEmitter.broadcastAsync({
 				type: 'winLightning',
 				winGroups: bookEvent.wins.map((win) => win.positions),
@@ -262,6 +268,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.gameType = 'freegame';
 		eventEmitter.broadcast({ type: 'boardFrameGlowShow' });
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+		lastFreeSpinTotal = bookEvent.totalFs;
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
 			current: undefined,
@@ -273,6 +280,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+		lastFreeSpinTotal = bookEvent.total;
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
 			current: bookEvent.amount,
@@ -284,11 +292,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'winCycleStop' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_scatter_win_v2' });
 		await animateSymbols({ positions: bookEvent.positions });
+
+		// how many spins this retrigger actually added (book only sends the total)
+		const added = bookEvent.totalFs - lastFreeSpinTotal;
+		lastFreeSpinTotal = bookEvent.totalFs;
+
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
 			current: undefined,
 			total: bookEvent.totalFs,
 		});
+
+		// announce the award with a themed "+N SPINS" banner before continuing
+		if (added > 0) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fs_respins' });
+			await eventEmitter.broadcastAsync({ type: 'retriggerBannerShow', amount: added });
+		}
 	},
 	freeSpinEnd: async (bookEvent: BookEventOfType<'freeSpinEnd'>) => {
 		const winLevelData = winLevelMap[bookEvent.winLevel as WinLevel];

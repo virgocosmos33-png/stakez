@@ -1,393 +1,292 @@
-"""Build a professional articulated Spine rig for the Lady Mirror scene char.
+"""Build a PROPER cut-out Spine rig for the Lady Mirror character.
 
-She is rigged from her EXISTING cutouts (no regen — her face/outfit stay exactly
-the same) as a single full-figure WEIGHTED MESH driven by a real bone hierarchy:
+NOT a single warping mesh (the old approach the art director rejected). Instead
+the flat cutout is sliced into SEPARATE PARTS — head, torso, mirror-arm, upper
+skirt, lower skirt/hem, and the veil — each packed as its own atlas region and
+pinned to its own bone in a hierarchy:
 
-    root -> hips -> spine -> chest -> neck -> head
-    hips -> gown            (skirt/hem sway)
-    head -> veil            (veil billow)
-    chest -> armR           (the hand-mirror arm: subtle raise)
-    (+ aura bone for the ghost glow)
+    root -> hips -> torso -> head -> veil
+                         \-> arm (+ hand mirror)
+            hips -> skirtUpper -> skirtLower
 
-Every mesh vertex is bone-weighted by region (head/neck/chest/spine/hips/gown
-chain + veil + arm overrides), so the veil, gown and hair BEND like cloth and
-the head/arm articulate — WITHOUT cutting the art into separate textures (which
-on a single AI illustration would leave holes/seams). One skinned mesh = no
-holes, no seams, no ghosting.
+The parts overlap generously and are layered back-to-front so the seams stay
+hidden, and the idle animation moves the BONES (float bob, breathing, head tilt,
+mirror-arm sway, skirt cloth-sway, veil billow) — real articulation, no image
+warping. First key == last key so the loop is seamless.
 
-Animations:
-    idle       looping ~4.6s: floating bob (root), breathing (spine scale),
-               head tilt, mirror-arm raise, gown sway, veil billow, hair drift,
-               pulsing violet ghost aura. First==last key -> seamless loop.
-    idle_flat  committed FALLBACK: the earlier whole-figure mesh-deform ripple
-               (gentle undulation) + aura, bones at rest.
+Base + bonus share ONE atlas (lady.webp) with prefixed regions (base_* / bonus_*)
+so lady.json and lady_bonus.json can both reference lady.atlas.
 
-Two variants (base + bonus) share one atlas (lady.webp) with regions
-lady_base / lady_bonus. Runtime @esotericsoftware/spine-pixi-v8 4.2.74 (4.1
-JSON, mesh deform nested under animation "attachments").
-
-Output -> static/assets/spines/lady/ (lady.atlas/.webp/.png + lady.json +
+Output -> static/assets/spines/lady/ (lady.webp + lady.atlas + lady.json +
 lady_bonus.json).  Run:  python tools/gen_lady_spine.py
 """
 
 from __future__ import annotations
 
+import io
 import json
 import math
 import os
+import time
+from pathlib import Path
 
 from PIL import Image
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-SCENE_DIR = os.path.normpath(
-    os.path.join(HERE, "..", "static", "assets", "sprites", "scene")
-)
-OUT_DIR = os.path.normpath(os.path.join(HERE, "..", "static", "assets", "spines", "lady"))
+
+def robust_write(path: Path, data: bytes, attempts: int = 8) -> None:
+    """Write via a temp file + atomic replace, retrying through OneDrive's
+    intermittent Errno 22 file locks."""
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    for i in range(attempts):
+        try:
+            with open(tmp, "wb") as f:
+                f.write(data)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp, path)
+            return
+        except OSError:
+            time.sleep(0.6 * (i + 1))
+    raise SystemExit(f"could not write {path} (OneDrive lock)")
+
+APP = Path(__file__).resolve().parents[1]
+SCENE = APP / "static" / "assets" / "sprites" / "scene"
+OUT = APP / "static" / "assets" / "spines" / "lady"
+OUT.mkdir(parents=True, exist_ok=True)
 
 SPINE_VERSION = "4.1.23"
-PAD = 2
-TARGET_H = 1000  # native atlas height per figure (scaled down at runtime)
+PERIOD = 5.0          # idle loop length (s)
+SAMPLES = 16          # sine samples per loop (last == first)
+# pack the atlas at reduced pixel res (kept < 4096 GPU limit); attachment display
+# size stays full so she renders at full size, the texture is just cheaper.
+ATLAS_SCALE = 0.6
 
-GX, GY = 7, 13  # mesh grid cells (8 x 14 vertices) — tall for smooth cloth
-PERIOD = 4.6
-STEPS = 12
-AURA_HEX = "9a6cff"
+# ---------------------------------------------------------------------------
+# Part layout. Boxes are (x0,y0,x1,y1) as fractions of the TRIMMED figure bbox
+# (origin top-left). Pivots are (px,py) fractions — the bone's rotation centre,
+# placed where the part joins its parent up the chain. Draw order is the list
+# order (first = furthest back).
+# ---------------------------------------------------------------------------
+Part = dict  # {name, box, pivot, parent, bone_extra?}
 
-# bone chain order (index in this list == Spine bone index used by weights)
-BONE_ORDER = ["root", "hips", "spine", "chest", "neck", "head", "gown", "veil", "armR", "aura"]
-BONE_PARENT = {
-    "hips": "root", "spine": "hips", "chest": "spine", "neck": "chest",
-    "head": "neck", "gown": "hips", "veil": "head", "armR": "chest", "aura": "root",
-}
+BASE_PARTS: list[Part] = [
+    {"name": "veil",       "box": (0.48, 0.02, 1.00, 0.82), "pivot": (0.60, 0.12), "parent": "head"},
+    {"name": "skirtLower", "box": (0.00, 0.58, 1.00, 1.00), "pivot": (0.50, 0.63), "parent": "skirtUpper"},
+    {"name": "skirtUpper", "box": (0.04, 0.35, 0.96, 0.68), "pivot": (0.50, 0.40), "parent": "hips"},
+    {"name": "torso",      "box": (0.22, 0.12, 0.78, 0.42), "pivot": (0.50, 0.40), "parent": "hips"},
+    {"name": "arm",        "box": (0.40, 0.40, 0.82, 0.72), "pivot": (0.55, 0.44), "parent": "torso"},
+    {"name": "head",       "box": (0.26, 0.00, 0.74, 0.21), "pivot": (0.49, 0.19), "parent": "torso"},
+]
 
-# Per-variant config: source file, bone pivots (fractional x,y from TOP-LEFT of
-# the trimmed image), and the arm/veil weight regions. Base holds the mirror
-# low-center; bonus raises the glowing mirror to the upper-left.
+BONUS_PARTS: list[Part] = [
+    {"name": "veil",       "box": (0.52, 0.06, 1.00, 0.88), "pivot": (0.62, 0.14), "parent": "head"},
+    {"name": "skirtLower", "box": (0.00, 0.62, 1.00, 1.00), "pivot": (0.50, 0.66), "parent": "skirtUpper"},
+    {"name": "skirtUpper", "box": (0.06, 0.40, 0.94, 0.72), "pivot": (0.50, 0.44), "parent": "hips"},
+    {"name": "torso",      "box": (0.28, 0.16, 0.74, 0.46), "pivot": (0.50, 0.44), "parent": "hips"},
+    {"name": "arm",        "box": (0.00, 0.02, 0.46, 0.40), "pivot": (0.40, 0.30), "parent": "torso"},
+    {"name": "head",       "box": (0.33, 0.02, 0.70, 0.24), "pivot": (0.50, 0.22), "parent": "torso"},
+]
+
 VARIANTS = {
-    "lady_base": {
-        "file": "lady_character.png",
-        "skeleton": "lady.json",
-        "pivots": {
-            "hips": (0.44, 0.55), "spine": (0.44, 0.38), "chest": (0.45, 0.27),
-            "neck": (0.43, 0.18), "head": (0.41, 0.12), "gown": (0.44, 0.46),
-            "veil": (0.60, 0.12), "armR": (0.52, 0.26),
-        },
-        # arm region (shoulder -> hand+mirror), peak toward the hand (bottom)
-        "arm_box": (0.47, 0.30, 0.72, 0.76), "arm_peak": "down",
-        # veil billows down the right side
-        "veil_box": (0.62, 0.10, 1.00, 0.95),
-    },
-    "lady_bonus": {
-        "file": "lady_bonus.png",
-        "skeleton": "lady_bonus.json",
-        "pivots": {
-            "hips": (0.48, 0.52), "spine": (0.48, 0.35), "chest": (0.49, 0.25),
-            "neck": (0.50, 0.19), "head": (0.50, 0.12), "gown": (0.48, 0.45),
-            "veil": (0.64, 0.16), "armR": (0.40, 0.22),
-        },
-        # raised arm+mirror to the upper-left, peak toward the mirror (up-left)
-        "arm_box": (0.00, 0.00, 0.42, 0.42), "arm_peak": "upleft",
-        "veil_box": (0.60, 0.14, 1.00, 0.95),
-    },
+    "base":  {"src": "lady_character.png", "parts": BASE_PARTS, "json": "lady.json"},
+    "bonus": {"src": "lady_bonus.png",     "parts": BONUS_PARTS, "json": "lady_bonus.json"},
 }
 
-
-def rgba_hex(hex6: str, alpha: float) -> str:
-    return f"{hex6}{int(max(0.0, min(1.0, alpha)) * 255):02x}"
-
-
-def load_trimmed(name: str) -> Image.Image:
-    img = Image.open(os.path.join(SCENE_DIR, name)).convert("RGBA")
-    bbox = img.getbbox()
-    if bbox:
-        img = img.crop(bbox)
-    w, h = img.size
-    return img.resize((max(1, round(w * TARGET_H / h)), TARGET_H), Image.LANCZOS)
-
-
-def smoothstep(a: float, b: float, x: float) -> float:
-    if a == b:
-        return 0.0 if x < a else 1.0
-    t = max(0.0, min(1.0, (x - a) / (b - a)))
-    return t * t * (3 - 2 * t)
+# idle bone motion — amplitude (deg unless noted), phase (fraction of loop)
+MOTION = {
+    "hips":       {"rotate": (0.5, 0.00)},
+    "torso":      {"rotate": (0.6, 0.05), "scaleY": (0.012, 0.05)},
+    "head":       {"rotate": (1.4, 0.12)},
+    "arm":        {"rotate": (1.7, 0.08)},
+    "skirtUpper": {"rotate": (0.9, 0.10)},
+    "skirtLower": {"rotate": (1.7, 0.16)},
+    "veil":       {"rotate": (2.3, 0.20)},
+}
+ARM_AMP_BONUS = 1.0  # raised mirror sways less
 
 
-def box_mask(fx: float, fy: float, box, feather=0.08) -> float:
-    x0, y0, x1, y1 = box
-    hx = smoothstep(x0 - feather, x0 + feather, fx) * (1 - smoothstep(x1 - feather, x1 + feather, fx))
-    hy = smoothstep(y0 - feather, y0 + feather, fy) * (1 - smoothstep(y1 - feather, y1 + feather, fy))
-    return hx * hy
+def trim_bbox(im: Image.Image) -> tuple[int, int, int, int]:
+    bbox = im.split()[3].getbbox()
+    if bbox is None:
+        raise SystemExit("empty image")
+    return bbox
 
 
-def chain_weight(fy: float, anchors) -> dict:
-    """Blend along the vertical spine chain by fy (2-bone linear blend)."""
-    if fy <= anchors[0][0]:
-        return {anchors[0][1]: 1.0}
-    if fy >= anchors[-1][0]:
-        return {anchors[-1][1]: 1.0}
-    for i in range(len(anchors) - 1):
-        y0, n0 = anchors[i]
-        y1, n1 = anchors[i + 1]
-        if y0 <= fy <= y1:
-            t = (fy - y0) / (y1 - y0)
-            return {n0: 1 - t, n1: t}
-    return {anchors[-1][1]: 1.0}
+def extract_parts(src: Image.Image, parts: list[Part]):
+    """Crop each part box, trim to its own content, return records with the
+    trimmed sub-image + geometry (all in TRIMMED-figure pixel space)."""
+    fx0, fy0, fx1, fy1 = trim_bbox(src)
+    fig = src.crop((fx0, fy0, fx1, fy1))
+    Wt, Ht = fig.size
+    records = []
+    for p in parts:
+        bx0, by0, bx1, by1 = p["box"]
+        box = (int(bx0 * Wt), int(by0 * Ht), int(bx1 * Wt), int(by1 * Ht))
+        tile = fig.crop(box)
+        sub = tile.split()[3].getbbox()
+        if sub is None:
+            continue
+        tile = tile.crop(sub)
+        cw, ch = tile.size  # full-res content size -> attachment display size
+        # content bbox centre in figure px
+        ccx = box[0] + sub[0] + cw / 2
+        ccy = box[1] + sub[1] + ch / 2
+        pivx = p["pivot"][0] * Wt
+        pivy = p["pivot"][1] * Ht
+        # downscale the packed pixels only (display size stays cw x ch)
+        aw = max(1, round(cw * ATLAS_SCALE))
+        ah = max(1, round(ch * ATLAS_SCALE))
+        packed = tile.resize((aw, ah), Image.LANCZOS)
+        records.append({
+            "name": p["name"], "parent": p["parent"], "img": packed,
+            "cw": cw, "ch": ch, "ccx": ccx, "ccy": ccy, "pivx": pivx, "pivy": pivy,
+        })
+    return records, Wt, Ht
 
 
-def vertex_weights(fx: float, fy: float, cfg: dict, anchors) -> dict:
-    w = chain_weight(fy, anchors)
-
-    # arm/mirror override: bias toward the hand end so the mirror leads
-    arm = box_mask(fx, fy, cfg["arm_box"], 0.06)
-    if cfg["arm_peak"] == "down":
-        arm *= smoothstep(cfg["arm_box"][1], cfg["arm_box"][3], fy)
-    else:  # upleft
-        arm *= smoothstep(cfg["arm_box"][2], cfg["arm_box"][0], fx) * smoothstep(
-            cfg["arm_box"][3], cfg["arm_box"][1], fy
-        )
-    arm_w = arm * 0.8
-    # veil override: strongest at the outer/lower edge of the veil
-    veil = box_mask(fx, fy, cfg["veil_box"], 0.07)
-    veil *= smoothstep(cfg["veil_box"][0], cfg["veil_box"][2], fx)
-    veil_w = veil * 0.55
-
-    override = min(0.92, arm_w + veil_w)
-    if override > 0.001:
-        for k in list(w.keys()):
-            w[k] *= 1 - override
-        if arm_w >= veil_w:
-            w["armR"] = w.get("armR", 0) + arm_w
-            if veil_w > 0.02:
-                w["veil"] = w.get("veil", 0) + veil_w
-        else:
-            w["veil"] = w.get("veil", 0) + veil_w
-            if arm_w > 0.02:
-                w["armR"] = w.get("armR", 0) + arm_w
-
-    # keep the 3 strongest, renormalise
-    top = dict(sorted(w.items(), key=lambda kv: kv[1], reverse=True)[:3])
-    total = sum(top.values()) or 1.0
-    return {k: v / total for k, v in top.items()}
+def pack(regions: list[dict], pad: int = 2, max_w: int = 2048):
+    """Simple shelf packer. regions get 'ax','ay' assigned. Returns (W,H)."""
+    x = pad
+    y = pad
+    row_h = 0
+    W = 0
+    for r in regions:
+        w, h = r["img"].size
+        if x + w + pad > max_w:
+            x = pad
+            y += row_h + pad
+            row_h = 0
+        r["ax"] = x
+        r["ay"] = y
+        x += w + pad
+        row_h = max(row_h, h)
+        W = max(W, x)
+    H = y + row_h + pad
+    return W, H
 
 
-def bone_abs(cfg: dict, W: float, H: float) -> dict:
-    """Absolute skeleton coords (y-up, figure centered) for every bone."""
-    def m(frac):
-        fx, fy = frac
-        return (-W / 2 + fx * W, H / 2 - fy * H)
-
-    abs_pos = {"root": (0.0, 0.0), "aura": (0.0, 0.0)}
-    for name, frac in cfg["pivots"].items():
-        abs_pos[name] = m(frac)
-    return abs_pos
-
-
-def build_bones(abs_pos: dict) -> list:
-    bones = []
-    for name in BONE_ORDER:
-        entry = {"name": name}
-        parent = BONE_PARENT.get(name)
-        if parent:
-            entry["parent"] = parent
-            entry["x"] = round(abs_pos[name][0] - abs_pos[parent][0], 2)
-            entry["y"] = round(abs_pos[name][1] - abs_pos[parent][1], 2)
-        bones.append(entry)
-    return bones
-
-
-def build_weighted_mesh(W: float, H: float, abs_pos: dict, cfg: dict) -> dict:
-    cols, rows = GX + 1, GY + 1
-    idx = {name: i for i, name in enumerate(BONE_ORDER)}
-    anchors = sorted(
-        [(cfg["pivots"][n][1], n) for n in ("head", "neck", "chest", "spine", "hips", "gown")]
-    )
-    uvs, verts = [], []
-    for row in range(rows):
-        for col in range(cols):
-            u, v = col / GX, row / GY
-            uvs += [u, v]
-            vx = -W / 2 + u * W
-            vy = H / 2 - v * H
-            weights = vertex_weights(u, v, cfg, anchors)
-            entry = [len(weights)]
-            for name, wt in weights.items():
-                bx, by = abs_pos[name]
-                entry += [idx[name], round(vx - bx, 2), round(vy - by, 2), round(wt, 4)]
-            verts += entry
-    triangles = []
-    for row in range(GY):
-        for col in range(GX):
-            i0 = row * cols + col
-            i1 = i0 + 1
-            i2 = i0 + cols
-            i3 = i2 + 1
-            triangles += [i0, i2, i1, i1, i2, i3]
-    return {
-        "type": "mesh",
-        "uvs": uvs,
-        "triangles": triangles,
-        "vertices": verts,
-        "hull": 2 * cols + 2 * (rows - 2),
-        "width": W,
-        "height": H,
-    }
-
-
-def sine_keys(amp, phase=0.0, base=0.0, cycles=1):
-    return [(i, base + amp * math.sin(2 * math.pi * cycles * (i / STEPS) + phase)) for i in range(STEPS + 1)]
-
-
-def timed(keys, make):
-    out = []
-    for i, value in keys:
-        key = make(value)
-        if i > 0:
-            key["time"] = round(i * PERIOD / STEPS, 4)
-        out.append(key)
-    return out
-
-
-def idle_animation(region: str, W: float, H: float) -> dict:
-    bones = {
-        "root": {"translate": timed(sine_keys(H * 0.018, 0.0), lambda v: {"x": 0, "y": round(v, 2)})},
-        "hips": {"rotate": timed(sine_keys(0.6, math.pi / 5), lambda v: {"value": round(v, 3)})},
-        "spine": {
-            "rotate": timed(sine_keys(0.5, math.pi / 3), lambda v: {"value": round(v, 3)}),
-            "scale": [],
-        },
-        "chest": {"rotate": timed(sine_keys(0.8, math.pi / 2), lambda v: {"value": round(v, 3)})},
-        "neck": {"rotate": timed(sine_keys(0.7, math.pi / 2.5), lambda v: {"value": round(v, 3)})},
-        "head": {"rotate": timed(sine_keys(1.6, math.pi / 2), lambda v: {"value": round(v, 3)})},
-        "gown": {"rotate": timed(sine_keys(1.4, 0.0), lambda v: {"value": round(v, 3)})},
-        "veil": {"rotate": timed(sine_keys(1.2, math.pi / 4), lambda v: {"value": round(v, 3)})},
-        "armR": {"rotate": timed(sine_keys(2.2, math.pi / 6), lambda v: {"value": round(v, 3)})},
-        "aura": {"scale": timed(sine_keys(0.02, math.pi / 2, 1.03), lambda v: {"x": round(v, 4), "y": round(v, 4)})},
-    }
-    # breathing on spine (y swell, slight x pinch)
-    for i, v in sine_keys(0.014, 0.0):
-        key = {"x": round(1 - v * 0.6, 4), "y": round(1 + v, 4)}
-        if i > 0:
-            key["time"] = round(i * PERIOD / STEPS, 4)
-        bones["spine"]["scale"].append(key)
-
-    # light cloth shimmer deform on top of the bone motion (small; seamless)
-    cols, rows = GX + 1, GY + 1
-    sway = W * 0.012
-    deform_keys = []
-    for i in range(STEPS + 1):
-        phase = 2 * math.pi * (i / STEPS)
-        deltas = []
-        for row in range(rows):
-            for col in range(cols):
-                ny = row / GY
-                dx = sway * (ny ** 1.4) * math.sin(phase + ny * 2.4)
-                deltas += [round(dx, 2), 0.0]
-        key = {"offset": 0, "vertices": deltas}
-        if i > 0:
-            key["time"] = round(i * PERIOD / STEPS, 4)
-        deform_keys.append(key)
-
-    aura_rgba = timed(
-        sine_keys(0.5, -math.pi / 2, 0.5),
-        lambda v: {"color": rgba_hex(AURA_HEX, 0.05 + 0.12 * max(0.0, min(1.0, v)))},
-    )
-    return {
-        "slots": {"lady_aura": {"rgba": aura_rgba}},
-        "bones": bones,
-        "attachments": {"default": {"lady_body": {region: {"deform": deform_keys}}}},
-    }
-
-
-def idle_flat_animation(region: str, W: float, H: float) -> dict:
-    """Committed fallback: the whole-figure mesh-deform ripple + aura, bones
-    at rest (the earlier single-texture 'living photo' idle)."""
-    cols, rows = GX + 1, GY + 1
-    amp = W * 0.03
+def sine_keys(amp: float, phase: float, base: float = 0.0):
     keys = []
-    for i in range(STEPS + 1):
-        p = i / STEPS
-        travel = 2 * math.pi * p
-        env = 0.5 - 0.5 * math.cos(2 * math.pi * p)  # sin^2 seam
-        deltas = []
-        for row in range(rows):
-            for col in range(cols):
-                nx = (col / GX) * 2 - 1
-                ny = 1 - (row / GY) * 2
-                damp = 0.6 + 0.4 * (1 - max(abs(nx), abs(ny)))
-                dx = amp * env * math.sin(travel + math.pi * 0.9 * nx + 0.6 * ny) * damp
-                dy = amp * 0.7 * env * math.sin(travel + math.pi * 1.1 * ny) * damp
-                deltas += [round(dx, 2), round(dy, 2)]
-        key = {"offset": 0, "vertices": deltas}
-        if i > 0:
-            key["time"] = round(p * PERIOD, 4)
-        keys.append(key)
-    aura_rgba = timed(
-        sine_keys(0.5, -math.pi / 2, 0.5),
-        lambda v: {"color": rgba_hex(AURA_HEX, 0.05 + 0.1 * max(0.0, min(1.0, v)))},
-    )
-    return {
-        "slots": {"lady_aura": {"rgba": aura_rgba}},
-        "bones": {"root": {"translate": timed(sine_keys(H * 0.014, 0.0), lambda v: {"x": 0, "y": round(v, 2)})}},
-        "attachments": {"default": {"lady_body": {region: {"deform": keys}}}},
-    }
+    for i in range(SAMPLES + 1):
+        t = PERIOD * i / SAMPLES
+        val = base + amp * math.sin(2 * math.pi * (i / SAMPLES) + phase * 2 * math.pi)
+        keys.append((round(t, 4), round(val, 4)))
+    return keys
 
 
-def skeleton_json(region: str, W: float, H: float, cfg: dict) -> dict:
-    abs_pos = bone_abs(cfg, W, H)
+def build_skeleton(records: list[dict], Wt: int, Ht: int, prefix: str, is_bonus: bool):
+    def sx(ix):  # image px -> spine world x (root at figure centre)
+        return round(ix - Wt / 2, 2)
+
+    def sy(iy):
+        return round(Ht / 2 - iy, 2)
+
+    by_name = {r["name"]: r for r in records}
+    # bone world positions (spine coords) from each part's pivot
+    world = {"root": (0.0, 0.0), "hips": (sx(Wt / 2), sy(Ht * 0.42))}
+    for r in records:
+        world[r["name"]] = (sx(r["pivx"]), sy(r["pivy"]))
+
+    parents = {"hips": "root"}
+    for r in records:
+        parents[r["name"]] = r["parent"]
+
+    def local(name):
+        wx, wy = world[name]
+        px, py = world[parents[name]]
+        return round(wx - px, 2), round(wy - py, 2)
+
+    # bone order: parents before children
+    order = ["root", "hips", "torso", "head", "veil", "arm", "skirtUpper", "skirtLower"]
+    bones = [{"name": "root"}]
+    for name in order[1:]:
+        if name != "hips" and name not in by_name:
+            continue
+        lx, ly = local(name)
+        bones.append({"name": name, "parent": parents[name], "x": lx, "y": ly})
+
+    # slots in draw order == records order (already back->front)
+    slots = []
+    skin_attach = {}
+    for r in records:
+        region = f"{prefix}_{r['name']}"
+        slot = f"sl_{r['name']}"
+        slots.append({"name": slot, "bone": r["name"], "attachment": region})
+        bwx, bwy = world[r["name"]]
+        ax = round((sx(r["ccx"])) - bwx, 2)
+        ay = round((sy(r["ccy"])) - bwy, 2)
+        skin_attach[slot] = {region: {"x": ax, "y": ay, "width": r["cw"], "height": r["ch"]}}
+
+    # ---- idle animation (bone transforms only) ----
+    anim_bones = {}
+    # float bob on root
+    root_keys = sine_keys(14.0, 0.0)
+    anim_bones["root"] = {"translate": [{"time": t, "x": 0, "y": v} for t, v in root_keys]}
+    for name, m in MOTION.items():
+        if name not in by_name and name not in ("hips",):
+            continue
+        entry = {}
+        if "rotate" in m:
+            amp, ph = m["rotate"]
+            if name == "arm" and is_bonus:
+                amp = ARM_AMP_BONUS
+            entry["rotate"] = [{"time": t, "value": v} for t, v in sine_keys(amp, ph)]
+        if "scaleY" in m:
+            amp, ph = m["scaleY"]
+            entry["scale"] = [{"time": t, "x": 1.0, "y": round(v, 4)}
+                              for t, v in sine_keys(amp, ph, base=1.0)]
+        anim_bones[name] = entry
+
     return {
         "skeleton": {
-            "hash": f"mm-{region}", "spine": SPINE_VERSION,
-            "x": -W / 2, "y": -H / 2, "width": W, "height": H,
-            "images": "./images/", "audio": "",
+            "hash": f"lady-{prefix}", "spine": SPINE_VERSION,
+            "x": round(-Wt / 2, 1), "y": round(-Ht / 2, 1),
+            "width": float(Wt), "height": float(Ht), "images": "", "audio": "",
         },
-        "bones": build_bones(abs_pos),
-        "slots": [
-            {"name": "lady_aura", "bone": "aura", "attachment": region,
-             "color": rgba_hex(AURA_HEX, 0.1), "blend": "additive"},
-            {"name": "lady_body", "bone": "root", "attachment": region},
-        ],
-        "skins": [{
-            "name": "default",
-            "attachments": {
-                "lady_aura": {region: {"width": W, "height": H}},
-                "lady_body": {region: build_weighted_mesh(W, H, abs_pos, cfg)},
-            },
-        }],
-        "animations": {
-            "idle": idle_animation(region, W, H),
-            "idle_flat": idle_flat_animation(region, W, H),
-        },
+        "bones": bones,
+        "slots": slots,
+        "skins": [{"name": "default", "attachments": skin_attach}],
+        "animations": {"idle": {"bones": anim_bones}},
     }
 
 
 def main() -> None:
-    os.makedirs(OUT_DIR, exist_ok=True)
-    imgs = {region: load_trimmed(cfg["file"]) for region, cfg in VARIANTS.items()}
+    all_regions: list[dict] = []
+    variant_records = {}
+    for key, cfg in VARIANTS.items():
+        src = Image.open(SCENE / cfg["src"]).convert("RGBA")
+        recs, Wt, Ht = extract_parts(src, cfg["parts"])
+        prefix = key
+        for r in recs:
+            r["region"] = f"{prefix}_{r['name']}"
+            all_regions.append(r)
+        variant_records[key] = (recs, Wt, Ht, prefix)
+        print(f"[{key}] {len(recs)} parts, figure {Wt}x{Ht}", flush=True)
 
-    base, bonus = imgs["lady_base"], imgs["lady_bonus"]
-    page_w = PAD * 3 + base.width + bonus.width
-    page_h = PAD * 2 + max(base.height, bonus.height)
-    page = Image.new("RGBA", (page_w, page_h), (0, 0, 0, 0))
-    placements = {"lady_base": (PAD, PAD), "lady_bonus": (PAD * 2 + base.width, PAD)}
-    atlas_lines = ["lady.webp", f"size:{page_w},{page_h}", "filter:Linear,Linear", "scale:1"]
-    for region, (x, y) in placements.items():
-        img = imgs[region]
-        page.paste(img, (x, y))
-        atlas_lines += [region, f"bounds:{x},{y},{img.width},{img.height}"]
+    # pack every region of both variants into one atlas page
+    W, H = pack(all_regions)
+    page = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    for r in all_regions:
+        page.alpha_composite(r["img"], (r["ax"], r["ay"]))
+    buf = io.BytesIO()
+    page.save(buf, "WEBP", lossless=True, quality=100)
+    robust_write(OUT / "lady.webp", buf.getvalue())
 
-    page.save(os.path.join(OUT_DIR, "lady.png"))
-    page.save(os.path.join(OUT_DIR, "lady.webp"), lossless=True)
-    with open(os.path.join(OUT_DIR, "lady.atlas"), "w", encoding="utf-8", newline="\n") as f:
-        f.write("\n".join(atlas_lines) + "\n")
+    # atlas
+    lines = ["lady.webp", f"size:{W},{H}", "filter:Linear,Linear", "scale:1"]
+    for r in all_regions:
+        w, h = r["img"].size
+        lines.append(r["region"])
+        lines.append(f"bounds:{r['ax']},{r['ay']},{w},{h}")
+    robust_write(OUT / "lady.atlas", ("\n".join(lines) + "\n").encode("utf-8"))
+    print(f"[atlas] lady.webp {W}x{H}, {len(all_regions)} regions", flush=True)
 
-    for region, cfg in VARIANTS.items():
-        img = imgs[region]
-        data = skeleton_json(region, float(img.width), float(img.height), cfg)
-        with open(os.path.join(OUT_DIR, cfg["skeleton"]), "w", encoding="utf-8", newline="\n") as f:
-            json.dump(data, f)
-        print(f"  {region}: {img.width}x{img.height} -> {cfg['skeleton']}")
-
-    print(f"wrote atlas {page_w}x{page_h} + {len(imgs)} weighted-mesh skeletons to {OUT_DIR}")
+    # skeletons
+    for key, (recs, Wt, Ht, prefix) in variant_records.items():
+        skel = build_skeleton(recs, Wt, Ht, prefix, is_bonus=(key == "bonus"))
+        robust_write(OUT / VARIANTS[key]["json"], json.dumps(skel).encode("utf-8"))
+        print(f"[skel] {VARIANTS[key]['json']} ({len(skel['bones'])} bones, "
+              f"{len(skel['slots'])} slots)", flush=True)
 
 
 if __name__ == "__main__":

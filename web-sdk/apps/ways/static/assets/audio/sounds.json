@@ -289,6 +289,10 @@
 		"sfx_madams_eye": [
 			412000,
 			4500.0
+		],
+		"sfx_thunder": [
+			418000,
+			4000.0
 		]
 	},
 	"src": [
@@ -503,6 +507,9 @@
 			"volume": 1
 		},
 		"sfx_madams_eye": {
+			"volume": 1
+		},
+		"sfx_thunder": {
 			"volume": 1
 		}
 	}

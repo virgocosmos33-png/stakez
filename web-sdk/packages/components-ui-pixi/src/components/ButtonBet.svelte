@@ -8,6 +8,7 @@
 	import ButtonBetProvider from './ButtonBetProvider.svelte';
 	import { UI_BASE_SIZE } from '../constants';
 	import { drawIcon } from '../icons';
+	import { HUD_THEME as T } from '../hudTheme';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const disabled = $derived(!stateBetDerived.isBetCostAvailable());
@@ -21,13 +22,13 @@
 		const c = R;
 		// outer gold ring
 		g.circle(c, c, R);
-		g.fill({ color: isDisabled ? 0x6a6a70 : hovered ? 0xffe98a : 0xffde6a });
+		g.fill({ color: isDisabled ? 0x6a6a70 : hovered ? T.spinCoinRimHover : T.spinCoinRim });
 		// dark bezel
 		g.circle(c, c, R - 3);
 		g.fill({ color: 0x1c2530 });
 		// gold body
 		g.circle(c, c, R - 7);
-		g.fill({ color: isDisabled ? 0x8a8a8a : 0xf7bb0f });
+		g.fill({ color: isDisabled ? 0x8a8a8a : T.spinCoinBody });
 		if (!isDisabled) {
 			g.circle(c - R * 0.22, c - R * 0.26, R * 0.62);
 			g.fill({ color: 0xffd94a, alpha: 0.6 });

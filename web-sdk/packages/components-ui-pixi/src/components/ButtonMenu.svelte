@@ -5,6 +5,7 @@
 	import UiButton from './UiButton.svelte';
 	import { UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
+	import { HUD_THEME } from '../hudTheme';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
@@ -17,4 +18,4 @@
 	};
 </script>
 
-<UiButton {...props} {sizes} {onpress} flat iconColor={0xf0e6d0} icon="menu" />
+<UiButton {...props} {sizes} {onpress} flat iconColor={HUD_THEME.textValue} icon="menu" />

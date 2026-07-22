@@ -145,9 +145,14 @@ export const drawIcon = (g: PIXI.Graphics, name: UiIconName, style: IconStyle) =
 			g.fill({ color: accent });
 			break;
 		}
-		case 'autoSpin':
 		case 'spin': {
-			refresh(g, name === 'spin' ? s * 1.05 : s, color);
+			refresh(g, s * 1.05, color);
+			break;
+		}
+		case 'autoSpin': {
+			// play triangle so autoplay reads distinctly from the spin refresh arrow
+			g.poly([-s * 0.22, -s * 0.3, s * 0.3, 0, -s * 0.22, s * 0.3]);
+			g.fill({ color });
 			break;
 		}
 		case 'stop': {

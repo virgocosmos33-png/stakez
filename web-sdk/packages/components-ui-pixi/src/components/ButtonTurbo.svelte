@@ -7,6 +7,7 @@
 	import UiSprite from './UiSprite.svelte';
 	import { UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
+	import { HUD_THEME } from '../hudTheme';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
 	const context = getContext();
@@ -28,7 +29,7 @@
 		stopButtonEnable: () => stateBetDerived.updateIsTurbo(false, { persistent: false }),
 	});
 
-	const LIT = 0xffb400; // gold: an engaged bolt
+	const LIT = HUD_THEME.turboLit; // gold: an engaged bolt (themeable)
 	const DIM = 0x5a6672; // steel: a dormant bolt
 
 	// lightning bolt path (from icons.ts 'turbo'), centred, shifted by dx

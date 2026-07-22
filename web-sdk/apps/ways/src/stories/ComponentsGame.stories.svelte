@@ -216,6 +216,8 @@
 			eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: 15360 });
 			eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 			eventEmitter.broadcast({ type: 'freeSpinCounterUpdate', current: 11, total: 15 });
+			// free-spins also arms the collapse-HUD drawer button (portrait)
+			eventEmitter.broadcast({ type: 'drawerButtonShow' });
 		},
 	})}
 	{template}

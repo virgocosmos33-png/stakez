@@ -21,9 +21,13 @@
 	import { getContext } from '../game/context';
 	import config from '../game/config';
 	import { stateShake } from '../game/stateShake.svelte';
+	import { hudColor } from '../game/hud.generated';
 	import InfoMarquee from './InfoMarquee.svelte';
 
 	const context = getContext();
+
+	// WAYS / FREE SPINS / WIN rail text colour — config-driven (hud.colors.text)
+	const RAIL_TEXT_COLOR = hudColor('text', 0xf0e6d0);
 
 	// Lockstep with BoardFrame.svelte
 	const GOLD_INNER_X = 58;
@@ -153,7 +157,7 @@
 				anchor={0.5}
 				text={s.text}
 				style={{
-					fill: 0xf0e6d0,
+					fill: RAIL_TEXT_COLOR,
 					fontSize: Math.min(L.fontSize, Math.floor(s.maxW / (s.text.length * 0.55))),
 					fontWeight: '700',
 					fontFamily: '"Segoe UI", Arial, Helvetica, sans-serif',

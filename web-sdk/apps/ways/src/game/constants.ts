@@ -1,22 +1,20 @@
 import _ from 'lodash';
 
 import type { RawSymbol, SymbolState } from './types';
+// Parametric board: reels/rows/symbol-size come from the game-builder config
+// (game-builder/config/<game>.config.json -> board.generated.ts). Editing the
+// config + `node game-builder/src/cli.mjs gen-frontend` reshapes the board.
+import { GEN_SYMBOL_SIZE, GEN_REEL_PADDING, GEN_HIGH_SYMBOLS, buildInitialBoard } from './board.generated';
 
 // 140 keeps the 5-wide board (+ ornate frame) inside the 800-wide portrait
 // canvas without clipping the edge symbols, and reads smaller/comfortable on
 // desktop (was 172, which overflowed portrait and dominated the desktop view).
-export const SYMBOL_SIZE = 140;
+export const SYMBOL_SIZE = GEN_SYMBOL_SIZE;
 
-export const REEL_PADDING = 0.53;
+export const REEL_PADDING = GEN_REEL_PADDING;
 
-// initial board: 4 visible rows + top/bottom padding = 6 entries per reel
-export const INITIAL_BOARD: RawSymbol[][] = [
-	[{ name: 'H1' }, { name: 'H1' }, { name: 'L4' }, { name: 'L4' }, { name: 'L4' }, { name: 'L1' }],
-	[{ name: 'H1' }, { name: 'H1' }, { name: 'L4' }, { name: 'L4' }, { name: 'H3' }, { name: 'L2' }],
-	[{ name: 'L2' }, { name: 'L2' }, { name: 'L3' }, { name: 'L3' }, { name: 'H2' }, { name: 'L1' }],
-	[{ name: 'L3' }, { name: 'H2' }, { name: 'H2' }, { name: 'H4' }, { name: 'H4' }, { name: 'L3' }],
-	[{ name: 'L3' }, { name: 'H2' }, { name: 'H2' }, { name: 'L2' }, { name: 'L2' }, { name: 'L4' }],
-];
+// initial board derived from config: numRows[reel] visible + top/bottom padding.
+export const INITIAL_BOARD: RawSymbol[][] = buildInitialBoard();
 
 export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: INITIAL_BOARD[0].length - 2 };
 
@@ -44,7 +42,7 @@ export const PORTRAIT_MAIN_SIZES = {
 	height: PORTRAIT_HEIGHT,
 };
 
-export const HIGH_SYMBOLS = ['H1', 'H2', 'H3', 'H4', 'H5'];
+export const HIGH_SYMBOLS = GEN_HIGH_SYMBOLS;
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 

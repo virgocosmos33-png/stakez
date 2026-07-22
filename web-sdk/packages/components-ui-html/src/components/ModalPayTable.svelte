@@ -192,18 +192,32 @@
 {/if}
 
 <style lang="scss">
+	/* contained, themed gothic card — not full-bleed. Centres in the popup with a
+	   dark-steel body, faint violet séance glow and a steel rim so it matches the
+	   in-game HUD instead of dumping plain text over the reels. */
 	.shell {
 		position: relative;
 		z-index: 100;
-		width: 100%;
-		height: 100%;
-		max-height: 100%;
+		width: min(74rem, 94vw);
+		max-width: 94vw;
+		height: min(90vh, 54rem);
+		max-height: 92vh;
+		margin: auto;
 		display: grid;
-		grid-template-columns: minmax(0, 1fr) 4.5rem;
-		color: #f4f4f6;
+		grid-template-columns: minmax(0, 1fr) 4.75rem;
+		color: #ece7db;
 		pointer-events: auto;
 		overflow: hidden;
 		box-sizing: border-box;
+		border-radius: 16px;
+		background:
+			radial-gradient(130% 90% at 50% -15%, rgba(96, 62, 140, 0.4), transparent 58%),
+			linear-gradient(180deg, #191d25 0%, #0f1319 100%);
+		border: 1px solid #3a4552;
+		box-shadow:
+			0 26px 64px rgba(0, 0, 0, 0.62),
+			inset 0 1px 0 rgba(255, 255, 255, 0.05),
+			inset 0 0 0 1px rgba(0, 0, 0, 0.4);
 	}
 
 	.rail {
@@ -216,16 +230,19 @@
 		order: 2;
 		z-index: 5;
 		pointer-events: auto;
+		border-left: 1px solid rgba(255, 255, 255, 0.08);
+		background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.32));
 	}
 
 	.rail-btn {
-		width: 3.4rem;
-		height: 3.4rem;
+		width: 3.3rem;
+		height: 3.3rem;
 		flex: 0 0 auto;
 		border-radius: 999px;
-		border: 2.5px solid #ffffff;
-		background: rgba(0, 0, 0, 0.35);
-		color: #fff;
+		/* dark-steel medallion to match the in-game HUD buttons (no white) */
+		border: 2px solid #3a4552;
+		background: rgba(16, 22, 29, 0.92);
+		color: #ece7db;
 		display: grid;
 		place-items: center;
 		cursor: pointer;
@@ -237,24 +254,31 @@
 			transform 0.12s ease;
 
 		svg {
-			width: 1.55rem;
-			height: 1.55rem;
+			width: 1.5rem;
+			height: 1.5rem;
 			display: block;
 		}
 
 		&:hover {
 			transform: scale(1.05);
-			background: rgba(255, 255, 255, 0.08);
+			border-color: #5a6672;
+			background: rgba(22, 29, 38, 0.95);
 		}
 
+		/* active/selected tab lights up gold like the spin coin */
 		&.active {
-			border-color: var(--mono-fill, #ffffff);
-			background: var(--mono-fill, #ffffff);
-			color: var(--mono-on-fill, #0a0e14);
+			border-color: #ffde6a;
+			background: #ffde6a;
+			color: #0a0e14;
 		}
 
 		&.close {
 			margin-top: 0.4rem;
+			border-color: #5a3a44;
+			&:hover {
+				border-color: #b4545f;
+				color: #ffd7dc;
+			}
 		}
 	}
 
@@ -275,7 +299,7 @@
 		flex: 0 0 auto;
 		padding-bottom: 0.85rem;
 		margin-bottom: 0.5rem;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.22);
+		border-bottom: 1px solid rgba(233, 196, 106, 0.28);
 
 		h1 {
 			margin: 0;
@@ -283,6 +307,8 @@
 			font-weight: 700;
 			font-style: italic;
 			letter-spacing: 0.01em;
+			color: #f0dca0;
+			text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
 		}
 	}
 
@@ -317,6 +343,7 @@
 			font-weight: 800;
 			letter-spacing: 0.06em;
 			text-transform: uppercase;
+			color: #e9c46a;
 		}
 
 		&.rule {
@@ -401,10 +428,14 @@
 		text-align: center;
 
 		img {
-			width: clamp(3.6rem, 8vw, 5.5rem);
-			height: clamp(3.6rem, 8vw, 5.5rem);
+			width: clamp(3.6rem, 8vw, 5.2rem);
+			height: clamp(3.6rem, 8vw, 5.2rem);
 			object-fit: contain;
-			filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.45));
+			padding: 0.3rem;
+			border-radius: 0.6rem;
+			background: radial-gradient(circle at 50% 35%, rgba(58, 46, 78, 0.5), rgba(0, 0, 0, 0.35));
+			border: 1px solid rgba(255, 255, 255, 0.08);
+			box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
 		}
 	}
 
@@ -447,18 +478,27 @@
 		align-items: center;
 		gap: 0.85rem;
 		text-align: left;
+		padding: 0.6rem 0.7rem;
+		background: rgba(0, 0, 0, 0.25);
+		border: 1px solid rgba(255, 255, 255, 0.07);
+		border-radius: 0.6rem;
 
 		img {
-			width: 4.2rem;
-			height: 4.2rem;
+			width: 3.8rem;
+			height: 3.8rem;
 			object-fit: contain;
 			flex-shrink: 0;
+			padding: 0.25rem;
+			border-radius: 0.5rem;
+			background: radial-gradient(circle at 50% 35%, rgba(58, 46, 78, 0.5), rgba(0, 0, 0, 0.35));
+			border: 1px solid rgba(255, 255, 255, 0.08);
 		}
 
 		strong {
 			display: block;
 			margin-bottom: 0.2rem;
 			font-size: 1.05rem;
+			color: #f0dca0;
 		}
 
 		p {

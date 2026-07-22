@@ -16,11 +16,13 @@
 	import type { Position } from '../game/types';
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { fxNum } from '../game/fx.generated';
 
 	const context = getContext();
 
 	// how dark the overlay over every non-winning cell is (winners stay bright)
-	const DIM_ALPHA = 0.78;
+	// parametric FX (panel-editable via game-builder config → fx.winDim)
+	const DIM_ALPHA = fxNum('winDim', 'dimAlpha', 0.78);
 
 	// darkens every non-winning cell so the winning symbols pop
 	const dimAlpha = new Tween(0);

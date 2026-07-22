@@ -8,10 +8,21 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { stateShake } from '../game/stateShake.svelte';
+	import { fxNum } from '../game/fx.generated';
 	import { drawFlameBorder, type FlamePalette, type FlameSample } from '../game/flameDraw';
 
 	const context = getContext();
 	const POSITION_ADJUSTMENT = 1.01;
+
+	// parametric FX (panel-editable via game-builder config → fx.framePlasma)
+	const ENVELOPE_MS = fxNum('framePlasma', 'envelopeMs', 420);
+	const FLAME_HEIGHT_MIN = fxNum('framePlasma', 'flameHeightMin', 7);
+	const FLAME_HEIGHT_MAX = fxNum('framePlasma', 'flameHeightMax', 30);
+	const LICK_SCALE = fxNum('framePlasma', 'lickScale', 2.5);
+	const LICK_EVERY = fxNum('framePlasma', 'lickEvery', 7);
+	const UP_BIAS = fxNum('framePlasma', 'upBias', 0.5);
+	const INSET = fxNum('framePlasma', 'inset', 5);
+	const MARGIN_SCALE = fxNum('framePlasma', 'marginScale', 0.16);
 
 	const frameX = $derived(
 		context.stateGameDerived.boardLayout().x * POSITION_ADJUSTMENT + stateShake.x,
@@ -31,7 +42,7 @@
 	// A living ring of purple FLAME licking off the board-frame perimeter
 	// (ragged flame bands via flameDraw.ts - no neon tube, no dot motes).
 	// Ignites on free-spin start, dies on exit, drawn ABOVE the reels.
-	const envelope = new Tween(0, { duration: 420, easing: cubicOut });
+	const envelope = new Tween(0, { duration: ENVELOPE_MS, easing: cubicOut });
 	let glowActive = $state(false);
 	let time = $state(0);
 
@@ -93,12 +104,12 @@
 			seed: 7.3,
 			time: timeValue,
 			alpha: env,
-			heightMin: 7 * env,
-			heightMax: 30 * env,
-			lickScale: 2.5,
-			lickEvery: 7,
-			upBias: 0.5,
-			inset: 5,
+			heightMin: FLAME_HEIGHT_MIN * env,
+			heightMax: FLAME_HEIGHT_MAX * env,
+			lickScale: LICK_SCALE,
+			lickEvery: LICK_EVERY,
+			upBias: UP_BIAS,
+			inset: INSET,
 		});
 	};
 </script>
@@ -116,8 +127,8 @@
 				draw={(graphics) =>
 					drawFrameFire(
 						graphics,
-						bw * 0.5 + SYMBOL_SIZE * 0.16,
-						bh * 0.5 + SYMBOL_SIZE * 0.16,
+						bw * 0.5 + SYMBOL_SIZE * MARGIN_SCALE,
+						bh * 0.5 + SYMBOL_SIZE * MARGIN_SCALE,
 						time,
 						envelope.current,
 					)}

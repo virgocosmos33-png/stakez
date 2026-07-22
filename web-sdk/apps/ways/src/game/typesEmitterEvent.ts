@@ -8,6 +8,7 @@ import type { EmitterEventTransition } from '../components/Transition.svelte';
 import type { EmitterEventApparition } from '../components/ApparitionOverlay.svelte';
 import type { EmitterEventFrameMorphHud } from '../components/FrameMorphHud.svelte';
 import type { EmitterEventBonusLevelBanner } from '../components/BonusLevelBanner.svelte';
+import type { EmitterEventRetriggerBanner } from '../components/RetriggerBanner.svelte';
 import type { EmitterEventMirrorShatter } from '../components/MirrorShatter.svelte';
 import type { EmitterEventWinSweep } from '../components/WinSweep.svelte';
 import type { EmitterEventWinDim } from '../components/WinDim.svelte';
@@ -24,6 +25,7 @@ export type EmitterEventGame =
 	| EmitterEventApparition
 	| EmitterEventFrameMorphHud
 	| EmitterEventBonusLevelBanner
+	| EmitterEventRetriggerBanner
 	| EmitterEventMirrorShatter
 	| EmitterEventWinSweep
 	| EmitterEventWinDim

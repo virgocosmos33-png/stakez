@@ -59,19 +59,27 @@
 </script>
 
 <Button {...props} {sizes} {onpress} {disabled} alpha={disabled ? 0.5 : 1}>
-	{#snippet children({ center })}
+	{#snippet children({ center, hovered, pressed })}
+		<!-- flat dark-steel medallion so the drawer fold button matches the menu /
+			turbo / autoplay chrome exactly (no gold glass bevel — same theme as the
+			rest of the mobile HUD) -->
 		<UiSprite
 			key="base_mobile_drawer"
 			{...center}
 			anchor={0.5}
 			width={sizes.width}
 			height={sizes.height}
+			shape="medallion"
+			tone="dark"
+			flat
+			{hovered}
+			{pressed}
 		/>
 		<Graphics
 			{...center}
 			rotation={rotationTween.current}
 			draw={(g: PIXI.Graphics) =>
-				drawIcon(g, 'chevron', { size: UI_BASE_SIZE * 0.5, color: 0xf3e6c8 })}
+				drawIcon(g, 'chevron', { size: UI_BASE_SIZE * 0.5, color: 0xf0e6d0 })}
 		/>
 	{/snippet}
 </Button>

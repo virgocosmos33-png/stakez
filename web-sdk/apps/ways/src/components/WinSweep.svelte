@@ -15,6 +15,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { fxNum } from '../game/fx.generated';
 
 	const context = getContext();
 
@@ -22,7 +23,10 @@
 	// symbols of a win, selling the LINK as the liner ignites behind it
 	type SweepCell = { key: string; reel: number; cx: number; cy: number };
 
-	const REEL_STAGGER = 0.22; // sweep offset per reel, in normalized progress units
+	// parametric FX (panel-editable via game-builder config → fx.winSweep)
+	const REEL_STAGGER = fxNum('winSweep', 'reelStagger', 0.22); // sweep offset per reel, normalized
+	const SWEEP_BASE_MS = fxNum('winSweep', 'baseMs', 550);
+	const SWEEP_PER_REEL_MS = fxNum('winSweep', 'perReelMs', 130);
 
 	let sweepCells = $state<SweepCell[]>([]);
 	let minReel = $state(0);
@@ -47,7 +51,7 @@
 			span = Math.max(...reels) - minReel;
 
 			progress.set(0, { duration: 0 });
-			await progress.set(1, { duration: 550 + span * 130, easing: linear });
+			await progress.set(1, { duration: SWEEP_BASE_MS + span * SWEEP_PER_REEL_MS, easing: linear });
 			sweepCells = [];
 		},
 	});

@@ -351,7 +351,7 @@ export default {
 	// emblem used as the in-HUD BONUS button (ButtonBuyBonus reads `buyBonusLogo`)
 	buyBonusLogo: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/buy_bonus_logo.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/mirror/buy_bonus_logo.webp', import.meta.url).href,
 		preload: true,
 	},
 	mirrorWaysPanel: {

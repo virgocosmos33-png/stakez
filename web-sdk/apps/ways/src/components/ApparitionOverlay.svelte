@@ -21,6 +21,7 @@
 	import { getContext } from '../game/context';
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE, HIGH_SYMBOLS } from '../game/constants';
+	import { fxNum } from '../game/fx.generated';
 	import { stateShake, shakeBoard } from '../game/stateShake.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 
@@ -47,7 +48,26 @@
 	};
 
 	// haunted cells sit at normal size and only grow when they win
-	const WIN_GROW = 1.1;
+	// parametric FX (panel-editable via game-builder config → fx.apparition)
+	const WIN_GROW = fxNum('apparition', 'winGrow', 1.1);
+
+	// the ACTUAL split animation (panel-editable via game-builder config →
+	// fx.splitAnimation): blade cut sweep, hit-stop seam flare, detonation,
+	// panes snapping apart, pulse punch and the board kick
+	const CUT_MS = fxNum('splitAnimation', 'cutMs', 140);
+	const CUT_STAGGER = fxNum('splitAnimation', 'cutStagger', 0.15);
+	const FLARE_IN_MS = fxNum('splitAnimation', 'flareInMs', 20);
+	const FLARE_OUT_MS = fxNum('splitAnimation', 'flareOutMs', 150);
+	const DETONATION_MS = fxNum('splitAnimation', 'detonationMs', 300);
+	const PANE_SNAP_MS = fxNum('splitAnimation', 'paneSnapMs', 130);
+	const PULSE_SCALE = fxNum('splitAnimation', 'pulseScale', 1.45);
+	const PULSE_MS = fxNum('splitAnimation', 'pulseMs', 420);
+	const SHAKE_BASE = fxNum('splitAnimation', 'shakeBase', 10);
+	const SHAKE_PER_CELL = fxNum('splitAnimation', 'shakePerCell', 2.5);
+	const SHAKE_MAX = fxNum('splitAnimation', 'shakeMax', 18);
+	const SHAKE_MS = fxNum('splitAnimation', 'shakeMs', 240);
+	const BLADE_SPARKS = fxNum('splitAnimation', 'bladeSparks', 4);
+	const SEAM_SPARKS = fxNum('splitAnimation', 'seamSparks', 6);
 
 	let cells = $state<HauntCell[]>([]);
 	// ghost markers: split cells that survive into the next spin keep their
@@ -129,18 +149,21 @@
 		detonation.set(0, { duration: 0 });
 		// one fast decisive slash: the blade rips straight down the seam
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_whoosh_hi' });
-		await cutSweep.set(1, { duration: 140, easing: cubicIn });
+		await cutSweep.set(1, { duration: CUT_MS, easing: cubicIn });
 
 		// impact lands the instant the blade clears: crack + white seam flash,
 		// a hard board kick, and the panes snap apart with overshoot - all at once
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_xways_split' });
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_explosion_b' });
 		detonatingKeys = keys;
-		seamFlare.set(1, { duration: 20 });
-		seamFlare.set(0, { duration: 150 });
-		shakeBoard({ intensity: Math.min(10 + keys.size * 2.5, 18), duration: 240 });
-		const fx = detonation.set(1, { duration: 300, easing: cubicOut });
-		await splitProgress.set(1, { duration: 130, easing: backOut });
+		seamFlare.set(1, { duration: FLARE_IN_MS });
+		seamFlare.set(0, { duration: FLARE_OUT_MS });
+		shakeBoard({
+			intensity: Math.min(SHAKE_BASE + keys.size * SHAKE_PER_CELL, SHAKE_MAX),
+			duration: SHAKE_MS,
+		});
+		const fx = detonation.set(1, { duration: DETONATION_MS, easing: cubicOut });
+		await splitProgress.set(1, { duration: PANE_SNAP_MS, easing: backOut });
 		await fx;
 		detonatingKeys = new Set();
 		splittingKeys = new Set();
@@ -149,8 +172,8 @@
 	const pulse = async (positions: Position[]) => {
 		const keys = new Set(positions.map((position) => `${position.reel}-${position.row}`));
 		pulsedKeys = keys;
-		pulseScale.set(1.45, { duration: 0 });
-		const punch = pulseScale.set(1, { duration: 420, easing: backOut });
+		pulseScale.set(PULSE_SCALE, { duration: 0 });
+		const punch = pulseScale.set(1, { duration: PULSE_MS, easing: backOut });
 		await runSplit(keys);
 		await punch;
 		pulsedKeys = new Set();
@@ -331,7 +354,7 @@
 			graphics.fill({ color: 0xffffff, alpha: 0.55 });
 
 			// a few sharp sparks flicking off the contact point
-			for (let i = 0; i < 4; i++) {
+			for (let i = 0; i < BLADE_SPARKS; i++) {
 				const sparkSeed = cell.seed * 13 + dividerIndex * 29 + i * 7;
 				const life = (timeValue * (3 + rand(sparkSeed) * 2) + rand(sparkSeed + 1)) % 1;
 				const angle = -Math.PI / 2 + (rand(sparkSeed + 2) - 0.5) * 2.2;
@@ -396,7 +419,7 @@
 		// sparks flung sideways off each parting seam
 		for (let seamIndex = 0; seamIndex < cell.count - 1; seamIndex++) {
 			const seamX = (-half + ((seamIndex + 1) / cell.count) * s) * split;
-			for (let k = 0; k < 6; k++) {
+			for (let k = 0; k < SEAM_SPARKS; k++) {
 				const sparkSeed = cell.seed * 17 + seamIndex * 71 + k * 13;
 				const side = rand(sparkSeed) > 0.5 ? 1 : -1;
 				const y0 = (rand(sparkSeed + 1) - 0.5) * s * 0.8;
@@ -494,7 +517,10 @@
 					{@const nDividers = cell.count - 1}
 					{#each Array.from({ length: nDividers }) as _, i (i)}
 						{@const sweep = Math.min(
-							Math.max(cutSweep.current * (1 + 0.15 * (nDividers - 1)) - 0.15 * i, 0),
+							Math.max(
+								cutSweep.current * (1 + CUT_STAGGER * (nDividers - 1)) - CUT_STAGGER * i,
+								0,
+							),
 							1,
 						)}
 						<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth} alpha={1 - split * 0.9}>

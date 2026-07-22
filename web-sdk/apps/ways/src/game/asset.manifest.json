@@ -1,0 +1,407 @@
+{
+  "generatedFrom": "madam_mirror",
+  "symbols": [
+    {
+      "id": "H1",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H2",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H3",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H4",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H5",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L1",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L2",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L3",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L4",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L5",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "W",
+      "kind": "wild",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "S",
+      "kind": "scatter",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "HM",
+      "kind": "special",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "ME",
+      "kind": "special",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    }
+  ],
+  "backgrounds": {
+    "base": {
+      "still": "mirror/bg_base.webp",
+      "stillPortrait": "mirror/bg_base_portrait.webp",
+      "anim": "mirror/bg_base_anim.mp4",
+      "animPortrait": "mirror/bg_base_anim_portrait.mp4"
+    },
+    "bonus": {
+      "still": "mirror/bg_freespin.webp",
+      "anim": "mirror/bg_freespin_anim.mp4"
+    },
+    "scene": {
+      "still": "scene/scene_bg.webp"
+    }
+  },
+  "character": {
+    "base": "sprites/scene/lady_character.png",
+    "bonus": "sprites/scene/lady_bonus.png",
+    "spine": "spines/lady/lady.json",
+    "bonusSpine": "spines/lady/lady.json"
+  },
+  "frame": {
+    "main": "mirror/mirror_frame_wide.png",
+    "bottomCompartments": "mirror/frame_bottom_compartments.png",
+    "backing": "mirror/mirror_backing.png",
+    "glassIntact": "mirror/glass_intact.png",
+    "glassBroken": "mirror/glass_broken.png"
+  },
+  "hud": {
+    "colors": {
+      "accent": "#ffc12e",
+      "text": "#f0e6d0",
+      "spinButton": "#f7bb0f",
+      "turbo": "#ffb400",
+      "panelFill": "#10161d",
+      "panelStroke": "#2a3542",
+      "stepper": "#1c2732",
+      "balanceText": "#f0e6d0",
+      "betText": "#f0e6d0"
+    },
+    "logo": {
+      "studio": "mirror/logo.png",
+      "buyBonus": "packages/components-ui-pixi/src/assets/buyBonusLogoData.ts#BUY_BONUS_LOGO_DATA_URL"
+    }
+  },
+  "intro": {
+    "loading": "mirror/loading.webp",
+    "studioLoader": "loader.gif",
+    "stakeLoader": "stake-engine-loader.gif",
+    "introVideo": "mirror/intro_mirror.mp4",
+    "carousel": [
+      "mirror/intro_seance.webp",
+      "mirror/intro_otherside.webp",
+      "mirror/intro_bloodmoon.webp"
+    ]
+  },
+  "bonusCards": [
+    "mirror/buy_seance.webp",
+    "mirror/buy_otherside.webp",
+    "mirror/buy_bloodmoon.webp",
+    "mirror/buy_feature1.webp",
+    "mirror/buy_feature2.webp",
+    "mirror/buy_feature3.webp",
+    "mirror/buy_ante.webp"
+  ],
+  "celebration": [
+    "celeb/celeb_t2",
+    "celeb/celeb_t3",
+    "celeb/celeb_t4",
+    "celeb/celeb_t5",
+    "celeb/celeb_t6",
+    "celeb/celeb_t7"
+  ],
+  "audio": {
+    "sprite": "assets/audio/sounds.json",
+    "cues": {
+      "music": [
+        "bgm_main",
+        "bgm_freespin",
+        "bgm_celeb_1",
+        "bgm_celeb_2",
+        "bgm_celeb_3",
+        "bgm_celeb_4",
+        "bgm_celeb_5",
+        "bgm_celeb_6"
+      ],
+      "ui": [
+        "sfx_btn_general",
+        "sfx_btn_spin"
+      ],
+      "reels": [
+        "sfx_reel_stop_1",
+        "sfx_reel_stop_2",
+        "sfx_reel_stop_3",
+        "sfx_reel_stop_4",
+        "sfx_reel_stop_5",
+        "sfx_symbols_landing",
+        "sfx_scatter_reveal"
+      ],
+      "winLevels": [
+        "sfx_winlevel_small",
+        "sfx_winlevel_nice",
+        "sfx_winlevel_standard",
+        "sfx_winlevel_substantial",
+        "sfx_bigwin_coinloop"
+      ],
+      "themeSpecific": [
+        "sfx_xways_split",
+        "sfx_mirror_break",
+        "sfx_madams_eye",
+        "sfx_youwon_panel"
+      ]
+    }
+  },
+  "fx": {
+    "splitTelegraph": {
+      "label": "Split Telegraph",
+      "desc": "Volley of tiny glass shards shooting from the mirror into the cells it is about to split.",
+      "shardsPerTarget": 8,
+      "durationMs": 340,
+      "colors": [
+        "0xd8ecff",
+        "0xc9a8ff"
+      ]
+    },
+    "splitShatter": {
+      "label": "Split Shatter",
+      "desc": "The cracked pane bursts into flying glass shards when the split resolves.",
+      "shardsPerCell": 14,
+      "durationMs": 650,
+      "colors": [
+        "0xd8ecff",
+        "0xb887ff"
+      ]
+    },
+    "mirrorBreak": {
+      "label": "Mirror Break",
+      "desc": "Cracked-glass pane pop-in and hold before the shatter.",
+      "popMs": 130,
+      "holdMs": 420
+    },
+    "winLightning": {
+      "label": "Mega-Win Lightning",
+      "desc": "Thunder bolts + prismatic burst over the board when a win reaches megaWinMultiplier x bet (max-win celebration).",
+      "megaWinMultiplier": 8685,
+      "hue": 360,
+      "size": 2,
+      "lightningMs": 1400,
+      "prismaticMs": 4570,
+      "maxExtraBolts": 40,
+      "prismaticIntensity": 5,
+      "prismaticSpeed": 1,
+      "colors": [
+        "#A855F7",
+        "#7C3AED",
+        "#6366F1"
+      ]
+    },
+    "winSweep": {
+      "label": "Win Sweep",
+      "desc": "Plasma surge sweeping left-to-right across the connecting symbols of a win.",
+      "reelStagger": 0.22,
+      "baseMs": 550,
+      "perReelMs": 130
+    },
+    "winDim": {
+      "label": "Win Dim",
+      "desc": "Darkens every non-winning cell so the winning symbols pop.",
+      "dimAlpha": 0.78
+    },
+    "apparition": {
+      "label": "Apparition Win Grow",
+      "desc": "Haunted apparition cells scale up when they are part of a win.",
+      "winGrow": 1.1
+    },
+    "splitAnimation": {
+      "label": "Split Animation",
+      "desc": "The actual split: blade cut sweep, hit-stop seam flare, detonation (flash/shockwave/sparks), panes snapping apart with overshoot, pulse punch and board kick.",
+      "cutMs": 140,
+      "cutStagger": 0.15,
+      "flareInMs": 20,
+      "flareOutMs": 150,
+      "detonationMs": 300,
+      "paneSnapMs": 130,
+      "pulseScale": 1.45,
+      "pulseMs": 420,
+      "shakeBase": 10,
+      "shakePerCell": 2.5,
+      "shakeMax": 18,
+      "shakeMs": 240,
+      "bladeSparks": 4,
+      "seamSparks": 6
+    },
+    "plasmaLiner": {
+      "label": "Win Liner Fire",
+      "desc": "Green plasma fire tracing the merged outer contour of the winning combination, igniting left-to-right.",
+      "igniteStagger": 0.09,
+      "igniteFlash": 0.24,
+      "cornerRadius": 15,
+      "fadeInMs": 100,
+      "fadeOutMs": 260,
+      "flameHeightMin": 4,
+      "flameHeightMax": 18,
+      "lickScale": 2.8,
+      "lickEvery": 7,
+      "upBias": 0.55
+    },
+    "framePlasma": {
+      "label": "Frame Fire",
+      "desc": "Purple flame ring licking off the board-frame perimeter during free spins.",
+      "envelopeMs": 420,
+      "flameHeightMin": 7,
+      "flameHeightMax": 30,
+      "lickScale": 2.5,
+      "lickEvery": 7,
+      "upBias": 0.5,
+      "inset": 5,
+      "marginScale": 0.16
+    }
+  }
+}

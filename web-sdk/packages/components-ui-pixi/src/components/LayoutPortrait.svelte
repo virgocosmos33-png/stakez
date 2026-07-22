@@ -10,8 +10,10 @@
 	import { waitForResolve } from 'utils-shared/wait';
 
 	import ButtonDrawer from './ButtonDrawer.svelte';
+	import ControlInfoBar, { INFO_BAR_SIZE } from './ControlInfoBar.svelte';
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
+	import { UI_BASE_SIZE } from '../constants';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -37,6 +39,22 @@
 		frameLocalW > 0 ? Math.max(OUTER_BASE, frameLocalW / 2 - BTN_HALF) : OUTER_BASE,
 	);
 	const fitX = $derived(rowHalf / OUTER_BASE);
+
+	// Align the unified BALANCE|BET panel EXACTLY to the control-row width: its
+	// left edge lands on the buy-bonus coin's left edge and its right edge on the
+	// menu badge's right edge. The control row is drawn at CTRL_SCALE with the
+	// outermost centres at ±CTRL_OUTER·fitX; the buy coin is 1.2× the base size,
+	// the menu badge is 1× — so the two half-widths differ and the span is
+	// asymmetric. Uniform-scaling a 500-wide card to that exact span keeps the
+	// desktop proportions while matching the buttons' outer edges pixel-for-pixel.
+	const CTRL_SCALE = 1.06;
+	const CTRL_OUTER = 415;
+	const buyHalf = (UI_BASE_SIZE * 1.2 * CTRL_SCALE) / 2;
+	const badgeHalf = (UI_BASE_SIZE * CTRL_SCALE) / 2;
+	const rowLeftX = $derived(W * 0.5 - CTRL_OUTER * fitX - buyHalf);
+	const rowRightX = $derived(W * 0.5 + CTRL_OUTER * fitX + badgeHalf);
+	const infoBarScale = $derived((rowRightX - rowLeftX) / INFO_BAR_SIZE.width);
+	const infoBarCenterY = $derived(H - 150);
 
 	const DRAWER_Y = {
 		unfold: 0,
@@ -125,32 +143,42 @@
 </MainContainer>
 
 <MainContainer standard alignVertical="bottom">
-	<!-- BET readout flanked by −/+ steppers. Free-spin tally lives in the game's
-	     RailPlaque (same chrome as WAYS / WIN), not this HUD. -->
-	<Container x={W * 0.5 - (250 + 200) * fitX} y={H - 112} scale={0.5}>
-		{@render props.buttonDecrease({ anchor: 0.5 })}
+	<!-- Unified BALANCE | BET · −/+ panel — the SAME ControlInfoBar the desktop
+	     layout uses, so mobile wears the identical themed card (stacked
+	     BALANCE/BET + steel steppers) instead of the old inline pills. Scaled to
+	     span the fitted control-row width and centred under it. Free-spin tally
+	     lives in the game's RailPlaque, not this HUD. -->
+	<Container
+		x={rowLeftX}
+		y={infoBarCenterY - (INFO_BAR_SIZE.height / 2) * infoBarScale}
+		scale={infoBarScale}
+	>
+		<ControlInfoBar />
 	</Container>
 
-	<Container x={W * 0.5 - 250 * fitX} y={H - 150} scale={0.9}>
-		{@render props.amountBet({ stacked: true })}
-	</Container>
-
-	<Container x={W * 0.5 - (250 - 200) * fitX} y={H - 112} scale={0.5}>
-		{@render props.buttonIncrease({ anchor: 0.5 })}
-	</Container>
-
-	<Container x={W * 0.5 + 250 * fitX} y={H - 150} scale={0.9}>
-		{@render props.amountBalance({ stacked: true })}
-	</Container>
-
-	<!-- drawer button -->
+	<!-- drawer (collapse-HUD) button. It only shows during free spins; sit it
+		EXACTLY on the menu slot (same x/y/scale as the control-row menu badge) so
+		when the HUD is pulled back up it reads as ONE clean dark-steel chevron
+		button in the far-right slot — no gold button overlapping the burger with a
+		sliver peeking out. When folded it rides up via drawerButtonTween as the
+		pull-up tab. -->
 	<FadeContainer
 		persistent
 		show={stateUi.drawerButtonShow}
 		oncomplete={drawerButtonFadeComplete}
 		y={drawerButtonTween.current}
 	>
-		<Container x={W * 0.5 + 415 * fitX} y={H - 300}>
+		<!-- The drawer sits ON the menu slot, so when it's hidden (base game) it
+			MUST stop hit-testing or it swallows the menu button's taps (a disabled
+			pixi Button is still eventMode:static). eventMode 'none' makes the whole
+			subtree ignore interaction so taps fall through to the menu behind;
+			'passive' re-enables it during free spins when the drawer is shown. -->
+		<Container
+			x={W * 0.5 + 415 * fitX}
+			y={H - 360}
+			scale={1.06}
+			eventMode={stateUi.drawerButtonShow ? 'passive' : 'none'}
+		>
 			<ButtonDrawer disabled={!stateUi.drawerButtonShow} anchor={0.5} />
 		</Container>
 	</FadeContainer>

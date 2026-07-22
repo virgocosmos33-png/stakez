@@ -12,6 +12,7 @@
 
 	import { getContext } from '../context';
 	import { i18nDerived } from '../i18n/i18nDerived';
+	import { HUD_THEME as T } from '../hudTheme';
 
 	const context = getContext();
 
@@ -43,12 +44,12 @@
 	const betHitW = minusCx - BTN_W / 2 - 8 - betHitX;
 
 	// HUD label parchment-cream for TEXT fills — legible on the dark panel
-	// (NOT white, NOT gold).
-	const HUD_GOLD = 0xf0e6d0;
+	// (NOT white, NOT gold). Themeable via hudTheme tokens (defaults unchanged).
+	const HUD_GOLD = T.textValue;
 	// Dark STEEL/SLATE-BLUE for ALL OUTLINES/RIMS/BORDERS. No gold on the HUD.
-	const STEEL = 0x3a4552;
-	const STEEL_HOVER = 0x5a6672;
-	const STEEL_DIM = 0x2a3542;
+	const STEEL = T.edgeGold;
+	const STEEL_HOVER = T.edgeGoldHover;
+	const STEEL_DIM = T.panelStroke;
 
 	const FONT = 'Segoe UI, Arial, sans-serif';
 	const labelStyle = {
@@ -58,11 +59,18 @@
 		fill: HUD_GOLD,
 		letterSpacing: 1.1,
 	} as const;
-	const valueStyle = {
+	const balanceValueStyle = {
 		fontFamily: FONT,
 		fontWeight: '700',
 		fontSize: 26,
-		fill: HUD_GOLD,
+		fill: T.balanceText,
+		letterSpacing: 0.3,
+	} as const;
+	const betValueStyle = {
+		fontFamily: FONT,
+		fontWeight: '700',
+		fontSize: 26,
+		fill: T.betText,
 		letterSpacing: 0.3,
 	} as const;
 
@@ -94,7 +102,7 @@
 
 	const drawPanel = (g: PIXI.Graphics) => {
 		g.roundRect(0, 0, W, H, 11);
-		g.fill({ color: 0x10161d, alpha: 1 });
+		g.fill({ color: T.panelFill, alpha: 1 });
 		g.roundRect(0.75, 0.75, W - 1.5, H - 1.5, 10);
 		g.stroke({ color: STEEL_DIM, width: 1.25 });
 	};
@@ -105,7 +113,7 @@
 
 	// raised stepper-button chrome, tuned to the mono panel (fill 0x10161d)
 	const drawStepFace = (g: PIXI.Graphics, hovered: boolean, pressed: boolean, off: boolean) => {
-		const fill = off ? 0x141b23 : pressed ? 0x0d131a : hovered ? 0x28374a : 0x1c2732;
+		const fill = off ? 0x141b23 : pressed ? 0x0d131a : hovered ? 0x28374a : T.stepperFill;
 		const border = off ? STEEL_DIM : hovered ? STEEL_HOVER : STEEL;
 		g.roundRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, 10);
 		g.fill({ color: fill });
@@ -129,7 +137,7 @@
 
 <!-- BALANCE -->
 <Text anchor={{ x: 0, y: 0.5 }} x={PAD} y={H * 0.34} text={balanceLabel} style={labelStyle} />
-<Text anchor={{ x: 0, y: 0.5 }} x={PAD} y={H * 0.64} text={balanceValue} style={valueStyle} />
+<Text anchor={{ x: 0, y: 0.5 }} x={PAD} y={H * 0.64} text={balanceValue} style={balanceValueStyle} />
 
 <Graphics x={dividerX} y={12} draw={drawDivider} />
 
@@ -137,7 +145,7 @@
 <Container eventMode="static" cursor={isIdle ? 'pointer' : 'not-allowed'} onpointerup={openBetMenu}>
 	<Rectangle x={betHitX} y={0} width={betHitW} height={H} backgroundColor={0xffffff} backgroundAlpha={0.001} />
 	<Text anchor={{ x: 0, y: 0.5 }} x={betX} y={H * 0.32} text={betLabel} style={labelStyle} />
-	<Text anchor={{ x: 0, y: 0.5 }} x={betX} y={H * 0.6} text={betValue} style={valueStyle} />
+	<Text anchor={{ x: 0, y: 0.5 }} x={betX} y={H * 0.6} text={betValue} style={betValueStyle} />
 </Container>
 
 <!-- − decrease -->

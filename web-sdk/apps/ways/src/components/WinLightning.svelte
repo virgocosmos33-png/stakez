@@ -19,15 +19,20 @@
 	import { SYMBOL_SIZE, BOARD_SIZES } from '../game/constants';
 	import { createReactBitsLightning } from '../game/reactBitsLightning';
 	import { createPrismaticBurst } from '../game/prismaticBurst';
+	import { fxNum, fxArr } from '../game/fx.generated';
 
 	const context = getContext();
 
 	const PRISMATIC_Z_INDEX = 120;
-	const HUE = 260;
-	const SIZE = 1;
-	const LIGHTNING_DURATION_MS = 1400;
-	const PRISMATIC_DURATION_MS = 2000;
-	const MAX_EXTRA_BOLTS = 4;
+	// parametric FX (panel-editable via game-builder config → fx.winLightning)
+	const HUE = fxNum('winLightning', 'hue', 260);
+	const SIZE = fxNum('winLightning', 'size', 1);
+	const LIGHTNING_DURATION_MS = fxNum('winLightning', 'lightningMs', 1400);
+	const PRISMATIC_DURATION_MS = fxNum('winLightning', 'prismaticMs', 2000);
+	const MAX_EXTRA_BOLTS = fxNum('winLightning', 'maxExtraBolts', 4);
+	const PRISMATIC_COLORS = fxArr('winLightning', 'colors', ['#A855F7', '#7C3AED', '#6366F1']);
+	const PRISMATIC_INTENSITY = fxNum('winLightning', 'prismaticIntensity', 2.5);
+	const PRISMATIC_SPEED = fxNum('winLightning', 'prismaticSpeed', 0.5);
 
 	type PlannedBolt = { xOffset: number; startT: number; timeSeed: number };
 
@@ -54,10 +59,10 @@
 				prismatic = {
 					canvas,
 					renderer: createPrismaticBurst(canvas, {
-						intensity: 2.5,
-						speed: 0.5,
+						intensity: PRISMATIC_INTENSITY,
+						speed: PRISMATIC_SPEED,
 						animationType: 'rotate3d',
-						colors: ['#A855F7', '#7C3AED', '#6366F1'],
+						colors: PRISMATIC_COLORS,
 						distort: 0,
 						rayCount: 0,
 					}),

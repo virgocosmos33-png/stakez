@@ -6,6 +6,7 @@
 
 	import { UI_BASE_SIZE } from '../constants';
 	import { getContext } from '../context';
+	import { HUD_THEME as T } from '../hudTheme';
 	import { BUY_BONUS_LOGO_DATA_URL } from '../assets/buyBonusLogoData';
 
 	const props: Partial<Omit<ButtonProps, 'children'>> = $props();
@@ -52,10 +53,21 @@
 		const c = R;
 		// face
 		g.circle(c, c, R);
-		g.fill({ color: disabled ? 0x14181f : hovered || active ? 0x161d26 : 0x10161d });
-		// steel ring so it matches the rest of the HUD (no gold anywhere)
-		g.circle(c, c, R - 1.5);
-		g.stroke({ color: disabled ? 0x2a3542 : hovered || active ? 0x5a6672 : 0x3a4552, width: 3 });
+		g.fill({ color: disabled ? 0x14181f : hovered || active ? 0x161d26 : T.panelFill });
+		// When the feature (activate/bonus) mode is ON, the ring lights up GOLD to
+		// match the SPIN coin (spinCoinRim) so it's obvious the feature is armed;
+		// otherwise it wears the same tarnished-steel rim as the rest of the HUD.
+		if (active && !disabled) {
+			// soft outer glow
+			g.circle(c, c, R);
+			g.stroke({ color: T.spinCoinRim, width: 6, alpha: 0.28 });
+			// bright gold rim
+			g.circle(c, c, R - 1.5);
+			g.stroke({ color: hovered ? T.spinCoinRimHover : T.spinCoinRim, width: 3.5 });
+		} else {
+			g.circle(c, c, R - 1.5);
+			g.stroke({ color: disabled ? 0x2a3542 : hovered ? 0x5a6672 : 0x3a4552, width: 3 });
+		}
 	};
 </script>
 

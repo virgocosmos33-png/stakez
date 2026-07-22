@@ -24,8 +24,19 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { fxNum, fxColors } from '../game/fx.generated';
 
 	const context = getContext();
+
+	// parametric FX (panel-editable via game-builder config)
+	const TELEGRAPH_SHARDS = fxNum('splitTelegraph', 'shardsPerTarget', 8);
+	const TELEGRAPH_MS = fxNum('splitTelegraph', 'durationMs', 340);
+	const TELEGRAPH_COLORS = fxColors('splitTelegraph', 'colors', [0xd8ecff, 0xc9a8ff]);
+	const SHATTER_SHARDS = fxNum('splitShatter', 'shardsPerCell', 14);
+	const SHATTER_MS = fxNum('splitShatter', 'durationMs', 650);
+	const SHATTER_COLORS = fxColors('splitShatter', 'colors', [0xd8ecff, 0xb887ff]);
+	const BREAK_POP_MS = fxNum('mirrorBreak', 'popMs', 130);
+	const BREAK_HOLD_MS = fxNum('mirrorBreak', 'holdMs', 420);
 
 	type Shard = {
 		x0: number;
@@ -68,7 +79,7 @@
 
 	const telegraph = async (pairs: { mirror: Position; targets: Position[] }[]) => {
 		telegraphTargets = pairs.flatMap((pair) => pair.targets.map(cellCenter));
-		const SHARDS_PER_TARGET = 8;
+		const SHARDS_PER_TARGET = TELEGRAPH_SHARDS;
 		telegraphBeams = pairs.flatMap((pair, pairIndex) => {
 			const from = cellCenter(pair.mirror);
 			return pair.targets.flatMap((target, targetIndex) => {
@@ -86,7 +97,7 @@
 			});
 		});
 		telegraphProgress.set(0, { duration: 0 });
-		await telegraphProgress.set(1, { duration: 340 });
+		await telegraphProgress.set(1, { duration: TELEGRAPH_MS });
 		telegraphTargets = [];
 		telegraphBeams = [];
 	};
@@ -99,7 +110,7 @@
 		shards = positions.flatMap((position) => {
 			const cx = originX + SYMBOL_SIZE * (position.reel + 0.5);
 			const cy = originY + SYMBOL_SIZE * (position.row - 1 + 0.5);
-			return Array.from({ length: 14 }, () => {
+			return Array.from({ length: SHATTER_SHARDS }, () => {
 				const angle = Math.random() * Math.PI * 2;
 				const speed = SYMBOL_SIZE * (0.8 + Math.random() * 1.6);
 				return {
@@ -109,13 +120,13 @@
 					vy: Math.sin(angle) * speed - SYMBOL_SIZE * 0.6,
 					spin: (Math.random() - 0.5) * 9,
 					size: SYMBOL_SIZE * (0.06 + Math.random() * 0.1),
-					color: Math.random() < 0.6 ? 0xd8ecff : 0xb887ff,
+					color: Math.random() < 0.6 ? SHATTER_COLORS[0] : (SHATTER_COLORS[1] ?? SHATTER_COLORS[0]),
 				};
 			});
 		});
 
 		progress.set(0, { duration: 0 });
-		await progress.set(1, { duration: 650, easing: cubicOut });
+		await progress.set(1, { duration: SHATTER_MS, easing: cubicOut });
 		shards = [];
 		brokenCells = [];
 	};
@@ -124,8 +135,8 @@
 		mirrorBreak: async ({ positions }) => {
 			brokenCells = positions.map(cellCenter);
 			brokenIn.set(0, { duration: 0 });
-			await brokenIn.set(1, { duration: 130 });
-			await wait(420);
+			await brokenIn.set(1, { duration: BREAK_POP_MS });
+			await wait(BREAK_HOLD_MS);
 		},
 		mirrorShatter: async ({ positions }) => {
 			await shatter(positions);
@@ -184,7 +195,7 @@
 			const rotation = Math.atan2(ahead.y - head.y, ahead.x - head.x);
 			const since = headF >= 1 ? Math.min((tt - delay - travel) / 0.12, 1) : 0;
 			const size = SYMBOL_SIZE * (0.045 + seeded(beam.seed + 13) * 0.055);
-			const color = seeded(beam.seed + 19) < 0.55 ? 0xd8ecff : 0xc9a8ff;
+			const color = seeded(beam.seed + 19) < 0.55 ? TELEGRAPH_COLORS[0] : (TELEGRAPH_COLORS[1] ?? TELEGRAPH_COLORS[0]);
 
 			return {
 				key: beamIndex,

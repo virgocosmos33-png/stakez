@@ -12,6 +12,7 @@
 
 	import { getContext } from '../game/context';
 	import { getBetModeMeta } from '../game/betModeMeta';
+	import { applyHudTheme } from '../game/hudInit';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -29,6 +30,7 @@
 	import SceneCharacter from './SceneCharacter.svelte';
 	import FrameMorphHud from './FrameMorphHud.svelte';
 	import BonusLevelBanner from './BonusLevelBanner.svelte';
+	import RetriggerBanner from './RetriggerBanner.svelte';
 	import MirrorShatter from './MirrorShatter.svelte';
 	import WinSweep from './WinSweep.svelte';
 	import WinDim from './WinDim.svelte';
@@ -37,6 +39,10 @@
 	import TapToSkip from './TapToSkip.svelte';
 
 	const context = getContext();
+
+	// Config-driven HUD theming: push this game's hud.generated colours into the
+	// shared components-ui-pixi theme BEFORE the HUD renders. Inert for other games.
+	applyHudTheme();
 
 	// Madam Mirror bet modes drive the buy-bonus menu (3 buyable bonus levels);
 	// social mode rewrites prohibited gambling terms for stake.us
@@ -125,6 +131,8 @@
 		<!-- mounted after the free-spin panels so the level banner is never
 			covered by their dim/plate layers -->
 		<BonusLevelBanner />
+		<!-- "+N SPINS" award toast when free spins retrigger -->
+		<RetriggerBanner />
 		<Transition />
 	{/if}
 </App>

@@ -7,6 +7,7 @@
 	import type { Position } from '../game/types';
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { fxNum } from '../game/fx.generated';
 	import { drawFlameBorder, type FlamePalette } from '../game/flameDraw';
 
 	const context = getContext();
@@ -26,9 +27,17 @@
 		core: 0xe8ffc0,
 	};
 
-	const IGNITE_STAGGER = 0.09;
-	const IGNITE_FLASH = 0.24;
-	const CORNER_RADIUS = 15;
+	// parametric FX (panel-editable via game-builder config → fx.plasmaLiner)
+	const IGNITE_STAGGER = fxNum('plasmaLiner', 'igniteStagger', 0.09);
+	const IGNITE_FLASH = fxNum('plasmaLiner', 'igniteFlash', 0.24);
+	const CORNER_RADIUS = fxNum('plasmaLiner', 'cornerRadius', 15);
+	const FADE_IN_MS = fxNum('plasmaLiner', 'fadeInMs', 100);
+	const FADE_OUT_MS = fxNum('plasmaLiner', 'fadeOutMs', 260);
+	const FLAME_HEIGHT_MIN = fxNum('plasmaLiner', 'flameHeightMin', 4);
+	const FLAME_HEIGHT_MAX = fxNum('plasmaLiner', 'flameHeightMax', 18);
+	const LICK_SCALE = fxNum('plasmaLiner', 'lickScale', 2.8);
+	const LICK_EVERY = fxNum('plasmaLiner', 'lickEvery', 7);
+	const UP_BIAS = fxNum('plasmaLiner', 'upBias', 0.55);
 	const SAMPLE_STEP = 9;
 
 	type Sample = { x: number; y: number; nx: number; ny: number };
@@ -231,12 +240,12 @@
 			};
 		});
 		ignitionTime = time;
-		fade.set(1, { duration: 100 });
+		fade.set(1, { duration: FADE_IN_MS });
 	};
 
 	const release = async () => {
 		const token = generation;
-		await fade.set(0, { duration: 260 });
+		await fade.set(0, { duration: FADE_OUT_MS });
 		if (token === generation) groups = [];
 	};
 
@@ -303,11 +312,11 @@
 				seed: group.seed,
 				time: timeValue,
 				alpha: alive,
-				heightMin: 4,
-				heightMax: 18,
-				lickScale: 2.8,
-				lickEvery: 7,
-				upBias: 0.55,
+				heightMin: FLAME_HEIGHT_MIN,
+				heightMax: FLAME_HEIGHT_MAX,
+				lickScale: LICK_SCALE,
+				lickEvery: LICK_EVERY,
+				upBias: UP_BIAS,
 			});
 		}
 	};

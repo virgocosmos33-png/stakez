@@ -9,56 +9,44 @@
 
 	const context = getContext();
 
-	// Lady Mirror stands beside the reels on the RIGHT (reference: "MADE MEN") —
-	// roughly board height, body angled toward the reels, contained in the empty
-	// room to the right so she NEVER covers the symbols. She lives in the board's
-	// MainContainer design space, so she scales and stays glued beside it at every
-	// size (no coordinate drift), and is hidden on layouts too narrow for her.
+	// Lady Mirror stands beside the reels on the RIGHT, roughly board height, in
+	// the empty room to the right so she NEVER covers the symbols. She lives in the
+	// board's MainContainer design space, so she scales and stays glued beside it
+	// at every size, and is hidden on layouts too narrow for her.
 	//
-	// She is a real SPINE rig (tools/gen_lady_spine.py): her cutout is a
-	// deformable mesh with a floating idle — bob + breathing + veil/gown
-	// cloth-sway + a pulsing violet ghost aura. When the spine asset is loaded she
-	// FLOATS (centered beside the board); otherwise she falls back to the trimmed
-	// still, hem-pinned, with a lighter code-driven breathing idle.
+	// She is a proper CUT-OUT SPINE rig (tools/gen_lady_spine.py): the cutout is
+	// sliced into SEPARATE PARTS — head, torso, mirror-arm, upper skirt, lower
+	// skirt/hem, veil — each its own atlas region pinned to its own bone
+	// (root->hips->torso->head->veil, hips->skirt chain, torso->arm). The idle
+	// moves the BONES (float bob + breathing + head tilt + mirror-arm sway + skirt
+	// cloth-sway + veil billow), so nothing is warped. When the spine asset is
+	// loaded she FLOATS centered beside the board; otherwise she falls back to the
+	// trimmed still with a light code-driven breathing idle.
 	//
 	// BONUS VARIANT: during free spins (gameType === 'freegame') she swaps to the
-	// activated pose with the glowing hand-mirror. Both variants face the reels.
-	const CHAR_ASPECT = 1021 / 1744; // base cutout W/H (floating pose)
-	const BONUS_ASPECT = 1153 / 1718; // bonus cutout W/H (floating pose)
-	const HEIGHT_SCALE = 1.16; // a touch taller than the board, standing beside it
-	const FLOAT_HEIGHT_SCALE = 1.0; // floating spine ~board height (crown stays on-screen)
+	// activated pose with the raised glowing hand-mirror. Both variants share one
+	// atlas (lady.webp) and face the reels.
+	const CHAR_ASPECT = 1021 / 1744; // base cutout W/H
+	const BONUS_ASPECT = 1153 / 1718; // bonus cutout W/H
+	const HEIGHT_SCALE = 1.16; // still: a touch taller than the board
+	const FLOAT_HEIGHT_SCALE = 1.0; // spine floats ~board height (crown stays on-screen)
 	const BOTTOM_NUDGE = 34; // still: hem just below the board bottom line
 	const LEFT_GAP = 6; // left edge just past the symbol area (never covers symbols)
 	const MIN_WIDTH = 130; // below this the right-side room is too tight -> hide her
 
-	// She rides one z-slot BELOW the default (0) gameplay/overlay layers so the
-	// big-win celebration takeover (Win.svelte), the WIN/WAYS plaques, and every
-	// other overlay always draw ON TOP of her instead of her floating in front.
-	// pixi-svelte sorts stage children by zIndex (context.parent.sortChildren on
-	// mount), and mount order alone put her in front; a negative zIndex fixes it
-	// deterministically. Kept above the scene-room background (zIndex -1/-2) so
-	// she stays visible, and she doesn't overlap the reels so sitting under the
-	// board layer is invisible.
+	// One z-slot BELOW the default (0) gameplay/overlay layers so the big-win
+	// celebration takeover, the WIN/WAYS plaques and every other overlay draw ON
+	// TOP of her. Kept above the scene-room background (zIndex -1/-2) so she stays
+	// visible, and she doesn't overlap the reels.
 	const SCENE_Z_INDEX = -0.5;
 
-	// activated during the bonus / free-spins game (canonical signal, same one
-	// Background.svelte's feature background keys off)
 	const isBonus = $derived(context.stateGame.gameType === 'freegame');
 
 	const stillKey = $derived(isBonus ? 'ladyBonus' : 'ladyCharacter');
 	const spineKey = $derived(isBonus ? 'ladyBonusSpine' : 'ladySpine');
 	const aspect = $derived(isBonus ? BONUS_ASPECT : CHAR_ASPECT);
 
-	// The Spine rig (tools/gen_lady_spine.py) is built from the FLOATING cutouts
-	// (lady_character.png / lady_bonus.png). load_trimmed() alpha-trims each source
-	// to its full bbox (head+crown+veil down to the gown hem) and packs that whole
-	// region into the atlas, and the weighted mesh spans the full region top-to-
-	// bottom, so the complete figure — head, face, crown, veil, gown, mirror — is
-	// present (verified in-frame via qa_float_lady.py; float-bob motion confirmed
-	// via qa_probe_lady_spine.py). She floats centered beside the board with the
-	// bob + breathing + veil/gown sway + ghost-aura idle.
-	const USE_SPINE = true;
-	const hasSpine = $derived(USE_SPINE && context.stateApp.loadedAssets?.[spineKey] != null);
+	const hasSpine = $derived(context.stateApp.loadedAssets?.[spineKey] != null);
 
 	// ---- still-fallback code idle (only used when the spine isn't available) ---
 	let time = $state(0);
@@ -117,21 +105,17 @@
 
 <!-- MainContainer ALWAYS mounts (only the character is conditional) so this
 	layer keeps its z-order slot below the WIN/WAYS plaques regardless of when she
-	becomes visible (avoids the late-mount-on-top bug). The wrapping Container
-	carries the negative zIndex (MainContainer doesn't forward zIndex to its
-	stage-level node) so the celebration overlay + plaques always draw over her. -->
+	becomes visible. The wrapping Container carries the negative zIndex so the
+	celebration overlay + plaques always draw over her. -->
 <Container zIndex={SCENE_Z_INDEX}>
 <MainContainer>
 	{#if layout.visible}
 		{#if hasSpine}
-			<!-- floating Spine rig: bob + breathing + veil/gown sway + ghost aura.
-				The skeleton is authored CENTERED on its root (content spans
-				x/y in [-W/2..W/2] / [-H/2..H/2]), the same convention as the
-				symbol spines. pixi-svelte's anchorToPivot assumes a top-left
-				[0..W]x[0..H] box, so passing anchor {0.5,0.5} would put the
-				pivot on the hem and shove her head a full figure-height above
-				the anchor (the "headless gown" bug). No anchor => pivot (0,0)
-				== root == true figure centre, so she centres on (cx,cyFloat). -->
+			<!-- floating cut-out Spine rig. The skeleton is authored CENTERED on
+				its root (box spans [-W/2..W/2] x [-H/2..H/2]), so passing NO anchor
+				keeps the pivot at the true figure centre and she centres on
+				(cx,cyFloat) — the head never flies off (the old headless bug came
+				from a top-left anchor assumption). -->
 			<SpineProvider
 				key={spineKey}
 				x={layout.cx}
