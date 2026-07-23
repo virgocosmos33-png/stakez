@@ -98,8 +98,9 @@
 					</header>
 
 					<div class="scroll">
-						<section class="block">
+						<section class="block payout">
 							<h2>PAYOUT</h2>
+							<h3 class="group">Premium Symbols</h3>
 							<div class="pay-row">
 								{#each HIGH_SYMBOLS as s (s.key)}
 									<div class="pay-cell">
@@ -112,6 +113,7 @@
 									</div>
 								{/each}
 							</div>
+							<h3 class="group">Royal Symbols</h3>
 							<div class="pay-row lows">
 								{#each LOW_SYMBOLS as s (s.key)}
 									<div class="pay-cell">
@@ -401,6 +403,16 @@
 		}
 	}
 
+	.group {
+		margin: 0 0 0.85rem;
+		text-align: center;
+		font-size: 1.15rem;
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: #f0dca0;
+		text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+	}
+
 	.pay-row {
 		display: grid;
 		grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -523,19 +535,162 @@
 		font-size: 0.85rem;
 	}
 
+	/* ---- mobile: full-screen sheet with a bottom toolbar (matches reference) ---- */
 	@media (max-width: 640px) {
+		.shell {
+			/* fill the whole viewport (dvh accounts for mobile browser chrome) */
+			width: 100vw;
+			max-width: 100vw;
+			height: 100vh;
+			height: 100dvh;
+			max-height: 100dvh;
+			border: none;
+			border-radius: 0;
+			box-shadow: none;
+			/* content on top, icon toolbar pinned along the bottom */
+			grid-template-columns: 1fr;
+			grid-template-rows: minmax(0, 1fr) auto;
+		}
+
 		.panel {
-			padding: 1rem 0.5rem 1rem 1rem;
+			order: 1;
+			padding: calc(0.6rem + env(safe-area-inset-top)) 1.1rem 0.6rem;
 		}
 
+		/* icon rail becomes a full-width bottom toolbar, evenly spaced */
 		.rail {
-			padding: 0.75rem 0.65rem;
-			gap: 0.85rem;
+			order: 2;
+			flex-direction: row;
+			align-items: center;
+			justify-content: space-around;
+			gap: 0.5rem;
+			padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+			border-left: none;
+			border-top: 1px solid rgba(255, 255, 255, 0.12);
+			background: linear-gradient(0deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.12));
 		}
 
+		/* borderless glyphs like the reference; only the active tab is a gold disc */
 		.rail-btn {
-			width: 2.7rem;
-			height: 2.7rem;
+			width: 3.2rem;
+			height: 3.2rem;
+			border-color: transparent;
+			background: transparent;
+
+			svg {
+				width: 1.7rem;
+				height: 1.7rem;
+			}
+
+			&:hover {
+				background: transparent;
+				border-color: transparent;
+			}
+
+			&.active {
+				border-color: #ffde6a;
+				background: #ffde6a;
+			}
+
+			&.close {
+				margin-top: 0;
+				border-color: transparent;
+			}
+		}
+
+		.head {
+			padding-bottom: 0.7rem;
+
+			h1 {
+				font-size: clamp(1.7rem, 7vw, 2.3rem);
+			}
+		}
+
+		.scroll {
+			padding-right: 0.4rem;
+		}
+
+		.block {
+			margin-bottom: 1.7rem;
+
+			h2 {
+				font-size: clamp(1.25rem, 5.4vw, 1.6rem);
+			}
+
+			&.rule {
+				p,
+				li {
+					font-size: clamp(1.02rem, 4.3vw, 1.2rem);
+				}
+			}
+		}
+
+		/* PAYOUT block centres its headings like the reference */
+		.payout {
+			text-align: center;
+
+			h2 {
+				text-align: center;
+			}
+
+			.foot {
+				text-align: center;
+			}
+		}
+
+		.group {
+			font-size: clamp(1.2rem, 5.2vw, 1.55rem);
+		}
+
+		/* all five symbols stay on one row, sized as large as the width allows */
+		.pay-row {
+			grid-template-columns: repeat(5, minmax(0, 1fr));
+			gap: 0.5rem 0.2rem;
+			margin-bottom: 1.2rem;
+		}
+
+		.pay-cell {
+			gap: 0.35rem;
+
+			img {
+				width: clamp(3.6rem, 18.5vw, 5.6rem);
+				height: clamp(3.6rem, 18.5vw, 5.6rem);
+				padding: 0.12rem;
+			}
+		}
+
+		.pay-list {
+			font-size: clamp(0.82rem, 3.5vw, 1.05rem);
+
+			em {
+				min-width: 0.75rem;
+				margin-right: 0.2rem;
+			}
+		}
+
+		.specials {
+			gap: 0.75rem;
+		}
+
+		.special {
+			padding: 0.8rem 0.85rem;
+
+			img {
+				width: clamp(3.8rem, 16.5vw, 5rem);
+				height: clamp(3.8rem, 16.5vw, 5rem);
+			}
+
+			strong {
+				font-size: clamp(1.08rem, 4.7vw, 1.25rem);
+			}
+
+			p {
+				font-size: clamp(0.98rem, 4.1vw, 1.12rem);
+			}
+		}
+
+		.info-row {
+			font-size: clamp(0.98rem, 4.1vw, 1.12rem);
 		}
 	}
 </style>

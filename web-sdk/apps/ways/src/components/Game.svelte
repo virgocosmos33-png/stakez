@@ -112,14 +112,35 @@
 				<UiGameName name="MADAM MIRROR" />
 			{/snippet}
 			{#snippet logo()}
-				<!-- logo art is 1024x641; anchored to the top-right corner of the canvas -->
-				<Sprite
-					key="mirrorLogo"
+				<!-- logo art is 1024x641 -->
+				{@const canvasWidth = context.stateLayoutDerived.canvasSizes().width}
+				{#if context.stateLayoutDerived.layoutType() === 'portrait'}
+					<!-- mobile/portrait: big logo sitting just above the board. This
+						snippet's container is pinned top-right (x = canvasWidth - 20, y = 0),
+						so we offset back to canvas-centre and compute the board's top edge
+						in canvas pixels to hang the logo right over it -->
+					{@const board = context.stateGameDerived.boardLayout()}
+					{@const main = context.stateLayoutDerived.mainLayout()}
+					{@const boardTopY = main.y + (board.y - board.height / 2 - main.height / 2) * main.scale}
+					{@const logoWidth = board.width * main.scale * 0.6}
+					<Sprite
+						key="mirrorLogo"
+						anchor={{ x: 0.5, y: 1 }}
+						x={20 - canvasWidth / 2}
+						y={boardTopY - REM * 0.4 - 50}
+						width={logoWidth}
+						height={logoWidth * (992 / 1536)}
+					/>
+				{:else}
+					<!-- anchored to the top-right corner of the canvas -->
+					<Sprite
+						key="mirrorLogo"
 					anchor={{ x: 1, y: 0 }}
 					y={REM * 0.5}
 					width={REM * 5.5}
-					height={REM * 5.5 * (641 / 1024)}
-				/>
+					height={REM * 5.5 * (992 / 1536)}
+					/>
+				{/if}
 			{/snippet}
 		</UI>
 		<Win />

@@ -3,13 +3,13 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import type { Texture, VideoSource } from 'pixi.js';
-	import { Container, Graphics, Rectangle, Sprite, BitmapText, Text } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { drawGlassPill } from '../game/glassChrome';
+	import ContinueButton from './ContinueButton.svelte';
 	import { getTiersPassed } from '../game/winCelebrationMap';
 	import type { MusicName, SoundEffectName } from '../game/sound';
 
@@ -73,6 +73,19 @@
 	let maxRecountStart = $state<number | null>(null);
 	const MAX_RECOUNT_DURATION = 9000;
 	const maxRecountEase = (f: number) => 1 - Math.pow(1 - f, 2);
+
+	// non-max celebrations leave on their own after a beat on the final amount —
+	// no click / CONTINUE button needed (only MAX WIN keeps the continue gate)
+	const POST_COUNT_HOLD_MS = 1600;
+	let completed = false;
+	let autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
+	// guard so a late press and the auto-dismiss timer can't both exit the scene
+	const complete = () => {
+		if (completed) return;
+		completed = true;
+		if (autoDismissTimer !== null) clearTimeout(autoDismissTimer);
+		props.oncomplete();
+	};
 
 	// ------------------------------------------------------------------
 	// transition fx: micro-fade + glitch/screen-tear interference between
@@ -158,6 +171,8 @@
 		} else {
 			countMult = finalMult;
 			finished = true;
+			// let the player read the final amount, then dismiss automatically
+			autoDismissTimer = setTimeout(complete, POST_COUNT_HOLD_MS);
 		}
 	};
 
@@ -176,7 +191,7 @@
 	const skip = () => {
 		if (waitContinue) return;
 		if (finished) {
-			props.oncomplete();
+			complete();
 			return;
 		}
 		if (maxRecountStart !== null) return;
@@ -226,6 +241,7 @@
 		raf = requestAnimationFrame(tick);
 		return () => {
 			cancelAnimationFrame(raf);
+			if (autoDismissTimer !== null) clearTimeout(autoDismissTimer);
 			// hand the music back to the room the player is actually in
 			context.eventEmitter.broadcast({
 				type: 'soundMusic',
@@ -484,18 +500,12 @@
 	<!-- MAX WIN gate: the only way out is the CONTINUE button, overlaid on the
 		lower part of the film frame so it is always on screen -->
 	{#if waitContinue}
-		<Container y={frameH / 2 - SYMBOL_SIZE * 0.62} scale={continuePulse}>
-			<Graphics
-				eventMode="static"
-				cursor="pointer"
-				onpointerup={() => props.oncomplete()}
-				draw={(g) => drawGlassPill(g, { width: SYMBOL_SIZE * 2.6, height: SYMBOL_SIZE * 0.62 })}
-			/>
-			<BitmapText
-				anchor={0.5}
-				text="CONTINUE"
-				eventMode="none"
-				style={{ fontFamily: 'gold', fontSize: SYMBOL_SIZE * 0.32, letterSpacing: 2 }}
+		<Container y={frameH / 2 - SYMBOL_SIZE * 0.62}>
+			<ContinueButton
+				onpress={() => complete()}
+				pulse={continuePulse}
+				width={SYMBOL_SIZE * 2.8}
+				height={SYMBOL_SIZE * 0.62}
 			/>
 		</Container>
 	{/if}

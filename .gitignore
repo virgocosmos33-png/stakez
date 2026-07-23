@@ -41,3 +41,11 @@ web-sdk/apps/ways/tools/scenario_out/
 
 # build/run scratch logs
 *.log
+
+# pip editable-install artifact (nested SDK copy) — not source
+math-sdk/src/stakeengine/
+
+# local scratch assets (working copies of generated media)
+madam_mirror_logo.png
+video.mp4
+web-sdk/apps/ways/static/assets/sprites/mirror/logo_backup.png

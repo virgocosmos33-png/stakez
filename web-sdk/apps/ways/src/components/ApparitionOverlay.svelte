@@ -19,7 +19,7 @@
 	import type { Position } from '../game/types';
 	import type { RawSymbol } from '../game/types';
 	import { getContext } from '../game/context';
-	import { getSymbolInfo } from '../game/utils';
+	import { getSymbolInfo, getSymbolX, getSymbolY } from '../game/utils';
 	import { SYMBOL_SIZE, HIGH_SYMBOLS } from '../game/constants';
 	import { fxNum } from '../game/fx.generated';
 	import { stateShake, shakeBoard } from '../game/stateShake.svelte';
@@ -70,9 +70,6 @@
 	const SEAM_SPARKS = fxNum('splitAnimation', 'seamSparks', 6);
 
 	let cells = $state<HauntCell[]>([]);
-	// ghost markers: split cells that survive into the next spin keep their
-	// haunt frame + count on the field WHILE the reels spin beneath them
-	let ghosts = $state<HauntCell[]>([]);
 	let show = $state(false);
 	let time = $state(0);
 	const pulseScale = new Tween(1);
@@ -119,10 +116,14 @@
 						count: multiplier,
 						name: reelSymbol.rawSymbol.name,
 						ttl: reelSymbol.rawSymbol.ttl,
-						cx: originX + SYMBOL_SIZE * (reelIndex + 0.5) + (rand(seed + 1) - 0.5) * 5,
-						cy: originY + SYMBOL_SIZE * (rowIndex - 0.5) + (rand(seed + 2) - 0.5) * 5,
-						scale: 1 + (rand(seed + 3) - 0.5) * 0.05,
-						rotation: (rand(seed + 4) - 0.5) * 0.06,
+						// sit EXACTLY on the real symbol cell (getSymbolX/Y, same as the
+						// reel + spin-time split lens) with no random tilt/scale/offset, so
+						// the split never pops/skews when the reel settles and this overlay
+						// takes over from the lens
+						cx: originX + getSymbolX(reelIndex),
+						cy: originY + getSymbolY(rowIndex - 1),
+						scale: 1,
+						rotation: 0,
 						z: rand(seed + 5),
 						seed,
 					});
@@ -185,14 +186,8 @@
 		// crack only ever plays once, on the mirror burst that created the cell)
 		apparitionsRefresh: () => {
 			refresh();
-			ghosts = [];
 		},
-		apparitionsHide: (emitterEvent) => {
-			// free spins: surviving cells leave a ghost frame on the field during
-			// the spin, telegraphing that whatever lands there is already split
-			ghosts = emitterEvent.keepPersistent
-				? cells.filter((cell) => cell.ttl === -1 || (cell.ttl !== undefined && cell.ttl >= 2))
-				: [];
+		apparitionsHide: () => {
 			show = false;
 			cells = [];
 		},
@@ -264,12 +259,19 @@
 		graphics.stroke({ color: persistent ? 0x2bff66 : 0x1a7a3c, width: 2, alpha: 0.95 });
 	};
 
-	// per-pane card border so every split copy still reads as a framed symbol
+	// per-pane card border so every split copy still reads as a framed symbol.
+	// When a cell splits many times the heavy per-pane frames would chop the
+	// artwork into unreadable bordered stripes, so above 4 splits we drop the
+	// per-pane frames entirely and let the slim seams do the separating - the
+	// symbol underneath stays legible.
+	const MANY_SPLITS = 5;
 	const drawPaneBorder = (
 		graphics: import('pixi.js').Graphics,
 		paneWidth: number,
 		isHigh: boolean,
+		count: number,
 	) => {
+		if (count >= MANY_SPLITS) return;
 		const s = SYMBOL_SIZE;
 		const w = paneWidth;
 		if (isHigh) {
@@ -289,26 +291,32 @@
 
 	// the settled cut seam: a clean, sharp line of light between panes -
 	// a white-hot core with a cold violet edge glow (no crawling lightning)
+	// slim: 1 for a few splits, shrinking toward 0 as the split count climbs so
+	// the seams stay hairline-thin on heavily-split cells and never smother the
+	// symbol art.
 	const drawDivider = (
 		graphics: import('pixi.js').Graphics,
 		cell: HauntCell,
 		dividerIndex: number,
 		timeValue: number,
+		slim: number,
 	) => {
 		const s = SYMBOL_SIZE;
 		const half = s / 2;
-		const intensity = Math.min((cell.count - 1) / 3, 1);
 		const flicker = 0.9 + 0.1 * Math.sin(timeValue * 14 + cell.seed * 3 + dividerIndex * 1.7);
 
-		// soft violet edge glow
-		graphics.roundRect(-4 - 1.5 * intensity, -half, 8 + 3 * intensity, s, 4);
-		graphics.fill({ color: 0xb887ff, alpha: 0.16 * flicker });
+		// soft violet edge glow (narrows with the split count)
+		const glowW = 5 * slim + 1;
+		graphics.roundRect(-glowW / 2, -half, glowW, s, 3);
+		graphics.fill({ color: 0xb887ff, alpha: 0.16 * flicker * slim });
 		// inner violet
-		graphics.roundRect(-1.8, -half, 3.6, s, 1.8);
+		const innerW = 2.4 * slim + 0.5;
+		graphics.roundRect(-innerW / 2, -half, innerW, s, 1);
 		graphics.fill({ color: 0xe6d2ff, alpha: 0.5 * flicker });
-		// white-hot core
-		graphics.roundRect(-0.7, -half, 1.4, s, 0.7);
-		graphics.fill({ color: 0xffffff, alpha: 0.92 * flicker });
+		// white-hot core: always a crisp hairline so the seam still reads
+		const coreW = 0.7 * slim + 0.3;
+		graphics.roundRect(-coreW / 2, -half, coreW, s, 0.4);
+		graphics.fill({ color: 0xffffff, alpha: 0.9 * flicker });
 	};
 
 	// the cut blade: a hot head that sweeps top -> bottom carving a glowing
@@ -443,130 +451,136 @@
 
 </script>
 
-<MainContainer>
-	<!-- ghost markers during the spin: surviving haunted cells keep their frame
-		and count on the field while the reels spin beneath them, so the next
-		symbol visibly drops INTO an already-split position -->
-	{#if !show && ghosts.length > 0}
-		{#each ghosts as ghost (ghost.key)}
-			<Container x={ghost.cx} y={ghost.cy} alpha={0.75}>
-				<Graphics draw={(graphics) => drawHauntFrame(graphics, ghost, time)} />
-				<Container x={SYMBOL_SIZE / 2 - 21} y={-SYMBOL_SIZE / 2 + 21}>
-					<Graphics draw={(graphics) => drawBadge(graphics, true)} />
-					<Text
-						anchor={0.5}
-						text={`X${ghost.count}`}
-						style={{
-							fontFamily: 'Arial',
-							fontWeight: '900',
-							fontSize: 20,
-							fill: 0xffffff,
-							stroke: { color: 0x000000, width: 3 },
-						}}
-					/>
+<!-- the panes + seams + FX for one haunted cell (badge drawn in a later pass) -->
+{#snippet hauntCell(cell: HauntCell, isGhost: boolean)}
+	{@const sliceWidth = SYMBOL_SIZE / cell.count}
+	{@const symbolInfo = getSymbolInfo({
+		// postWinStatic is the guaranteed-sprite card state (static now
+		// routes to the looping Spine idle, which panes can't slice)
+		rawSymbol: { name: cell.name },
+		state: 'postWinStatic',
+	})}
+	{@const isHigh = HIGH_SYMBOLS.includes(cell.name)}
+	<!-- split = 0: all panes stack centered with a full-width mask, reading
+		as one whole symbol; split = 1: panes at their final offsets with
+		slice-width masks. Animating it makes the symbol visibly crack apart. -->
+	{@const split = splittingKeys.has(cell.key) ? splitProgress.current : 1}
+	<!-- seams/gaps shrink as the split count climbs so heavily-split cells stay
+		readable instead of turning into opaque stripes -->
+	{@const slim = Math.min(1, 3 / cell.count)}
+	{@const gap = SYMBOL_SIZE * Math.min(0.025, 0.09 / cell.count)}
+	{@const paneWidth = Math.max((sliceWidth - gap) * split + SYMBOL_SIZE * (1 - split), 2)}
+	<Container
+		x={cell.cx}
+		y={cell.cy}
+		rotation={cell.rotation}
+		alpha={isGhost ? 0.9 : 1}
+		scale={cell.scale *
+			(pulsedKeys.has(cell.key) ? pulseScale.current : 1) *
+			(winningKeys.has(cell.key) ? winScale.current : 1)}
+	>
+		<Graphics draw={(graphics) => drawUnderGlow(graphics)} />
+		{#if cell.count >= MANY_SPLITS}
+			<!-- heavily split: draw the whole symbol ONCE so it stays identifiable;
+				the slim seams below just mark how many ways it split (narrow
+				center-cropped copies here would be an unreadable stack of stripes) -->
+			<Container>
+				<Rectangle isMask anchor={0.5} width={SYMBOL_SIZE} height={SYMBOL_SIZE} />
+				<SymbolSprite {symbolInfo} />
+			</Container>
+		{:else}
+			{#each Array.from({ length: cell.count }) as _, i (i)}
+				{@const paneX = (-SYMBOL_SIZE / 2 + (i + 0.5) * sliceWidth) * split}
+				<Container x={paneX}>
+					<Rectangle isMask anchor={0.5} width={paneWidth} height={SYMBOL_SIZE} />
+					<SymbolSprite {symbolInfo} />
 				</Container>
+				<Container x={paneX}>
+					<Graphics draw={(graphics) => drawPaneBorder(graphics, paneWidth, isHigh, cell.count)} />
+				</Container>
+			{/each}
+		{/if}
+		{#each Array.from({ length: cell.count - 1 }) as _, i (i)}
+			<Container x={(-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth) * split} alpha={split}>
+				<Graphics draw={(graphics) => drawDivider(graphics, cell, i, time, slim)} />
 			</Container>
 		{/each}
-	{/if}
+		<!-- cut blades sweep down the future seam lines while the symbol is
+			still whole, then the carved trails dissolve as the panes part -->
+		{#if splittingKeys.has(cell.key)}
+			{@const nDividers = cell.count - 1}
+			{#each Array.from({ length: nDividers }) as _, i (i)}
+				{@const sweep = Math.min(
+					Math.max(
+						cutSweep.current * (1 + CUT_STAGGER * (nDividers - 1)) - CUT_STAGGER * i,
+						0,
+					),
+					1,
+				)}
+				<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth} alpha={1 - split * 0.9}>
+					<Graphics draw={(graphics) => drawCutBlade(graphics, cell, i, sweep, time)} />
+				</Container>
+			{/each}
+			<!-- hit-stop: the carved seams burn white-hot for a frozen beat -->
+			{#each Array.from({ length: nDividers }) as _, i (i)}
+				<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth}>
+					<Graphics draw={(graphics) => drawSeamFlare(graphics, seamFlare.current)} />
+				</Container>
+			{/each}
+		{/if}
+		<!-- persistent-haunt frame: the split state stays readable at rest, and
+			cells that survive into the next spin (bonus 2/3) visibly burn -->
+		<Container alpha={split}>
+			<Graphics draw={(graphics) => drawHauntFrame(graphics, cell, time)} />
+		</Container>
+		<!-- detonation: flash + shockwaves + seam sparks + plasma smoke -->
+		{#if detonatingKeys.has(cell.key)}
+			<Container>
+				<Graphics draw={(graphics) => drawDetonation(graphics, cell, detonation.current, split)} />
+			</Container>
+		{/if}
+	</Container>
+{/snippet}
+
+<!-- the xN count badge, drawn in a pass ABOVE every cell so overlapping split
+	neighbours can never cover it - the multiplier is always visible -->
+{#snippet badgeMarker(cell: HauntCell)}
+	{@const persistent = cell.ttl !== undefined && (cell.ttl === -1 || cell.ttl >= 2)}
+	<Container
+		x={cell.cx}
+		y={cell.cy}
+		rotation={cell.rotation}
+		scale={cell.scale *
+			(pulsedKeys.has(cell.key) ? pulseScale.current : 1) *
+			(winningKeys.has(cell.key) ? winScale.current : 1)}
+	>
+		<Container x={SYMBOL_SIZE / 2 - 21} y={-SYMBOL_SIZE / 2 + 21}>
+			<Graphics draw={(graphics) => drawBadge(graphics, persistent)} />
+			<Text
+				anchor={0.5}
+				text={`X${cell.count}`}
+				style={{
+					fontFamily: 'Arial',
+					fontWeight: '900',
+					fontSize: 20,
+					fill: 0xffffff,
+					stroke: { color: 0x000000, width: 3 },
+				}}
+			/>
+		</Container>
+	</Container>
+{/snippet}
+
+<MainContainer>
 	{#if show}
 		<Container x={stateShake.x} y={stateShake.y}>
-		{#each cells as cell (cell.key)}
-			{@const sliceWidth = SYMBOL_SIZE / cell.count}
-			{@const symbolInfo = getSymbolInfo({
-				// postWinStatic is the guaranteed-sprite card state (static now
-				// routes to the looping Spine idle, which panes can't slice)
-				rawSymbol: { name: cell.name },
-				state: 'postWinStatic',
-			})}
-			{@const isHigh = HIGH_SYMBOLS.includes(cell.name)}
-			<!-- split = 0: all panes stack centered with a full-width mask, reading
-				as one whole symbol; split = 1: panes at their final offsets with
-				slice-width masks. Animating it makes the symbol visibly crack apart. -->
-			{@const split = splittingKeys.has(cell.key) ? splitProgress.current : 1}
-			{@const paneWidth = Math.max(
-				(sliceWidth - SYMBOL_SIZE * 0.025) * split + SYMBOL_SIZE * (1 - split),
-				2,
-			)}
-			<Container
-				x={cell.cx}
-				y={cell.cy}
-				rotation={cell.rotation}
-				scale={cell.scale *
-					(pulsedKeys.has(cell.key) ? pulseScale.current : 1) *
-					(winningKeys.has(cell.key) ? winScale.current : 1)}
-			>
-				<Graphics draw={(graphics) => drawUnderGlow(graphics)} />
-				{#each Array.from({ length: cell.count }) as _, i (i)}
-					{@const paneX = (-SYMBOL_SIZE / 2 + (i + 0.5) * sliceWidth) * split}
-					<Container x={paneX}>
-						<Rectangle isMask anchor={0.5} width={paneWidth} height={SYMBOL_SIZE} />
-						<SymbolSprite {symbolInfo} />
-					</Container>
-					<Container x={paneX}>
-						<Graphics draw={(graphics) => drawPaneBorder(graphics, paneWidth, isHigh)} />
-					</Container>
-				{/each}
-				{#each Array.from({ length: cell.count - 1 }) as _, i (i)}
-					<Container x={(-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth) * split} alpha={split}>
-						<Graphics draw={(graphics) => drawDivider(graphics, cell, i, time)} />
-					</Container>
-				{/each}
-				<!-- cut blades sweep down the future seam lines while the symbol is
-					still whole, then the carved trails dissolve as the panes part -->
-				{#if splittingKeys.has(cell.key)}
-					{@const nDividers = cell.count - 1}
-					{#each Array.from({ length: nDividers }) as _, i (i)}
-						{@const sweep = Math.min(
-							Math.max(
-								cutSweep.current * (1 + CUT_STAGGER * (nDividers - 1)) - CUT_STAGGER * i,
-								0,
-							),
-							1,
-						)}
-						<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth} alpha={1 - split * 0.9}>
-							<Graphics
-								draw={(graphics) => drawCutBlade(graphics, cell, i, sweep, time)}
-							/>
-						</Container>
-					{/each}
-					<!-- hit-stop: the carved seams burn white-hot for a frozen beat -->
-					{#each Array.from({ length: nDividers }) as _, i (i)}
-						<Container x={-SYMBOL_SIZE / 2 + (i + 1) * sliceWidth}>
-							<Graphics draw={(graphics) => drawSeamFlare(graphics, seamFlare.current)} />
-						</Container>
-					{/each}
-				{/if}
-				<!-- persistent-haunt frame + apparition count badge: the split state
-					stays readable at rest, and cells that survive into the next
-					spin (bonus 2/3) visibly burn instead of flickering out -->
-				{@const persistent = cell.ttl !== undefined && (cell.ttl === -1 || cell.ttl >= 2)}
-				<Container alpha={split}>
-					<Graphics draw={(graphics) => drawHauntFrame(graphics, cell, time)} />
-					<Container x={SYMBOL_SIZE / 2 - 21} y={-SYMBOL_SIZE / 2 + 21}>
-						<Graphics draw={(graphics) => drawBadge(graphics, persistent)} />
-						<Text
-							anchor={0.5}
-							text={`X${cell.count}`}
-							style={{
-								fontFamily: 'Arial',
-								fontWeight: '900',
-								fontSize: 20,
-								fill: 0xffffff,
-								stroke: { color: 0x000000, width: 3 },
-							}}
-						/>
-					</Container>
-				</Container>
-				<!-- detonation: flash + shockwaves + seam sparks + plasma smoke -->
-				{#if detonatingKeys.has(cell.key)}
-					<Container>
-						<Graphics
-							draw={(graphics) => drawDetonation(graphics, cell, detonation.current, split)}
-						/>
-					</Container>
-				{/if}
-			</Container>
-		{/each}
+			{#each cells as cell (cell.key)}
+				{@render hauntCell(cell, false)}
+			{/each}
+			<!-- badges last: always on top of every pane of every cell -->
+			{#each cells as cell (cell.key)}
+				{@render badgeMarker(cell)}
+			{/each}
 		</Container>
 	{/if}
 </MainContainer>

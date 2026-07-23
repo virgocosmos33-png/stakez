@@ -10,7 +10,7 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
-	import { BitmapText, Container, Graphics, Sprite } from 'pixi-svelte';
+	import { Container, Graphics, Sprite } from 'pixi-svelte';
 	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -19,7 +19,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { drawGlassPill } from '../game/glassChrome';
+	import ContinueButton from './ContinueButton.svelte';
 	import WinCoins from './WinCoins.svelte';
 
 	const context = getContext();
@@ -148,19 +148,13 @@
 							</Container>
 						</Container>
 
-						<!-- themed press-anywhere banner matching the HUD scrying-glass chrome -->
-						<Container y={panelHeight * 0.53} scale={continuePulse}>
-							<Graphics
-								eventMode="static"
-								cursor="pointer"
-								onpointerup={() => (countUpCompleted ? oncomplete() : finishCountUp())}
-								draw={(g) => drawGlassPill(g, { width: SYMBOL_SIZE * 4.4, height: SYMBOL_SIZE * 0.52 })}
-							/>
-							<BitmapText
-								anchor={0.5}
-								text="PRESS ANYWHERE TO CONTINUE"
-								eventMode="none"
-								style={{ fontFamily: 'amethyst', fontSize: SYMBOL_SIZE * 0.19, letterSpacing: 2 }}
+						<!-- shared continue button (identical everywhere, white label) -->
+						<Container y={panelHeight * 0.53}>
+							<ContinueButton
+								onpress={() => (countUpCompleted ? oncomplete() : finishCountUp())}
+								pulse={continuePulse}
+								width={SYMBOL_SIZE * 3.4}
+								height={SYMBOL_SIZE * 0.62}
 							/>
 						</Container>
 					</Container>

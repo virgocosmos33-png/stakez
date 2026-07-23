@@ -19,6 +19,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
+	import ReelSplitLens from './ReelSplitLens.svelte';
 
 	const context = getContext();
 
@@ -72,4 +73,11 @@
 			<BoardBase />
 		</BoardContainer>
 	</BoardContext>
+
+	<!-- split slots stay active while the reels spin: whatever scrolls through a
+		haunted position is clipped into N ways here, above the plain reels but
+		below the settled ApparitionOverlay (which takes over once stopped) -->
+	<BoardContainer>
+		<ReelSplitLens />
+	</BoardContainer>
 {/if}
