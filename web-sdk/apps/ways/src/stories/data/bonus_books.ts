@@ -8062,7 +8062,7 @@ export default [
  },
  {
   "id": 293,
-  "payoutMultiplier": 3000000,
+  "payoutMultiplier": 2222200,
   "events": [
    {
     "index": 0,
@@ -10086,7 +10086,7 @@ export default [
    {
     "index": 45,
     "type": "winInfo",
-    "totalWin": 3000000,
+    "totalWin": 2222200,
     "wins": [
      {
       "symbol": "H1",
@@ -10623,28 +10623,28 @@ export default [
    {
     "index": 46,
     "type": "wincap",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 47,
     "type": "setTotalWin",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 48,
     "type": "freeSpinEnd",
-    "amount": 3000000,
+    "amount": 2222200,
     "winLevel": 10
    },
    {
     "index": 49,
     "type": "finalWin",
-    "amount": 3000000
+    "amount": 2222200
    }
   ],
   "criteria": "freegame",
   "baseGameWins": 0.0,
-  "freeGameWins": 30000
+  "freeGameWins": 22222
  },
  {
   "id": 20,
@@ -22145,7 +22145,7 @@ export default [
  },
  {
   "id": 47,
-  "payoutMultiplier": 3000000,
+  "payoutMultiplier": 2222200,
   "events": [
    {
     "index": 0,
@@ -25456,12 +25456,12 @@ export default [
    {
     "index": 71,
     "type": "winInfo",
-    "totalWin": 3000000,
+    "totalWin": 2222200,
     "wins": [
      {
       "symbol": "H1",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -25511,7 +25511,7 @@ export default [
       "meta": {
        "ways": 3168,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 36
       }
      },
@@ -25997,28 +25997,28 @@ export default [
    {
     "index": 72,
     "type": "wincap",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 73,
     "type": "setTotalWin",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 74,
     "type": "freeSpinEnd",
-    "amount": 3000000,
+    "amount": 2222200,
     "winLevel": 10
    },
    {
     "index": 75,
     "type": "finalWin",
-    "amount": 3000000
+    "amount": 2222200
    }
   ],
   "criteria": "freegame",
   "baseGameWins": 0.0,
-  "freeGameWins": 30000
+  "freeGameWins": 22222
  },
  {
   "id": 77,
@@ -30060,7 +30060,7 @@ export default [
  },
  {
   "id": 254,
-  "payoutMultiplier": 3000000,
+  "payoutMultiplier": 2222200,
   "events": [
    {
     "index": 0,
@@ -32133,32 +32133,32 @@ export default [
    {
     "index": 28,
     "type": "wincap",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 29,
     "type": "setTotalWin",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 30,
     "type": "freeSpinEnd",
-    "amount": 3000000,
+    "amount": 2222200,
     "winLevel": 10
    },
    {
     "index": 31,
     "type": "finalWin",
-    "amount": 3000000
+    "amount": 2222200
    }
   ],
   "criteria": "freegame",
   "baseGameWins": 0.0,
-  "freeGameWins": 30000
+  "freeGameWins": 22222
  },
  {
   "id": 296,
-  "payoutMultiplier": 3000000,
+  "payoutMultiplier": 2222200,
   "events": [
    {
     "index": 0,
@@ -34933,12 +34933,12 @@ export default [
    {
     "index": 60,
     "type": "winInfo",
-    "totalWin": 3000000,
+    "totalWin": 2222200,
     "wins": [
      {
       "symbol": "H1",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -34996,14 +34996,14 @@ export default [
       "meta": {
        "ways": 38808,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "H2",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35057,14 +35057,14 @@ export default [
       "meta": {
        "ways": 34496,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "H3",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35122,14 +35122,14 @@ export default [
       "meta": {
        "ways": 37632,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "H4",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35183,14 +35183,14 @@ export default [
       "meta": {
        "ways": 34496,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "H5",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35252,14 +35252,14 @@ export default [
       "meta": {
        "ways": 48510,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "L1",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35317,14 +35317,14 @@ export default [
       "meta": {
        "ways": 36960,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "L2",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35386,14 +35386,14 @@ export default [
       "meta": {
        "ways": 49280,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "L3",
       "kind": 5,
-      "win": 3000000,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35451,14 +35451,14 @@ export default [
       "meta": {
        "ways": 37632,
        "globalMult": 1,
-       "winWithoutMult": 3000000,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "L4",
       "kind": 5,
-      "win": 2759680,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35512,14 +35512,14 @@ export default [
       "meta": {
        "ways": 34496,
        "globalMult": 1,
-       "winWithoutMult": 2759680,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      },
      {
       "symbol": "L5",
       "kind": 5,
-      "win": 2759680,
+      "win": 2222200,
       "positions": [
        {
         "reel": 0,
@@ -35573,7 +35573,7 @@ export default [
       "meta": {
        "ways": 34496,
        "globalMult": 1,
-       "winWithoutMult": 2759680,
+       "winWithoutMult": 2222200,
        "symbolMult": 43
       }
      }
@@ -35582,28 +35582,28 @@ export default [
    {
     "index": 61,
     "type": "wincap",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 62,
     "type": "setTotalWin",
-    "amount": 3000000
+    "amount": 2222200
    },
    {
     "index": 63,
     "type": "freeSpinEnd",
-    "amount": 3000000,
+    "amount": 2222200,
     "winLevel": 10
    },
    {
     "index": 64,
     "type": "finalWin",
-    "amount": 3000000
+    "amount": 2222200
    }
   ],
   "criteria": "freegame",
   "baseGameWins": 48.2,
-  "freeGameWins": 30000
+  "freeGameWins": 22222
  },
  {
   "id": 160,

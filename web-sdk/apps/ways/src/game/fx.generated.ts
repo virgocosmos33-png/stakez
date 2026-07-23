@@ -31,7 +31,7 @@ export const GEN_FX: Record<string, any> = {
 	"winLightning": {
 		"label": "Mega-Win Lightning",
 		"desc": "Thunder bolts + prismatic burst over the board when a win reaches megaWinMultiplier x bet (max-win celebration).",
-		"megaWinMultiplier": 8685,
+		"megaWinMultiplier": 1000,
 		"hue": 360,
 		"size": 2,
 		"lightningMs": 1400,

@@ -3,8 +3,8 @@
 Base game is deliberately starved (~55% zero-win spins, base RTP share ~55%);
 the rest of the RTP lives in the three bonus levels.
 
-Wincap (30,000x) hit-rate targets per mode, NLC-profile:
-  base   ~1 in 10,000,000 spins  (rtp 0.003 = 30000/1e7)
+Wincap (22,222x) hit-rate targets per mode, NLC-profile:
+  base   ~1 in 10,000,000 spins  (rtp scales with the cap)
   bonus1 ~1 in 100,000 buys      (rtp 0.003 = 300x cost / 1e5)
   bonus2 ~1 in 7,500 buys        (rtp 0.010 = 75x cost / 7.5e3)
   bonus3 ~1 in 200 buys          (rtp 0.150 = 30x cost / 2e2)
@@ -46,7 +46,9 @@ class OptimizationSetup:
                 "scaling": ConstructScaling(
                     [
                         {"criteria": "freegame", "scale_factor": 0.9, "win_range": (20, 50), "probability": 1.0},
-                        {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
+                        # 1.3 (was 0.8): the damp made bonus3 invert - a 2000-5000x
+                        # outcome landed MORE often than 1000-2000x (1-in-43 vs 1-in-136)
+                        {"criteria": "freegame", "scale_factor": 1.3, "win_range": (1000, 2000), "probability": 1.0},
                         {"criteria": "freegame", "scale_factor": 1.2, "win_range": (5000, 10000), "probability": 1.0},
                     ]
                 ).return_dict(),
@@ -75,7 +77,7 @@ class OptimizationSetup:
             return {
                 "conditions": {
                     "wincap": ConstructConditions(
-                        rtp=wincap_rtp, av_win=30000, search_conditions=30000
+                        rtp=wincap_rtp, av_win=wincaps["base"], search_conditions=wincaps["base"]
                     ).return_dict(),
                     "freegame": ConstructConditions(
                         rtp=freegame_rtp, hr=50, search_conditions={"symbol": "scatter"}
@@ -84,10 +86,23 @@ class OptimizationSetup:
                         rtp=rtp_total - wincap_rtp - freegame_rtp, hr="x"
                     ).return_dict(),
                 },
+                # smooth-taper shaping, MUCH stronger than base mode needs:
+                # feature books are bimodal (guaranteed mirrors either pay modest
+                # or blow up), so mid-range books are scarce and need heavy
+                # weight boosts + a top-end damp or the 500-2000x band dies
+                # (feature3 paid 10,000x+ 3x MORE often than 500-1000x)
                 "scaling": ConstructScaling(
                     [
                         {"criteria": "basegame", "scale_factor": 1.2, "win_range": (1, 5), "probability": 1.0},
+                        {"criteria": "basegame", "scale_factor": 0.5, "win_range": (100, 500), "probability": 1.0},
+                        {"criteria": "basegame", "scale_factor": 4.0, "win_range": (500, 2000), "probability": 1.0},
+                        {"criteria": "basegame", "scale_factor": 2.0, "win_range": (2000, 5000), "probability": 1.0},
+                        {"criteria": "basegame", "scale_factor": 0.6, "win_range": (10000, 20000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 0.5, "win_range": (100, 500), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 4.0, "win_range": (500, 2000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 2.0, "win_range": (2000, 5000), "probability": 1.0},
                         {"criteria": "freegame", "scale_factor": 1.2, "win_range": (5000, 10000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 0.6, "win_range": (10000, 20000), "probability": 1.0},
                     ]
                 ).return_dict(),
                 "parameters": ConstructParameters(
@@ -122,11 +137,18 @@ class OptimizationSetup:
                         hr=4.0, rtp=mode_rtps["base"] - 0.006 - 0.414
                     ).return_dict(),
                 },
+                # taper, don't hump: the old table crammed ~60% of all RTP into
+                # 100-500x and starved 500-2000x (500-1000x hit 1-in-240k while
+                # 200-500x hit 1-in-1300). Damp the 100-500x pile-up and feed the
+                # mid-high bands so contribution declines smoothly toward the cap.
                 "scaling": ConstructScaling(
                     [
                         {"criteria": "basegame", "scale_factor": 1.2, "win_range": (1, 2), "probability": 1.0},
                         {"criteria": "basegame", "scale_factor": 1.5, "win_range": (10, 20), "probability": 1.0},
-                        {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 0.6, "win_range": (100, 500), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 2.0, "win_range": (500, 1000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 1.8, "win_range": (1000, 2000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 1.4, "win_range": (2000, 5000), "probability": 1.0},
                         {"criteria": "freegame", "scale_factor": 1.2, "win_range": (5000, 10000), "probability": 1.0},
                     ]
                 ).return_dict(),
@@ -165,11 +187,15 @@ class OptimizationSetup:
                     ).return_dict(),
                     "basegame": ConstructConditions(hr=6.0, rtp=0.292).return_dict(),
                 },
+                # same smooth-taper shaping as base (ante shares its profile)
                 "scaling": ConstructScaling(
                     [
                         {"criteria": "basegame", "scale_factor": 1.2, "win_range": (1, 2), "probability": 1.0},
                         {"criteria": "basegame", "scale_factor": 1.5, "win_range": (10, 20), "probability": 1.0},
-                        {"criteria": "freegame", "scale_factor": 0.8, "win_range": (1000, 2000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 0.6, "win_range": (100, 500), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 2.0, "win_range": (500, 1000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 1.8, "win_range": (1000, 2000), "probability": 1.0},
+                        {"criteria": "freegame", "scale_factor": 1.4, "win_range": (2000, 5000), "probability": 1.0},
                         {"criteria": "freegame", "scale_factor": 1.2, "win_range": (5000, 10000), "probability": 1.0},
                     ]
                 ).return_dict(),

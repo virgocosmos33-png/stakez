@@ -7,7 +7,7 @@ Rules:
 - Wilds only on reels 2/3/4 (index 1/2/3), sparse in base, richer in free reels.
 - Haunted Mirrors (HM) are NOT on strips - they are placed by game_override.
 - Free reels (FR0) carry scatters on all reels (retriggers) and more wilds.
-- Wincap reels (FRWCAP) are wild/high heavy for forcing 30,000x sims.
+- Wincap reels (FRWCAP) are wild/high heavy for forcing wincap (22,222x) sims.
 """
 
 import os

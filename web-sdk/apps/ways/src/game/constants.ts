@@ -82,15 +82,16 @@ export const SPIN_OPTIONS_TURBO = {
 	symbolFallOutInterval: 8,
 };
 
-// super turbo (tier 2): much snappier fall + near-instant settle (hacksaw-style)
+// super turbo (tier 2): much snappier fall + quick settle (hacksaw-style),
+// but the drop stays VISIBLE - a fully instant snap made spins feel skipped
 export const SPIN_OPTIONS_FAST = {
 	...SPIN_OPTIONS_SHARED,
-	symbolFallInSpeed: 12,
-	symbolFallInInterval: 0,
-	symbolFallInBounceSpeed: 0.6,
-	symbolFallInBounceSizeMulti: 0.2,
-	symbolFallOutSpeed: 12,
-	symbolFallOutInterval: 0,
+	symbolFallInSpeed: 8,
+	symbolFallInInterval: 4,
+	symbolFallInBounceSpeed: 0.5,
+	symbolFallInBounceSizeMulti: 0.25,
+	symbolFallOutSpeed: 8,
+	symbolFallOutInterval: 4,
 };
 
 export const MOTION_BLUR_VELOCITY = 31;

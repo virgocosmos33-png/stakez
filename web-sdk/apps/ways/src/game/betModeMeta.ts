@@ -26,7 +26,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: '',
 			tickerSpin: '',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	ante: {
 		mode: 'ante',
@@ -51,7 +51,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'EXTRA BET IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	feature1: {
 		mode: 'feature1',
@@ -76,7 +76,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'MIRROR SPIN IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	feature2: {
 		mode: 'feature2',
@@ -101,7 +101,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'TWIN MIRRORS IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	feature3: {
 		mode: 'feature3',
@@ -126,7 +126,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'TRIPLE MIRRORS IS ACTIVE',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	bonus1: {
 		mode: 'bonus1',
@@ -151,7 +151,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'THE SÉANCE',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	bonus2: {
 		mode: 'bonus2',
@@ -176,7 +176,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'THE OTHER SIDE',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 	bonus3: {
 		mode: 'bonus3',
@@ -201,7 +201,7 @@ export const betModeMeta: BetModeMeta = {
 			tickerIdle: 'BLOOD MOON',
 			tickerSpin: 'GOOD LUCK',
 		},
-		maxWin: 30000,
+		maxWin: 22222,
 	},
 };
 

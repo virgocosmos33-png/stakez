@@ -1,7 +1,7 @@
 import _ from 'lodash';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
-import { stateBet, stateBetDerived } from 'state-shared';
+import { stateBet } from 'state-shared';
 import { sequence } from 'utils-shared/sequence';
 import { waitForTimeout } from 'utils-shared/wait';
 
@@ -58,8 +58,10 @@ let lastFreeSpinTotal = 0;
 export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContext> = {
 	reveal: async (bookEvent: BookEventOfType<'reveal'>, { bookEvents }: BookEventContext) => {
 		const isBonusGame = checkIsMultipleRevealEvents({ bookEvents });
+		// EVERY spin re-arms the stop/skip controls (a press earlier in the round
+		// disables them until this fires; base spins need it too, not just bonus)
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
 		if (isBonusGame) {
-			eventEmitter.broadcast({ type: 'stopButtonEnable' });
 			recordBookEvent({ bookEvent });
 		}
 
@@ -96,8 +98,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'apparitionsRefresh' });
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		const betCost = stateBetDerived.betCost();
-		const megaWin = bookEvent.wins.find((win) => isMegaWin(win.win, betCost));
+		const megaWin = bookEvent.wins.find((win) => isMegaWin(win.win));
 
 		if (!megaWin) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });

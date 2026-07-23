@@ -20,7 +20,7 @@ class Instrumented(GameState):
 if __name__ == "__main__":
     config = GameConfig()
     gamestate = Instrumented(config)
-    gamestate.win_manager = WinManager(config.basegame_type, config.freegame_type, 30000)
+    gamestate.win_manager = WinManager(config.basegame_type, config.freegame_type, 22222)
     gamestate.library = {}
     gamestate.recorded_events = {}
     gamestate.betmode = "base"

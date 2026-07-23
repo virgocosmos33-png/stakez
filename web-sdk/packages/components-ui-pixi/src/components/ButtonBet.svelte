@@ -43,7 +43,10 @@
 	{@const isSpin = ['spin_default', 'spin_disabled'].includes(key)}
 	{@const isDisabled = disabled || ['spin_disabled', 'stop_disabled'].includes(key)}
 	{@const iconColor = isDisabled ? 0x6a6a70 : 0x12305c}
-	<OnHotkey hotkey="Space" disabled={isSpin ? disabled : false} {onpress} />
+	<!-- Space starts a spin only while idle; DURING a spin the tap-to-skip layer
+		is the single Space owner (it slam-stops without cancelling autoplay),
+		so the same press can't fire two competing stop paths -->
+	<OnHotkey hotkey="Space" disabled={isSpin ? disabled : true} {onpress} />
 		<Button {...props} {sizes} {onpress} {disabled}>
 			{#snippet children({ center, hovered })}
 				<Graphics draw={(g: PIXI.Graphics) => drawCoin(g, isDisabled, hovered)} />

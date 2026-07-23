@@ -49,3 +49,6 @@ math-sdk/src/stakeengine/
 madam_mirror_logo.png
 video.mp4
 web-sdk/apps/ways/static/assets/sprites/mirror/logo_backup.png
+
+# mock RGS local cache (books + self-signed TLS certs)
+tools/mock_rgs_cache/

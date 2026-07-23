@@ -66,6 +66,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		motion: 'stopped' as CascadingReelMotion,
 		spinType: 'normal' as SpinType,
 		anticipating: false,
+		// a slam-stop can jump a reel straight from fallingOut to stopped,
+		// skipping 'hanging' - the readyToSpin gate must fire in that case too
+		// or the reveal spin waits forever (frozen round, dead HUD)
+		slammed: false,
 		readyToSpin: () => {},
 		spinOptions: () => ({}) as CascadingReelSpinOptions,
 	});
@@ -84,6 +88,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		updateSymbols(targetSymbols);
 		reelState.anticipating = false;
 		reelState.motion = 'stopped';
+		reelState.slammed = true;
 
 		await moveAllSymbolsWith(async (reelSymbol) => {
 			const y = getSymbolY(reelSymbol.symbolIndexOfBoard);
@@ -101,6 +106,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	}: {
 		isTurboBeforeAll: boolean; // To avoid previous spinType has effect on "getSpinOption" in "slideDownLoop"
 	}) => {
+		// a slam from the PREVIOUS round is stale - it must not cut this fresh
+		// pre-spin short or leak through the readyToSpin gate
+		slamStop = false;
+		reelState.slammed = false;
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
 		await fallOut();
@@ -263,6 +272,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	}) => {
 		reelState.spinType = prepareToSpinOptions.spinType;
 		slamStop = false;
+		reelState.slammed = false;
 
 		noStop = prepareToSpinOptions.noStop;
 		targetSymbols = prepareToSpinOptions.symbols;
@@ -298,7 +308,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 
 	const readyToSpinEffect = () => {
 		$effect(() => {
-			if (reelState.motion === 'hanging') {
+			// 'slammed' also releases the gate: a slam-stopped reel never reaches
+			// 'hanging', and reading readyToSpin inside the branch keeps the
+			// effect re-running when the reveal assigns its resolver late
+			if (reelState.motion === 'hanging' || reelState.slammed) {
 				reelState.readyToSpin();
 			}
 		});

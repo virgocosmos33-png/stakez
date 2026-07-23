@@ -2,9 +2,11 @@
 	import { onMount } from 'svelte';
 
 	import { Text } from 'pixi-svelte';
+	import { stateBet } from 'state-shared';
 
 	import { gameActor } from '../game/actor';
 	import { getContext } from '../game/context';
+	import { trace } from '../game/debugTrace';
 
 	type Props = {
 		debug?: boolean;
@@ -16,7 +18,7 @@
 	onMount(() => {
 		const { unsubscribe } = gameActor.subscribe((snapshot) => {
 			context.stateXstate.value = snapshot.value;
-			// const childActor = snapshot.children[snapshot.value];
+			trace('xstate ->', JSON.stringify(snapshot.value));
 		});
 
 		gameActor.start();
@@ -35,6 +37,11 @@
 		autoBet: () => gameActor.send({ type: 'AUTO_BET' }),
 		resumeBet: () => gameActor.send({ type: 'RESUME_BET' }),
 	});
+
+	// dev tracing: these two states DRIVE continuous betting - when a run
+	// refuses to stop, the console shows exactly which one is responsible
+	$effect(() => trace('autoSpinsCounter =', stateBet.autoSpinsCounter));
+	$effect(() => trace('isSpaceHold =', stateBet.isSpaceHold));
 </script>
 
 {#if props.debug}

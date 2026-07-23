@@ -126,7 +126,7 @@ export const INFO_SECTIONS: InfoSection[] = [
 	},
 	{
 		title: 'MAX WIN',
-		body: 'The maximum win is 30,000× the bet in all modes. Once the cap is reached the round ends immediately.',
+		body: 'The maximum win is 22,222× the bet in all modes. Once the cap is reached the round ends immediately.',
 	},
 	{
 		title: 'USER INTERFACE',

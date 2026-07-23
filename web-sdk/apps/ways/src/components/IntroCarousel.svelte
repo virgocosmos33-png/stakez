@@ -28,7 +28,7 @@
 		{ headline: 'SURVIVE 3 HAUNTINGS\nSEANCE / THE OTHER SIDE\nBLOOD MOON', art: 'hauntings' },
 		{
 			// stake.us social mode prohibits "bet" wording
-			headline: stateUrlDerived.social() ? 'WIN UP TO\n30,000X YOUR PLAY' : 'WIN UP TO\n30,000X YOUR BET',
+			headline: stateUrlDerived.social() ? 'WIN UP TO\n22,222X YOUR PLAY' : 'WIN UP TO\n22,222X YOUR BET',
 			art: 'maxwin',
 		},
 	];

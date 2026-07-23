@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Button, Popup } from 'components-shared';
 	import { zIndex } from 'constants-shared/zIndex';
-	import { stateBet, stateModal, stateUi, INFINITY_MARK } from 'state-shared';
+	import { stateBet, stateBetDerived, stateModal, stateUi, INFINITY_MARK } from 'state-shared';
 	import { getContextEventEmitter } from 'utils-event-emitter';
 
 	import BaseIcon from './BaseIcon.svelte';
@@ -24,6 +24,10 @@
 		}
 
 		if (stateBonusDerived.selectedBetModeData().type === 'activate') {
+			// the mode multiplies the bet cost - re-clamp the bet amount so the
+			// new cost still fits the balance, otherwise the spin button silently
+			// disables and "pressing spin does nothing"
+			stateBetDerived.setBetAmount(stateBet.betAmount);
 			stateUi.autoSpinsLossLimitText = INFINITY_MARK;
 			stateUi.autoSpinsSingleWinLimitText = INFINITY_MARK;
 		}

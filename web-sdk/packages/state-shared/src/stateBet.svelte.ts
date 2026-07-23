@@ -79,7 +79,7 @@ const isContinuousBet = () => stateBet.autoSpinsCounter > 1 || stateBet.isSpaceH
 // Two turbo tiers (both fast-forward every tween/spine/count-up that reads
 // timeScale). Turbo = comfortably faster; super turbo = clearly faster again.
 const timeScale = () => {
-	if (stateBet.isSuperTurbo) return 2.2;
+	if (stateBet.isSuperTurbo) return 1.8;
 	if (stateBet.isTurbo) return 1.35;
 	return 1;
 };

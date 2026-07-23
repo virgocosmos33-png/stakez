@@ -11,6 +11,7 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
 	import { Container, Graphics, Sprite } from 'pixi-svelte';
+	import { stateBet, stateBetDerived } from 'state-shared';
 	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { waitForResolve } from 'utils-shared/wait';
@@ -38,9 +39,28 @@
 	let amount = $state(0);
 	let winLevelData = $state<WinLevelData>();
 	let oncomplete = $state(() => {});
-	let onCountUpComplete = $state(() => {});
 
 	const scale = new Tween(0);
+
+	// during autoplay / space-hold the outro must not block waiting for a manual
+	// CONTINUE press (otherwise autoplay stalls on every bonus win): once the
+	// amount has finished counting up, hold a beat so it's readable, then leave
+	// on its own. Manual play still gates on the button.
+	const AUTO_CONTINUE_HOLD_MS = 1200;
+	let autoContinueTimer: ReturnType<typeof setTimeout> | null = null;
+	const clearAutoContinue = () => {
+		if (autoContinueTimer !== null) {
+			clearTimeout(autoContinueTimer);
+			autoContinueTimer = null;
+		}
+	};
+	// autoplay (any remaining count, incl. the last spin) or space-hold
+	const isAutoPlaying = () => stateBetDerived.hasAutoBetCounter() || stateBet.isSpaceHold;
+	const handleCountUpComplete = () => {
+		if (!isAutoPlaying()) return;
+		clearAutoContinue();
+		autoContinueTimer = setTimeout(() => oncomplete(), AUTO_CONTINUE_HOLD_MS);
+	};
 
 	context.eventEmitter.subscribeOnMount({
 		freeSpinOutroShow: async () => {
@@ -48,11 +68,22 @@
 			show = true;
 			await scale.set(1, { duration: 420, easing: backOut });
 		},
-		freeSpinOutroHide: async () => (show = false),
+		freeSpinOutroHide: async () => {
+			clearAutoContinue();
+			show = false;
+		},
 		freeSpinOutroCountUp: async (emitterEvent) => {
 			amount = emitterEvent.amount;
 			winLevelData = emitterEvent.winLevelData;
 			await waitForResolve((resolve) => (oncomplete = resolve));
+		},
+		// Space / tap-to-skip / the stop button skip the outro entirely - the
+		// blocking count-up promise must resolve so the round can finish (a
+		// stranded promise here leaves the HUD dead)
+		stopButtonClick: () => {
+			if (!show) return;
+			clearAutoContinue();
+			oncomplete();
 		},
 	});
 
@@ -118,7 +149,7 @@
 <FadeContainer {show}>
 	{#if winLevelData}
 		{@const duration = winLevelData.presentDuration}
-		<WinCountUpProvider {amount} {duration} oncomplete={() => onCountUpComplete()}>
+			<WinCountUpProvider {amount} {duration} oncomplete={handleCountUpComplete}>
 			{#snippet children({ countUpAmount, startCountUp, finishCountUp, countUpCompleted })}
 				<OnMount onmount={() => startCountUp()} />
 

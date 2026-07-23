@@ -1,8 +1,8 @@
 // crafted showcase: every visible cell is H1 haunted at max apparitions,
-// paying the full 30000x wincap so the MAX WIN celebration plays
+// paying the full 22222x wincap so the MAX WIN celebration plays
 export default {
  "id": 999001,
- "payoutMultiplier": 30000,
+ "payoutMultiplier": 22222,
  "events": [
   {
    "index": 0,
@@ -148,12 +148,12 @@ export default {
   {
    "index": 1,
    "type": "winInfo",
-   "totalWin": 3000000,
+   "totalWin": 2222200,
    "wins": [
     {
      "symbol": "H1",
      "kind": 5,
-     "win": 3000000,
+     "win": 2222200,
      "positions": [
       {
        "reel": 0,
@@ -239,7 +239,7 @@ export default {
      "meta": {
       "ways": 1048576,
       "globalMult": 1,
-      "winWithoutMult": 3000000,
+      "winWithoutMult": 2222200,
       "symbolMult": 0
      }
     }
@@ -248,18 +248,18 @@ export default {
   {
    "index": 2,
    "type": "setWin",
-   "amount": 3000000,
+   "amount": 2222200,
    "winLevel": 10
   },
   {
    "index": 3,
    "type": "setTotalWin",
-   "amount": 3000000
+   "amount": 2222200
   },
   {
    "index": 4,
    "type": "finalWin",
-   "amount": 3000000
+   "amount": 2222200
   }
  ]
 };

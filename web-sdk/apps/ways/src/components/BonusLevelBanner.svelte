@@ -8,6 +8,7 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
+	import { stateBet, stateBetDerived } from 'state-shared';
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { Container, Graphics, Sprite, Text } from 'pixi-svelte';
 
@@ -36,7 +37,11 @@
 	const scale = new Tween(0);
 	const alpha = new Tween(1);
 
-	// the game waits on the CONTINUE click before free spins begin
+	// manual play waits on the CONTINUE click before free spins begin; during
+	// autoplay / space-hold it auto-continues after a readable beat so the run
+	// never stalls on the banner
+	const AUTO_CONTINUE_HOLD_MS = 1800;
+	let autoContinueTimer: ReturnType<typeof setTimeout> | null = null;
 	context.eventEmitter.subscribeOnMount({
 		bonusLevelShow: async (emitterEvent) => {
 			level = emitterEvent.level;
@@ -44,9 +49,22 @@
 			scale.set(0, { duration: 0 });
 			show = true;
 			await scale.set(1, { duration: 350, easing: backOut });
+			if (stateBetDerived.hasAutoBetCounter() || stateBet.isSpaceHold) {
+				autoContinueTimer = setTimeout(() => oncontinue(), AUTO_CONTINUE_HOLD_MS);
+			}
 			await new Promise<void>((resolve) => (oncontinue = resolve));
+			if (autoContinueTimer !== null) {
+				clearTimeout(autoContinueTimer);
+				autoContinueTimer = null;
+			}
 			await alpha.set(0, { duration: 350, easing: cubicOut });
 			show = false;
+		},
+		// Space / tap-to-skip / the stop button all fire stopButtonClick - the
+		// banner must honour it, otherwise the round blocks on CONTINUE forever
+		// and the whole HUD stays disabled
+		stopButtonClick: () => {
+			if (show) oncontinue();
 		},
 	});
 

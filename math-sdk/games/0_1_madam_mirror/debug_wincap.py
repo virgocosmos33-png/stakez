@@ -1,7 +1,7 @@
 """Measure the win distribution of wincap-condition sims (no repeat filtering).
 
 Temporarily strips win_criteria from the wincap distribution so every attempt
-is recorded, then reports percentiles - tells us how reachable 30,000x is.
+is recorded, then reports percentiles - tells us how reachable 22,222x is.
 """
 
 import statistics
@@ -25,7 +25,7 @@ if __name__ == "__main__":
                 if d.get_criteria() == "wincap":
                     d._win_criteria = None  # record every attempt
 
-    gamestate.win_manager = WinManager(config.basegame_type, config.freegame_type, 30000)
+    gamestate.win_manager = WinManager(config.basegame_type, config.freegame_type, 22222)
     gamestate.library = {}
     gamestate.recorded_events = {}
     gamestate.betmode = mode
@@ -41,5 +41,5 @@ if __name__ == "__main__":
     print(f"min/median/mean/max: {wins[0]:.0f} / {wins[N//2]:.0f} / {statistics.mean(wins):.0f} / {wins[-1]:.0f}")
     for pct in (50, 75, 90, 95, 99):
         print(f"p{pct}: {wins[int(N * pct / 100) - 1]:.0f}")
-    over = sum(1 for w in wins if w >= 30000)
-    print(f">=30000x: {over}/{N}")
+    over = sum(1 for w in wins if w >= 22222)
+    print(f">=22222x: {over}/{N}")

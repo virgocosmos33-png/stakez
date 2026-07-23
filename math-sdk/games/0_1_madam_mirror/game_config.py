@@ -27,7 +27,7 @@ class GameConfig(Config):
         self.game_name = "madam_mirror"
         self.provider_number = 0
         self.working_name = "Madam Mirror"
-        self.wincap = 30000.0
+        self.wincap = 22222.0
         self.win_type = "ways"
         self.rtp = 0.965
         self.construct_paths()
@@ -102,7 +102,7 @@ class GameConfig(Config):
                 "scatter_triggers": scatter_triggers,
             }
 
-        mode_maxwin = 30000
+        mode_maxwin = 22222
         self.mode_rtps = {"base": 0.962, "ante": 0.962, "feature1": 0.965, "feature2": 0.965, "feature3": 0.965, "bonus1": 0.965, "bonus2": 0.966, "bonus3": 0.9665}
 
         def ante_condition(base_condition):

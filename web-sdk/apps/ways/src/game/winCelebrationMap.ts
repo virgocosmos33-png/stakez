@@ -4,7 +4,7 @@ import type { MusicName, SoundEffectName } from './sound';
 
 // Tier thresholds are bet multiples (book amount / 100 = multiplier of bet).
 // At a $0.20 bet: 25x = $5, 50x = $10, 100x = $20, 500x = $100, 2500x = $500,
-// and the 30000x wincap is MAX WIN.
+// and the 22222x wincap is MAX WIN.
 export type WinCelebrationData = {
 	tier: number;
 	// alias/type keep compatibility with coin particles + win level sounds
@@ -78,7 +78,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		alias: 'max',
 		type: 'big',
 		title: 'MAX WIN',
-		minMultiplier: 30000,
+		minMultiplier: 22222,
 		presentDuration: 24 * SECOND,
 		sound: { sfx: undefined, bgm: undefined },
 	},

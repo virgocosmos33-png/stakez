@@ -142,7 +142,7 @@ if __name__ == "__main__":
         print(f"  P(>=5000x) scaled: {r['p5000_scaled']:.2e}   {flag(r['p5000_scaled'] <= P5000_LIMIT)}")
         print(f"  P(>=10000x) scaled: {r['p10000_scaled']:.2e}   {flag(r['p10000_scaled'] <= P10000_LIMIT)}")
         wincap_hr = 1 / r["p_wincap"] if r["p_wincap"] else float("inf")
-        print(f"  maxwin (30000x) hit rate: 1 in {wincap_hr:,.0f}   {flag(r['p_wincap'] > 0)}")
+        print(f"  maxwin (22222x) hit rate: 1 in {wincap_hr:,.0f}   {flag(r['p_wincap'] > 0)}")
         print(f"  CVaR (worst 0.1%, /cost): {r['cvar_norm']:.1f}   {flag(r['cvar_norm'] <= CVAR_LIMIT)}")
         print(f"  ETL share >=40x cost: {r['etl40']:.3f}   {flag(r['etl40'] <= ETL40_LIMIT)}")
         print(f"  ETL share >=10000x: {r['etl10k']:.3f}   {flag(r['etl10k'] <= ETL10K_LIMIT)}")

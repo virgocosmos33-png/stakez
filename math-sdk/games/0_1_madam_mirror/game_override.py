@@ -111,7 +111,7 @@ class GameStateOverride(GameExecutables):
         lifetime = level["lifetime"] if in_freegame else None
 
         # wincap sims: bias the search (mirrors on every spin, max split count),
-        # otherwise a 30,000x round would be near-unfindable at the lower levels
+        # otherwise a wincap (22,222x) round would be near-unfindable at the lower levels
         forced = bool(self.get_current_distribution_conditions().get("force_mirrors", False))
         # feature spins: the base spin is guaranteed N+ mirrors
         forced_min = (

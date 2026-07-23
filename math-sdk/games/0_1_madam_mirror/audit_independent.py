@@ -49,7 +49,7 @@ PAYTABLE = {
 }
 PAYING = sorted({s for _, s in PAYTABLE})
 WILD = "W"
-WINCAP = 30000.0
+WINCAP = 22222.0
 SCATTER_TO_LEVEL = {3: 1, 4: 2, 5: 3}
 FS_BASE = {3: 8, 4: 10, 5: 12}
 
