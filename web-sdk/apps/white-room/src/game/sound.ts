@@ -60,6 +60,7 @@ export type SoundEffectName =
 	| 'sfx_cell_seal_h3_expand'
 	| 'sfx_cell_seal_h3_loop'
 	| 'sfx_mirror_break'
+	| 'sfx_claw_split'
 	| 'sfx_celeb_whoosh'
 	| 'sfx_celeb_swell'
 	| 'sfx_celeb_wobble'

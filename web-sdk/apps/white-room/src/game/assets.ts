@@ -252,94 +252,21 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/bg_base_anim_portrait.mp4', import.meta.url).href,
 	},
-	// --- Lady-Mirror ambient SCENE ------------------------------------------
-	// ONE full-scene backdrop (candles/crystal-ball/mirror/lamp ambience baked
-	// in) that cover-scales to the viewport as a single unit, plus a right-side
-	// Lady-Mirror character. Source-agnostic layers: the *Anim video keys below
-	// are registered ONLY once the looping files exist (tools drop mp4/webm into
-	// assets/sprites/scene/); until then Background.svelte / SceneCharacter.svelte
-	// fall back to these stills. Stills built by tools/prepare_scene_assets.py.
-	// v5 = same cold clinical grade as lady_idle_*_v5 (desat→hist-match→cool tint)
-	// Cell-block ward backdrop: the bright padded room read as pasted-on behind
-	// the black iron chassis, so the scene is now the dark block itself, with an
-	// empty unlit corridor down the middle for the reels to sit in.
+	// --- ambient SCENE --------------------------------------------------------
+	// ONE full-scene backdrop that cover-scales to the viewport as a single
+	// unit. Built by tools/prepare_scene_assets.py.
+	// v5 = cold clinical grade (desat→hist-match→cool tint). The cell-block
+	// plate was too dark behind the iron chassis, so this is the clinical white
+	// room, which reads as the ward with the chassis bolted into it.
+	//
+	// The right-side character ("the patient" / Lady Mirror) that used to stand
+	// here is REMOVED, along with her stills, idle webms and Spine rigs. The art
+	// is still on disk under assets/sprites/scene/ and assets/spines/lady/ but
+	// nothing loads it — do not re-register these without asking.
 	sceneBg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/scene_bg_cellblock.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/scene_bg_v5.webp', import.meta.url).href,
 		preload: true,
-	},
-	ladyCharacter: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_character.png', import.meta.url).href,
-		preload: true,
-	},
-	// activated bonus/free-spins pose (White Room restraint / clinical stance)
-	// swapped in by SceneCharacter while gameType === 'freegame'
-	ladyBonus: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_bonus.png', import.meta.url).href,
-		preload: true,
-	},
-	// Alpha-webm Patient idle loops (SceneCharacter breath×5 → mid×1 → move×1).
-	// Register ONLY when files exist under assets/sprites/scene/ — missing
-	// .webm URLs make PIXI.Assets.load hang forever (~95% load bar).
-	// SceneCharacter prefers these over Spine/stills.
-	// v5 = v4 ping-pong + shared cold clinical grade-match (desat→hist-match→cool tint):
-	//   breath asset_jDxAn1p25Vx1MfNXqZmpXHMf, move asset_7ryyhvZcpJjEh7zAmmSJ6qSo
-	// mid v1 = same grade/ping-pong pipeline: asset_YaH9ZZ6PMrcWmn9es1NyeDhr
-	// Each file = 1 loop (forward then reverse). New filename = cache bust. Muted.
-	ladyIdleBreath: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_idle_breath_v5.webm', import.meta.url).href,
-		preload: true,
-	},
-	ladyIdleMid: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_idle_mid_v1.webm', import.meta.url).href,
-		preload: true,
-	},
-	ladyIdleMove: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_idle_move_v5.webm', import.meta.url).href,
-		preload: true,
-	},
-	// Legacy alias → breath (no preload — sequencer keys above already load it).
-	ladyIdleBase: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_idle_breath_v5.webm', import.meta.url).href,
-	},
-	// Bonus/freegame side character v12 (graded to base idle v5):
-	//   intro = A fwd → A rev (drop peak join, audio ON)
-	//   loop  = C ping-pong [0..N-1]+[N-2..0] (audio ON)
-	// Grade: Rec.709 desat → hist-match clinical ref → tint R*0.969 G*1.002 B*1.069
-	// SceneCharacter: play intro once, then SWAP to loop clip (no long-file seek).
-	// Build: tools/_build_lady_idle_bonus_v12.py
-	ladyIdleBonus: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_idle_bonus_v12_intro.webm', import.meta.url).href,
-		preload: true,
-	},
-	ladyIdleBonusLoop: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/lady_idle_bonus_v12_loop.webm', import.meta.url).href,
-		preload: true,
-	},
-	// Local cutout Spine fallback (GodMode sequences remain quarantined).
-	ladySpine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/lady/lady.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/lady/lady.json', import.meta.url).href,
-			scale: 1,
-		},
-	},
-	ladyBonusSpine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/lady/lady.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/lady/lady_bonus.json', import.meta.url).href,
-			scale: 1,
-		},
 	},
 	// THE WHITE ROOM win celebration loops (folder masters; wire_celeb copies roots)
 	celebT2: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t2.webp', import.meta.url).href },
@@ -540,20 +467,14 @@ export default {
 		src: new URL('../../assets/sprites/mirror/wr_clone.png', import.meta.url).href,
 		preload: true,
 	},
-	// Reserved-slot cage overlay, drawn OVER the symbol reeling inside a chassis
-	// opening (LockedSlots.svelte): closed while the cell is locked, swung open
-	// once the bonus unlocks that group. True-alpha PNGs keyed from a magenta
-	// plate; the closed bars are transparent BETWEEN the bars so the symbol shows
-	// through. (The old cellBg housing layer is gone — the cell-block chassis art
-	// is the housing now.)
-	prisonBarsClosed: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/prison_bars_closed.png', import.meta.url).href,
-		preload: true,
-	},
-	prisonBarsOpen: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/prison_bars_open.png', import.meta.url).href,
+	// (The reserved-slot cage overlay is drawn procedurally by LockedSlots.svelte
+	// now — the old prison_bars_closed/open PNGs are no longer registered.)
+	// SPLIT: a patient's clawed hand fades in over each scored symbol and rakes
+	// down through it. 'spriteSheet' hands the game the frame textures as an
+	// ordered array (JSON key order = play order). Baked by tools/make_claw_atlas.py.
+	splitClaw: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/split_claw.json', import.meta.url).href,
 		preload: true,
 	},
 	// CELL-BLOCK CHASSIS — the heavy iron structure holding the nine reserved
@@ -600,6 +521,18 @@ export default {
 	chassisSwag: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/chassis_swag.png', import.meta.url).href,
+		preload: true,
+	},
+	// STRETCH feature rig (tools/make_stretch_chain.py): a vertically-tileable
+	// heavy chain strip and the two-jaw clamp that grips the reel edge to pull it.
+	stretchChain: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/stretch/chain_tile.png', import.meta.url).href,
+		preload: true,
+	},
+	stretchClamp: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/stretch/clamp.png', import.meta.url).href,
 		preload: true,
 	},
 	// HIGH-symbol outline frame UI element (hollow bezel). Replaces Graphics grey stroke.

@@ -1,9 +1,13 @@
 <script lang="ts">
+	import { Tween } from 'svelte/motion';
+	import { backIn } from 'svelte/easing';
+	import type { Graphics as PixiGraphics } from 'pixi.js';
 	import { MainContainer } from 'components-layout';
-	import { Container, Sprite } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { cellFrames, type Rect } from '../game/chassisArt';
+	import { WHITE_ROOM_PALETTE } from '../game/clinicalFx';
 	import {
 		BOTTOM_SLOTS,
 		RIGHT_SLOTS,
@@ -13,6 +17,7 @@
 		unlockedCellKeys,
 	} from '../game/cellUnlock';
 	import type { SymbolName } from '../game/types';
+	import { SYMBOL_SIZE } from '../game/constants';
 	import SlotSymbol from './SlotSymbol.svelte';
 
 	// Reserved "special symbol" slots that frame the diamond board: a BOTTOM row
@@ -170,29 +175,110 @@
 		return set;
 	});
 
-	// The openings are not square (the beam's are taller than they are wide), so
-	// the symbol is sized to whichever side is tighter and stays inside the iron.
-	const symSize = (frame: Rect) => Math.min(frame.w, frame.h) * 0.96;
+	// EVERY cell shows its symbol at EXACTLY board scale (size = SYMBOL_SIZE,
+	// scale 1) with the overflow cropped by the cell's opening — identical to a
+	// board symbol with its edges cut off, NEVER a shrunken one. Side openings
+	// used to fit the symbol to the tighter side (~half board scale), which read
+	// as a broken mini-symbol next to the full-size board cards.
+	const CELL_CLIP_RADIUS = 7;
+
+	// EVERY cell's socket, recessed straight into whatever sits behind it — the
+	// BoardPlate for the bottom cells, the iron column for the side cells. Same
+	// inset/radius as the board's cells. The side cells NEED this: they are now
+	// full board-card size, bigger than the openings baked into the chassis art,
+	// so the socket is what actually punches the larger hole through the iron
+	// (it fully covers the old baked opening and its bezel).
+	const drawSockets = (g: import('pixi.js').Graphics, all: SlotPos[]) => {
+		for (const slot of all) {
+			const f = slot.frame;
+			g.roundRect(f.cx - f.w / 2, f.cy - f.h / 2, f.w, f.h, CELL_CLIP_RADIUS);
+			g.fill({ color: 0x0c0d0f, alpha: 0.9 });
+			g.roundRect(f.cx - f.w / 2, f.cy - f.h / 2, f.w, f.h, CELL_CLIP_RADIUS);
+			g.stroke({ color: 0x000000, width: 3, alpha: 0.5 });
+		}
+	};
 
 	// All the special symbols DROP TOGETHER (see SlotSymbol). The border lightning
 	// is driven by the feature handlers instead: each feature electrifies ITS cell
 	// (cellLightningOn/Off) for as long as its animation runs, in the fixed math
 	// order (bottom L->R, right bottom->top, left top->bottom). See CellLightning.
 	const DROP_DUR = 300; // ms a single symbol takes to reel in (all together)
+
+	// --- prison bars -----------------------------------------------------------
+	// VERTICAL steel bars drawn procedurally over each opening, replacing the old
+	// cage/door PNGs. The bar count is solved from the frame width against a fixed
+	// pitch, so thickness and spacing are identical on every cell — the short
+	// bottom cells no longer need the crop-instead-of-squash hack. On unlock the
+	// bars RETRACT DOWN into the cell floor (masked to the frame), instead of
+	// swapping to an open-door sprite.
+	const BAR_PITCH = 26; // target px between bar centres
+	const BAR_W = 7;
+	// bars run past the frame on both ends (masked away while idle): the top
+	// extension hides the rounded caps so the bars read as set into the ceiling,
+	// the bottom one covers backIn's anticipation dip (the bars rise a touch
+	// before dropping) so no gap opens at the floor line.
+	const BAR_TOP_EXT = 8;
+	const BAR_BOTTOM_EXT = 0.14; // fraction of frame height
+	const barTravel = (frame: Rect) => frame.h + BAR_TOP_EXT + 2;
+
+	const drawBars = (g: PixiGraphics, w: number, h: number) => {
+		const count = Math.max(2, Math.round(w / BAR_PITCH));
+		const pitch = w / count;
+		const top = -h / 2 - BAR_TOP_EXT;
+		const len = h + BAR_TOP_EXT + h * BAR_BOTTOM_EXT;
+		for (let i = 0; i < count; i++) {
+			const x = -w / 2 + pitch * (i + 0.5);
+			// round steel bar: dark core, lit left flank, thin specular, shaded right edge
+			g.roundRect(x - BAR_W / 2, top, BAR_W, len, BAR_W / 2);
+			g.fill({ color: 0x33363b });
+			g.roundRect(x - BAR_W / 2 + 1, top + 1, BAR_W * 0.42, len - 2, BAR_W * 0.21);
+			g.fill({ color: WHITE_ROOM_PALETTE.steel, alpha: 0.55 });
+			g.roundRect(x - BAR_W / 2 + 1.6, top + 2, 1.4, len - 4, 0.7);
+			g.fill({ color: WHITE_ROOM_PALETTE.bone, alpha: 0.4 });
+			g.roundRect(x + BAR_W / 2 - 1.8, top + 1, 1.8, len - 2, 0.9);
+			g.fill({ color: 0x000000, alpha: 0.45 });
+		}
+	};
+
+	// slide progress per cell: 0 = bars up (locked), 1 = fully retracted (open).
+	// Cells already open when the component mounts start at 1, so a session that
+	// begins mid-bonus shows no bars without replaying the drop.
+	const initialOpen = unlockedCellKeys(context.stateGame);
+	const slide = new Map(
+		CELL_KEYS.map((key) => [key, new Tween(initialOpen.has(key) ? 1 : 0)] as const),
+	);
+
+	$effect(() => {
+		for (const key of CELL_KEYS) {
+			const t = slide.get(key)!;
+			if (openKeys.has(key)) {
+				if (t.target !== 1) t.set(1, { duration: 500, easing: backIn });
+			} else if (t.target !== 0) {
+				// relock (bonus over, back to base game): bars snap straight back up
+				t.set(0, { duration: 0 });
+			}
+		}
+	});
 </script>
 
 <MainContainer>
+	<!-- z-1: recessed socket behind EVERY cell, matching the board plate
+	     exactly — for the side cells this is what cuts the full-card opening
+	     through the iron column (the art's baked holes are smaller) -->
+	<Container>
+		<Graphics draw={(g) => drawSockets(g, slots)} />
+	</Container>
 	<!-- Each reserved cell is a 2-layer z-stack drawn INTO an opening in the
 	     cell-block chassis (CellChassis paints the ironwork behind this):
 	       z0  SlotSymbol  the symbol reeling inside the opening
-	       z1  bars        closed while locked / swung-open once unlocked
+	       z1  bars        vertical bars while locked / retracted once unlocked
 	     The BARS live in their own layer mounted after every cell, NOT as a
 	     sibling inside each cell: a Pixi child that gets rebuilt is APPENDED to
 	     its parent, so a cell-level bar would fall behind the symbol and the
 	     symbol would escape its cage.
-	     Base game: every opening shows its symbol behind CLOSED bars. Bonus: the
-	     unlocked groups swing OPEN and premiums/wilds drop in (a bottom WILD
-	     rises into its reel as a Wild Reel instead). -->
+	     Base game: every opening shows its symbol behind its bars. Bonus: the
+	     unlocked groups' bars retract into the floor and premiums/wilds drop in
+	     (a bottom WILD rises into its reel as a Wild Reel instead). -->
 	<Container>
 		{#each slots as slot (slot.key)}
 			<Container x={slot.frame.cx} y={slot.frame.cy}>
@@ -203,7 +289,10 @@
 				<SlotSymbol
 					cx={0}
 					cy={0}
-					size={symSize(slot.frame)}
+					size={SYMBOL_SIZE}
+					clipH={slot.frame.h}
+					clipW={slot.frame.w}
+					clipRadius={CELL_CLIP_RADIUS}
 					name={slot.symbol?.name}
 					multiplier={slot.symbol?.multiplier}
 					win={winKeys.has(slot.key)}
@@ -213,17 +302,27 @@
 			</Container>
 		{/each}
 	</Container>
-	<!-- z1: prison bars, filling each chassis opening, above every symbol -->
+	<!-- z1: prison bars, filling each chassis opening, above every symbol.
+	     Each cell's mask container stays PERMANENTLY mounted (per-slot remounts
+	     would be harmless here since cells never overlap, but permanence keeps
+	     the exit animation alive: the bars must stay mounted to slide out). -->
 	<Container>
 		{#each slots as slot (slot.key)}
-			<Sprite
-				x={slot.frame.cx}
-				y={slot.frame.cy}
-				anchor={0.5}
-				width={slot.frame.w}
-				height={slot.frame.h}
-				key={slot.unlocked ? 'prisonBarsOpen' : 'prisonBarsClosed'}
-			/>
+			{@const t = slide.get(slot.key)!.current}
+			<Container x={slot.frame.cx} y={slot.frame.cy}>
+				<Rectangle
+					isMask
+					anchor={0.5}
+					width={slot.frame.w}
+					height={slot.frame.h}
+					backgroundColor={0xffffff}
+				/>
+				{#if t < 1}
+					<Container y={t * barTravel(slot.frame)}>
+						<Graphics draw={(g) => drawBars(g, slot.frame.w, slot.frame.h)} />
+					</Container>
+				{/if}
+			</Container>
 		{/each}
 	</Container>
 </MainContainer>

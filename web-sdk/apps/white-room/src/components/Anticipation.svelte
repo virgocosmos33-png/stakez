@@ -5,7 +5,8 @@
 
 	import { getContext } from '../game/context';
 	import type { Reel } from '../game/stateGame.svelte';
-	import { REEL_PADDING, SYMBOL_SIZE, NUM_ROWS, MAX_ROWS } from '../game/constants';
+	import { SYMBOL_SIZE, CELL_PITCH_X, NUM_ROWS, MAX_ROWS } from '../game/constants';
+	import { getSymbolX } from '../game/utils';
 
 	type Props = {
 		reel: Reel;
@@ -17,7 +18,7 @@
 
 	// THE WHITE ROOM anticipation: fluorescent tube column + falling ceramic dust
 	// + restraint buckle flashes. NOT spectral violet light / mirror shards.
-	const COL_W = SYMBOL_SIZE;
+	const COL_W = CELL_PITCH_X;
 	// diamond: the fluorescent column matches THIS reel's height (it's already
 	// drawn centered on the board mid-line, where every reel is centered).
 	const COL_H = SYMBOL_SIZE * (NUM_ROWS[props.reel.reelIndex] ?? MAX_ROWS);
@@ -165,7 +166,7 @@
 <Container
 	x={context.stateGameDerived.boardLayout().x -
 		context.stateGameDerived.boardLayout().width * 0.5 +
-		(props.reel.reelIndex + REEL_PADDING) * SYMBOL_SIZE}
+		getSymbolX(props.reel.reelIndex)}
 	y={context.stateGameDerived.boardLayout().y}
 >
 	<Graphics draw={(graphics) => draw(graphics, time, envelope)} />

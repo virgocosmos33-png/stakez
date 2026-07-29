@@ -18,11 +18,11 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { getSymbolInfo, getReelYOffset } from '../game/utils';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
+	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
 	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 
@@ -33,7 +33,7 @@
 	const GOLD = 0xf0d488;
 	const DARK = 0x0a0a0a;
 
-	type Cell = { key: string; reel: number; row: number; cx: number; cy: number; seed: number };
+	type Cell = { key: string; reel: number; row: number; seed: number };
 
 	let cells = $state<Cell[]>([]);
 	let fromName = $state<SymbolName | null>(null);
@@ -51,18 +51,38 @@
 	};
 
 	const layout = (incoming: { reel: number; row: number }[]) => {
+		// Drawn in a fixed reel/row order rather than book order. The overlay paints
+		// opaque plates over live board cells, so if two clone cells are neighbours
+		// an arbitrary order lets a later cell's plate clip the one next to it.
+		cells = [...incoming]
+			.sort((a, b) => a.reel - b.reel || a.row - b.row)
+			.map((c) => ({
+				key: `${c.reel}-${c.row}`,
+				reel: c.reel,
+				row: c.row,
+				seed: c.reel * 31 + c.row * 7,
+			}));
+	};
+
+	/**
+	 * Cell centres, recomputed every frame instead of snapshotted at `show`.
+	 *
+	 * `getReelYOffset` depends on a reel's CURRENT row count, which other features
+	 * (wild reel, stretch) change mid-spin. Baking the position once meant a clone
+	 * that followed one of those drew its plates a whole row off the symbols they
+	 * were meant to cover — you saw the settled new premium peeking out from behind
+	 * an offset copy of the old one.
+	 */
+	const placed = $derived.by(() => {
 		const boardLayout = context.stateGameDerived.boardLayout();
 		const originX = boardLayout.x - boardLayout.width * 0.5;
 		const originY = boardLayout.y - boardLayout.height * 0.5;
-		cells = incoming.map((c) => ({
-			key: `${c.reel}-${c.row}`,
-			reel: c.reel,
-			row: c.row,
-			cx: originX + (c.reel + 0.5) * SYMBOL_SIZE,
-			cy: originY + (c.row - 0.5) * SYMBOL_SIZE + getReelYOffset(c.reel),
-			seed: c.reel * 31 + c.row * 7,
+		return cells.map((cell) => ({
+			...cell,
+			cx: originX + getSymbolX(cell.reel),
+			cy: originY + getCellCenterY(cell.reel, cell.row),
 		}));
-	};
+	});
 
 	const run = async () => {
 		phase = 'charge';
@@ -113,10 +133,14 @@
 		return () => cancelAnimationFrame(raf);
 	});
 
+	// Fully opaque. The handler settles the board to the NEW premium before the
+	// morph starts, so anything less than opaque lets that new symbol ghost
+	// through underneath the old one the overlay is still showing.
 	const drawBacking = (g: import('pixi.js').Graphics) => {
-		const s = SYMBOL_SIZE;
-		g.roundRect(-s / 2 - 2, -s / 2 - 2, s + 4, s + 4, 10);
-		g.fill({ color: DARK, alpha: 0.9 });
+		const w = CELL_PITCH_X;
+		const h = SYMBOL_SIZE;
+		g.roundRect(-w / 2 - 2, -h / 2 - 2, w + 4, h + 4, 10);
+		g.fill({ color: DARK, alpha: 1 });
 	};
 
 	// charge rings + orbiting sparks that spin faster as the clone gathers power
@@ -140,13 +164,22 @@
 		}
 	};
 
-	const drawFlash = (g: import('pixi.js').Graphics) => {
+	// The white-out is split in two: the FILL belongs to the cell and is clipped
+	// to it (it used to bleed 6px over the neighbours and white out their
+	// symbols), while the expanding ring is chrome that is meant to escape.
+	const drawFlashFill = (g: import('pixi.js').Graphics) => {
 		const f = flash.current;
 		if (f <= 0.01) return;
+		const w = CELL_PITCH_X;
 		const s = SYMBOL_SIZE;
-		g.roundRect(-s / 2 - 6, -s / 2 - 6, s + 12, s + 12, 12);
+		g.roundRect(-w / 2 - 6, -s / 2 - 6, w + 12, s + 12, 12);
 		g.fill({ color: CORE, alpha: 0.92 * f });
-		const ring = s * (0.3 + 0.8 * (1 - f));
+	};
+
+	const drawFlashRing = (g: import('pixi.js').Graphics) => {
+		const f = flash.current;
+		if (f <= 0.01) return;
+		const ring = SYMBOL_SIZE * (0.3 + 0.8 * (1 - f));
 		g.circle(0, 0, ring);
 		g.stroke({ color: GOLD, width: 3 * f + 0.5, alpha: 0.8 * f });
 	};
@@ -155,38 +188,62 @@
 	const drawLinks = (g: import('pixi.js').Graphics) => {
 		if (phase !== 'charge' && phase !== 'flash') return;
 		const a = (phase === 'charge' ? charge.current : 1) * 0.5;
-		if (a <= 0.01 || cells.length < 2) return;
-		const sorted = [...cells].sort((p, q) => p.reel - q.reel || p.row - q.row);
-		for (let i = 0; i < sorted.length - 1; i++) {
-			g.moveTo(sorted[i].cx, sorted[i].cy);
-			g.lineTo(sorted[i + 1].cx, sorted[i + 1].cy);
+		if (a <= 0.01 || placed.length < 2) return;
+		for (let i = 0; i < placed.length - 1; i++) {
+			g.moveTo(placed[i].cx, placed[i].cy);
+			g.lineTo(placed[i + 1].cx, placed[i + 1].cy);
 			g.stroke({ color: GLASS, width: 1.5, alpha: a });
 		}
 	};
 </script>
 
-{#if phase !== 'idle' && cells.length}
-	<MainContainer>
+<!-- MainContainer stays MOUNTED even while idle: a remounted node appends to
+	the END of the shared pixi parent and would jump above WinDim
+	(see .cursor/skills/pixi-svelte-layering). -->
+<MainContainer>
+	{#if phase !== 'idle' && cells.length}
 		<Container x={stateShake.x} y={stateShake.y}>
 			<Graphics draw={drawLinks} />
-			{#each cells as cell (cell.key)}
+
+			<!-- PASS 1 — the cells themselves. Each is clipped to its own cell, so
+				the charge pulse and the reveal's backOut overshoot can grow past the
+				card without ever spilling a symbol onto the cell next door. Every
+				plate is drawn before any chrome, so no cell can paint over another's
+				symbol either. -->
+			{#each placed as cell (cell.key)}
 				{@const chargePulse = 1 + charge.current * 0.12 * (0.6 + 0.4 * Math.sin(time * 9 + cell.seed))}
 				{@const revealScale = 0.55 + 0.45 * reveal.current}
 				<Container x={cell.cx} y={cell.cy}>
+					<Rectangle
+						isMask
+						anchor={0.5}
+						width={CELL_PITCH_X}
+						height={SYMBOL_SIZE}
+						backgroundColor={0xffffff}
+					/>
 					<Graphics draw={drawBacking} />
 					{#if (phase === 'charge' || phase === 'flash') && fromName}
 						<Container scale={chargePulse}>
 							<SymbolSprite symbolInfo={getSymbolInfo({ rawSymbol: { name: fromName }, state: 'postWinStatic' })} />
 						</Container>
-						<Graphics draw={(g) => drawCharge(g, cell)} />
 					{:else if phase === 'reveal' && toName}
 						<Container scale={revealScale}>
 							<SymbolSprite symbolInfo={getSymbolInfo({ rawSymbol: { name: toName }, state: 'postWinStatic' })} />
 						</Container>
 					{/if}
-					<Graphics draw={drawFlash} />
+					<Graphics draw={drawFlashFill} />
+				</Container>
+			{/each}
+
+			<!-- PASS 2 — chrome that is supposed to reach outside its cell -->
+			{#each placed as cell (cell.key)}
+				<Container x={cell.cx} y={cell.cy}>
+					{#if phase === 'charge' || phase === 'flash'}
+						<Graphics draw={(g) => drawCharge(g, cell)} />
+					{/if}
+					<Graphics draw={drawFlashRing} />
 				</Container>
 			{/each}
 		</Container>
-	</MainContainer>
-{/if}
+	{/if}
+</MainContainer>

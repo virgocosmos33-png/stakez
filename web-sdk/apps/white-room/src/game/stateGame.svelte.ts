@@ -148,8 +148,10 @@ export const stateGame = $state({
 const boardLayout = () => ({
 	x: stateLayoutDerived.mainLayout().width * 0.5,
 	// nudge up so the board + bottom locked slots + WAYS/WIN rail all clear the
-	// bottom bet/spin controls (diamond board leaves the top corners open)
-	y: stateLayoutDerived.mainLayout().height * 0.5 - 110,
+	// bottom bet/spin controls (diamond board leaves the top corners open).
+	// Was -110; the beam wall under the board is gone now, freeing space below,
+	// so the board rides 50px lower.
+	y: stateLayoutDerived.mainLayout().height * 0.5 - 60,
 	anchor: { x: 0.5, y: 0.5 },
 	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
 	...BOARD_SIZES,

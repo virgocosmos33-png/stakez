@@ -1,7 +1,7 @@
 """Local mock of the Stake Engine RGS for testing the frontend without uploading.
 
-Serves /wallet/authenticate, /wallet/play, /wallet/end-round and /bet/event
-over HTTPS (the frontend fetcher hardcodes https://) using real books sampled
+Serves /wallet/authenticate, /wallet/play, /wallet/end-round, /bet/event and
+/bet/replay over HTTPS (the frontend fetcher hardcodes https://) using real books sampled
 from the math build in library/publish_files, weighted by the lookup tables -
 so bets, autobet, feature buys and win distribution behave like production.
 
@@ -20,6 +20,7 @@ self-signed certificate warning. After that open the game with:
 import csv
 import io
 import json
+import os
 import random
 import ssl
 import subprocess
@@ -29,6 +30,7 @@ from bisect import bisect_right
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from itertools import accumulate
 from pathlib import Path
+from urllib.parse import parse_qs
 
 try:
     import zstandard
@@ -38,11 +40,18 @@ except ImportError:
 ROOT = Path(__file__).resolve().parent.parent
 GAME = sys.argv[1] if len(sys.argv) > 1 else "0_1_madam_mirror"
 PORT = int(sys.argv[2]) if len(sys.argv) > 2 else 7777
-PUBLISH = ROOT / "math-sdk" / "games" / GAME / "library" / "publish_files"
+# Standalone games (e.g. white-room) keep their own math tree outside the main
+# math-sdk; MOCK_RGS_PUBLISH points the server straight at that publish_files dir.
+if os.environ.get("MOCK_RGS_PUBLISH"):
+    PUBLISH = Path(os.environ["MOCK_RGS_PUBLISH"]).resolve()
+else:
+    PUBLISH = ROOT / "math-sdk" / "games" / GAME / "library" / "publish_files"
 CACHE_DIR = Path(__file__).resolve().parent / "mock_rgs_cache" / GAME
 CERT_DIR = Path(__file__).resolve().parent / "mock_rgs_cache" / "cert"
 POOL_SIZE = 400          # weighted book sample kept in memory per mode
-START_BALANCE = 10_000_000_000  # $10,000 in API units (1e6 = $1)
+# $10,000 in API units (1e6 = $1). MOCK_RGS_BALANCE overrides it in dollars,
+# which is how the insufficient-funds path gets tested.
+START_BALANCE = int(float(os.environ.get("MOCK_RGS_BALANCE", 10_000)) * 1_000_000)
 
 MODES = {m["name"]: m for m in json.loads((PUBLISH / "index.json").read_text())["modes"]}
 
@@ -129,7 +138,7 @@ CONFIG = {
     "minBet": BET_LEVELS[0],
     "maxBet": BET_LEVELS[-1],
     "stepBet": 100_000,
-    "defaultBetLevel": 1_000_000,
+    "defaultBetLevel": 200_000,  # $0.20 - distinct from the old hardcoded 1.00 so the fix is visible
     "betLevels": BET_LEVELS,
     "betModes": {},
     "jurisdiction": {
@@ -184,8 +193,45 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith("/health"):
             self._send({"status": "ok", "mockRgs": True})
+        elif self.path.startswith("/bet/replay/"):
+            self._replay()
         else:
             self._send({"error": "not found"}, 404)
+
+    def _replay(self):
+        """GET /bet/replay/{game}/{version}/{mode}/{event}[?language=xx]
+
+        The real RGS looks the round up by id. There is no round store here, so
+        a book is drawn from the requested mode's pool - which is enough to
+        exercise the replay UI, and re-serves a different round each time.
+        """
+        path, _, query = self.path.partition("?")
+        parts = [p for p in path.strip("/").split("/") if p]  # bet replay g v m e
+        mode = (parts[4] if len(parts) > 4 else "base").lower()
+        event = parts[5] if len(parts) > 5 else "0"
+        params = parse_qs(query)
+        # not a real RGS param; lets a local replay URL keep the panel's stake
+        # in step with the ?amount= the game was launched with
+        amount = int(params.get("amount", ["1000000"])[0])
+
+        if mode not in POOLS:
+            self._send({"error": f"unknown mode {mode}"}, 404)
+            return
+
+        book = POOLS[mode].draw()
+        pm = float(book.get("payoutMultiplier") or 0)
+        lang = params.get("language", ["-"])[0]
+        print(f"  -> replay event={event} mode={mode} lang={lang} win={pm}x")
+        self._send({
+            "betID": int(event) if event.isdigit() else 0,
+            "amount": amount,
+            "payout": int(round(amount * pm)),
+            "payoutMultiplier": pm,
+            "active": True,
+            "state": book["events"],
+            "mode": mode,
+            "event": None,
+        })
 
     def do_POST(self):
         length = int(self.headers.get("Content-Length") or 0)

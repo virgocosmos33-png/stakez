@@ -19,6 +19,7 @@ import type { EmitterEventCloneMorph } from '../components/CloneMorph.svelte';
 import type { EmitterEventStretchFx } from '../components/StretchFx.svelte';
 import type { EmitterEventStretchWays } from '../components/StretchWays.svelte';
 import type { EmitterEventCellLightning } from '../components/CellLightning.svelte';
+import type { EmitterEventTargetLock } from '../components/TargetLock.svelte';
 
 export type EmitterEventGame =
 	| EmitterEventBoard
@@ -41,4 +42,5 @@ export type EmitterEventGame =
 	| EmitterEventCloneMorph
 	| EmitterEventStretchFx
 	| EmitterEventStretchWays
-	| EmitterEventCellLightning;
+	| EmitterEventCellLightning
+	| EmitterEventTargetLock;

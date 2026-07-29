@@ -15,7 +15,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { getReelYOffset } from '../game/utils';
+	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { fxNum } from '../game/fx.generated';
 	import { drawMemoryGlitchCell } from '../game/clinicalFx';
 
@@ -44,8 +44,8 @@
 			sweepCells = positions.map((position, index) => ({
 				key: `${position.reel}-${position.row}`,
 				reel: position.reel,
-				cx: originX + SYMBOL_SIZE * (position.reel + 0.5),
-				cy: originY + SYMBOL_SIZE * (position.row - 0.5) + getReelYOffset(position.reel),
+				cx: originX + getSymbolX(position.reel),
+				cy: originY + getCellCenterY(position.reel, position.row),
 				seed: index * 17 + position.reel * 3,
 			}));
 			const reels = sweepCells.map((cell) => cell.reel);

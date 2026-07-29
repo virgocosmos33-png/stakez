@@ -16,8 +16,8 @@
 	import { Container, Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
-	import { getReelYOffset } from '../game/utils';
+	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
+	import { getReelYOffset, getCellLeft, getReelRows } from '../game/utils';
 	import { fxNum } from '../game/fx.generated';
 
 	const context = getContext();
@@ -98,15 +98,26 @@
 		const originY = boardLayout.y - boardLayout.height * 0.5;
 
 		context.stateGame.board.forEach((reel, reelIndex) => {
+			// a risen wild column is ONE piece of art covering the whole reel;
+			// dimming its "non-winning" cells blacks out half the artwork. The
+			// column is always part of every win anyway, so never dim it.
+			if (context.stateGame.wildReelReels.includes(reelIndex)) return;
+			// a racked (STRETCH) reel spreads its rows over a taller window, so the
+			// dim cells must use the spread pitch or they drift off the symbols
+			const rowCount = reel.reelState.symbols.length - 2;
+			const pitch =
+				context.stateGame.reelStretch[reelIndex] != null && rowCount > 0
+					? (getReelRows(reelIndex) * SYMBOL_SIZE) / rowCount
+					: SYMBOL_SIZE;
 			reel.reelState.symbols.forEach((_, rowIndex) => {
 				if (rowIndex === 0 || rowIndex === reel.reelState.symbols.length - 1) return;
 				if (keys.has(`${reelIndex}-${rowIndex}`)) return;
 				// sharp padded-cell mask (hard corners, not soft gothic rounds)
 				graphics.rect(
-					originX + SYMBOL_SIZE * reelIndex + 1,
-					originY + SYMBOL_SIZE * (rowIndex - 1) + 1 + getReelYOffset(reelIndex),
-					SYMBOL_SIZE - 2,
-					SYMBOL_SIZE - 2,
+					originX + getCellLeft(reelIndex) + 1,
+					originY + pitch * (rowIndex - 1) + 1 + getReelYOffset(reelIndex),
+					CELL_PITCH_X - 2,
+					pitch - 2,
 				);
 			});
 		});
@@ -120,7 +131,7 @@
 		return [...keys].map((key) => {
 			const [reelIndex, rowIndex] = key.split('-').map(Number);
 			return {
-				x: originX + SYMBOL_SIZE * reelIndex,
+				x: originX + getCellLeft(reelIndex),
 				y: originY + SYMBOL_SIZE * (rowIndex - 1) + getReelYOffset(reelIndex),
 			};
 		});
@@ -129,7 +140,7 @@
 	const drawFlashMask = (graphics: import('pixi.js').Graphics, keys: Set<string>) => {
 		if (keys.size === 0) return;
 		cellsOf(keys).forEach((cell) => {
-			graphics.rect(cell.x, cell.y, SYMBOL_SIZE, SYMBOL_SIZE);
+			graphics.rect(cell.x, cell.y, CELL_PITCH_X, SYMBOL_SIZE);
 		});
 		graphics.fill({ color: 0xffffff, alpha: 1 });
 	};

@@ -8,7 +8,7 @@
 	import { stateModal, stateMeta, stateUrlDerived } from 'state-shared';
 
 	import { UI, UiGameName } from 'components-ui-pixi';
-	import { GameVersion, Modals } from 'components-ui-html';
+	import { GameVersion, Modals, ReplayPanel } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
 	import { getBetModeMeta } from '../game/betModeMeta';
@@ -21,13 +21,15 @@
 	import Background from './Background.svelte';
 	import LoadingScreen from './LoadingScreen.svelte';
 	import Board from './Board.svelte';
+	import BoardPlate from './BoardPlate.svelte';
+	import TargetLock from './TargetLock.svelte';
 	import LockedSlots from './LockedSlots.svelte';
 	import CellChassis from './CellChassis.svelte';
+	import CellFlameBorder from './CellFlameBorder.svelte';
 	import Anticipations from './Anticipations.svelte';
 	import Win from './Win.svelte';
 	import FreeSpinOutro from './FreeSpinOutro.svelte';
 	import Transition from './Transition.svelte';
-	import SceneCharacter from './SceneCharacter.svelte';
 	import FrameMorphHud from './FrameMorphHud.svelte';
 	import BonusLevelBanner from './BonusLevelBanner.svelte';
 	import RetriggerBanner from './RetriggerBanner.svelte';
@@ -152,6 +154,12 @@
 			</MainContainer>
 		{/if}
 
+		<!-- The steel plate the symbols are recessed into. Its own MainContainer,
+			mounted first, so a board remount can never shuffle it in front. -->
+		<MainContainer>
+			<BoardPlate />
+		</MainContainer>
+
 		<MainContainer>
 			<Board />
 			<Anticipations />
@@ -171,6 +179,13 @@
 			openings punched through this art, so it mounts BEFORE the cells. -->
 		<CellChassis />
 
+		<!-- Procedural fire permanently burning around the border of the three
+			BOTTOM special-symbol cells. Over the chassis iron (so the outward
+			licks show on the metal) but UNDER LockedSlots, whose sockets/
+			symbols/bars cover the inward half of the band - the flame reads as
+			a burning border, never over the symbol. -->
+		<CellFlameBorder />
+
 		<!-- Reserved special-symbol slots framing the board (bottom + side columns):
 			empty padded cells behind prison bars; bonus opens them and drops
 			premiums/wilds in. Mounted after the wild column so the cell cards
@@ -189,14 +204,17 @@
 			together into the same premium. -->
 		<CloneMorph />
 
+		<!-- Marks the symbols a feature is about to hit, just before it fires, so
+			the choice is readable instead of lost in the detonation. -->
+		<TargetLock />
+
 		<!-- Special cells activation: purple lightning crackles around each cell's
 			border in order (bottom L->R, right bottom->top, left top->bottom). -->
 		<CellLightning />
 
-		<!-- Lady Mirror mascot standing beside the reels on the right; lives in the
-			board's design space so she scales with it and never drifts, and is
-			positioned clear of the symbols (hidden on layouts too narrow to fit) -->
-		<SceneCharacter />
+		<!-- SceneCharacter REMOVED: the patient beside the reels is gone. The
+			right of the board is now empty room by design — do not remount her
+			without asking. -->
 
 		<!-- BoardFramePlasma REMOVED: freegame fluorescent frame overlay was blamed
 			for dashed cutlines; real dashes were baked into mirror_frame_wide.png
@@ -254,3 +272,9 @@
 		<GameVersion version="0.0.0" />
 	{/snippet}
 </Modals>
+
+<!-- Bet Replay intro / "replay again" card. Held back until the loading screen
+	is gone so the two never stack. -->
+{#if !context.stateLayout.showLoadingScreen}
+	<ReplayPanel />
+{/if}

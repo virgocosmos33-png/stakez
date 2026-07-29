@@ -252,7 +252,13 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				anims.push(symbol.symbolY.set(symbol.symbolY.current + drop, { duration: 560, easing: backOut }));
 			});
 		});
-		anims.push(eventEmitter.broadcastAsync({ type: 'wildReelSlideShow', reels }));
+		anims.push(
+			eventEmitter.broadcastAsync({
+				type: 'wildReelSlideShow',
+				// carry each risen wild's multiplier through so the column can stamp it
+				reels: bookEvent.reels.map(({ reel, ways }) => ({ reel, ways })),
+			}),
+		);
 		await Promise.all(anims);
 
 		// feature finished -> the lightning fades and moves on to the next cell
@@ -305,6 +311,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		];
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		await waitForTimeout(360);
+
+		// 1b) mark the symbols on the reels about to be stretched, so the reel the
+		//     feature picked is readable before it starts moving.
+		await eventEmitter.broadcastAsync({
+			type: 'targetLockShow',
+			cells: bookEvent.reels.flatMap(({ reel, cells }) =>
+				cells.map(({ row }) => ({ reel, row })),
+			),
+			tone: 'stretch',
+		});
 
 		// 2) stamp the per-symbol multipliers onto every stretched reel so the ways
 		//    engine reflects the extra x-ways (count_board_ways counts multiplier=m as
@@ -391,15 +407,43 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		await waitForTimeout(360);
 
+		// 1b) mark every copy of `from` before it morphs, so the player sees which
+		//     symbols the clone picked while they are still the old symbol.
+		await eventEmitter.broadcastAsync({
+			type: 'targetLockShow',
+			cells: bookEvent.cells.map(({ reel, row }) => ({ reel, row })),
+			tone: 'clone',
+		});
+
 		// 2) convert every matching cell to the target premium underneath, but hide
 		//    it under the CloneMorph overlay so the swap is only ever seen as a morph
 		const newBoard = stateGameDerived
 			.boardRaw()
 			.map((reel) => reel.map((rawSymbol) => ({ ...rawSymbol })));
 		bookEvent.cells.forEach(({ reel, row }) => {
-			if (newBoard[reel]?.[row]) newBoard[reel][row] = { name: bookEvent.to };
+			// keep the rest of the raw symbol (notably a split's `multiplier`):
+			// a clone converting an already-split cell must not strip its ways
+			if (newBoard[reel]?.[row]) {
+				newBoard[reel][row] = { ...newBoard[reel][row], name: bookEvent.to };
+			}
 		});
 		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
+
+		// 2b) Park the morphing symbols back on their cells. `boardSettle` swaps the
+		//     raw symbols but deliberately leaves symbolY alone, and features that
+		//     ran earlier this spin (wild reel, wild stretch) shove a whole reel's
+		//     symbols down and off the bottom edge without ever putting them back.
+		//     A clone landing on such a reel would then morph a symbol that is no
+		//     longer under the overlay — the old art shows through beside the new
+		//     one, and the win pulse afterwards plays off-screen.
+		bookEvent.cells.forEach(({ reel, row }) => {
+			const reelSymbol = stateGame.board[reel]?.reelState.symbols[row];
+			if (!reelSymbol) return;
+			const restY = (row - 0.5) * SYMBOL_SIZE;
+			if (reelSymbol.symbolY.current !== restY) {
+				reelSymbol.symbolY.set(restY, { duration: 0 });
+			}
+		});
 
 		// 3) PLAY the clone morph: every copy of `from` charges, flashes and morphs
 		//    into `to` (the overlay covers the cells so the instant swap is unseen)
@@ -419,8 +463,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		await waitForTimeout(160);
 	},
-	// customised: SPLIT — a split cell multiplies the winning cells of one winning
-	// symbol type, adding ways.
+	// customised: SPLIT — a split cell ADDS +1..+10 ways to the winning cells of
+	// one winning symbol type (and to any risen wild column). Never a multiplier.
 	splitSymbols: async (bookEvent: BookEventOfType<'splitSymbols'>) => {
 		// this cell's feature is now ACTIVE: electrify its border for the whole run
 		if (bookEvent.cell && (bookEvent.cell.reel != null || bookEvent.cell.side != null)) {
@@ -435,6 +479,28 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		await waitForTimeout(340);
 
+		// Cells on a wild column belong to the wild reel overlay, which hides the
+		// board symbols underneath it — so the paying-symbol pane overlay can't
+		// paint them. The wild column itself handles the Madam-Mirror tear (and
+		// the ways badge climb) via wildReelWaysUpdate.
+		const symbolCells = bookEvent.cells.filter(({ wild }) => !wild);
+		// per wild reel: the resulting per-cell ways count drives how many panes
+		// the column tears into (same rule as a paying symbol's split count).
+		const wildSplitByReel = new Map<number, number>();
+		for (const c of bookEvent.cells) {
+			if (!c.wild) continue;
+			wildSplitByReel.set(c.reel, Math.max(wildSplitByReel.get(c.reel) ?? 0, c.multiplier));
+		}
+
+		// 1b) mark the chosen symbols BEFORE anything happens to them, so the
+		//     player reads which cells the split picked rather than only seeing
+		//     the aftermath.
+		await eventEmitter.broadcastAsync({
+			type: 'targetLockShow',
+			cells: symbolCells.map(({ reel, row }) => ({ reel, row })),
+			tone: 'split',
+		});
+
 		// 2) stamp the multiplier onto each split cell so the ways engine + board
 		//    reflect the split (the pane overlay then renders on top of these cells)
 		const newBoard = stateGameDerived
@@ -448,15 +514,28 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
 
 		// 3) VISUALLY split each winning symbol into N center-cropped panes that
-		//    snap apart (Madam-Mirror style), leaving a slim-seam XN cell.
-		await eventEmitter.broadcastAsync({
-			type: 'splitPanesShow',
-			cells: bookEvent.cells.map(({ reel, row, multiplier }) => ({
-				reel,
-				row,
-				count: multiplier,
-			})),
-		});
+		//    snap apart (Madam-Mirror style), leaving a slim-seam XN cell, while
+		//    any wild column the split tore through tears into panes AND climbs
+		//    to its new worth.
+		await Promise.all([
+			eventEmitter.broadcastAsync({
+				type: 'splitPanesShow',
+				cells: symbolCells.map(({ reel, row, multiplier }) => ({
+					reel,
+					row,
+					count: multiplier,
+				})),
+			}),
+			bookEvent.wildReels?.length
+				? eventEmitter.broadcastAsync({
+						type: 'wildReelWaysUpdate',
+						reels: bookEvent.wildReels.map((w) => ({
+							...w,
+							split: wildSplitByReel.get(w.reel) ?? bookEvent.mult,
+						})),
+					})
+				: Promise.resolve(),
+		]);
 
 		// feature finished -> the lightning fades and moves on to the next cell
 		eventEmitter.broadcast({ type: 'cellLightningOff' });

@@ -17,16 +17,23 @@
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { BulgePinchFilter } from 'pixi-filters';
 	import { MainContainer } from 'components-layout';
-	import { Container, Sprite, BaseSprite, Rectangle, Graphics, Text, getContextApp } from 'pixi-svelte';
+	import { Container, Sprite, BaseSprite, Rectangle, Graphics, getContextApp } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
+	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
+	import { getSymbolX } from '../game/utils';
 	import { stateShake } from '../game/stateShake.svelte';
+	import WildColumnLabel from './WildColumnLabel.svelte';
+	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
 
 	const context = getContext();
 	const appContext = getContextApp();
 
 	const BLOOD = 0xff2d2d;
+	const CORE = 0xffffff;
+	const GLASS = 0xdfe6ea;
+	/** same visual pane cap as WildReelSlide — don't import that module (cycle risk) */
+	const WILD_SPLIT_MAX_PANES = 4;
 
 	// stretch curve: flat for the central FLAT fraction of the half-height, then a
 	// steep power curve out to the edges (higher STEEP = sharper knee after 20%).
@@ -54,6 +61,10 @@
 		// stretch events fire ONE PER CELL (activation order): a reel from an
 		// EARLIER event stays fully stretched (settled) while the new one animates.
 		settled: boolean;
+		/** Madam-Mirror pane count after a SPLIT tears the column (1 = intact) */
+		panes: number;
+		/** 0 = whole column, 1 = fully torn into panes */
+		tear: Tween<number>;
 	};
 
 	let reels = $state<FxReel[]>([]);
@@ -107,7 +118,7 @@
 				reel,
 				ways,
 				baseWays: Math.max(baseRows, 1),
-				cx: originX + (reel + 0.5) * SYMBOL_SIZE,
+				cx: originX + getSymbolX(reel),
 				cy,
 				// rest height = the reel window; targets are fixed overflows
 				// (constant — never scale with `ways`).
@@ -122,8 +133,23 @@
 				// isn't over-magnified. Driven steadily (no breathing) in the $effect.
 				bulge: new BulgePinchFilter({ center: { x: 0.5, y: 0.5 }, radius: SYMBOL_SIZE, strength: 0 }),
 				settled: false,
+				panes: 1,
+				tear: new Tween(0),
 			};
 		});
+	};
+
+	const drawWildDivider = (g: import('pixi.js').Graphics, h: number, slim: number) => {
+		const half = (h * 0.5 - 4) * slim;
+		g.moveTo(0, -half);
+		g.lineTo(0, half);
+		g.stroke({ color: BLOOD, width: 5, alpha: 0.55 });
+		g.moveTo(0, -half);
+		g.lineTo(0, half);
+		g.stroke({ color: CORE, width: 1.6, alpha: 0.95 });
+		g.moveTo(-1.2, -half);
+		g.lineTo(-1.2, half);
+		g.stroke({ color: GLASS, width: 0.7, alpha: 0.55 });
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -148,6 +174,41 @@
 			const dur = Math.min(3200, Math.max(750, 700 + maxWays * 4.4));
 			waysT.set(1, { duration: dur, easing: cubicOut });
 			await stretchT.set(1, { duration: dur, easing: backOut });
+		},
+		// a split tore through a settled wild-stretch column: rake it with the
+		// split claw, snap it into Madam-Mirror panes, and punch the new total
+		wildReelWaysUpdate: async (e) => {
+			const mine = new Set(reels.map((r) => r.reel));
+			const incoming = e.reels.filter(({ reel }) => mine.has(reel));
+			if (!incoming.length) return;
+			tearing = incoming.map(({ reel }) => reel);
+			let punch: Promise<unknown> = Promise.resolve();
+			await playColumnClaw(
+				(t) => (clawT = t),
+				() => {
+					const byReel = new Map(incoming.map((r) => [r.reel, r]));
+					const touched = reels.filter((r) => byReel.has(r.reel));
+					reels = reels.map((r) => {
+						const next = byReel.get(r.reel);
+						if (!next) return r;
+						return {
+							...r,
+							ways: next.ways,
+							settled: true,
+							panes: Math.min(Math.max(next.split ?? r.panes, 2), WILD_SPLIT_MAX_PANES),
+						};
+					});
+					punch = (async () => {
+						await Promise.all([
+							...touched.map((r) => r.tear.set(1, { duration: 160, easing: backOut })),
+							badge.set(0.45, { duration: 110 }),
+						]);
+						await badge.set(1, { duration: 260, easing: backOut });
+					})();
+				},
+			);
+			tearing = [];
+			await punch;
 		},
 		stretchFxHide: () => {
 			destroyReels();
@@ -187,10 +248,18 @@
 			g.fill({ color: BLOOD, alpha: 0.22 * a });
 		}
 	};
+
+	// When a SPLIT tears through a settled wild-stretch column, the split's claw
+	// rakes the whole column and the new worth punches in on the clench.
+	let clawT = $state(-1);
+	let tearing = $state<number[]>([]);
 </script>
 
-{#if reels.length}
-	<MainContainer>
+<!-- MainContainer stays MOUNTED even while empty: a remounted node appends to
+	the END of the shared pixi parent and would jump above WinDim
+	(see .cursor/skills/pixi-svelte-layering). -->
+<MainContainer>
+	{#if reels.length}
 		<Container x={stateShake.x} y={stateShake.y}>
 			{#each reels as cell (cell.reel)}
 				{@const p = cell.settled ? 1 : stretchT.current}
@@ -203,7 +272,7 @@
 						<Rectangle
 							isMask
 							anchor={0.5}
-							width={SYMBOL_SIZE}
+							width={CELL_PITCH_X}
 							height={cell.baseH}
 							backgroundColor={0xffffff}
 						/>
@@ -212,68 +281,123 @@
 							x={0}
 							y={-cell.baseH * (1 - dropT.current)}
 							anchor={0.5}
-							width={SYMBOL_SIZE}
+							width={CELL_PITCH_X}
 							height={cell.baseH}
 						/>
 					</Container>
 				{:else}
+					{@const panes = Math.max(cell.panes, 1)}
+					{@const tear = cell.tear.current}
+					{@const colH = bottomY - topY}
+					{@const sliceW = CELL_PITCH_X / panes}
+					{@const gap = CELL_PITCH_X * Math.min(0.025, 0.09 / panes)}
+					{@const slim = Math.min(1, 3 / panes)}
+					{@const paneW = Math.max((sliceW - gap) * tear + CELL_PITCH_X * (1 - tear), 2)}
 					<Container x={cell.cx} y={cell.cy}>
 						<Rectangle
 							isMask
 							anchor={{ x: 0.5, y: 0 }}
 							y={topY}
-							width={SYMBOL_SIZE}
-							height={bottomY - topY}
+							width={CELL_PITCH_X + 6}
+							height={colH}
 							backgroundColor={0xffffff}
 						/>
-						<!-- bulge lens wraps the sliced column so the grip bars stay crisp -->
-						<Container filters={[cell.bulge]}>
-							{#each cell.slices as s (s.c0)}
-								{@const y0 = dispY(s.c0, baseHalf, s.c0 < 0 ? cell.topHalf : cell.bottomHalf, p)}
-								{@const y1 = dispY(s.c1, baseHalf, s.c1 < 0 ? cell.topHalf : cell.bottomHalf, p)}
-								<BaseSprite
-									texture={s.tex}
-									x={0}
-									y={(y0 + y1) / 2}
-									anchor={0.5}
-									width={SYMBOL_SIZE}
-									height={y1 - y0}
-								/>
+						{#if panes <= 1 || tear < 0.001}
+							<!-- bulge lens wraps the sliced column so the grip bars stay crisp -->
+							<Container filters={[cell.bulge]}>
+								{#each cell.slices as s (s.c0)}
+									{@const y0 = dispY(s.c0, baseHalf, s.c0 < 0 ? cell.topHalf : cell.bottomHalf, p)}
+									{@const y1 = dispY(s.c1, baseHalf, s.c1 < 0 ? cell.topHalf : cell.bottomHalf, p)}
+									<BaseSprite
+										texture={s.tex}
+										x={0}
+										y={(y0 + y1) / 2}
+										anchor={0.5}
+										width={CELL_PITCH_X}
+										height={y1 - y0}
+									/>
+								{/each}
+							</Container>
+						{:else}
+							<!-- SPLIT tore the wild stretch into Madam-Mirror panes -->
+							{#each Array.from({ length: panes }) as _, i (i)}
+								{@const paneX = (-CELL_PITCH_X / 2 + (i + 0.5) * sliceW) * tear}
+								<Container x={paneX}>
+									<Rectangle
+										isMask
+										anchor={{ x: 0.5, y: 0 }}
+										y={topY}
+										width={paneW}
+										height={colH}
+									/>
+									<Container x={-paneX} filters={[cell.bulge]}>
+										{#each cell.slices as s (s.c0)}
+											{@const y0 = dispY(s.c0, baseHalf, s.c0 < 0 ? cell.topHalf : cell.bottomHalf, p)}
+											{@const y1 = dispY(s.c1, baseHalf, s.c1 < 0 ? cell.topHalf : cell.bottomHalf, p)}
+											<BaseSprite
+												texture={s.tex}
+												x={0}
+												y={(y0 + y1) / 2}
+												anchor={0.5}
+												width={CELL_PITCH_X}
+												height={y1 - y0}
+											/>
+										{/each}
+									</Container>
+								</Container>
 							{/each}
-						</Container>
-						<Graphics draw={(g) => drawGrip(g, SYMBOL_SIZE, topY, bottomY, flare)} />
-					</Container>
-				{/if}
-			{/each}
-
-			<!-- plain WAYS text centred in the reel, counting up as it stretches -->
-			{#each reels as cell (cell.reel)}
-				{@const bp = badge.current}
-				{#if bp > 0.001}
-					{@const shown = cell.settled
-						? cell.ways
-						: Math.round(cell.baseWays + (cell.ways - cell.baseWays) * waysT.current)}
-					{@const pop = cell.settled ? 1 : 1 + 0.12 * Math.sin(Math.min(1, waysT.current) * Math.PI)}
-					<Container
-						x={cell.cx}
-						y={cell.cy}
-						scale={(0.7 + 0.3 * bp) * pop}
-						alpha={Math.min(1, bp * 1.6)}
-					>
-						<Text
-							anchor={0.5}
-							text={`${shown} WAYS`}
-							style={{
-								fontFamily: 'Arial',
-								fontWeight: '900',
-								fontSize: 26,
-								fill: 0xffffff,
-								stroke: { color: 0x000000, width: 5 },
-							}}
-						/>
+							{#each Array.from({ length: panes - 1 }) as _, i (i)}
+								<Container
+									x={(-CELL_PITCH_X / 2 + (i + 1) * sliceW) * tear}
+									y={(topY + bottomY) / 2}
+									alpha={tear}
+								>
+									<Graphics draw={(g) => drawWildDivider(g, colH, slim)} />
+								</Container>
+							{/each}
+						{/if}
+						<Graphics draw={(g) => drawGrip(g, CELL_PITCH_X, topY, bottomY, flare)} />
 					</Container>
 				{/if}
 			{/each}
 		</Container>
-	</MainContainer>
-{/if}
+
+		<!-- Same WILD plate the Wild Reel uses, counting up as the column
+			stretches. This IS a wild column, so it has to say so in the same
+			words and the same place as the other feature that makes one.
+
+			In its OWN layer, mounted after the columns' container: the column
+			above switches subtrees when the drop phase becomes the stretch
+			phase, and a remounted pixi-svelte child is appended to the END of
+			its parent — as a sibling it would land on top of this label and
+			hide the ways (which is exactly what used to happen). -->
+		<Container x={stateShake.x} y={stateShake.y}>
+			{#each reels as cell (cell.reel)}
+				{@const shown = cell.settled
+					? cell.ways
+					: Math.round(cell.baseWays + (cell.ways - cell.baseWays) * waysT.current)}
+				{@const pop = cell.settled ? 1 : 1 + 0.12 * Math.sin(Math.min(1, waysT.current) * Math.PI)}
+				<WildColumnLabel
+					x={cell.cx}
+					y={cell.cy}
+					ways={shown}
+					progress={badge.current}
+					{pop}
+				/>
+			{/each}
+		</Container>
+
+		<!-- the split's claw raking a torn column, over everything it cuts. The
+			settled column spans -topHalf..+bottomHalf around cy, so the strike
+			box is recentred on that. -->
+		{#if clawT >= 0}
+			<Container x={stateShake.x} y={stateShake.y}>
+				{#each reels.filter((r) => tearing.includes(r.reel)) as cell (cell.reel)}
+					<Container x={cell.cx} y={cell.cy + (cell.bottomHalf - cell.topHalf) / 2}>
+						<ColumnClawStrike h={cell.topHalf + cell.bottomHalf} t={clawT} />
+					</Container>
+				{/each}
+			</Container>
+		{/if}
+	{/if}
+</MainContainer>

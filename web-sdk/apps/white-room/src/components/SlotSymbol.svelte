@@ -29,6 +29,14 @@
 		cx: number;
 		cy: number;
 		size: number;
+		/** crop the cell's visible height to this (design px). The symbol keeps
+		 * its full-width proportions and the overflow is hidden — for the short
+		 * bottom cells, which show a full-size symbol cut off at the waist. */
+		clipH?: number;
+		/** crop the visible width too (design px) — the cell's socket width */
+		clipW?: number;
+		/** corner radius of the crop (design px) — matches the cell's socket */
+		clipRadius?: number;
 		/** the content this cell should hold now; undefined = the cell empties out */
 		name?: SymbolName;
 		multiplier?: number;
@@ -41,6 +49,9 @@
 	const context = getContext();
 
 	const scale = $derived(props.size / SYMBOL_SIZE);
+	/** mask size in local (pre-scale) units */
+	const maskH = $derived(props.clipH != null ? props.clipH / scale : SYMBOL_SIZE);
+	const maskW = $derived(props.clipW != null ? props.clipW / scale : SYMBOL_SIZE);
 	const OUT_DUR = 260; // reel-out mirrors the board reels sliding down (backIn)
 
 	// What is CURRENTLY in the cell, held separately from the props so the
@@ -112,7 +123,14 @@
 <Container x={props.cx} y={props.cy} scale={scale}>
 	<!-- clip the travel to this cell so the symbol reels in and out "within the
 		symbol space", never spilling over the housing -->
-	<Rectangle isMask anchor={0.5} width={SYMBOL_SIZE} height={SYMBOL_SIZE} backgroundColor={0xffffff} />
+	<Rectangle
+		isMask
+		anchor={0.5}
+		width={maskW}
+		height={maskH}
+		borderRadius={(props.clipRadius ?? 0) / scale}
+		backgroundColor={0xffffff}
+	/>
 	{#if shown}
 		<!-- everything the cell holds rides the same travel, so the scrim and the
 			multiplier badge reel out with their symbol instead of hanging behind -->
@@ -139,7 +157,13 @@
 				/>
 			{/if}
 			{#if showMult}
-				<Container x={SYMBOL_SIZE * 0.28} y={SYMBOL_SIZE * 0.3}>
+				<!-- keep the badge inside the VISIBLE box: clipped cells (side/bottom
+					openings narrower than a board card) would otherwise mask it away -->
+				<Container
+					x={Math.min(maskW, SYMBOL_SIZE) * 0.28}
+					y={Math.min(maskH, SYMBOL_SIZE) * 0.3}
+				>
+
 					<Text
 						anchor={0.5}
 						text={`x${shown.multiplier}`}

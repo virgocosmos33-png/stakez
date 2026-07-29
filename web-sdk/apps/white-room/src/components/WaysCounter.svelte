@@ -16,7 +16,7 @@
 	const context = getContext();
 
 	// WAYS nameplate: mounted on the LEFT RAIL of the reel frame (stacked ABOVE
-	// the matching WIN plaque, balancing Lady Mirror on the right). On narrow
+	// the matching WIN plaque). On narrow
 	// layouts (tablet / portrait) the stack sits ABOVE the board crest so plaques
 	// never cover symbols. Styling is the shared RailPlaque so WIN matches.
 	const rail = $derived(getRailLayout());

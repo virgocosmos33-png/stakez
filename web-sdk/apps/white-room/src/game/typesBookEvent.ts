@@ -105,6 +105,9 @@ type BookEventWildReel = {
 		baseRows: number;
 		added: number;
 		cells: (Position & { multiplier: number })[];
+		// what the whole column is worth on its own. Filling the reel to four
+		// rows is already worth 4, so this never reads below 4.
+		ways: number;
 	}[];
 	totalWays: number;
 };
@@ -147,8 +150,9 @@ type BookEventCloneSymbol = {
 	totalWays: number;
 };
 
-// customised: Split — a SPLIT cell multiplies the winning cells of one winning
-// symbol type (2-10), adding ways.
+// customised: Split — a SPLIT cell ADDS +1..+10 ways (`mult`) to each winning
+// cell of one winning symbol type, and to every cell of any risen wild column.
+// Always additive, never a multiplier.
 type BookEventSplitSymbols = {
 	index: number;
 	type: 'splitSymbols';
@@ -156,7 +160,10 @@ type BookEventSplitSymbols = {
 	cell: FeatureCardCell;
 	symbol: SymbolName;
 	mult: number;
-	cells: (Position & { multiplier: number })[];
+	// cells on a wild column are flagged `wild`: the wild-reel overlay owns their
+	// Madam-Mirror pane tear (via wildReelWaysUpdate), not SplitPanes.
+	cells: (Position & { multiplier: number; wild?: boolean })[];
+	wildReels: { reel: number; ways: number }[];
 	totalWays: number;
 };
 

@@ -8,8 +8,8 @@ type ShowcaseBook = { id: number; payoutMultiplier: number; events: BookEvent[] 
 
 export const comboFeaturesBook: ShowcaseBook =
 	{
- "id": 416,
- "payoutMultiplier": 18560,
+ "id": 5815,
+ "payoutMultiplier": 39900,
  "events": [
   {
    "type": "bonusLevel",
@@ -24,71 +24,39 @@ export const comboFeaturesBook: ShowcaseBook =
    "board": [
     [
      {
+      "name": "L5"
+     },
+     {
+      "name": "L4"
+     },
+     {
       "name": "L2"
      },
      {
       "name": "H1"
      },
      {
-      "name": "L5"
+      "name": "H3"
      },
      {
-      "name": "L3"
-     },
-     {
-      "name": "L4"
-     },
-     {
-      "name": "L4"
+      "name": "H3"
      }
     ],
     [
      {
       "name": "L5"
-     },
-     {
-      "name": "L2"
-     },
-     {
-      "name": "L4"
-     },
-     {
-      "name": "L3"
-     },
-     {
-      "name": "L2"
-     }
-    ],
-    [
-     {
-      "name": "H1"
-     },
-     {
-      "name": "L4"
-     },
-     {
-      "name": "L5"
-     },
-     {
-      "name": "L4"
-     }
-    ],
-    [
-     {
-      "name": "H1"
-     },
-     {
-      "name": "L4"
-     },
-     {
-      "name": "L4"
      },
      {
       "name": "H2"
      },
      {
-      "name": "W",
-      "wild": true
+      "name": "H5"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H1"
      }
     ],
     [
@@ -96,28 +64,59 @@ export const comboFeaturesBook: ShowcaseBook =
       "name": "H4"
      },
      {
+      "name": "H3"
+     },
+     {
+      "name": "L4"
+     },
+     {
       "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L1"
      },
      {
       "name": "H4"
      },
      {
-      "name": "H2"
+      "name": "L1"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "L2"
      },
      {
       "name": "L5"
      },
      {
-      "name": "L3"
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L2"
      }
     ]
    ],
    "paddingPositions": [
-    212,
-    153,
-    7,
-    231,
-    208
+    161,
+    192,
+    177,
+    32,
+    77
    ],
    "gameType": "freegame",
    "anticipation": [
@@ -151,24 +150,24 @@ export const comboFeaturesBook: ShowcaseBook =
      "reel": 1,
      "mode": "normal",
      "baseRows": 3,
-     "reelWays": 5,
+     "reelWays": 7,
      "cells": [
       {
        "row": 1,
-       "multiplier": 3
+       "multiplier": 2
       },
       {
        "row": 2,
-       "multiplier": 1
+       "multiplier": 3
       },
       {
        "row": 3,
-       "multiplier": 1
+       "multiplier": 2
       }
      ]
     }
    ],
-   "totalWays": 480
+   "totalWays": 672
   },
   {
    "index": 4,
@@ -188,38 +187,42 @@ export const comboFeaturesBook: ShowcaseBook =
        "row": 4,
        "multiplier": 1
       }
-     ]
+     ],
+     "ways": 4
     }
    ],
-   "totalWays": 960
+   "totalWays": 1344
   },
   {
    "index": 5,
-   "type": "stretchReel",
-   "label": "Stretch",
-   "reels": [
+   "type": "splitSymbols",
+   "label": "Split",
+   "cell": {
+    "reel": 3
+   },
+   "symbol": "W",
+   "mult": 3,
+   "cells": [
     {
-     "reel": 3,
-     "mode": "wild",
-     "baseRows": 3,
-     "reelWays": 4,
-     "cells": [
-      {
-       "row": 1,
-       "multiplier": 2
-      },
-      {
-       "row": 2,
-       "multiplier": 1
-      },
-      {
-       "row": 3,
-       "multiplier": 1
-      }
-     ]
+     "reel": 2,
+     "row": 3,
+     "multiplier": 4,
+     "wild": true
+    },
+    {
+     "reel": 2,
+     "row": 4,
+     "multiplier": 4,
+     "wild": true
     }
    ],
-   "totalWays": 1280
+   "wildReels": [
+    {
+     "reel": 2,
+     "ways": 10
+    }
+   ],
+   "totalWays": 3360
   },
   {
    "index": 6,
@@ -229,43 +232,61 @@ export const comboFeaturesBook: ShowcaseBook =
     "side": "right",
     "slotRow": 2
    },
-   "symbol": "L3",
+   "symbol": "W",
    "mult": 2,
    "cells": [
     {
-     "reel": 0,
+     "reel": 2,
      "row": 3,
-     "multiplier": 2
+     "multiplier": 6,
+     "wild": true
     },
     {
-     "reel": 1,
-     "row": 3,
-     "multiplier": 2
+     "reel": 2,
+     "row": 4,
+     "multiplier": 6,
+     "wild": true
     }
    ],
-   "totalWays": 1920
+   "wildReels": [
+    {
+     "reel": 2,
+     "ways": 14
+    }
+   ],
+   "totalWays": 4704
   },
   {
    "index": 7,
-   "type": "cloneSymbol",
-   "label": "Clone",
+   "type": "splitSymbols",
+   "label": "Split",
    "cell": {
     "side": "right",
     "slotRow": 1
    },
-   "from": "L2",
-   "to": "H4",
+   "symbol": "W",
+   "mult": 1,
    "cells": [
     {
-     "reel": 1,
-     "row": 1
+     "reel": 2,
+     "row": 3,
+     "multiplier": 7,
+     "wild": true
     },
     {
-     "reel": 4,
-     "row": 1
+     "reel": 2,
+     "row": 4,
+     "multiplier": 7,
+     "wild": true
     }
    ],
-   "totalWays": 1280
+   "wildReels": [
+    {
+     "reel": 2,
+     "ways": 16
+    }
+   ],
+   "totalWays": 5376
   },
   {
    "index": 8,
@@ -275,113 +296,156 @@ export const comboFeaturesBook: ShowcaseBook =
     "side": "right",
     "slotRow": 0
    },
-   "from": "H4",
-   "to": "H1",
+   "from": "H1",
+   "to": "H5",
+   "cells": [
+    {
+     "reel": 0,
+     "row": 3
+    }
+   ],
+   "totalWays": 5376
+  },
+  {
+   "index": 9,
+   "type": "cloneSymbol",
+   "label": "Clone",
+   "cell": {
+    "side": "left",
+    "slotRow": 0
+   },
+   "from": "H2",
+   "to": "H3",
    "cells": [
     {
      "reel": 1,
      "row": 1
     },
     {
-     "reel": 4,
-     "row": 1
-    },
-    {
-     "reel": 4,
-     "row": 2
+     "reel": 1,
+     "row": 3
     }
    ],
-   "totalWays": 1280
+   "totalWays": 5376
   },
   {
-   "index": 9,
+   "index": 10,
    "type": "splitSymbols",
    "label": "Split",
    "cell": {
     "side": "left",
-    "slotRow": 0
+    "slotRow": 1
    },
-   "symbol": "L4",
+   "symbol": "H3",
    "mult": 2,
    "cells": [
     {
      "reel": 0,
      "row": 4,
-     "multiplier": 2
+     "multiplier": 3
     },
     {
      "reel": 1,
-     "row": 2,
-     "multiplier": 2
+     "row": 1,
+     "multiplier": 4
+    },
+    {
+     "reel": 1,
+     "row": 3,
+     "multiplier": 4
     },
     {
      "reel": 2,
      "row": 1,
-     "multiplier": 2
-    }
-   ],
-   "totalWays": 2400
-  },
-  {
-   "index": 10,
-   "type": "cloneSymbol",
-   "label": "Clone",
-   "cell": {
-    "side": "left",
-    "slotRow": 1
-   },
-   "from": "L3",
-   "to": "H5",
-   "cells": [
-    {
-     "reel": 0,
-     "row": 3
+     "multiplier": 3
     },
     {
-     "reel": 1,
-     "row": 3
+     "reel": 2,
+     "row": 3,
+     "multiplier": 9,
+     "wild": true
+    },
+    {
+     "reel": 2,
+     "row": 4,
+     "multiplier": 9,
+     "wild": true
     }
    ],
-   "totalWays": 1600
+   "wildReels": [
+    {
+     "reel": 2,
+     "ways": 22
+    }
+   ],
+   "totalWays": 17424
   },
   {
    "index": 11,
-   "type": "cloneSymbol",
-   "label": "Clone",
+   "type": "splitSymbols",
+   "label": "Split",
    "cell": {
     "side": "left",
     "slotRow": 2
    },
-   "from": "H5",
-   "to": "H5",
+   "symbol": "H5",
+   "mult": 2,
    "cells": [
     {
      "reel": 0,
-     "row": 3
+     "row": 3,
+     "multiplier": 3
     },
     {
      "reel": 1,
-     "row": 3
+     "row": 2,
+     "multiplier": 5
+    },
+    {
+     "reel": 2,
+     "row": 3,
+     "multiplier": 11,
+     "wild": true
+    },
+    {
+     "reel": 2,
+     "row": 4,
+     "multiplier": 11,
+     "wild": true
     }
    ],
-   "totalWays": 1600
+   "wildReels": [
+    {
+     "reel": 2,
+     "ways": 26
+    }
+   ],
+   "totalWays": 32448
   },
   {
    "index": 12,
    "type": "winInfo",
-   "totalWin": 18560,
+   "totalWin": 39900,
    "wins": [
     {
-     "symbol": "H1",
-     "kind": 5,
-     "win": 16000,
+     "symbol": "H3",
+     "kind": 3,
+     "win": 30000,
      "positions": [
       {
        "reel": 0,
+       "row": 4
+      },
+      {
+       "reel": 1,
        "row": 1
       },
       {
        "reel": 1,
+       "row": 3
+      },
+      {
+       "reel": 2,
        "row": 1
       },
       {
@@ -391,39 +455,19 @@ export const comboFeaturesBook: ShowcaseBook =
       {
        "reel": 2,
        "row": 4
-      },
-      {
-       "reel": 3,
-       "row": 1
-      },
-      {
-       "reel": 3,
-       "row": 2
-      },
-      {
-       "reel": 3,
-       "row": 3
-      },
-      {
-       "reel": 4,
-       "row": 1
-      },
-      {
-       "reel": 4,
-       "row": 2
       }
      ],
      "meta": {
-      "ways": 16,
+      "ways": 600,
       "globalMult": 1,
-      "winWithoutMult": 16000,
-      "symbolMult": 2
+      "winWithoutMult": 30000,
+      "symbolMult": 22
      }
     },
     {
      "symbol": "H5",
-     "kind": 4,
-     "win": 640,
+     "kind": 3,
+     "win": 9900,
      "positions": [
       {
        "reel": 0,
@@ -431,7 +475,7 @@ export const comboFeaturesBook: ShowcaseBook =
       },
       {
        "reel": 1,
-       "row": 3
+       "row": 2
       },
       {
        "reel": 2,
@@ -440,70 +484,13 @@ export const comboFeaturesBook: ShowcaseBook =
       {
        "reel": 2,
        "row": 4
-      },
-      {
-       "reel": 3,
-       "row": 1
-      },
-      {
-       "reel": 3,
-       "row": 2
-      },
-      {
-       "reel": 3,
-       "row": 3
       }
      ],
      "meta": {
-      "ways": 8,
+      "ways": 330,
       "globalMult": 1,
-      "winWithoutMult": 640,
-      "symbolMult": 2
-     }
-    },
-    {
-     "symbol": "L4",
-     "kind": 4,
-     "win": 1920,
-     "positions": [
-      {
-       "reel": 0,
-       "row": 4
-      },
-      {
-       "reel": 1,
-       "row": 2
-      },
-      {
-       "reel": 2,
-       "row": 1
-      },
-      {
-       "reel": 2,
-       "row": 3
-      },
-      {
-       "reel": 2,
-       "row": 4
-      },
-      {
-       "reel": 3,
-       "row": 1
-      },
-      {
-       "reel": 3,
-       "row": 2
-      },
-      {
-       "reel": 3,
-       "row": 3
-      }
-     ],
-     "meta": {
-      "ways": 64,
-      "globalMult": 1,
-      "winWithoutMult": 1920,
-      "symbolMult": 2
+      "winWithoutMult": 9900,
+      "symbolMult": 22
      }
     }
    ]
@@ -511,17 +498,17 @@ export const comboFeaturesBook: ShowcaseBook =
   {
    "index": 13,
    "type": "setWin",
-   "amount": 18560,
+   "amount": 39900,
    "winLevel": 9
   },
   {
    "type": "setTotalWin",
-   "amount": 18560,
+   "amount": 39900,
    "index": 14
   },
   {
    "type": "finalWin",
-   "amount": 18560,
+   "amount": 39900,
    "index": 15
   }
  ]

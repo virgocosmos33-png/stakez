@@ -7,8 +7,8 @@ type ShowcaseBook = { id: number; payoutMultiplier: number; events: BookEvent[] 
 
 export const unlockedSlotsLevel1Book: ShowcaseBook =
 	{
- "id": 188,
- "payoutMultiplier": 15100,
+ "id": 87,
+ "payoutMultiplier": 15000,
  "events": [
   {
    "index": 0,
@@ -16,51 +16,36 @@ export const unlockedSlotsLevel1Book: ShowcaseBook =
    "board": [
     [
      {
-      "name": "L5"
-     },
-     {
-      "name": "L3"
-     },
-     {
-      "name": "H2"
-     },
-     {
-      "name": "H2"
-     },
-     {
-      "name": "H2"
-     },
-     {
-      "name": "L5"
-     }
-    ],
-    [
-     {
-      "name": "L3"
-     },
-     {
-      "name": "S",
-      "scatter": true
-     },
-     {
-      "name": "L2"
-     },
-     {
       "name": "H4"
      },
      {
-      "name": "L3"
-     }
-    ],
-    [
+      "name": "H5"
+     },
      {
-      "name": "L2"
+      "name": "H1"
      },
      {
       "name": "H3"
      },
      {
+      "name": "H3"
+     },
+     {
+      "name": "H4"
+     }
+    ],
+    [
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H5"
+     },
+     {
       "name": "L5"
+     },
+     {
+      "name": "H5"
      },
      {
       "name": "L2"
@@ -72,57 +57,84 @@ export const unlockedSlotsLevel1Book: ShowcaseBook =
       "wild": true
      },
      {
-      "name": "H5"
+      "name": "L3"
      },
      {
-      "name": "H1"
+      "name": "H4"
      },
      {
-      "name": "H1"
-     },
-     {
-      "name": "H5"
+      "name": "H3"
      }
     ],
     [
      {
-      "name": "H3"
+      "name": "L4"
      },
      {
       "name": "H3"
      },
      {
-      "name": "H5"
+      "name": "S",
+      "scatter": true
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L5"
+     }
+    ],
+    [
+     {
+      "name": "L2"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H3"
+     },
+     {
+      "name": "L2"
      },
      {
       "name": "L4"
      },
      {
       "name": "H2"
-     },
-     {
-      "name": "L3"
      }
     ]
    ],
    "paddingPositions": [
-    95,
-    248,
-    101,
-    145,
-    41
+    155,
+    99,
+    40,
+    88,
+    79
    ],
    "gameType": "basegame",
    "anticipation": [
     0,
     0,
-    1,
-    2,
-    3
+    0,
+    0,
+    1
    ]
   },
   {
    "index": 1,
+   "type": "unlockedSlots",
+   "label": "Unlocked Slots",
+   "level": 1,
+   "unlocked": [
+    "bottom"
+   ],
+   "bottom": [],
+   "sides": [],
+   "totalWays": 288
+  },
+  {
+   "index": 2,
    "type": "wildReel",
    "label": "Wild Reel",
    "reels": [
@@ -133,10 +145,19 @@ export const unlockedSlotsLevel1Book: ShowcaseBook =
      "cells": [
       {
        "row": 4,
-       "multiplier": 2
+       "multiplier": 1
       }
-     ]
-    },
+     ],
+     "ways": 4
+    }
+   ],
+   "totalWays": 384
+  },
+  {
+   "index": 3,
+   "type": "wildReel",
+   "label": "Wild Reel",
+   "reels": [
     {
      "reel": 2,
      "baseRows": 2,
@@ -144,49 +165,81 @@ export const unlockedSlotsLevel1Book: ShowcaseBook =
      "cells": [
       {
        "row": 3,
-       "multiplier": 3
+       "multiplier": 1
       },
       {
        "row": 4,
-       "multiplier": 2
+       "multiplier": 1
       }
-     ]
+     ],
+     "ways": 4
     }
    ],
-   "totalWays": 1680
+   "totalWays": 768
   },
   {
-   "index": 2,
-   "type": "unlockedSlots",
-   "label": "Unlocked Slots",
-   "level": 1,
-   "unlocked": [
-    "bottom"
-   ],
-   "bottom": [
+   "index": 4,
+   "type": "wildReel",
+   "label": "Wild Reel",
+   "reels": [
     {
      "reel": 3,
-     "row": 4,
-     "name": "H2"
+     "baseRows": 3,
+     "added": 1,
+     "cells": [
+      {
+       "row": 4,
+       "multiplier": 5
+      }
+     ],
+     "ways": 8
     }
    ],
-   "sides": [],
-   "totalWays": 2240
+   "totalWays": 2048
   },
   {
-   "index": 3,
+   "index": 5,
    "type": "winInfo",
-   "totalWin": 15100,
+   "totalWin": 15000,
    "wins": [
     {
-     "symbol": "H2",
-     "kind": 5,
-     "win": 15000,
+     "symbol": "H1",
+     "kind": 4,
+     "win": 3000,
      "positions": [
       {
        "reel": 0,
        "row": 2
       },
+      {
+       "reel": 1,
+       "row": 4
+      },
+      {
+       "reel": 2,
+       "row": 3
+      },
+      {
+       "reel": 2,
+       "row": 4
+      },
+      {
+       "reel": 3,
+       "row": 4
+      }
+     ],
+     "meta": {
+      "ways": 10,
+      "globalMult": 1,
+      "winWithoutMult": 3000,
+      "symbolMult": 5
+     }
+    },
+    {
+     "symbol": "H3",
+     "kind": 5,
+     "win": 9600,
+     "positions": [
       {
        "reel": 0,
        "row": 3
@@ -209,28 +262,40 @@ export const unlockedSlotsLevel1Book: ShowcaseBook =
       },
       {
        "reel": 3,
+       "row": 1
+      },
+      {
+       "reel": 3,
        "row": 4
       },
       {
        "reel": 4,
-       "row": 4
+       "row": 2
       }
      ],
      "meta": {
-      "ways": 30,
+      "ways": 24,
       "globalMult": 1,
-      "winWithoutMult": 15000,
-      "symbolMult": 7
+      "winWithoutMult": 9600,
+      "symbolMult": 5
      }
     },
     {
-     "symbol": "L3",
-     "kind": 3,
-     "win": 100,
+     "symbol": "H5",
+     "kind": 4,
+     "win": 2400,
      "positions": [
       {
        "reel": 0,
        "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 3
       },
       {
        "reel": 1,
@@ -243,40 +308,44 @@ export const unlockedSlotsLevel1Book: ShowcaseBook =
       {
        "reel": 2,
        "row": 4
+      },
+      {
+       "reel": 3,
+       "row": 4
       }
      ],
      "meta": {
-      "ways": 10,
+      "ways": 30,
       "globalMult": 1,
-      "winWithoutMult": 100,
-      "symbolMult": 7
+      "winWithoutMult": 2400,
+      "symbolMult": 5
      }
     }
    ]
   },
   {
-   "index": 4,
+   "index": 6,
    "type": "setWin",
-   "amount": 15100,
+   "amount": 15000,
    "winLevel": 9
   },
   {
    "type": "setTotalWin",
-   "amount": 15100,
-   "index": 5
+   "amount": 15000,
+   "index": 7
   },
   {
    "type": "finalWin",
-   "amount": 15100,
-   "index": 6
+   "amount": 15000,
+   "index": 8
   }
  ]
 } as ShowcaseBook;
 
 export const unlockedSlotsLevel2Book: ShowcaseBook =
 	{
- "id": 167,
- "payoutMultiplier": 15000,
+ "id": 357,
+ "payoutMultiplier": 15040,
  "events": [
   {
    "index": 0,
@@ -284,42 +353,14 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
    "board": [
     [
      {
-      "name": "L4"
-     },
-     {
-      "name": "L5"
-     },
-     {
-      "name": "H4"
-     },
-     {
-      "name": "L2"
-     },
-     {
       "name": "L3"
      },
      {
       "name": "H3"
-     }
-    ],
-    [
-     {
-      "name": "L1"
-     },
-     {
-      "name": "L5"
      },
      {
       "name": "L1"
      },
-     {
-      "name": "L4"
-     },
-     {
-      "name": "L2"
-     }
-    ],
-    [
      {
       "name": "H4"
      },
@@ -327,19 +368,42 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
       "name": "H5"
      },
      {
-      "name": "H3"
-     },
-     {
-      "name": "L4"
+      "name": "L1"
      }
     ],
     [
      {
+      "name": "W",
+      "wild": true
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H2"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "L2"
+     }
+    ],
+    [
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H5"
+     },
+     {
       "name": "L4"
      },
      {
-      "name": "L1"
-     },
+      "name": "H2"
+     }
+    ],
+    [
      {
       "name": "H4"
      },
@@ -348,35 +412,42 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
      },
      {
       "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true
+     },
+     {
+      "name": "L2"
      }
     ],
     [
      {
-      "name": "L2"
+      "name": "L4"
      },
      {
-      "name": "L3"
+      "name": "L4"
+     },
+     {
+      "name": "H1"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "H3"
      },
      {
       "name": "L5"
-     },
-     {
-      "name": "L2"
-     },
-     {
-      "name": "L2"
-     },
-     {
-      "name": "L1"
      }
     ]
    ],
    "paddingPositions": [
-    64,
-    20,
-    59,
-    32,
-    67
+    168,
+    177,
+    196,
+    34,
+    15
    ],
    "gameType": "basegame",
    "anticipation": [
@@ -389,6 +460,43 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
   },
   {
    "index": 1,
+   "type": "unlockedSlots",
+   "label": "Unlocked Slots",
+   "level": 2,
+   "unlocked": [
+    "bottom",
+    "right"
+   ],
+   "bottom": [
+    {
+     "reel": 2,
+     "row": 3,
+     "name": "H4"
+    }
+   ],
+   "sides": [
+    {
+     "side": "right",
+     "reel": 5,
+     "cells": [
+      {
+       "row": 1,
+       "slotRow": 0,
+       "name": "H4"
+      },
+      {
+       "row": 2,
+       "slotRow": 2,
+       "name": "W",
+       "multiplier": 1
+      }
+     ]
+    }
+   ],
+   "totalWays": 864
+  },
+  {
+   "index": 2,
    "type": "wildReel",
    "label": "Wild Reel",
    "reels": [
@@ -399,25 +507,19 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
      "cells": [
       {
        "row": 4,
-       "multiplier": 2
-      }
-     ]
-    },
-    {
-     "reel": 2,
-     "baseRows": 2,
-     "added": 2,
-     "cells": [
-      {
-       "row": 3,
-       "multiplier": 2
-      },
-      {
-       "row": 4,
        "multiplier": 1
       }
-     ]
-    },
+     ],
+     "ways": 4
+    }
+   ],
+   "totalWays": 1152
+  },
+  {
+   "index": 3,
+   "type": "wildReel",
+   "label": "Wild Reel",
+   "reels": [
     {
      "reel": 3,
      "baseRows": 3,
@@ -425,137 +527,96 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
      "cells": [
       {
        "row": 4,
-       "multiplier": 2
+       "multiplier": 3
       }
-     ]
+     ],
+     "ways": 6
     }
    ],
-   "totalWays": 2000
+   "totalWays": 2304
   },
   {
-   "index": 2,
-   "type": "unlockedSlots",
-   "label": "Unlocked Slots",
-   "level": 2,
-   "unlocked": [
-    "bottom",
-    "right"
-   ],
-   "bottom": [],
-   "sides": [
+   "index": 4,
+   "type": "cloneSymbol",
+   "label": "Clone",
+   "cell": {
+    "side": "right",
+    "slotRow": 1
+   },
+   "from": "L1",
+   "to": "H5",
+   "cells": [
     {
-     "side": "right",
-     "reel": 5,
-     "cells": [
-      {
-       "row": 1,
-       "slotRow": 1,
-       "name": "W",
-       "multiplier": 1
-      },
-      {
-       "row": 2,
-       "slotRow": 2,
-       "name": "H5"
-      }
-     ]
+     "reel": 0,
+     "row": 2
     }
    ],
-   "totalWays": 4000
+   "totalWays": 2304
   },
   {
-   "index": 3,
+   "index": 5,
    "type": "winInfo",
-   "totalWin": 15000,
+   "totalWin": 15040,
    "wins": [
     {
      "symbol": "H4",
+     "kind": 6,
+     "win": 14400,
+     "positions": [
+      {
+       "reel": 0,
+       "row": 3
+      },
+      {
+       "reel": 1,
+       "row": 1
+      },
+      {
+       "reel": 1,
+       "row": 4
+      },
+      {
+       "reel": 2,
+       "row": 3
+      },
+      {
+       "reel": 3,
+       "row": 3
+      },
+      {
+       "reel": 3,
+       "row": 4
+      },
+      {
+       "reel": 4,
+       "row": 3
+      },
+      {
+       "reel": 5,
+       "row": 1
+      },
+      {
+       "reel": 5,
+       "row": 2
+      }
+     ],
+     "meta": {
+      "ways": 16,
+      "globalMult": 1,
+      "winWithoutMult": 14400,
+      "symbolMult": 3
+     }
+    },
+    {
+     "symbol": "H5",
      "kind": 4,
-     "win": 1800,
+     "win": 640,
      "positions": [
       {
        "reel": 0,
        "row": 2
       },
       {
-       "reel": 1,
-       "row": 4
-      },
-      {
-       "reel": 2,
-       "row": 3
-      },
-      {
-       "reel": 2,
-       "row": 4
-      },
-      {
-       "reel": 3,
-       "row": 2
-      },
-      {
-       "reel": 3,
-       "row": 4
-      }
-     ],
-     "meta": {
-      "ways": 18,
-      "globalMult": 1,
-      "winWithoutMult": 1800,
-      "symbolMult": 6
-     }
-    },
-    {
-     "symbol": "L2",
-     "kind": 6,
-     "win": 7200,
-     "positions": [
-      {
-       "reel": 0,
-       "row": 3
-      },
-      {
-       "reel": 1,
-       "row": 4
-      },
-      {
-       "reel": 2,
-       "row": 3
-      },
-      {
-       "reel": 2,
-       "row": 4
-      },
-      {
-       "reel": 3,
-       "row": 4
-      },
-      {
-       "reel": 4,
-       "row": 3
-      },
-      {
-       "reel": 4,
-       "row": 4
-      },
-      {
-       "reel": 5,
-       "row": 1
-      }
-     ],
-     "meta": {
-      "ways": 24,
-      "globalMult": 1,
-      "winWithoutMult": 7200,
-      "symbolMult": 6
-     }
-    },
-    {
-     "symbol": "L3",
-     "kind": 6,
-     "win": 2400,
-     "positions": [
-      {
        "reel": 0,
        "row": 4
       },
@@ -565,101 +626,48 @@ export const unlockedSlotsLevel2Book: ShowcaseBook =
       },
       {
        "reel": 2,
-       "row": 3
+       "row": 1
       },
       {
-       "reel": 2,
-       "row": 4
+       "reel": 3,
+       "row": 3
       },
       {
        "reel": 3,
        "row": 4
-      },
-      {
-       "reel": 4,
-       "row": 1
-      },
-      {
-       "reel": 5,
-       "row": 1
       }
      ],
      "meta": {
-      "ways": 12,
+      "ways": 8,
       "globalMult": 1,
-      "winWithoutMult": 2400,
-      "symbolMult": 6
-     }
-    },
-    {
-     "symbol": "L5",
-     "kind": 6,
-     "win": 3600,
-     "positions": [
-      {
-       "reel": 0,
-       "row": 1
-      },
-      {
-       "reel": 1,
-       "row": 1
-      },
-      {
-       "reel": 1,
-       "row": 4
-      },
-      {
-       "reel": 2,
-       "row": 3
-      },
-      {
-       "reel": 2,
-       "row": 4
-      },
-      {
-       "reel": 3,
-       "row": 4
-      },
-      {
-       "reel": 4,
-       "row": 2
-      },
-      {
-       "reel": 5,
-       "row": 1
-      }
-     ],
-     "meta": {
-      "ways": 18,
-      "globalMult": 1,
-      "winWithoutMult": 3600,
-      "symbolMult": 6
+      "winWithoutMult": 640,
+      "symbolMult": 3
      }
     }
    ]
   },
   {
-   "index": 4,
+   "index": 6,
    "type": "setWin",
-   "amount": 15000,
+   "amount": 15040,
    "winLevel": 9
   },
   {
    "type": "setTotalWin",
-   "amount": 15000,
-   "index": 5
+   "amount": 15040,
+   "index": 7
   },
   {
    "type": "finalWin",
-   "amount": 15000,
-   "index": 6
+   "amount": 15040,
+   "index": 8
   }
  ]
 } as ShowcaseBook;
 
 export const unlockedSlotsLevel3Book: ShowcaseBook =
 	{
- "id": 113,
+ "id": 279,
  "payoutMultiplier": 15000,
  "events": [
   {
@@ -668,78 +676,27 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
    "board": [
     [
      {
-      "name": "L3"
-     },
-     {
-      "name": "H1"
-     },
-     {
-      "name": "L1"
-     },
-     {
-      "name": "L1"
-     },
-     {
       "name": "H5"
      },
-     {
-      "name": "H4"
-     }
-    ],
-    [
      {
       "name": "H3"
      },
      {
-      "name": "H5"
-     },
-     {
-      "name": "H5"
-     },
-     {
-      "name": "L1"
-     },
-     {
-      "name": "W",
-      "wild": true
-     }
-    ],
-    [
-     {
       "name": "L2"
      },
      {
-      "name": "H5"
-     },
-     {
-      "name": "S",
-      "scatter": true
-     },
-     {
-      "name": "H1"
-     }
-    ],
-    [
-     {
-      "name": "H4"
-     },
-     {
-      "name": "L2"
-     },
-     {
-      "name": "W",
-      "wild": true
+      "name": "L3"
      },
      {
       "name": "H5"
      },
      {
-      "name": "H1"
+      "name": "L3"
      }
     ],
     [
      {
-      "name": "L1"
+      "name": "L5"
      },
      {
       "name": "H2"
@@ -748,22 +705,72 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
       "name": "H5"
      },
      {
+      "name": "H2"
+     },
+     {
       "name": "H1"
+     }
+    ],
+    [
+     {
+      "name": "L5"
+     },
+     {
+      "name": "S",
+      "scatter": true
+     },
+     {
+      "name": "L3"
+     },
+     {
+      "name": "L1"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H4"
+     },
+     {
+      "name": "L2"
+     },
+     {
+      "name": "W",
+      "wild": true
+     },
+     {
+      "name": "H5"
+     }
+    ],
+    [
+     {
+      "name": "L4"
+     },
+     {
+      "name": "L4"
+     },
+     {
+      "name": "H5"
      },
      {
       "name": "H3"
      },
      {
-      "name": "L4"
+      "name": "L1"
+     },
+     {
+      "name": "L5"
      }
     ]
    ],
    "paddingPositions": [
-    4,
-    26,
-    145,
-    143,
-    108
+    20,
+    192,
+    201,
+    142,
+    168
    ],
    "gameType": "basegame",
    "anticipation": [
@@ -788,11 +795,11 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
     {
      "reel": 1,
      "row": 4,
-     "name": "H3"
+     "name": "H4"
     },
     {
-     "reel": 3,
-     "row": 4,
+     "reel": 2,
+     "row": 3,
      "name": "H5"
     }
    ],
@@ -804,18 +811,18 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
       {
        "row": 1,
        "slotRow": 0,
-       "name": "W",
-       "multiplier": 1
+       "name": "H3"
       },
       {
        "row": 2,
        "slotRow": 1,
-       "name": "H4"
+       "name": "H5"
       },
       {
        "row": 3,
        "slotRow": 2,
-       "name": "H4"
+       "name": "W",
+       "multiplier": 2
       }
      ]
     },
@@ -825,17 +832,46 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
      "cells": [
       {
        "row": 1,
+       "slotRow": 0,
+       "name": "H5"
+      },
+      {
+       "row": 2,
+       "slotRow": 1,
+       "name": "H4"
+      },
+      {
+       "row": 3,
        "slotRow": 2,
-       "name": "W",
-       "multiplier": 1
+       "name": "H3"
       }
      ]
     }
    ],
-   "totalWays": 1536
+   "totalWays": 6912
   },
   {
    "index": 2,
+   "type": "wildReel",
+   "label": "Wild Reel",
+   "reels": [
+    {
+     "reel": 3,
+     "baseRows": 3,
+     "added": 1,
+     "cells": [
+      {
+       "row": 4,
+       "multiplier": 1
+      }
+     ],
+     "ways": 4
+    }
+   ],
+   "totalWays": 9216
+  },
+  {
+   "index": 3,
    "type": "winInfo",
    "totalWin": 15000,
    "wins": [
@@ -850,19 +886,11 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
       },
       {
        "reel": 1,
-       "row": 1
-      },
-      {
-       "reel": 1,
        "row": 2
       },
       {
        "reel": 2,
-       "row": 1
-      },
-      {
-       "reel": 3,
-       "row": 2
+       "row": 3
       },
       {
        "reel": 3,
@@ -878,7 +906,11 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
       },
       {
        "reel": 5,
-       "row": 1
+       "row": 2
+      },
+      {
+       "reel": 5,
+       "row": 3
       },
       {
        "reel": 6,
@@ -889,13 +921,13 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
       "ways": 6,
       "globalMult": 1,
       "winWithoutMult": 15000,
-      "symbolMult": 0
+      "symbolMult": 2
      }
     }
    ]
   },
   {
-   "index": 3,
+   "index": 4,
    "type": "setWin",
    "amount": 15000,
    "winLevel": 9
@@ -903,12 +935,12 @@ export const unlockedSlotsLevel3Book: ShowcaseBook =
   {
    "type": "setTotalWin",
    "amount": 15000,
-   "index": 4
+   "index": 5
   },
   {
    "type": "finalWin",
    "amount": 15000,
-   "index": 5
+   "index": 6
   }
  ]
 } as ShowcaseBook;

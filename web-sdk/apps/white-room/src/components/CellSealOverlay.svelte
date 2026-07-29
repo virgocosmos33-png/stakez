@@ -41,13 +41,14 @@
 	import { getContext } from '../game/context';
 	import {
 		SYMBOL_SIZE,
+		CELL_PITCH_X,
 		SYMBOL_CARD_W,
 		SYMBOL_CARD_H,
 		BOARD_DIMENSIONS,
 		NUM_ROWS,
 		MAX_ROWS,
 	} from '../game/constants';
-	import { getReelYOffset } from '../game/utils';
+	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { fxNum, fxColors, fxStr } from '../game/fx.generated';
 	import { winFontFamily, winFontTint } from '../game/winFont';
 	import { drawObservationConduitHandshake } from '../game/clinicalFx';
@@ -189,7 +190,7 @@
 		const originY = boardLayout.y - boardLayout.height * 0.5;
 		// diamond: seal art spans only THIS reel's rows, centered on the board mid-line
 		const rows = NUM_ROWS[reel] ?? BOARD_DIMENSIONS.y;
-		const cx = originX + (reel + 0.5) * SYMBOL_SIZE;
+		const cx = originX + getSymbolX(reel);
 		const cy = originY + (MAX_ROWS * 0.5) * SYMBOL_SIZE;
 		const keys = assetKeysFor(symbol);
 		return {
@@ -200,7 +201,7 @@
 			hardenBumps,
 			cx,
 			cy,
-			fullW: SYMBOL_SIZE,
+			fullW: CELL_PITCH_X,
 			fullH: rows * SYMBOL_SIZE,
 			...keys,
 		};
@@ -439,7 +440,7 @@
 		if (phase === 'idle') return;
 		const boardLayout = context.stateGameDerived.boardLayout();
 		const originY = boardLayout.y - boardLayout.height * 0.5;
-		const cellCy = originY + (s.highlightRow - 0.5) * SYMBOL_SIZE + getReelYOffset(s.reel);
+		const cellCy = originY + getCellCenterY(s.reel, s.highlightRow);
 		const alpha =
 			phase === 'highlight' ? highlightT.current : Math.max(0.15, 1 - expandT.current * 1.1);
 		if (alpha < 0.02) return;

@@ -11,7 +11,7 @@ import {
 	GEN_NUM_ROWS,
 	buildInitialBoard,
 } from './board.generated';
-import { CHASSIS_BOTTOM_EXTENT } from './chassisArt';
+import { CHASSIS_BOTTOM_EXTENT, CELL_PITCH_X } from './chassisArt';
 
 // 140 keeps the 5-wide board (+ ornate frame) inside the 800-wide portrait
 // canvas without clipping the edge symbols, and reads smaller/comfortable on
@@ -27,6 +27,11 @@ export const SYMBOL_SIZE = GEN_SYMBOL_SIZE;
 // the cell pitch, or it will cut through transparent margin instead of art.
 export const SYMBOL_CARD_H = SYMBOL_SIZE * (292 / 300);
 export const SYMBOL_CARD_W = SYMBOL_CARD_H * 0.775;
+
+// The grid pitch is NOT square: rows step by SYMBOL_SIZE, columns by the
+// narrower CELL_PITCH_X so both gutters around a portrait card come out the
+// same. Positioning by (reel, row) => x uses CELL_PITCH_X, y uses SYMBOL_SIZE.
+export { CELL_PITCH_X };
 
 export const REEL_PADDING = GEN_REEL_PADDING;
 
@@ -66,7 +71,7 @@ export const INITIAL_BOARD: RawSymbol[][] = buildInitialBoard();
 export const BOARD_DIMENSIONS = { x: INITIAL_BOARD.length, y: MAX_ROWS };
 
 export const BOARD_SIZES = {
-	width: SYMBOL_SIZE * BOARD_DIMENSIONS.x,
+	width: CELL_PITCH_X * BOARD_DIMENSIONS.x,
 	height: SYMBOL_SIZE * BOARD_DIMENSIONS.y,
 };
 

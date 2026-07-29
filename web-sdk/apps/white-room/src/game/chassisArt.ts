@@ -11,10 +11,27 @@
 // Leaf module on purpose: it imports only the generated board numbers, never
 // state or constants.ts, because constants.ts reads LOCKED_SLOTS_BOTTOM_EXTENT
 // back out of it to drop the HUD rail below the beam.
-import { GEN_SYMBOL_SIZE, GEN_NUM_ROWS } from './board.generated';
+import { GEN_SYMBOL_SIZE, GEN_NUM_ROWS, GEN_REEL_PADDING } from './board.generated';
 
 const SYMBOL_SIZE = GEN_SYMBOL_SIZE;
 const MAX_ROWS = Math.max(...GEN_NUM_ROWS);
+
+/**
+ * HORIZONTAL pitch between reel columns.
+ *
+ * The cell pitch is square (SYMBOL_SIZE) but the CARD painted inside it is
+ * portrait (SYMBOL_CARD_W ≈ 0.75 × pitch), so a square pitch leaves a ~29px
+ * channel between columns against a ~3px gap between rows — the columns read as
+ * separate strips instead of one board. Pulling the columns in to 0.8 pitch
+ * evens the two gutters out (≈5px vs ≈3px).
+ *
+ * Lives here rather than constants.ts because this is the leaf module and the
+ * bottom beam has to be built from the same number — constants.ts reads it back
+ * out. Anything positioning by (reel, row) must use this for x and SYMBOL_SIZE
+ * for y.
+ */
+export const COLUMN_PITCH_SCALE = 0.8;
+export const CELL_PITCH_X = SYMBOL_SIZE * COLUMN_PITCH_SCALE;
 
 /** Measured by tools/make_chassis_assets.py. Fractions of the cropped tile. */
 const ART = {
@@ -42,26 +59,42 @@ const ART = {
 // Scale is capped by the screen, not by taste: the block is centred on the board
 // and the design space only runs to y=0, so anything taller than this clips off
 // the top. The openings land wherever that leaves them.
-export const SIDE_H = MAX_ROWS * SYMBOL_SIZE * 1.15;
+//
+// SIDE_SCALE keeps the stone/chain columns from dominating the board — at 1.0
+// each side was ~37% of board width. 0.78 trims that without regenerating art.
+const SIDE_SCALE = 0.78;
+export const SIDE_H = MAX_ROWS * SYMBOL_SIZE * 1.15 * SIDE_SCALE;
 export const SIDE_W = (SIDE_H * ART.side.w) / ART.side.h;
-export const SIDE_OPEN_W = SIDE_W * ART.side.openW;
-export const SIDE_OPEN_H = SIDE_H * ART.side.openH;
+
+// The side CELLS no longer use the art's baked openings (ART.side.openW/H,
+// ~0.52 x 0.55 of a symbol): the special symbols must read at EXACTLY board
+// scale, same width and height as a normal board card, nothing cropped. Each
+// side cell is therefore a full symbol card, and LockedSlots recesses a socket
+// through the iron over the (smaller) baked hole. Same numbers as
+// constants.SYMBOL_CARD_W/H — duplicated because this is the leaf module
+// constants.ts itself imports from.
+const SIDE_CELL_H = SYMBOL_SIZE * (292 / 300);
+const SIDE_CELL_W = SIDE_CELL_H * 0.775;
 
 // --- bottom beam -------------------------------------------------------------
 // The beam is NOT free to scale: its three openings extend the middle reels, so
 // their pitch has to be exactly one reel wide or the cells stop lining up with
 // the columns above them. That single constraint fixes the whole beam size.
 const BEAM_PITCH = (ART.beam.cx[2] - ART.beam.cx[0]) / 2;
-export const BEAM_W = SYMBOL_SIZE / BEAM_PITCH;
+export const BEAM_W = CELL_PITCH_X / BEAM_PITCH;
 export const BEAM_H = (BEAM_W * ART.beam.h) / ART.beam.w;
 export const BEAM_OPEN_W = BEAM_W * ART.beam.openW;
 export const BEAM_OPEN_H = BEAM_H * ART.beam.openH;
 
 /** breathing room between the board edge and the blocks bolted to it */
-export const CHASSIS_GAP = SYMBOL_SIZE * 0.04;
+export const CHASSIS_GAP = SYMBOL_SIZE * 0.02;
 
-/** how far the chassis reaches below the board — the HUD rail drops by this */
-export const CHASSIS_BOTTOM_EXTENT = CHASSIS_GAP + BEAM_H;
+/** how far the chassis reaches below the board — the HUD rail drops by this.
+ * The beam WALL art is gone: the bottom cells are full board-cell-sized slots
+ * flush under the board, so the extent is a cell plus its number plate. */
+// the cells stop exactly at the board bottom line now; only their number
+// plates hang below it
+export const CHASSIS_BOTTOM_EXTENT = SYMBOL_SIZE * 0.3;
 
 export type Rect = { cx: number; cy: number; w: number; h: number };
 export type BoardBox = { x: number; y: number; width: number; height: number };
@@ -89,27 +122,55 @@ export const chassisBlocks = (board: BoardBox) => {
 export const cellFrames = (board: BoardBox): Record<string, Rect> => {
 	const blocks = chassisBlocks(board);
 	const out: Record<string, Rect> = {};
+	// side cells: one full board card each (see SIDE_CELL_W/H above), stacked at
+	// the board's ROW PITCH (SYMBOL_SIZE) and vertically centred on the board —
+	// the same grid a reel uses, so a side symbol sits exactly like a board
+	// symbol. The art's baked openings are smaller and off this pitch; the
+	// horizontal centres still come from the art (the machined face of the
+	// column), only the vertical layout is now the board grid.
 	for (let j = 0; j < 3; j++) {
-		const cy = blocks.sideL.y + ART.side.cy[j] * SIDE_H;
+		const cy = board.y + (j - 1) * SYMBOL_SIZE;
 		out[`left:${j}`] = {
 			cx: blocks.sideL.x + ART.side.cxLeft * SIDE_W,
 			cy,
-			w: SIDE_OPEN_W,
-			h: SIDE_OPEN_H,
+			w: SIDE_CELL_W,
+			h: SIDE_CELL_H,
 		};
 		out[`right:${j}`] = {
 			cx: blocks.sideR.x + ART.side.cxRight * SIDE_W,
 			cy,
-			w: SIDE_OPEN_W,
-			h: SIDE_OPEN_H,
+			w: SIDE_CELL_W,
+			h: SIDE_CELL_H,
 		};
 	}
+	// bottom cells: no beam wall any more — each cell is a full board-cell-sized
+	// slot tucked FLUSH under its own middle reel, filling the diamond's lower
+	// notch, so it reads as that reel's extra bottom cell rather than a cage
+	// floating below the whole board. Positions use the AUTHORED diamond heights
+	// (never the live board), so the cells hold still when a wild reel grows.
+	const boardTop = board.y - board.height * 0.5;
+	// the board's true bottom line, set by the tall OUTER reels — every bottom
+	// cell ends exactly on it, never past it
+	const boardBottom = boardTop + MAX_ROWS * SYMBOL_SIZE;
+	// EXACT board grid: each bottom cell fills its reel's notch from the reel's
+	// bottom edge down to the board bottom line (04/06 shorter than 05).
+	// cx MUST use the same formula as getSymbolX — reel + GEN_REEL_PADDING
+	// (0.53, NOT 0.5) — or the cells land a few px left of the symbols above.
+	// Width is the symbol CARD width, so the special symbols read exactly as
+	// wide as the normal symbols on the reels.
+	const GROUT = 1.75;
+	const CARD_W = SYMBOL_SIZE * (292 / 300) * 0.775; // = constants.SYMBOL_CARD_W
+	const boardLeft = board.x - board.width * 0.5;
 	for (let i = 0; i < 3; i++) {
+		const reelIndex = i + 1; // bottom cells extend the three middle reels
+		const rows = GEN_NUM_ROWS[reelIndex] ?? MAX_ROWS;
+		const reelBottom = boardTop + ((MAX_ROWS - rows) / 2 + rows) * SYMBOL_SIZE;
+		const cellH = boardBottom - reelBottom - GROUT * 2;
 		out[`bottom:${i}`] = {
-			cx: blocks.beam.x + ART.beam.cx[i] * BEAM_W,
-			cy: blocks.beam.y + ART.beam.cy * BEAM_H,
-			w: BEAM_OPEN_W,
-			h: BEAM_OPEN_H,
+			cx: boardLeft + CELL_PITCH_X * (reelIndex + GEN_REEL_PADDING),
+			cy: reelBottom + GROUT + cellH * 0.5,
+			w: CARD_W,
+			h: cellH,
 		};
 	}
 	return out;
@@ -159,12 +220,28 @@ export const chassisCogs = (board: BoardBox): CogSpot[] => {
 	return out;
 };
 
+/**
+ * How tall the tiled chain strip is vs the column. Built by
+ * tools/make_chassis_chain_tile.py (3913 / 1505) so the strip has runway to
+ * scroll down behind a mask while the gears wind.
+ */
+export const CHAIN_STRIP_RATIO = 3913 / 1505;
+
 /** the hanging chain + counterweights down the outer edge of each column */
 export const chassisChains = (board: BoardBox) => {
 	const blocks = chassisBlocks(board);
 	const w = MOVERS.chainW * SIDE_W;
+	const stripH = SIDE_H * CHAIN_STRIP_RATIO;
 	return [
-		{ key: 'l', assetKey: 'chassisChainL', x: blocks.sideL.x, y: blocks.sideL.y, w, h: SIDE_H },
+		{
+			key: 'l',
+			assetKey: 'chassisChainL',
+			x: blocks.sideL.x,
+			y: blocks.sideL.y,
+			w,
+			h: SIDE_H,
+			stripH,
+		},
 		{
 			key: 'r',
 			assetKey: 'chassisChainR',
@@ -172,6 +249,7 @@ export const chassisChains = (board: BoardBox) => {
 			y: blocks.sideR.y,
 			w,
 			h: SIDE_H,
+			stripH,
 		},
 	];
 };
@@ -187,21 +265,6 @@ export const chassisSwag = (board: BoardBox) => {
 	};
 };
 
-/** blank riveted plate above each opening, where the cell number is drawn */
-export const platePoint = (frame: Rect, side: boolean) => ({
-	x: frame.cx,
-	y: frame.cy - frame.h * (side ? 0.72 : 0.62),
-});
-
-/** cell numbers stencilled on the plates: left 01-03, bottom 04-06, right 07-09 */
-export const CELL_NUMBERS: Record<string, string> = {
-	'left:0': '01',
-	'left:1': '02',
-	'left:2': '03',
-	'bottom:0': '04',
-	'bottom:1': '05',
-	'bottom:2': '06',
-	'right:0': '07',
-	'right:1': '08',
-	'right:2': '09',
-};
+// The stencilled cell-number plates ("01".."09") are gone: the full-card side
+// cells sit on the board's row pitch with ~4px between openings, leaving no
+// room for a plate (the bottom cells lost theirs when the beam wall went).

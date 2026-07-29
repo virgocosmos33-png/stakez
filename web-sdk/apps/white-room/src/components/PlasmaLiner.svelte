@@ -16,8 +16,8 @@
 
 	import type { Position } from '../game/types';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, SYMBOL_CARD_W } from '../game/constants';
-	import { getReelYOffset } from '../game/utils';
+	import { SYMBOL_SIZE, CELL_PITCH_X, SYMBOL_CARD_W } from '../game/constants';
+	import { getReelYOffset, getRowPitch } from '../game/utils';
 	import { fxNum, fxColors } from '../game/fx.generated';
 	import { drawRestraintStraps, type ClinicalPalette } from '../game/clinicalFx';
 
@@ -47,7 +47,7 @@
 	const DUST_COUNT = fxNum('plasmaLiner', 'dustCount', 14);
 	const SAMPLE_STEP = 9;
 	/** half the gutter each portrait card leaves inside its square cell */
-	const CARD_X_INSET = (SYMBOL_SIZE - SYMBOL_CARD_W) / 2;
+	const CARD_X_INSET = (CELL_PITCH_X - SYMBOL_CARD_W) / 2;
 
 	type Sample = { x: number; y: number; nx: number; ny: number };
 
@@ -129,14 +129,23 @@
 	// dense samples along a rectilinear loop: straight runs stepped every
 	// SAMPLE_STEP px, convex corners rounded with a small arc, concave
 	// junction corners kept sharp (the reference pinches there)
-	const sampleLoop = (vertices: [number, number][], toPx: number, ox: number, oy: number) => {
+	const sampleLoop = (
+		vertices: [number, number][],
+		pxX: number,
+		pxY: number,
+		ox: number,
+		oy: number,
+	) => {
 		const count = vertices.length;
 		const samples: Sample[] = [];
 		// diamond: each grid column is vertically centered by getReelYOffset, so a
 		// vertex on column boundary gx is shifted by that column's offset. Outlines
 		// therefore step/slant between reels of different heights.
+		// row edges use the column's LIVE pitch: a racked (STRETCH) reel spreads
+		// its rows, and the liner has to trace the spread cells, not the old grid
 		const grid = vertices.map(
-			([gx, gy]) => [ox + gx * toPx, oy + gy * toPx + getReelYOffset(gx)] as [number, number],
+			([gx, gy]) =>
+				[ox + gx * pxX, oy + gy * getRowPitch(gx) + getReelYOffset(gx)] as [number, number],
 		);
 
 		// The cell is square but the card inside it is portrait, so a boundary
@@ -255,7 +264,7 @@
 		groups = components.map((component, index) => {
 			const cellSet = new Set(component);
 			const loops = traceLoops(cellSet).map((loop) =>
-				sampleLoop(loop, SYMBOL_SIZE, originX, originY),
+				sampleLoop(loop, CELL_PITCH_X, SYMBOL_SIZE, originX, originY),
 			);
 			const groupMinReel = Math.min(...component.map((key) => Number(key.split(',')[0])));
 			return {

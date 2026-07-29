@@ -478,7 +478,8 @@
         "sfx_cell_seal_expand",
         "sfx_cell_seal_harden",
         "sfx_cell_seal_h3_expand",
-        "sfx_cell_seal_h3_loop"
+        "sfx_cell_seal_h3_loop",
+        "sfx_claw_split"
       ]
     },
     "celebrationMusic": {

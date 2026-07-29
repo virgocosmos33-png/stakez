@@ -203,8 +203,7 @@
 	{template}
 />
 
-<!-- QA: bonus/free-spins ACTIVATED character (glowing hand-mirror). Sets the
-	canonical freegame signal SceneCharacter swaps on -->
+<!-- QA: sets the canonical freegame signal the scene swaps on -->
 <Story
 	name="sceneBonus"
 	args={templateArgs({
