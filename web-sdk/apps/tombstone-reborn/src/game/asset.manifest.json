@@ -1,0 +1,749 @@
+{
+  "generatedFrom": "the_white_room",
+  "symbols": [
+    {
+      "id": "H1",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H2",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H3",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H4",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "H5",
+      "kind": "high",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L1",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L2",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L3",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L4",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "L5",
+      "kind": "low",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "W",
+      "kind": "wild",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "S",
+      "kind": "scatter",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "HM",
+      "kind": "special",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    },
+    {
+      "id": "ME",
+      "kind": "special",
+      "states": [
+        "static",
+        "spin",
+        "land",
+        "win",
+        "postWin",
+        "postWinStatic",
+        "explosion"
+      ]
+    }
+  ],
+  "backgrounds": {
+    "base": {
+      "still": "mirror/bg_base.webp",
+      "stillPortrait": "mirror/bg_base_portrait.webp",
+      "anim": "mirror/bg_base_anim.mp4",
+      "animPortrait": "mirror/bg_base_anim_portrait.mp4"
+    },
+    "bonus": {
+      "still": "mirror/bg_freespin.webp",
+      "anim": "mirror/bg_freespin_anim.mp4"
+    },
+    "scene": {
+      "still": "scene/scene_bg_v5.webp",
+      "note": "v5 grade-matched to lady idle v5 (Rec.709 desat → hist-match cold clinical ref → tint R*0.969 G*1.002 B*1.069). Script: tools/_build_scene_bg_v5_grade_match.py"
+    }
+  },
+  "character": {
+    "base": "sprites/scene/lady_character.png",
+    "bonus": "sprites/scene/lady_bonus.png",
+    "spine": "spines/lady/lady.json",
+    "bonusSpine": "spines/lady/lady_bonus.json",
+    "idleBreath": "sprites/scene/lady_idle_breath_v5.webm",
+    "idleMid": "sprites/scene/lady_idle_mid_v1.webm",
+    "idleMove": "sprites/scene/lady_idle_move_v5.webm",
+    "idleBase": "sprites/scene/lady_idle_breath_v5.webm",
+    "idleBonus": "sprites/scene/lady_idle_bonus_v12_intro.webm",
+    "idleBonusLoop": "sprites/scene/lady_idle_bonus_v12_loop.webm",
+    "layout": {
+      "heightScale": 1.28,
+      "bottomNudge": 200,
+      "leftGap": 6,
+      "minWidth": 130,
+      "anchorY": 0.95,
+      "note": "Chair on floor: bottomNudge 200 + anchorY 0.95 + heightScale 1.28. Base idle: breath asset_jDxAn1p25Vx1MfNXqZmpXHMf x5 → mid asset_YaH9ZZ6PMrcWmn9es1NyeDhr x1 → move asset_7ryyhvZcpJjEh7zAmmSJ6qSo x1 (muted ping-pong files). Bonus idle v12: A asset_mmvxxR2qWvKd3CxSawDxw27q fwd+rev (intro), then C asset_tS51AF1KczZ2EVyB1ft1WW6K ping-pong loop forever; grade-matched to base v5 (Rec.709 desat → hist-match clinical → tint R*0.969 G*1.002 B*1.069); audio ON, dual-clip SWAP. B dropped. Tune via set_config assets.character.layout."
+    }
+  },
+  "frame": {
+    "main": "mirror/mirror_frame_wide.png",
+    "bottomCompartments": "mirror/frame_bottom_compartments.png",
+    "backing": "mirror/mirror_backing.png",
+    "glassIntact": "mirror/observation_pane_intact.png",
+    "glassBroken": "mirror/observation_pane_cracked.png",
+    "note": "Main reel frame: padded-cell quilt + riveted brushed steel (NOT gothic filigree). MUST stay 1803x1386 with bak-locked opening (mirror_frame_wide_GOTHIC_BAK) via process_wide_frame.py. Bottom WAYS|FS|WIN rail MUST stay 1524x462 (GOLD_BAK geometry). Never ship 21:9 stretched gens \u2014 process_bottom_compartments.py bak-locks size. FrameMorphHud WELL fractions measured on bottom geometry."
+  },
+  "hud": {
+    "waysFrame": "mirror/ways_frame.png",
+    "fsFrame": "mirror/fs_frame.png",
+    "counterGlass": "mirror/counter_glass.png",
+    "logo": "mirror/logo_v3.png",
+    "buyBonusLogo": "mirror/buy_bonus_logo.webp",
+    "note": "Studio logo: clinical THE/WHITE/ROOM stack 2048x2082 transparent (logo_v3, Scenario GPT Image 2 + Photoroom alpha asset_PdDRpzb71iCLPEPNhsMgxweb). WAYS/WIN/FS counter frames: white/silver clinical ornate plaques. Bottom spin bar kept Madam layout."
+  },
+  "intro": {
+    "loading": "mirror/loading.webp",
+    "studioLoader": "loader.gif",
+    "introVideo": "mirror/intro_mirror.mp4",
+    "carousel": [
+      "mirror/intro_seance.webp",
+      "mirror/intro_otherside.webp",
+      "mirror/intro_bloodmoon.webp"
+    ],
+    "carouselLabels": [
+      "THE_INTAKE",
+      "HER_SIDE",
+      "WHITEOUT"
+    ]
+  },
+  "loading": {
+    "label": "Loading chrome (progress bar + falling debris)",
+    "bar": {
+      "label": "Loading progress bar",
+      "sheet": "sprites/progressBar/progressBar.json",
+      "texture": "sprites/progressBar/progressBar.webp",
+      "note": "Clinical observation-chrome frame + fluorescent fill. NOT Madam rocky/purple. Regen: regenerate_assets scope=loading."
+    },
+    "particles": {
+      "label": "Falling loading debris",
+      "sheet": "sprites/loadingParticles/loadingParticles.json",
+      "texture": "sprites/loadingParticles/loadingParticles.webp",
+      "note": "Ceramic tile chips + pills + PATIENT 404 paper scraps + padded lint + fluorescent motes + buckle scraps. ZERO glass shards / crystals. Regen: regenerate_assets scope=loading."
+    }
+  },
+  "transition": {
+    "label": "Bonus enter/exit clinical debris shower",
+    "atlas": "spines/transition/transition.atlas",
+    "texture": "spines/transition/transition.png",
+    "note": "PRIMARY bonus enter/exit (Transition.svelte). rock1..rock8 = ceramic chips + pills + PATIENT 404 paper + lint + fluorescent dust + buckle scraps. ZERO Madam purple diamonds / amethyst crystals. Regen: regenerate_assets scope=transition \u2192 make_transition_debris.py. Old purple atlases quarantined under assets-raw/_OLD_PURPLE_DIAMONDS/."
+  },
+  "bonusCards": [
+    "mirror/buy_seance.webp",
+    "mirror/buy_otherside.webp",
+    "mirror/buy_bloodmoon.webp",
+    "mirror/buy_feature1.webp",
+    "mirror/buy_feature2.webp",
+    "mirror/buy_feature3.webp",
+    "mirror/buy_ante.webp"
+  ],
+  "bonusBuyChrome": [
+    "mirror/buy_ui/cta_activate.png",
+    "mirror/buy_ui/cta_buy.png",
+    "mirror/buy_ui/ribbon_blank.png",
+    "mirror/buy_ui/ribbon_scatter.png",
+    "mirror/buy_ui/ribbon_observation.png",
+    "mirror/buy_ui/ribbon_observation_plus.png",
+    "mirror/buy_ui/ribbon_observation_plusplus.png",
+    "mirror/buy_ui/ribbon_fractured.png",
+    "mirror/buy_ui/ribbon_deepness.png",
+    "mirror/buy_ui/section_magenta_wide.png",
+    "mirror/buy_ui/btn_close_magenta.png",
+    "mirror/buy_ui/chevron_plate.png",
+    "mirror/buy_ui/accent_stain.png"
+  ],
+  "celebration": [
+    "celeb/celeb_t2",
+    "celeb/celeb_t3",
+    "celeb/celeb_t4",
+    "celeb/celeb_t5",
+    "celeb/celeb_t6",
+    "celeb/celeb_t7"
+  ],
+  "cellSeal": {
+    "label": "Cell Seal expand reels",
+    "symbols": [
+      "H1",
+      "H2",
+      "H3",
+      "H4",
+      "H5"
+    ],
+    "fullPattern": "sprites/cellSeal/{id}_full.webp",
+    "expandGifPattern": "sprites/cellSeal/{id}_expand.gif",
+    "bySymbol": {
+      "H1": {
+        "id": "H1",
+        "name": "The Patient",
+        "full": "sprites/cellSeal/H1_full.webp",
+        "expand": "sprites/cellSeal/H1_expand.gif",
+        "assetKeyFull": "cellSealH1Full",
+        "assetKeyExpand": "cellSealH1Expand",
+        "idle": "sprites/cellSeal/H1_idle.webm",
+        "spine": "spines/cellSeal/H1.json",
+        "assetKeyIdle": "cellSealH1Idle",
+        "assetKeySpine": "cellSealH1Spine",
+        "scenarioStillAssetId": "asset_R3AvZAjSkWt8CFCJTY6xvoBF"
+      },
+      "H2": {
+        "id": "H2",
+        "name": "The Doctor",
+        "full": "sprites/cellSeal/H2_full.webp",
+        "expand": "sprites/cellSeal/H2_expand.gif",
+        "assetKeyFull": "cellSealH2Full",
+        "assetKeyExpand": "cellSealH2Expand",
+        "idle": "sprites/cellSeal/H2_idle.webm",
+        "spine": "spines/cellSeal/H2.json",
+        "assetKeyIdle": "cellSealH2Idle",
+        "assetKeySpine": "cellSealH2Spine",
+        "scenarioStillAssetId": "asset_J9XJ5P6are594g4vxzQ1XeEd",
+        "scenarioModel": "model_bfl-flux-2-dev",
+        "refPortrait": "asset_XqbMtfY4AHTT1fdK6qGFjj7j"
+      },
+      "H3": {
+        "id": "H3",
+        "name": "The Grin",
+        "full": "sprites/cellSeal/H3_full.webp",
+        "expand": "sprites/cellSeal/H3_expand.mp4",
+        "assetKeyFull": "cellSealH3Full",
+        "assetKeyExpand": "cellSealH3Expand",
+        "idle": "sprites/cellSeal/H3_idle.webm",
+        "spine": "spines/cellSeal/H3.json",
+        "assetKeyIdle": "cellSealH3Idle",
+        "assetKeySpine": "cellSealH3Spine",
+        "scenarioStillAssetId": "asset_FAzE2aCwGhwM6T96AyoqeLqc",
+        "scenarioExpandAssetId": "asset_Tyof69YVJivqdeuiEy9aEQf5",
+        "expandPlayback": "playOnceThenLoopLast3s",
+        "expandAudio": {
+          "once": "sfx_cell_seal_h3_expand",
+          "loop": null
+        }
+      },
+      "H4": {
+        "id": "H4",
+        "name": "The Doorway",
+        "full": "sprites/cellSeal/H4_full.webp",
+        "expand": "sprites/cellSeal/H4_expand.gif",
+        "assetKeyFull": "cellSealH4Full",
+        "assetKeyExpand": "cellSealH4Expand",
+        "idle": "sprites/cellSeal/H4_idle.webm",
+        "spine": "spines/cellSeal/H4.json",
+        "assetKeyIdle": "cellSealH4Idle",
+        "assetKeySpine": "cellSealH4Spine",
+        "scenarioStillAssetId": "asset_bdAju4fBa1GW8xG4a63eoZZw"
+      },
+      "H5": {
+        "id": "H5",
+        "name": "File 404",
+        "full": "sprites/cellSeal/H5_full.webp",
+        "expand": "sprites/cellSeal/H5_expand.gif",
+        "assetKeyFull": "cellSealH5Full",
+        "assetKeyExpand": "cellSealH5Expand",
+        "idle": "sprites/cellSeal/H5_idle.webm",
+        "spine": "spines/cellSeal/H5.json",
+        "assetKeyIdle": "cellSealH5Idle",
+        "assetKeySpine": "cellSealH5Spine",
+        "scenarioStillAssetId": "asset_cerNuZDfCjBgASNsnb3ZTtux"
+      }
+    },
+    "note": "Full-reel Cell Seal. Idle=VP9 webm loop cover-cropped to 512x1680. Expand=gif (H1/H2/H4/H5) or mp4 (H3 The Grin: Scenario asset_Tyof69YVJivqdeuiEy9aEQf5, play-once then loop last 3s silent; sfx_cell_seal_h3_expand once only). FE prefers expand video over idle. object-fit:cover + reel mask. Link VFX = Observation Conduit Handshake when 2+. Paths: sprites/cellSeal/{id}_full.webp + expand.(gif|mp4) + idle.webm.",
+    "idlePattern": "sprites/cellSeal/{id}_idle.webm",
+    "spineAtlas": "spines/cellSeal/cellSeal.atlas",
+    "spinePattern": "spines/cellSeal/{id}.json"
+  },
+  "winParticles": {
+    "gems": {
+      "label": "White Room clinical debris cascade",
+      "sheet": "sprites/coin/SD2_Coin.json",
+      "texture": "sprites/coin/SD2_Coin.png",
+      "note": "PRIMARY: ceramic tile chips + pill capsules + torn PATIENT 404 paper + padded-wall lint + fluorescent dust + restraint buckle scraps. ZERO Madam Mirror glass shards / triangle knives / crystals. Pack via regenerate_assets scope=winParticles."
+    }
+  },
+  "features": {
+    "freeSpins": {
+      "label": "Her Side",
+      "enabled": true
+    },
+    "bonusLevels": {
+      "enabled": true
+    },
+    "mirror": {
+      "label": "Cell Fracture",
+      "enabled": true
+    },
+    "eye": {
+      "label": "It Knows",
+      "enabled": true
+    },
+    "split": {
+      "label": "Fracture",
+      "enabled": true
+    },
+    "wild": {
+      "label": "The Sealed",
+      "enabled": true
+    },
+    "scatter": {
+      "label": "Memory Reset",
+      "enabled": true
+    },
+    "cellSeal": {
+      "label": "Cell Seal",
+      "enabled": true
+    }
+  },
+  "audio": {
+    "sprite": "assets/audio/sounds.json",
+    "cues": {
+      "music": [
+        "bgm_main",
+        "bgm_freespin",
+        "bgm_celeb_1",
+        "bgm_celeb_2",
+        "bgm_celeb_3",
+        "bgm_celeb_4",
+        "bgm_celeb_5",
+        "bgm_celeb_6"
+      ],
+      "ui": [
+        "sfx_btn_general",
+        "sfx_btn_spin"
+      ],
+      "reels": [
+        "sfx_reel_stop_1",
+        "sfx_reel_stop_2",
+        "sfx_reel_stop_3",
+        "sfx_reel_stop_4",
+        "sfx_reel_stop_5",
+        "sfx_symbols_landing",
+        "sfx_scatter_reveal"
+      ],
+      "winLevels": [
+        "sfx_winlevel_small",
+        "sfx_winlevel_nice",
+        "sfx_winlevel_standard",
+        "sfx_winlevel_substantial",
+        "sfx_bigwin_coinloop"
+      ],
+      "themeSpecific": [
+        "sfx_xways_split",
+        "sfx_mirror_break",
+        "sfx_madams_eye",
+        "sfx_youwon_panel",
+        "sfx_cell_seal_expand",
+        "sfx_cell_seal_harden",
+        "sfx_cell_seal_h3_expand",
+        "sfx_cell_seal_h3_loop",
+        "sfx_claw_split"
+      ]
+    },
+    "celebrationMusic": {
+      "mode": "evolvingStages",
+      "master": "bgm_celeb_full",
+      "stageSeconds": 8,
+      "stages": [
+        "bgm_celeb_1",
+        "bgm_celeb_2",
+        "bgm_celeb_3",
+        "bgm_celeb_4",
+        "bgm_celeb_5",
+        "bgm_celeb_6"
+      ],
+      "note": "FE playStageMusic() stops old Madam cues then plays stage bed; no sfx_celeb whoosh/hit/maxslam during takeover.",
+      "noLegacySfxLayer": true,
+      "runtime": "WinCelebration.playStageMusic"
+    }
+  },
+  "fx": {
+    "splitTelegraph": {
+      "label": "Fluorescent Intake Shot",
+      "tag": "intake shot",
+      "desc": "MODE intakeShot: buckle / fluorescent tube / clipboard stamp projectiles toward fracture targets. ZERO glass knives / triangle shards / Madam Mirror spit.",
+      "mode": "intakeShot",
+      "shardsPerTarget": 8,
+      "durationMs": 420,
+      "colors": [
+        "0xf4f1ec",
+        "0xc8c4bc",
+        "0x8a8680",
+        "0x3a3632",
+        "0x6b2a28"
+      ],
+      "chipScale": 0.09,
+      "strapChance": 0.4,
+      "impactRingMs": 110
+    },
+    "splitShatter": {
+      "label": "Padded Wall Tear",
+      "tag": "padded tear",
+      "desc": "MODE paddedTear: foam chunks + strap strips + buckle plates + fluorescent blackout. ZERO falling glass / ceramic knife shards / haunted-mirror triangles.",
+      "mode": "paddedTear",
+      "shardsPerCell": 18,
+      "durationMs": 720,
+      "colors": [
+        "0xf4f1ec",
+        "0xe8e4dc",
+        "0xc8c4bc",
+        "0x8a8680",
+        "0x5c5854",
+        "0x3a3632"
+      ],
+      "gravityScale": 1.6,
+      "dustCount": 6
+    },
+    "mirrorBreak": {
+      "label": "Intake Stamp Lock",
+      "tag": "stamp lock",
+      "desc": "MODE intakeStamp: clipboard intake stamp + fluorescent tube frame + REC brackets. ZERO frost glass observation pane.",
+      "mode": "intakeStamp",
+      "popMs": 100,
+      "holdMs": 420,
+      "crackBranches": 0,
+      "bezelWidth": 5
+    },
+    "winLightning": {
+      "label": "Padded-Cell Whiteout",
+      "desc": "REPLACES lightning+prismatic: fluorescent strobe bands + memory-glitch CRT wipe. No bolts. No prism.",
+      "megaWinMultiplier": 8685,
+      "hue": 200,
+      "size": 2,
+      "lightningMs": 1400,
+      "prismaticMs": 4570,
+      "maxExtraBolts": 40,
+      "prismaticIntensity": 5,
+      "prismaticSpeed": 1,
+      "colors": [
+        "#f4f1ec",
+        "#c8c4bc",
+        "#8a8680",
+        "#5c5854"
+      ],
+      "mode": "paddedCellStrobe",
+      "strobeMs": 900,
+      "glitchMs": 2400,
+      "bandCount": 9,
+      "scanlineCount": 22,
+      "flashPeak": 0.85,
+      "blackoutChance": 0.06
+    },
+    "winSweep": {
+      "label": "Memory Glitch Wipe",
+      "desc": "Horizontal CRT tear across winning cells. Not plasma wash.",
+      "reelStagger": 0.14,
+      "baseMs": 380,
+      "perReelMs": 90,
+      "mode": "memoryGlitch",
+      "bandCount": 5
+    },
+    "winDim": {
+      "label": "Cell Isolation Dim",
+      "desc": "Padded-cell darkness on non-winners + horizontal fluorescent observation lamp scan. NOT diagonal glass glint.",
+      "dimAlpha": 0.86,
+      "mode": "observationScan",
+      "scanMs": 420
+    },
+    "apparition": {
+      "label": "Observation Fracture",
+      "tag": "fracture cell",
+      "desc": "MODE observationFracture: corner brackets + restraint straps + stamped count. Clinical silver panes on win \u2014 NOT haunt halo.",
+      "mode": "observationFracture",
+      "winGrow": 1.16
+    },
+    "splitAnimation": {
+      "label": "Fluorescent Tear Fracture",
+      "tag": "cell split",
+      "desc": "MODE fluorescentTear: fluorescent scan cut, intake stamp flare, padded perforation tear, pane snap. ZERO glass/knife blades.",
+      "mode": "fluorescentTear",
+      "cutMs": 130,
+      "cutStagger": 0.1,
+      "flareInMs": 16,
+      "flareOutMs": 200,
+      "detonationMs": 360,
+      "paneSnapMs": 180,
+      "pulseScale": 1.5,
+      "pulseMs": 480,
+      "shakeBase": 12,
+      "shakePerCell": 3,
+      "shakeMax": 22,
+      "shakeMs": 280,
+      "bladeSparks": 8,
+      "seamSparks": 12
+    },
+    "plasmaLiner": {
+      "label": "Restraint Strap Liner",
+      "desc": "REPLACES flame: dashed leather straps, steel buckles, ceramic dust. No licking fire.",
+      "igniteStagger": 0.06,
+      "igniteFlash": 0.18,
+      "cornerRadius": 8,
+      "fadeInMs": 70,
+      "fadeOutMs": 200,
+      "flameHeightMin": 4,
+      "flameHeightMax": 18,
+      "lickScale": 2.8,
+      "lickEvery": 7,
+      "upBias": 0.55,
+      "colors": [
+        "0x3a3632",
+        "0x8a8680",
+        "0xc8c4bc",
+        "0xf4f1ec",
+        "0x6b2a28"
+      ],
+      "mode": "restraintStraps",
+      "strapWidth": 5,
+      "dashLen": 18,
+      "gapLen": 10,
+      "buckleEvery": 6,
+      "dustCount": 14
+    },
+    "framePlasma": {
+      "label": "Fluorescent Tube Frame",
+      "desc": "REPLACES flame ring: segmented fluorescent tubes with flicker and blackouts.",
+      "envelopeMs": 280,
+      "flameHeightMin": 7,
+      "flameHeightMax": 30,
+      "lickScale": 2.5,
+      "lickEvery": 7,
+      "upBias": 0.5,
+      "inset": 3,
+      "marginScale": 0.12,
+      "colors": [
+        "0x3a3632",
+        "0x8a8680",
+        "0xc8c4bc",
+        "0xf4f1ec"
+      ],
+      "mode": "fluorescentTubes",
+      "tubeWidth": 6,
+      "flickerHz": 11,
+      "segmentGap": 14,
+      "blackoutChance": 0.05
+    },
+    "symbolBorder": {
+      "label": "High Symbol Outline Frame",
+      "tag": "symbols",
+      "desc": "Dedicated UI sprite symbolOutlineFrame (padded/steel observation bezel) over high symbols. NOT Graphics strokes; NOT baked into card art. alpha/scale tune the sprite.",
+      "alpha": 1,
+      "scale": 1,
+      "swatchNames": [],
+      "colors": []
+    },
+    "cellSeal": {
+      "label": "Cell Seal Expand",
+      "tag": "cell seal",
+      "desc": "Observation-pane bezel + restraint brackets + fluorescent tube glow + stamped ceramic ways plaque. Link = Observation Conduit Handshake (housing/couplers/buckles/CCTV scan). Feature name OFF. NO arcade yellow/flower/dots.",
+      "highlightMs": 420,
+      "expandMs": 720,
+      "swatchNames": [
+        "bezel steel",
+        "frost rim",
+        "fluorescent",
+        "plaque face",
+        "blood stamp",
+        "mult text"
+      ],
+      "colors": [
+        "0x8a8680",
+        "0xc8c4bc",
+        "0xf4f1ec",
+        "0x2a2826",
+        "0x6b2a28",
+        "0xf4f1ec"
+      ],
+      "showFeatureLabel": 0,
+      "mode": "observationPane",
+      "bezelWidth": 5,
+      "bracketLen": 22,
+      "bracketWidth": 3.2,
+      "tubeGlow": 0.55,
+      "scanlineCount": 4,
+      "badgeScale": 1.2,
+      "connectionMode": "observationConduitHandshake",
+      "conduitHousingH": 12,
+      "conduitScanSpeed": 0.72,
+      "conduitBuckleCount": 4
+    },
+    "winAmountFont": {
+      "label": "Win Amount Font",
+      "tag": "win text",
+      "desc": "PER-GAME FONT (must be unique). Player-facing win/outro/celebration amounts + PRESS ANYWHERE chrome. fontFamily = BitmapText face (clinical = White Room whiteRoomFont). BANNED defaults: silver (Mining-Mayhem western slab template), gold/amethyst/ghost (Madam drip). colors[0] = Pixi tint. Regen: regenerate_assets scope=fonts.",
+      "fontFamily": "clinical",
+      "fontSizeScale": 1,
+      "swatchNames": [
+        "tint"
+      ],
+      "colors": [
+        "0xf4f1ec"
+      ]
+    }
+  },
+  "hudTheme": {
+    "colors": {
+      "accent": "#c8c4bc",
+      "text": "#f4f1ec",
+      "spinButton": "#f7bb0f",
+      "turbo": "#ffb400",
+      "panelFill": "#10161d",
+      "panelStroke": "#2a3542",
+      "stepper": "#1c2732",
+      "balanceText": "#f0e6d0",
+      "betText": "#f0e6d0",
+      "bodyTop": "#353542",
+      "bodyBottom": "#0a0a0e",
+      "edgeGold": "#8a8680",
+      "innerHighlight": "#f4f1ec",
+      "accentGlow": "#c8c4bc"
+    },
+    "shape": {
+      "bodyAlpha": 0.94
+    },
+    "logo": {
+      "studio": "mirror/logo_v3.png",
+      "buyBonus": "packages/components-ui-pixi/src/assets/buyBonusLogoData.ts#BUY_BONUS_LOGO_DATA_URL"
+    }
+  }
+}

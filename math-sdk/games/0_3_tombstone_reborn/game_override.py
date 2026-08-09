@@ -149,20 +149,18 @@ class GameStateOverride(GameExecutables):
 
     # ---- individual effects ------------------------------------------------
     def _apply_coffin(self):
+        """Grow ONLY the reel under each coffin bar card, by at most +1 row.
+        The last-reel special lane is never grown."""
         cfg = self.config.coffin_config
-        target = cfg["target_rows"]
         last = self.config.num_reels - 1
+        max_added = int(cfg.get("max_added", 1))
+        coffin_reels = sorted({
+            c["reel"] for c in self.special_bar
+            if c["kind"] == "coffin" and c["reel"] != last
+        })
         grown = []
-        for reel in range(self.config.num_reels):
-            if reel == last:
-                continue
-            height = len(self.board[reel])
-            if height >= target:
-                continue
-            room = target - height
-            added = min(self._pick_factor(cfg["grow_weights"]), room)
-            if added <= 0:
-                continue
+        for reel in coffin_reels:
+            added = max_added
             strip = self.reelstrip[reel]
             new_cells = []
             for _ in range(added):
@@ -253,13 +251,19 @@ class GameStateOverride(GameExecutables):
             bounty_event(self, symbol, self.win_multiplier)
             return
 
-        # NUDGE: slide left across the other reels, +mult per premium passed
+        # NUDGE: the premium slides LEFT from the last lane across each column.
+        # Every premium it passes climbs the WIN multiplier AND is left as a WILD
+        # so the ways eval that follows sees the scorched cells as wilds.
         add_per = cfg["nudge_add_per_premium"]
-        passed = 0
-        for reel in range(last):
-            for sym in self.board[reel]:
+        hits = []
+        for reel in range(last - 1, -1, -1):
+            for row, sym in enumerate(self.board[reel]):
                 if self.is_premium(sym.name):
-                    passed += 1
+                    hits.append({"reel": reel, "row": row, "name": sym.name})
+        passed = len(hits)
         win_mult = int(base_mult) + passed * add_per
         self.win_multiplier = max(1, win_mult)
-        nudge_event(self, symbol, int(base_mult), passed, self.win_multiplier)
+        for h in hits:
+            self.board[h["reel"]][h["row"]] = self.create_symbol(self.config.wild_symbol)
+        # hits listed right-to-left (the order the slide encounters them)
+        nudge_event(self, symbol, int(base_mult), passed, self.win_multiplier, hits)

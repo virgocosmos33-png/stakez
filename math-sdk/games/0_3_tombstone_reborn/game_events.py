@@ -149,14 +149,15 @@ def bounty_event(gamestate, symbol, win_mult):
     gamestate.book.add_event(event)
 
 
-def nudge_event(gamestate, symbol, base_mult, passed, win_mult):
+def nudge_event(gamestate, symbol, base_mult, passed, win_mult, hits=None):
     """NUDGE: the bounty premium slid left, climbing its WIN multiplier for
-    every premium it passed over.
+    every premium it passed over. Each hit cell is left as a WILD on the board.
 
     symbol:    the sliding premium.
     baseMult:  the WIN multiplier before the slide.
     passed:    how many premiums the slide crossed.
     winMult:   the final WIN multiplier after the slide.
+    hits:      premiums encountered right-to-left (padding-adjusted rows).
     """
     event = {
         "index": len(gamestate.book.events),
@@ -165,5 +166,9 @@ def nudge_event(gamestate, symbol, base_mult, passed, win_mult):
         "baseMult": base_mult,
         "passed": passed,
         "winMult": win_mult,
+        "hits": [
+            {"reel": h["reel"], "row": h["row"] + 1, "name": h.get("name")}
+            for h in (hits or [])
+        ],
     }
     gamestate.book.add_event(event)

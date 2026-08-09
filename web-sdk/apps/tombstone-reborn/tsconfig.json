@@ -1,0 +1,8 @@
+{
+	"extends": "config-ts/base.json",
+	"compilerOptions": {
+		"resolveJsonModule": true
+	},
+	"include": ["src"],
+	"exclude": ["dist", "build", "node_modules", "assets-src", "static", "tools"]
+}

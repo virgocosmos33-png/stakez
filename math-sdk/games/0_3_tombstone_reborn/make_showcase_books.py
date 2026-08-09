@@ -90,7 +90,27 @@ def main():
     with open(os.path.join(BOOKS, "showcase_index.json"), "w", encoding="utf-8") as fh:
         json.dump(index, fh, indent=2)
 
-    print("\nDONE. Wrote", len(showcase), "showcase books.")
+    # Emit an embeddable data file for the standalone draft viewer (no build /
+    # no fetch needed - the HTML just includes this script).
+    id_to_label = {v["showcaseId"]: k for k, v in index.items()}
+    preview = []
+    for b in showcase:
+        label = id_to_label.get(b["id"], f"book_{b['id']}")
+        meta = index.get(label, {})
+        preview.append({
+            "label": label,
+            "mode": meta.get("mode"),
+            "payoutX": meta.get("payoutX"),
+            "events": b["events"],
+        })
+    app_src = os.path.join(
+        HERE, "..", "..", "..", "web-sdk", "apps", "tombstone-reborn", "src"
+    )
+    os.makedirs(app_src, exist_ok=True)
+    with open(os.path.join(app_src, "showcase.generated.json"), "w", encoding="utf-8") as fh:
+        json.dump(preview, fh, indent=1)
+
+    print("\nDONE. Wrote", len(showcase), "showcase books + src/showcase.generated.json")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,134 @@
+<script lang="ts" module>
+	// BOUNTY / NUDGE payoff badge — a WIN multiplier on the scored cell.
+	// No White Room chain rack / clamp pull.
+	export type EmitterEventStretchWays =
+		| { type: 'stretchWaysShow'; cells: { reel: number; row: number; multiplier: number }[] }
+		| { type: 'stretchWaysHide' };
+</script>
+
+<script lang="ts">
+	import { Tween } from 'svelte/motion';
+	import { backOut, cubicOut } from 'svelte/easing';
+	import { MainContainer } from 'components-layout';
+	import { Container, Graphics, Text } from 'pixi-svelte';
+	import { stateBet } from 'state-shared';
+
+	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
+	import { fxDur } from '../game/fxTiming';
+	import { getContext } from '../game/context';
+	import { getSymbolX, getCellCenterY } from '../game/utils';
+	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+
+	const context = getContext();
+
+	type Badge = {
+		key: string;
+		reel: number;
+		row: number;
+		multiplier: number;
+		/** 0 → final multiplier (odometer climb) */
+		climb: Tween<number>;
+		/** pop when the badge lands */
+		pop: Tween<number>;
+	};
+
+	let badges = $state<Badge[]>([]);
+	let show = $state(false);
+	const fallOut = new Tween(0);
+
+	const runBadge = async (badge: Badge) => {
+		const instant = stateBet.isSuperTurbo;
+		const tier = (ms: number) => (instant ? 0 : fxDur(ms));
+
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		await badge.pop.set(1, { duration: tier(280), easing: backOut });
+		await badge.climb.set(1, { duration: tier(520), easing: cubicOut });
+		shakeBoard({ intensity: 4, duration: tier(140) });
+	};
+
+	context.eventEmitter.subscribeOnMount({
+		stretchWaysShow: async ({ cells: incoming }) => {
+			const jobs: Promise<void>[] = [];
+			for (const c of incoming) {
+				const key = `${c.reel}-${c.row}`;
+				if (badges.some((b) => b.key === key)) continue;
+				const badge: Badge = {
+					key,
+					reel: c.reel,
+					row: c.row,
+					multiplier: c.multiplier,
+					climb: new Tween(0),
+					pop: new Tween(0),
+				};
+				badges = [...badges, badge];
+				show = true;
+				jobs.push(runBadge(badge));
+			}
+			await Promise.all(jobs);
+		},
+		featureFxFallOut: async () => {
+			await fallOutFeatureFx(fallOut, show && badges.length > 0);
+			show = false;
+			badges = [];
+			fallOut.set(0, { duration: 0 });
+		},
+		stretchWaysHide: () => {
+			show = false;
+			badges = [];
+			fallOut.set(0, { duration: 0 });
+		},
+	});
+
+	const boardLayout = $derived(context.stateGameDerived.boardLayout());
+	const originX = $derived(boardLayout.x - boardLayout.width * 0.5);
+	const originY = $derived(boardLayout.y - boardLayout.height * 0.5);
+
+	const drawn = $derived(
+		badges.map((b) => {
+			const t = b.climb.current;
+			const start = Math.min(2, b.multiplier);
+			const raw = start + (b.multiplier - start) * t * t;
+			return {
+				key: b.key,
+				cx: originX + getSymbolX(b.reel),
+				cy: originY + getCellCenterY(b.reel, b.row),
+				shown: Math.round(raw),
+				scale: 0.85 + 0.15 * b.pop.current,
+				tick: 1 + 0.1 * (1 - (raw - Math.floor(raw))) * Math.sin(Math.PI * t),
+			};
+		}),
+	);
+
+	const drawPlate = (g: import('pixi.js').Graphics) => {
+		g.clear();
+		g.roundRect(-34, -16, 68, 32, 9);
+		g.fill({ color: 0x1a1208, alpha: 0.92 });
+		g.roundRect(-34, -16, 68, 32, 9);
+		g.stroke({ color: 0xe0b45a, width: 2, alpha: 0.95 });
+	};
+</script>
+
+<MainContainer>
+	<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
+		{#if show}
+			{#each drawn as cell (cell.key)}
+				{#if cell.shown > 0}
+					<Container x={cell.cx} y={cell.cy} scale={cell.scale * cell.tick}>
+						<Graphics draw={drawPlate} />
+						<Text
+							anchor={0.5}
+							text={`${cell.shown}x`}
+							style={{
+								fontFamily: 'Arial',
+								fontWeight: '900',
+								fontSize: 26,
+								fill: 0xf0d090,
+								stroke: { color: 0x000000, width: 4 },
+							}}
+						/>
+					</Container>
+				{/if}
+			{/each}
+		{/if}
+	</Container>
+</MainContainer>

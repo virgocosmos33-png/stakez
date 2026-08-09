@@ -47,11 +47,46 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		return reelSymbols;
 	};
 
-	const updateSymbols = (value: TRawSymbol[]) =>
-		reelState.symbols.map((reelSymbol, symbolIndex) => {
+	// Some games (e.g. White Room's Wild Reel) grow/shrink a reel's height at
+	// runtime. Resize the reactive symbol array to match the incoming board
+	// before rewriting it. For fixed-height games the lengths always match, so
+	// neither branch runs and behaviour is unchanged.
+	const resizeSymbolsTo = (length: number) => {
+		if (length > reelState.symbols.length) {
+			for (let symbolIndex = reelState.symbols.length; symbolIndex < length; symbolIndex++) {
+				reelState.symbols.push(
+					createReelSymbol({ rawSymbol: reelState.symbols[0]?.rawSymbol, symbolIndex }),
+				);
+			}
+		} else if (length < reelState.symbols.length) {
+			reelState.symbols.splice(length);
+		}
+	};
+
+	const updateSymbols = (value: TRawSymbol[]) => {
+		resizeSymbolsTo(value.length);
+		return reelState.symbols.map((reelSymbol, symbolIndex) => {
 			reelSymbol.rawSymbol = value[symbolIndex];
 			reelSymbol.symbolState = 'static' as TSymbolState;
+			// Growing/shrinking reuses ReelSymbol objects; snap every row back to
+			// its rest Y so a longer strip never leaves a cell parked off-window.
+			const restY = getSymbolY(symbolIndex - 1);
+			if (reelSymbol.symbolY.current !== restY) {
+				reelSymbol.symbolY.set(restY, { duration: 0 });
+			}
 		});
+	};
+
+	// Restore the reel to its authored height (used before a fresh spin so a
+	// previously grown reel starts clean). No-op for fixed-height reels.
+	const resetToInitialHeight = () => {
+		if (reelState.symbols.length === reelOptions.initialSymbols.length) return;
+		resizeSymbolsTo(reelOptions.initialSymbols.length);
+		reelState.symbols.forEach((reelSymbol, symbolIndex) => {
+			reelSymbol.rawSymbol = reelOptions.initialSymbols[symbolIndex];
+			reelSymbol.symbolState = reelOptions.initialSymbolState;
+		});
+	};
 
 	// constants
 	const reelLength = reelOptions.initialSymbols.length;
@@ -84,6 +119,36 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	let paddingSize = 0;
 	let slamStop = false;
 
+	// A slam must cut an ALREADY-RUNNING symbol tween, not just the gaps between
+	// them. Svelte's Tween.set() resolves only when the tween finishes (aborting
+	// it never resolves the promise), and interruptible.interrupt() only releases
+	// the hang wait - so a reel caught mid-fall would otherwise keep animating to
+	// completion while its neighbours snap. This signal is raced against every
+	// blocking tween await; stop() resolves it, releasing all reels at once.
+	let resolveSlamSignal: () => void = () => {};
+	let slamSignal: Promise<void> = new Promise((resolve) => (resolveSlamSignal = resolve));
+	const resetSlamSignal = () => {
+		slamStop = false;
+		reelState.slammed = false;
+		slamSignal = new Promise((resolve) => (resolveSlamSignal = resolve));
+	};
+	// resolves as soon as EITHER the tween completes or a slam fires
+	const raceSlam = (promise: Promise<unknown>) => Promise.race([promise, slamSignal]);
+
+	// slamming DURING fall-out completes the fall-out instantly (symbols snap
+	// off-board, reel ends 'hanging') instead of snapping the old board back
+	// on. This keeps every reel in the same phase after a skip: they all sit
+	// hanging and then drop the reveal board in together, rather than some
+	// reels visibly falling out twice
+	const slamFallOutToHanging = async () => {
+		reelState.motion = 'hanging';
+
+		await moveAllSymbolsWith(async (reelSymbol) => {
+			const y = getSymbolY(reelSymbol.symbolIndexOfBoard + reelLength);
+			await reelSymbol.symbolY.set(y, { duration: 0 });
+		});
+	};
+
 	const slamToStopped = async () => {
 		updateSymbols(targetSymbols);
 		reelState.anticipating = false;
@@ -98,7 +163,11 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	};
 
 	const delaySpinByReelIndex = async () => {
-		await waitForTimeout(reelState.spinOptions().reelFallOutDelay * reelOptions.reelIndex);
+		// raced so a slam during the pre-spin stagger releases every reel at
+		// once instead of each waiting out its own start delay
+		await raceSlam(
+			waitForTimeout(reelState.spinOptions().reelFallOutDelay * reelOptions.reelIndex),
+		);
 	};
 
 	const preSpin = async ({
@@ -108,8 +177,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	}) => {
 		// a slam from the PREVIOUS round is stale - it must not cut this fresh
 		// pre-spin short or leak through the readyToSpin gate
-		slamStop = false;
-		reelState.slammed = false;
+		resetSlamSignal();
 		reelState.spinType = isTurboBeforeAll ? 'fast' : 'normal';
 		if (!isTurboBeforeAll) await delaySpinByReelIndex();
 		await fallOut();
@@ -121,7 +189,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 
 	const fallOut = async () => {
 		if (slamStop) {
-			await slamToStopped();
+			await slamFallOutToHanging();
 			return;
 		}
 
@@ -138,14 +206,14 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 				reelState.spinOptions().symbolFallOutInterval *
 				(reelLengthInBoard - reelSymbol.symbolIndexOfBoard);
 
-			await waitForTimeout(delay);
+			await raceSlam(waitForTimeout(delay));
 			if (slamStop) return;
 			reelSymbol.symbolState = 'spin' as TSymbolState;
-			await reelSymbol.symbolY.set(newSymbolY, { duration });
+			await raceSlam(reelSymbol.symbolY.set(newSymbolY, { duration }));
 		});
 
 		if (slamStop) {
-			await slamToStopped();
+			await slamFallOutToHanging();
 			return;
 		}
 
@@ -215,20 +283,28 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 			// hit the row; they start above the board where they are culled,
 			// so flipping the state before the delayed tween is invisible
 			reelSymbol.symbolState = 'spin' as TSymbolState;
-			await reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
-				duration: landDuration,
-				delay,
-			});
+			await raceSlam(
+				reelSymbol.symbolY.set(newSymbolY - bounceDistance, {
+					duration: landDuration,
+					delay,
+				}),
+			);
 			if (slamStop) return;
 			reelSymbol.symbolState = 'land' as TSymbolState;
 			reelOptions.onSymbolLand({ rawSymbol: reelSymbol.rawSymbol });
 			if (reelSymbol.symbolIndexOfBoard === reelLengthInBoard - 1) {
 				onSpinFinishing();
 			}
-			await reelSymbol.symbolY.set(newSymbolY, {
-				duration: bounceDuration,
-				easing: backOut,
-			});
+			// the bounce must be raced too: the first reel lands (and bounces)
+			// earliest, and moveAllSymbolsWith waits for EVERY symbol - an
+			// un-raced bounce would keep that reel visibly animating while the
+			// other reels (still in their fall-in wait) snap instantly
+			await raceSlam(
+				reelSymbol.symbolY.set(newSymbolY, {
+					duration: bounceDuration,
+					easing: backOut,
+				}),
+			);
 		});
 
 		if (slamStop) {
@@ -243,8 +319,10 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		const isHanging = reelState.motion === 'hanging';
 
 		if (!isHanging) {
+			// a slam during fallOut leaves the reel 'hanging' (empty), NOT
+			// finished - fall through so hanging()/fallIn() slam the final
+			// board in, otherwise the reel would end the round blank
 			await fallOut();
-			if (slamStop) return;
 		}
 		await hanging();
 		if (slamStop) return;
@@ -271,8 +349,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		previousPaddingSize: number;
 	}) => {
 		reelState.spinType = prepareToSpinOptions.spinType;
-		slamStop = false;
-		reelState.slammed = false;
+		resetSlamSignal();
 
 		noStop = prepareToSpinOptions.noStop;
 		targetSymbols = prepareToSpinOptions.symbols;
@@ -303,6 +380,9 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	const stop = () => {
 		slamStop = true;
 		reelState.spinType = 'fast';
+		// release any in-flight symbol tween immediately (raceSlam), then the
+		// hang wait (interruptible) - so every reel bails on the same frame
+		resolveSlamSignal();
 		interruptible.interrupt();
 	};
 
@@ -331,6 +411,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		spin,
 		stop,
 		setSymbolsWithRawSymbols,
+		resetToInitialHeight,
 		readyToSpinEffect,
 	};
 }

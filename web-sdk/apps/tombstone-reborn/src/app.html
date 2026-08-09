@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.svg" />
+		<!-- No external stylesheets/fonts: Stake Engine XSS policy requires the
+		     build to be fully static with no external requests -->
+		<!-- initial-scale=1 is load-bearing: without it the browser picks its own
+		     zoom to fit the widest thing on the page (the flies in bugs.js wander
+		     past the edge), which shrinks the whole HTML UI layer. maximum-scale
+		     and user-scalable also kill double-tap and pinch zoom, per the Stake
+		     Engine responsive checks. -->
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover"
+		/>
+		%sveltekit.head%
+	</head>
+	<body
+		style="margin: 0; padding: 0; overflow: hidden; background-color: black; touch-action: manipulation"
+	>
+		<div>%sveltekit.body%</div>
+		<!-- ambient flies crawling the room (local sprite, no external requests) -->
+		<script defer src="%sveltekit.assets%/bugs.js"></script>
+	</body>
+</html>

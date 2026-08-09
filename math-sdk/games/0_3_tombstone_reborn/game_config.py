@@ -138,7 +138,7 @@ class GameConfig(Config):
             # the WIN multiplier the bounty premium carries
             "bounty_mult_weights": {2: 40, 3: 26, 5: 16, 10: 9, 25: 5, 50: 3, 100: 1},
             # nudge slides across the 5 columns left of the lane; each premium it
-            # passes adds this much to the WIN multiplier
+            # passes adds this much to the WIN multiplier and is left as a WILD
             "nudge_add_per_premium": 1,
         }
 
@@ -155,9 +155,10 @@ class GameConfig(Config):
                 "H5": 9, "H4": 7, "H3": 6, "H2": 5, "H1": 4,
             },
         }
+        # Tombstone Open grows ONLY the reel under each coffin card, by exactly
+        # +1 visible row (never the last-reel special lane).
         self.coffin_config = {
-            "target_rows": 4,
-            "grow_weights": {1: 46, 2: 30, 3: 16, 4: 8},
+            "max_added": 1,
         }
         self.supersplit_config = {
             "all_ways_weights": {2: 40, 3: 28, 5: 18, 8: 9, 10: 5},

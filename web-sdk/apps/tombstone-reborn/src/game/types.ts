@@ -1,25 +1,39 @@
+import { type SpinningReelSymbolState } from 'utils-slots';
 import type config from './config';
 
 export type SymbolName = keyof typeof config.symbols;
-export type BetMode = keyof typeof config.betModes;
-export type GameType = keyof typeof config.paddingReels;
-
 export type RawSymbol = {
 	name: SymbolName;
+	// Wild Reel / bonus-slot wild multiplier, rides on the math engine's multiplier attribute
+	multiplier?: number;
+	scatter?: boolean;
 	wild?: boolean;
+	// A W that grows its whole reel instead of substituting in place. Same math
+	// symbol, its own card (the arrow one) — set by LockedSlots for the bottom
+	// cell that a Wild Reel rises out of.
+	expanding?: boolean;
+	// 1..5: which scatter this is, left to right across the board. Each position
+	// has its own face (MEMORY / DOUBT / REGRET / REVELATION / OBLIVION), the
+	// same 1..5 the scatter stop sounds already use.
+	scatterIndex?: number;
 };
+export type BetMode = keyof typeof config.betModes;
+export type GameType = keyof typeof config.paddingReels;
 
 export const SYMBOL_STATES = [
 	'static',
 	'spin',
 	'land',
 	'win',
+	// looping mesh-deform ripple of the card's own art; the winner keeps
+	// undulating (haunted "living photo") while the board rests after a win
 	'postWin',
+	// deterministic crisp card frame (used by the apparition pane slicing)
 	'postWinStatic',
 	'explosion',
 ] as const;
 
-export type SymbolState = (typeof SYMBOL_STATES)[number];
+export type SymbolState = SpinningReelSymbolState | (typeof SYMBOL_STATES)[number];
 
 export type Position = {
 	reel: number;

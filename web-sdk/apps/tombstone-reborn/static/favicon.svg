@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <!-- THE WHITE ROOM: bright quilted padded-cell tile (no dark edges, per
+       Stake thumbnail brightness guidance) -->
+  <defs>
+    <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#e7ecf1"/>
+    </linearGradient>
+    <linearGradient id="tuft" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#f2f5f8"/>
+    </linearGradient>
+  </defs>
+  <!-- bright backing so edges never read dark on Stake's background -->
+  <rect x="2" y="2" width="60" height="60" rx="12" fill="url(#pad)"/>
+  <rect x="2.75" y="2.75" width="58.5" height="58.5" rx="11.25" fill="none" stroke="#d5dbe2" stroke-width="1.5"/>
+  <!-- three-by-three quilted panels -->
+  <g fill="url(#tuft)" stroke="#cdd4dc" stroke-width="1.2">
+    <rect x="9" y="9" width="14" height="14" rx="4"/>
+    <rect x="25" y="9" width="14" height="14" rx="4"/>
+    <rect x="41" y="9" width="14" height="14" rx="4"/>
+    <rect x="9" y="25" width="14" height="14" rx="4"/>
+    <rect x="25" y="25" width="14" height="14" rx="4"/>
+    <rect x="41" y="25" width="14" height="14" rx="4"/>
+    <rect x="9" y="41" width="14" height="14" rx="4"/>
+    <rect x="25" y="41" width="14" height="14" rx="4"/>
+    <rect x="41" y="41" width="14" height="14" rx="4"/>
+  </g>
+  <!-- tuft buttons at each seam intersection -->
+  <g fill="#b8c0c9">
+    <circle cx="24" cy="24" r="1.7"/>
+    <circle cx="40" cy="24" r="1.7"/>
+    <circle cx="24" cy="40" r="1.7"/>
+    <circle cx="40" cy="40" r="1.7"/>
+  </g>
+</svg>
