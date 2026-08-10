@@ -337,34 +337,31 @@
 	const jitterX = $derived((rand(Math.floor(time * 24) * 7 + 3) - 0.5) * (1.6 + glitch.current * 7));
 	const flicker = $derived(0.86 + 0.14 * rand(Math.floor(time * 18) * 13 + 1));
 
-	// CRT / observation-monitor damage (NOT vintage film scratches)
+	// Dust / grit damage over the celebration plate (not CRT scanlines)
 	const drawFilmDamage = (graphics: import('pixi.js').Graphics, timeValue: number) => {
 		const w = frameW;
 		const h = frameH;
 		const chunk = Math.floor(timeValue * 14);
-		// persistent horizontal scanlines
-		for (let i = 0; i < 18; i++) {
-			const y = -h / 2 + (i / 18) * h;
+		for (let i = 0; i < 10; i++) {
+			const y = -h / 2 + (i / 10) * h;
 			graphics.rect(-w / 2, y, w, 1);
-			graphics.fill({ color: 0xffffff, alpha: 0.03 + (i % 3 === 0 ? 0.04 : 0) });
+			graphics.fill({ color: 0x8a6e4a, alpha: 0.025 + (i % 3 === 0 ? 0.03 : 0) });
 		}
-		// dead pixels / dropouts
 		for (let i = 0; i < 9; i++) {
 			if (rand(chunk * 41 + i * 13) > 0.55) continue;
 			const x = (rand(chunk * 19 + i * 29) - 0.5) * w;
 			const y = (rand(chunk * 23 + i * 37) - 0.5) * h;
 			graphics.rect(x, y, 2 + rand(chunk + i) * 6, 2 + rand(chunk + i * 2) * 4);
-			graphics.fill({ color: 0x12100e, alpha: 0.55 });
+			graphics.fill({ color: 0x0a0806, alpha: 0.55 });
 		}
-		// fluorescent flicker band
 		if (rand(chunk * 61) > 0.7) {
 			const y = (rand(chunk * 71) - 0.5) * h;
 			graphics.rect(-w / 2, y, w, 6 + rand(chunk) * 14);
-			graphics.fill({ color: 0xf4f1ec, alpha: 0.08 });
+			graphics.fill({ color: 0xc9a34a, alpha: 0.06 });
 		}
 	};
 
-	// MEMORY WIPE transition: hard CRT tear blocks + fluorescent strobe lines
+	// Dust-storm tear / powder streak transition (not CRT memory wipe)
 	const drawGlitchNoise = (graphics: import('pixi.js').Graphics, amount: number, timeValue: number) => {
 		if (amount <= 0.01) return;
 		const w = frameW;
@@ -376,50 +373,45 @@
 			const shear = (rand(chunk + i * 3) - 0.5) * w * 0.12 * amount;
 			graphics.rect(-w / 2 + shear, y, w, 2 + rand(chunk + i) * 5);
 			graphics.fill({
-				color: rand(chunk * 5 + i) > 0.4 ? 0xffffff : 0x8a8680,
-				alpha: 0.2 * amount + rand(chunk * 3 + i) * 0.25 * amount,
+				color: rand(chunk * 5 + i) > 0.4 ? 0xc9a34a : 0x6e6860,
+				alpha: 0.18 * amount + rand(chunk * 3 + i) * 0.22 * amount,
 			});
 		}
-		// vertical memory-column wipe
 		for (let i = 0; i < 3; i++) {
 			if (rand(chunk * 29 + i) > amount) continue;
 			const x = (rand(chunk * 31 + i * 5) - 0.5) * w;
 			graphics.rect(x, -h / 2, 3 + rand(chunk + i) * 18, h);
-			graphics.fill({ color: 0xf4f1ec, alpha: 0.12 * amount });
+			graphics.fill({ color: 0x3a2418, alpha: 0.12 * amount });
 		}
 	};
 
-	// CCTV / clinical monitor bezel (NOT film sprocket frame)
+	// Weathered wood / iron saloon bezel (not CCTV clinical monitor)
 	const drawFilmFrame = (graphics: import('pixi.js').Graphics) => {
 		const w = frameW;
 		const h = frameH;
 		const bezel = holeColW * 0.85;
 		graphics.roundRect(-w / 2 - bezel, -h / 2 - bezel * 0.7, w + bezel * 2, h + bezel * 1.4, 6);
-		graphics.fill({ color: 0x2a2826, alpha: 0.97 });
-		// steel lip
+		graphics.fill({ color: 0x1a1410, alpha: 0.97 });
 		graphics.roundRect(-w / 2 - bezel, -h / 2 - bezel * 0.7, w + bezel * 2, h + bezel * 1.4, 6);
-		graphics.stroke({ color: 0x8a8680, width: 3, alpha: 0.85 });
-		// status LEDs (clinical, not sprocket holes)
+		graphics.stroke({ color: 0x5a4e42, width: 3, alpha: 0.9 });
 		for (let i = 0; i < 3; i++) {
 			const x = -w / 2 - bezel * 0.45;
 			const y = -h / 2 + h * (0.2 + i * 0.25);
 			graphics.circle(x, y, 4);
-			graphics.fill({ color: i === 0 ? 0xf4f1ec : 0x6b2a28, alpha: i === 0 ? 0.9 : 0.55 });
+			graphics.fill({ color: i === 0 ? 0xc9a34a : 0xb54a2a, alpha: i === 0 ? 0.9 : 0.55 });
 		}
 		graphics.roundRect(-w / 2, -h / 2, w, h, 2);
-		graphics.stroke({ color: 0xc8c4bc, width: 2, alpha: 0.7 });
-		// REC stamp corner
+		graphics.stroke({ color: 0xc9a34a, width: 2, alpha: 0.55 });
 		graphics.rect(w / 2 - 52, -h / 2 + 10, 40, 14);
-		graphics.fill({ color: 0x6b2a28, alpha: 0.75 });
+		graphics.fill({ color: 0xb54a2a, alpha: 0.75 });
 	};
 
 	const drawVignette = (graphics: import('pixi.js').Graphics) => {
 		const w = frameW;
 		const h = frameH;
-		// hard clinical edge falloff (not soft gothic vignette)
 		for (let i = 0; i < 3; i++) {
 			graphics.rect(-w / 2 + i * 4, -h / 2 + i * 4, w - i * 8, h - i * 8);
-			graphics.stroke({ color: 0x12100e, width: 10, alpha: 0.18 - i * 0.04 });
+			graphics.stroke({ color: 0x0a0806, width: 10, alpha: 0.2 - i * 0.04 });
 		}
 	};
 
@@ -444,7 +436,7 @@
 			     Never stretch-letterbox (width/height alone on padded mp4 left bars). -->
 			<Rectangle isMask anchor={0.5} width={frameW} height={frameH} borderRadius={3} />
 			<Sprite key={reelKey} anchor={0.5} width={reelCover.width} height={reelCover.height} />
-			<!-- fluorescent blackout ghost (desaturated clinical, NOT RGB séance split) -->
+			<!-- brass / gunsmoke ghost (western dust storm, not clinical CRT) -->
 			{#if glitch.current > 0.02}
 				<Sprite
 					key={reelKey}
@@ -452,8 +444,8 @@
 					width={reelCover.width}
 					height={reelCover.height}
 					x={glitch.current * 7}
-					tint={0xf4f1ec}
-					alpha={0.35 * glitch.current}
+					tint={0xc9a34a}
+					alpha={0.28 * glitch.current}
 				/>
 				<Sprite
 					key={reelKey}
@@ -461,7 +453,7 @@
 					width={reelCover.width}
 					height={reelCover.height}
 					y={glitch.current * 5}
-					tint={0x8a8680}
+					tint={0x6e6860}
 					alpha={0.22 * glitch.current}
 				/>
 			{/if}
@@ -574,7 +566,7 @@
 			/>
 		</Container>
 	{:else if skipHint}
-		<!-- clinical chrome under the amount — dismiss prompt only -->
+		<!-- brass plate under the amount — dismiss prompt only -->
 		<Container y={frameH / 2 + SYMBOL_SIZE * 1.72} alpha={0.72 + 0.18 * Math.sin(time * 3.2)}>
 			<BitmapText
 				anchor={0.5}

@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import type { Tween } from 'svelte/motion';
 
-import { stateBet } from 'state-shared';
+import { stateBet, stateUi } from 'state-shared';
 import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -12,6 +12,7 @@ import { eventEmitter } from './eventEmitter';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
+	BOARD_PLATE_PAD,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
@@ -20,6 +21,11 @@ import {
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
 import { COLUMN_ROW_OFFSET } from './chassisArt';
+
+/** Must match FrameMorphHud rail height + plate clearance. */
+const HUD_RAIL_H = 56;
+const HUD_PLATE_CLEAR = 14;
+const HUD_CLEAR_PX = 12;
 
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	if (rawSymbol.name === 'S') {
@@ -86,8 +92,8 @@ export type MultiplierSymbol = {
 export const stateGame = $state({
 	board,
 	gameType: 'basegame' as GameType,
-	// TOMBSTONE REBORN: the top special bar's revealed cards this spin (one entry
-	// per non-empty bar cell). Set by the specialBar book event, cleared on reveal.
+	// TOMBSTONE REBORN: the special bar's revealed cards this spin (one entry per
+	// non-empty bar cell). Set by the specialBar book event, cleared on reveal.
 	specialBar: [] as { reel: number; kind: string }[],
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
@@ -159,18 +165,33 @@ export const stateGame = $state({
 	slotsReleased: true,
 });
 
-const boardLayout = () => ({
-	// centres the seven columns of CARDS, not the box they live in — see
-	// COLUMN_ROW_OFFSET
-	x: stateLayoutDerived.mainLayout().width * 0.5 - COLUMN_ROW_OFFSET,
-	// nudge down so the TOP special bar (six sealed cells above the board)
-	// clears the logo / canvas edge, while the WAYS/WIN rail still clears the
-	// bottom bet/spin controls.
-	y: stateLayoutDerived.mainLayout().height * 0.5 - 20,
-	anchor: { x: 0.5, y: 0.5 },
-	pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
-	...BOARD_SIZES,
-});
+const boardLayout = () => {
+	const main = stateLayoutDerived.mainLayout();
+	// Slight upward nudge so logo / special-bar strip clear the top; may lift
+	// further so BoardPlate + WAYS/WIN console never collide with bet/spin HUD.
+	const preferredY = main.height * 0.5 - 36;
+	let y = preferredY;
+	const hudTopScreen = stateUi.hudBarTopScreenY;
+	if (hudTopScreen > 0) {
+		const canvasH = stateLayoutDerived.canvasSizes().height;
+		const railFloor =
+			main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale - HUD_RAIL_H / 2;
+		// When the console is clamped to railFloor, keep plateBottom + CLEAR
+		// at or above the console top (railFloor - HUD_RAIL_H/2).
+		const maxBoardY =
+			railFloor - HUD_RAIL_H / 2 - BOARD_SIZES.height / 2 - BOARD_PLATE_PAD - HUD_PLATE_CLEAR;
+		y = Math.min(preferredY, maxBoardY);
+	}
+	return {
+		// centres the seven columns of CARDS, not the box they live in — see
+		// COLUMN_ROW_OFFSET
+		x: main.width * 0.5 - COLUMN_ROW_OFFSET,
+		y,
+		anchor: { x: 0.5, y: 0.5 },
+		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+		...BOARD_SIZES,
+	};
+};
 
 const boardRaw = () =>
 	board.map((reel) => reel.reelState.symbols.map((reelSymbol) => reelSymbol.rawSymbol));

@@ -68,7 +68,9 @@ NEW_CUES["sfx_cell_seal_expand"] = False  # Cell Seal full-reel expand hit
 NEW_CUES["sfx_cell_seal_harden"] = False  # Cell Seal harden / multiplier bump
 NEW_CUES["sfx_cell_seal_h3_expand"] = False  # H3 The Grin expand video bed (full once)
 NEW_CUES["sfx_cell_seal_h3_loop"] = True  # unused in FE (last-3s visual loop is silent)
-NEW_CUES["sfx_claw_split"] = False  # nails tearing the card open on the SPLIT strike
+NEW_CUES["sfx_claw_split"] = False  # legacy key — now a wood bullet hit (kept for old refs)
+NEW_CUES["sfx_bullet_wood"] = False  # pistol round slamming into weathered wood
+NEW_CUES["sfx_bullet_ricochet"] = False  # occasional western ricochet whine after a hit
 
 # per-cue loudness overrides: the eye boom is normalized MUCH hotter than the
 # default -16 LUFS bed so it punches through everything, peaks near 0 dBFS
@@ -76,9 +78,10 @@ CUE_FILTERS = {
     "sfx_madams_eye": "loudnorm=I=-9:TP=-0.1:LRA=5",
     # thunder should hit hard alongside the lightning burst
     "sfx_thunder": "loudnorm=I=-10:TP=-0.3:LRA=6",
-    # the tear plays under the board shake and the pane detonation, so it needs
-    # to sit above the -16 bed to be heard at all
+    # bullet hits stack under the board shake — sit above the -16 bed
     "sfx_claw_split": "loudnorm=I=-11:TP=-0.5:LRA=7",
+    "sfx_bullet_wood": "loudnorm=I=-11:TP=-0.5:LRA=7",
+    "sfx_bullet_ricochet": "loudnorm=I=-13:TP=-0.8:LRA=8",
 }
 
 

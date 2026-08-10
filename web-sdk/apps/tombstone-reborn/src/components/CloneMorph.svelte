@@ -21,19 +21,21 @@
 	import { Container, Graphics, Rectangle } from 'pixi-svelte';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
+	import { filterVisibleCells } from '../game/boardCells';
 	import { fxDur } from '../game/fxTiming';
 	import { getContext } from '../game/context';
 	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
 	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
 	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import SymbolSprite from './SymbolSprite.svelte';
 
 	const context = getContext();
 
-	const CORE = 0xffffff;
-	const GLASS = 0xdfe6ea;
-	const GOLD = 0xf0d488;
-	const DARK = 0x0a0a0a;
+	const CORE = TOMBSTONE_FX.spentBrass;
+	const BRASS = TOMBSTONE_FX.brass;
+	const DUST = TOMBSTONE_FX.dust;
+	const DARK = TOMBSTONE_FX.dark;
 
 	type Cell = { key: string; reel: number; row: number; seed: number };
 
@@ -58,7 +60,8 @@
 		// Drawn in a fixed reel/row order rather than book order. The overlay paints
 		// opaque plates over live board cells, so if two clone cells are neighbours
 		// an arbitrary order lets a later cell's plate clip the one next to it.
-		cells = [...incoming]
+		// Skip pad / OOB rows — those sockets are empty on the diamond board.
+		cells = filterVisibleCells([...incoming])
 			.sort((a, b) => a.reel - b.reel || a.row - b.row)
 			.map((c) => ({
 				key: `${c.reel}-${c.row}`,
@@ -97,7 +100,7 @@
 		// gather energy across every copy
 		await charge.set(1, { duration: fxDur(560), easing: cubicOut });
 
-		// white-out flash hides the swap
+		// brass muzzle flash hides the swap (SFX keys rebuilt via Scenario Sonilo)
 		phase = 'flash';
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 		shakeBoard({ intensity: Math.min(8 + cells.length * 1.5, 16), duration: fxDur(240) });
@@ -166,16 +169,16 @@
 		// contracting ring pulls energy inward
 		const r = (s * 0.7) * (1 - c) + s * 0.2;
 		g.circle(0, 0, r);
-		g.stroke({ color: GLASS, width: 2, alpha: 0.5 * c });
+		g.stroke({ color: DUST, width: 2, alpha: 0.5 * c });
 		g.circle(0, 0, r * 0.7);
-		g.stroke({ color: CORE, width: 1, alpha: 0.6 * c });
+		g.stroke({ color: BRASS, width: 1, alpha: 0.6 * c });
 		for (let i = 0; i < 6; i++) {
 			const a = time * (3 + i * 0.4) + cell.seed + (i * Math.PI) / 3;
 			const dist = r * (0.8 + 0.2 * Math.sin(time * 5 + i));
 			const x = Math.cos(a) * dist;
 			const y = Math.sin(a) * dist;
 			g.circle(x, y, 1.6 + rand(cell.seed + i) * 1.4);
-			g.fill({ color: i % 2 === 0 ? CORE : GOLD, alpha: 0.8 * c });
+			g.fill({ color: i % 2 === 0 ? CORE : BRASS, alpha: 0.8 * c });
 		}
 	};
 
@@ -188,7 +191,7 @@
 		const w = CELL_PITCH_X;
 		const s = SYMBOL_SIZE;
 		g.roundRect(-w / 2 - 6, -s / 2 - 6, w + 12, s + 12, 12);
-		g.fill({ color: CORE, alpha: 0.92 * f });
+		g.fill({ color: CORE, alpha: 0.78 * f });
 	};
 
 	const drawFlashRing = (g: import('pixi.js').Graphics) => {
@@ -196,7 +199,7 @@
 		if (f <= 0.01) return;
 		const ring = SYMBOL_SIZE * (0.3 + 0.8 * (1 - f));
 		g.circle(0, 0, ring);
-		g.stroke({ color: GOLD, width: 3 * f + 0.5, alpha: 0.8 * f });
+		g.stroke({ color: BRASS, width: 3 * f + 0.5, alpha: 0.8 * f });
 	};
 
 	// link line joining every clone copy, drawn while charging
@@ -207,7 +210,7 @@
 		for (let i = 0; i < placed.length - 1; i++) {
 			g.moveTo(placed[i].cx, placed[i].cy);
 			g.lineTo(placed[i + 1].cx, placed[i + 1].cy);
-			g.stroke({ color: GLASS, width: 1.5, alpha: a });
+			g.stroke({ color: BRASS, width: 1.5, alpha: a });
 		}
 	};
 </script>

@@ -1,0 +1,182 @@
+{
+  "sfx_btn_spin": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Revolver cylinder spin then firm wooden stop click, casino spin button, western",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334427.9312327
+  },
+  "sfx_ui_click": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Tiny dry wooden tick like a revolver hammer half-cock, ultra short casino UI click, western, no metal clang ring",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334391.3084848
+  },
+  "sfx_ui_click_soft": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Very soft dry finger tap on weathered wood bar top, muted western UI tick",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334400.5021822
+  },
+  "sfx_ui_click_heavy": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Heavy wooden stamp on saloon counter, short solid UI confirm thud",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334409.9161096
+  },
+  "sfx_btn_general": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Short brass lever clack of an old slot machine handle, western saloon",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334418.9844615
+  },
+  "sfx_reel_stop_1": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Soft wooden reel stop thud, light, dusty western slot machine",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334437.324586
+  },
+  "sfx_reel_stop_2": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Wooden reel stop thud medium weight, western slot",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334446.2045197
+  },
+  "sfx_reel_stop_3": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Firm wooden reel stop with faint brass rattle, western slot",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334455.3451498
+  },
+  "sfx_reel_stop_4": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Heavy wooden reel stop thud, western",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334464.271124
+  },
+  "sfx_reel_stop_5": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Hardest wooden reel slam stop with short brass ring, western",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334473.3647516
+  },
+  "sfx_symbols_landing": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Poker chip and spur landing softly on wood table, short western symbol land",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334482.6282475
+  },
+  "sfx_royals_landing": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Heavy premium symbol land: brass spur and whiskey glass set down hard on wood",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334495.098149
+  },
+  "sfx_scatter_stop_1": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Distant church bell hint plus wooden tombstone tap, soft scatter stop",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334504.259286
+  },
+  "sfx_scatter_stop_2": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Church bell hint louder, wooden tombstone tap, scatter stop 2",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334513.410233
+  },
+  "sfx_scatter_stop_3": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Clearer church bell and wood tombstone hit, rising tension scatter stop",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334522.3800204
+  },
+  "sfx_scatter_stop_4": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Strong church bell and dusty wood hit, tense scatter stop",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334531.71932
+  },
+  "sfx_scatter_stop_5": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Loud church bell strike and heavy wood impact, final scatter stop",
+      "duration": 1,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334540.9087062
+  },
+  "sfx_scatter_reveal": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Dusty reveal whoosh with church bell shimmer and gravel settle, western scatter reveal",
+      "duration": 2,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334560.0837255
+  },
+  "sfx_scatter_win": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Triumphant dusty western stinger: church bells and brass, scatter win",
+      "duration": 2,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334569.0222023
+  },
+  "sfx_scatter_win_v2": {
+    "model": "model_sonilo-v1-1-text-to-sound-effects",
+    "payload": {
+      "prompt": "Bigger western scatter win: church bells, revolver cylinder spin flourish, dusty brass fanfare",
+      "duration": 4,
+      "audioFormat": "mp3"
+    },
+    "ts": 1786334581.5366154
+  }
+}

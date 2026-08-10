@@ -24,7 +24,7 @@ importers:
         specifier: 2.4.4
         version: 2.4.4
 
-  apps/cluster:
+  apps/tombstone-reborn:
     dependencies:
       '@lingui/core':
         specifier: 5.2.0
@@ -62,554 +62,9 @@ importers:
       lodash:
         specifier: 4.17.16
         version: 4.17.16
-      pixi-svelte:
-        specifier: workspace:*
-        version: link:../../packages/pixi-svelte
-      rgs-requests:
-        specifier: workspace:*
-        version: link:../../packages/rgs-requests
-      state-shared:
-        specifier: workspace:*
-        version: link:../../packages/state-shared
-      svelte:
-        specifier: 5.20.5
-        version: 5.20.5
-      utils-bet:
-        specifier: workspace:*
-        version: link:../../packages/utils-bet
-      utils-book:
-        specifier: workspace:*
-        version: link:../../packages/utils-book
-      utils-event-emitter:
-        specifier: workspace:*
-        version: link:../../packages/utils-event-emitter
-      utils-layout:
-        specifier: workspace:*
-        version: link:../../packages/utils-layout
-      utils-shared:
-        specifier: workspace:*
-        version: link:../../packages/utils-shared
-      utils-slots:
-        specifier: workspace:*
-        version: link:../../packages/utils-slots
-      utils-sound:
-        specifier: workspace:*
-        version: link:../../packages/utils-sound
-      utils-xstate:
-        specifier: workspace:*
-        version: link:../../packages/utils-xstate
-      vite:
-        specifier: 6.2.0
-        version: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
-    devDependencies:
-      '@storybook/addon-svelte-csf':
-        specifier: 5.0.5
-        version: 5.0.5(@storybook/svelte@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5))(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(babel-plugin-macros@3.1.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 5.0.3
-        version: 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      chromatic:
-        specifier: 11.26.1
-        version: 11.26.1
-      config-lingui:
-        specifier: workspace:*
-        version: link:../../packages/config-lingui
-      config-storybook:
-        specifier: workspace:*
-        version: link:../../packages/config-storybook
-      config-svelte:
-        specifier: workspace:*
-        version: link:../../packages/config-svelte
-      config-ts:
-        specifier: workspace:*
-        version: link:../../packages/config-ts
-      config-vite:
-        specifier: workspace:*
-        version: link:../../packages/config-vite
-      eslint:
-        specifier: 9.21.0
-        version: 9.21.0(jiti@1.21.7)
-      eslint-config-custom:
-        specifier: workspace:*
-        version: link:../../packages/eslint-config-custom
-
-  apps/lines:
-    dependencies:
-      '@lingui/core':
-        specifier: 5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3))(babel-plugin-macros@3.1.0)
-      '@sveltejs/kit':
-        specifier: 2.17.3
-        version: 2.17.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@types/lodash':
-        specifier: 4.17.16
-        version: 4.17.16
-      components-layout:
-        specifier: workspace:*
-        version: link:../../packages/components-layout
-      components-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-pixi
-      components-shared:
-        specifier: workspace:*
-        version: link:../../packages/components-shared
-      components-storybook:
-        specifier: workspace:*
-        version: link:../../packages/components-storybook
-      components-ui-html:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-html
-      components-ui-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-pixi
-      constants-shared:
-        specifier: workspace:*
-        version: link:../../packages/constants-shared
-      envs:
-        specifier: workspace:*
-        version: link:../../packages/envs
-      lodash:
-        specifier: 4.17.16
-        version: 4.17.16
-      pixi-svelte:
-        specifier: workspace:*
-        version: link:../../packages/pixi-svelte
-      rgs-requests:
-        specifier: workspace:*
-        version: link:../../packages/rgs-requests
-      state-shared:
-        specifier: workspace:*
-        version: link:../../packages/state-shared
-      svelte:
-        specifier: 5.20.5
-        version: 5.20.5
-      utils-bet:
-        specifier: workspace:*
-        version: link:../../packages/utils-bet
-      utils-book:
-        specifier: workspace:*
-        version: link:../../packages/utils-book
-      utils-event-emitter:
-        specifier: workspace:*
-        version: link:../../packages/utils-event-emitter
-      utils-layout:
-        specifier: workspace:*
-        version: link:../../packages/utils-layout
-      utils-shared:
-        specifier: workspace:*
-        version: link:../../packages/utils-shared
-      utils-slots:
-        specifier: workspace:*
-        version: link:../../packages/utils-slots
-      utils-sound:
-        specifier: workspace:*
-        version: link:../../packages/utils-sound
-      utils-xstate:
-        specifier: workspace:*
-        version: link:../../packages/utils-xstate
-      vite:
-        specifier: 6.2.0
-        version: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
-    devDependencies:
-      '@storybook/addon-svelte-csf':
-        specifier: 5.0.5
-        version: 5.0.5(@storybook/svelte@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5))(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(babel-plugin-macros@3.1.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 5.0.3
-        version: 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      chromatic:
-        specifier: 11.26.1
-        version: 11.26.1
-      config-lingui:
-        specifier: workspace:*
-        version: link:../../packages/config-lingui
-      config-storybook:
-        specifier: workspace:*
-        version: link:../../packages/config-storybook
-      config-svelte:
-        specifier: workspace:*
-        version: link:../../packages/config-svelte
-      config-ts:
-        specifier: workspace:*
-        version: link:../../packages/config-ts
-      config-vite:
-        specifier: workspace:*
-        version: link:../../packages/config-vite
-      cross-env:
-        specifier: ^10.1.0
-        version: 10.1.0
-      eslint:
-        specifier: 9.21.0
-        version: 9.21.0(jiti@1.21.7)
-      eslint-config-custom:
-        specifier: workspace:*
-        version: link:../../packages/eslint-config-custom
-
-  apps/number-picker:
-    dependencies:
-      '@lingui/core':
-        specifier: 5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3))(babel-plugin-macros@3.1.0)
-      '@sveltejs/kit':
-        specifier: 2.17.3
-        version: 2.17.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@types/lodash':
-        specifier: 4.17.16
-        version: 4.17.16
-      components-layout:
-        specifier: workspace:*
-        version: link:../../packages/components-layout
-      components-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-pixi
-      components-shared:
-        specifier: workspace:*
-        version: link:../../packages/components-shared
-      components-storybook:
-        specifier: workspace:*
-        version: link:../../packages/components-storybook
-      components-ui-html:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-html
-      components-ui-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-pixi
-      constants-shared:
-        specifier: workspace:*
-        version: link:../../packages/constants-shared
-      envs:
-        specifier: workspace:*
-        version: link:../../packages/envs
-      lodash:
-        specifier: 4.17.16
-        version: 4.17.16
-      pixi-svelte:
-        specifier: workspace:*
-        version: link:../../packages/pixi-svelte
-      rgs-requests:
-        specifier: workspace:*
-        version: link:../../packages/rgs-requests
-      state-shared:
-        specifier: workspace:*
-        version: link:../../packages/state-shared
-      svelte:
-        specifier: 5.20.5
-        version: 5.20.5
-      utils-bet:
-        specifier: workspace:*
-        version: link:../../packages/utils-bet
-      utils-book:
-        specifier: workspace:*
-        version: link:../../packages/utils-book
-      utils-event-emitter:
-        specifier: workspace:*
-        version: link:../../packages/utils-event-emitter
-      utils-layout:
-        specifier: workspace:*
-        version: link:../../packages/utils-layout
-      utils-shared:
-        specifier: workspace:*
-        version: link:../../packages/utils-shared
-      utils-slots:
-        specifier: workspace:*
-        version: link:../../packages/utils-slots
-      utils-sound:
-        specifier: workspace:*
-        version: link:../../packages/utils-sound
-      utils-xstate:
-        specifier: workspace:*
-        version: link:../../packages/utils-xstate
-      vite:
-        specifier: 6.2.0
-        version: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
-    devDependencies:
-      '@storybook/addon-svelte-csf':
-        specifier: 5.0.5
-        version: 5.0.5(@storybook/svelte@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5))(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(babel-plugin-macros@3.1.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 5.0.3
-        version: 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      chromatic:
-        specifier: 11.26.1
-        version: 11.26.1
-      config-lingui:
-        specifier: workspace:*
-        version: link:../../packages/config-lingui
-      config-storybook:
-        specifier: workspace:*
-        version: link:../../packages/config-storybook
-      config-svelte:
-        specifier: workspace:*
-        version: link:../../packages/config-svelte
-      config-ts:
-        specifier: workspace:*
-        version: link:../../packages/config-ts
-      config-vite:
-        specifier: workspace:*
-        version: link:../../packages/config-vite
-      eslint:
-        specifier: 9.21.0
-        version: 9.21.0(jiti@1.21.7)
-      eslint-config-custom:
-        specifier: workspace:*
-        version: link:../../packages/eslint-config-custom
-
-  apps/price:
-    dependencies:
-      '@lingui/core':
-        specifier: 5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3))(babel-plugin-macros@3.1.0)
-      '@sveltejs/kit':
-        specifier: 2.17.3
-        version: 2.17.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@types/lodash':
-        specifier: 4.17.16
-        version: 4.17.16
-      components-layout:
-        specifier: workspace:*
-        version: link:../../packages/components-layout
-      components-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-pixi
-      components-shared:
-        specifier: workspace:*
-        version: link:../../packages/components-shared
-      components-storybook:
-        specifier: workspace:*
-        version: link:../../packages/components-storybook
-      components-ui-html:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-html
-      components-ui-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-pixi
-      constants-shared:
-        specifier: workspace:*
-        version: link:../../packages/constants-shared
-      envs:
-        specifier: workspace:*
-        version: link:../../packages/envs
-      lodash:
-        specifier: 4.17.16
-        version: 4.17.16
-      pixi-svelte:
-        specifier: workspace:*
-        version: link:../../packages/pixi-svelte
-      rgs-requests:
-        specifier: workspace:*
-        version: link:../../packages/rgs-requests
-      state-shared:
-        specifier: workspace:*
-        version: link:../../packages/state-shared
-      svelte:
-        specifier: 5.20.5
-        version: 5.20.5
-      utils-bet:
-        specifier: workspace:*
-        version: link:../../packages/utils-bet
-      utils-book:
-        specifier: workspace:*
-        version: link:../../packages/utils-book
-      utils-event-emitter:
-        specifier: workspace:*
-        version: link:../../packages/utils-event-emitter
-      utils-layout:
-        specifier: workspace:*
-        version: link:../../packages/utils-layout
-      utils-shared:
-        specifier: workspace:*
-        version: link:../../packages/utils-shared
-      utils-slots:
-        specifier: workspace:*
-        version: link:../../packages/utils-slots
-      utils-sound:
-        specifier: workspace:*
-        version: link:../../packages/utils-sound
-      utils-xstate:
-        specifier: workspace:*
-        version: link:../../packages/utils-xstate
-      vite:
-        specifier: 6.2.0
-        version: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
-    devDependencies:
-      '@storybook/addon-svelte-csf':
-        specifier: 5.0.5
-        version: 5.0.5(@storybook/svelte@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5))(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(babel-plugin-macros@3.1.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 5.0.3
-        version: 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      chromatic:
-        specifier: 11.26.1
-        version: 11.26.1
-      config-lingui:
-        specifier: workspace:*
-        version: link:../../packages/config-lingui
-      config-storybook:
-        specifier: workspace:*
-        version: link:../../packages/config-storybook
-      config-svelte:
-        specifier: workspace:*
-        version: link:../../packages/config-svelte
-      config-ts:
-        specifier: workspace:*
-        version: link:../../packages/config-ts
-      config-vite:
-        specifier: workspace:*
-        version: link:../../packages/config-vite
-      eslint:
-        specifier: 9.21.0
-        version: 9.21.0(jiti@1.21.7)
-      eslint-config-custom:
-        specifier: workspace:*
-        version: link:../../packages/eslint-config-custom
-
-  apps/scatter:
-    dependencies:
-      '@lingui/core':
-        specifier: 5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3))(babel-plugin-macros@3.1.0)
-      '@sveltejs/kit':
-        specifier: 2.17.3
-        version: 2.17.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@types/lodash':
-        specifier: 4.17.16
-        version: 4.17.16
-      components-layout:
-        specifier: workspace:*
-        version: link:../../packages/components-layout
-      components-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-pixi
-      components-shared:
-        specifier: workspace:*
-        version: link:../../packages/components-shared
-      components-storybook:
-        specifier: workspace:*
-        version: link:../../packages/components-storybook
-      components-ui-html:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-html
-      components-ui-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-pixi
-      constants-shared:
-        specifier: workspace:*
-        version: link:../../packages/constants-shared
-      envs:
-        specifier: workspace:*
-        version: link:../../packages/envs
-      lodash:
-        specifier: 4.17.16
-        version: 4.17.16
-      pixi-svelte:
-        specifier: workspace:*
-        version: link:../../packages/pixi-svelte
-      rgs-requests:
-        specifier: workspace:*
-        version: link:../../packages/rgs-requests
-      state-shared:
-        specifier: workspace:*
-        version: link:../../packages/state-shared
-      svelte:
-        specifier: 5.20.5
-        version: 5.20.5
-      utils-bet:
-        specifier: workspace:*
-        version: link:../../packages/utils-bet
-      utils-book:
-        specifier: workspace:*
-        version: link:../../packages/utils-book
-      utils-event-emitter:
-        specifier: workspace:*
-        version: link:../../packages/utils-event-emitter
-      utils-layout:
-        specifier: workspace:*
-        version: link:../../packages/utils-layout
-      utils-shared:
-        specifier: workspace:*
-        version: link:../../packages/utils-shared
-      utils-slots:
-        specifier: workspace:*
-        version: link:../../packages/utils-slots
-      utils-sound:
-        specifier: workspace:*
-        version: link:../../packages/utils-sound
-      utils-xstate:
-        specifier: workspace:*
-        version: link:../../packages/utils-xstate
-      vite:
-        specifier: 6.2.0
-        version: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
-    devDependencies:
-      '@storybook/addon-svelte-csf':
-        specifier: 5.0.5
-        version: 5.0.5(@storybook/svelte@9.0.15(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5))(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(babel-plugin-macros@3.1.0)(storybook@9.0.15(@testing-library/dom@10.4.0)(prettier@3.6.2))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@sveltejs/vite-plugin-svelte':
-        specifier: 5.0.3
-        version: 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      chromatic:
-        specifier: 11.26.1
-        version: 11.26.1
-      config-lingui:
-        specifier: workspace:*
-        version: link:../../packages/config-lingui
-      config-storybook:
-        specifier: workspace:*
-        version: link:../../packages/config-storybook
-      config-svelte:
-        specifier: workspace:*
-        version: link:../../packages/config-svelte
-      config-ts:
-        specifier: workspace:*
-        version: link:../../packages/config-ts
-      config-vite:
-        specifier: workspace:*
-        version: link:../../packages/config-vite
-      eslint:
-        specifier: 9.21.0
-        version: 9.21.0(jiti@1.21.7)
-      eslint-config-custom:
-        specifier: workspace:*
-        version: link:../../packages/eslint-config-custom
-
-  apps/ways:
-    dependencies:
-      '@lingui/core':
-        specifier: 5.2.0
-        version: 5.2.0(@lingui/babel-plugin-lingui-macro@5.2.0(babel-plugin-macros@3.1.0)(typescript@5.8.3))(babel-plugin-macros@3.1.0)
-      '@sveltejs/kit':
-        specifier: 2.17.3
-        version: 2.17.3(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      '@types/lodash':
-        specifier: 4.17.16
-        version: 4.17.16
-      components-layout:
-        specifier: workspace:*
-        version: link:../../packages/components-layout
-      components-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-pixi
-      components-shared:
-        specifier: workspace:*
-        version: link:../../packages/components-shared
-      components-storybook:
-        specifier: workspace:*
-        version: link:../../packages/components-storybook
-      components-ui-html:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-html
-      components-ui-pixi:
-        specifier: workspace:*
-        version: link:../../packages/components-ui-pixi
-      constants-shared:
-        specifier: workspace:*
-        version: link:../../packages/constants-shared
-      envs:
-        specifier: workspace:*
-        version: link:../../packages/envs
-      lodash:
-        specifier: 4.17.16
-        version: 4.17.16
+      pixi-filters:
+        specifier: 6.1.0
+        version: 6.1.0(pixi.js@8.8.1)
       pixi-svelte:
         specifier: workspace:*
         version: link:../../packages/pixi-svelte
@@ -686,6 +141,12 @@ importers:
       eslint-config-custom:
         specifier: workspace:*
         version: link:../../packages/eslint-config-custom
+      svelte-check:
+        specifier: ^4.7.5
+        version: 4.7.5(picomatch@4.0.5)(svelte@5.20.5)(typescript@5.8.3)
+      typescript:
+        specifier: ^5.8.3
+        version: 5.8.3
 
   packages/components-layout:
     dependencies:
@@ -2142,10 +1603,6 @@ packages:
     peerDependencies:
       eslint: ^6.0.0 || ^7.0.0 || >=8.0.0
 
-  '@eslint-community/regexpp@4.12.1':
-    resolution: {integrity: sha512-CCZCDJuduB9OUkFkY2IgppNZMi2lBQgD2qzwXkEia16cge2pijY/aXi96CJMquDMn3nJdlPV1A5KrJEXwfLNzQ==}
-    engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
-
   '@eslint-community/regexpp@4.12.2':
     resolution: {integrity: sha512-EriSTlt5OC9/7SXkRSCAhfSxxoSUgBm33OH+IkwbdpgoqsSsUg7y3uh+IICI/Qg4BBWr3U2i39RpmycbxMq4ew==}
     engines: {node: ^12.0.0 || ^14.0.0 || >=16.0.0}
@@ -2527,6 +1984,10 @@ packages:
       '@sveltejs/vite-plugin-svelte': ^3.0.0 || ^4.0.0-next.1 || ^5.0.0 || ^6.0.0-next.0
       svelte: ^4.0.0 || ^5.0.0-next.0
       vite: ^5.0.3 || ^6.0.0 || ^7.0.0-beta.0
+
+  '@sveltejs/load-config@0.2.2':
+    resolution: {integrity: sha512-K7dsJDQxBOF+f+epuhMactcjK2VP4MRkLKtwSykNtEI+cKVEyzrmmhQ1pmoxI800m4JKcyJ05L2M4yPwAGiBNw==}
+    engines: {node: '>= 18.0.0'}
 
   '@sveltejs/package@2.3.10':
     resolution: {integrity: sha512-A4fQacgjJ7C/7oSmxR61/TdB14u6ecyMZ8V9JCR5Lol0bLj/PdJPU4uFodFBsKzO3iFiJMpNTgZZ+zYsYZNpUg==}
@@ -4172,6 +3633,14 @@ packages:
     peerDependencies:
       svelte: ^5.0.0
 
+  svelte-check@4.7.5:
+    resolution: {integrity: sha512-NnkHGCTPH6k4ka1E9IpTuNv40uLArHnX52kLEuaHSGqRlPYTnkbFs529jSWG+y+wDy+v+jA2PQ0soN1umVK+OA==}
+    engines: {node: '>= 18.0.0'}
+    hasBin: true
+    peerDependencies:
+      svelte: ^4.0.0 || ^5.0.0-next.0
+      typescript: ^5.0.0 || ^6.0.0
+
   svelte-eslint-parser@1.8.0:
     resolution: {integrity: sha512-mikR1qwIVy3t5WthUoAXkMwxkXvabZP9FJgdx35Ei7EbGWmctva1Pih16Koeor/bdNNq8NXHlwKGS6NkYTawLg==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0, pnpm: 10.34.1}
@@ -4794,14 +4263,14 @@ snapshots:
   '@esbuild/win32-x64@0.25.5':
     optional: true
 
-  '@eslint-community/eslint-utils@4.7.0(eslint@9.21.0(jiti@1.21.7))':
-    dependencies:
-      eslint: 9.21.0(jiti@1.21.7)
-      eslint-visitor-keys: 3.4.3
-
   '@eslint-community/eslint-utils@4.7.0(eslint@9.30.1(jiti@1.21.7))':
     dependencies:
       eslint: 9.30.1(jiti@1.21.7)
+      eslint-visitor-keys: 3.4.3
+
+  '@eslint-community/eslint-utils@4.9.1(eslint@9.21.0(jiti@1.21.7))':
+    dependencies:
+      eslint: 9.21.0(jiti@1.21.7)
       eslint-visitor-keys: 3.4.3
 
   '@eslint-community/eslint-utils@4.9.1(eslint@9.30.1(jiti@1.21.7))':
@@ -4809,14 +4278,12 @@ snapshots:
       eslint: 9.30.1(jiti@1.21.7)
       eslint-visitor-keys: 3.4.3
 
-  '@eslint-community/regexpp@4.12.1': {}
-
   '@eslint-community/regexpp@4.12.2': {}
 
   '@eslint/config-array@0.19.2':
     dependencies:
       '@eslint/object-schema': 2.1.6
-      debug: 4.4.1
+      debug: 4.4.3
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -4850,7 +4317,7 @@ snapshots:
   '@eslint/eslintrc@3.3.1':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.1
+      debug: 4.4.3
       espree: 10.4.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -5369,6 +4836,8 @@ snapshots:
       vite: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
       vitefu: 1.0.7(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
 
+  '@sveltejs/load-config@0.2.2': {}
+
   '@sveltejs/package@2.3.10(svelte@5.20.5)(typescript@5.8.3)':
     dependencies:
       chokidar: 4.0.3
@@ -5383,7 +4852,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1))
-      debug: 4.4.1
+      debug: 4.4.3
       svelte: 5.20.5
       vite: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1)
     transitivePeerDependencies:
@@ -5392,7 +4861,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      debug: 4.4.1
+      debug: 4.4.3
       svelte: 5.20.5
       vite: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
     transitivePeerDependencies:
@@ -5401,7 +4870,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 5.1.0(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      debug: 4.4.1
+      debug: 4.4.3
       svelte: 5.20.5
       vite: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
     transitivePeerDependencies:
@@ -5410,7 +4879,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.20.5)(vite@7.0.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@7.0.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 5.1.0(svelte@5.20.5)(vite@7.0.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      debug: 4.4.1
+      debug: 4.4.3
       svelte: 5.20.5
       vite: 7.0.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
     transitivePeerDependencies:
@@ -5419,7 +4888,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte-inspector@4.0.1(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.35.1)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.35.1)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte': 5.1.0(svelte@5.35.1)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      debug: 4.4.1
+      debug: 4.4.3
       svelte: 5.35.1
       vite: 6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)
     transitivePeerDependencies:
@@ -5428,7 +4897,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1))':
     dependencies:
       '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.85.1))
-      debug: 4.4.1
+      debug: 4.4.3
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.17
@@ -5441,7 +4910,7 @@ snapshots:
   '@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte-inspector': 4.0.1(@sveltejs/vite-plugin-svelte@5.0.3(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2)))(svelte@5.20.5)(vite@6.2.0(@types/node@26.1.1)(jiti@1.21.7)(sass-embedded@1.89.2))
-      debug: 4.4.1
+      debug: 4.4.3
       deepmerge: 4.3.1
       kleur: 4.1.5
       magic-string: 0.30.17
@@ -6073,8 +5542,8 @@ snapshots:
 
   eslint@9.21.0(jiti@1.21.7):
     dependencies:
-      '@eslint-community/eslint-utils': 4.7.0(eslint@9.21.0(jiti@1.21.7))
-      '@eslint-community/regexpp': 4.12.1
+      '@eslint-community/eslint-utils': 4.9.1(eslint@9.21.0(jiti@1.21.7))
+      '@eslint-community/regexpp': 4.12.2
       '@eslint/config-array': 0.19.2
       '@eslint/core': 0.12.0
       '@eslint/eslintrc': 3.3.1
@@ -6088,7 +5557,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.1
+      debug: 4.4.3
       escape-string-regexp: 4.0.0
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
@@ -7074,6 +6543,19 @@ snapshots:
       esrap: 1.2.2
       svelte: 5.35.1
       zimmerframe: 1.1.2
+
+  svelte-check@4.7.5(picomatch@4.0.5)(svelte@5.20.5)(typescript@5.8.3):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.29
+      '@sveltejs/load-config': 0.2.2
+      chokidar: 4.0.3
+      fdir: 6.5.0(picomatch@4.0.5)
+      picocolors: 1.1.1
+      sade: 1.8.1
+      svelte: 5.20.5
+      typescript: 5.8.3
+    transitivePeerDependencies:
+      - picomatch
 
   svelte-eslint-parser@1.8.0(svelte@5.35.1):
     dependencies:

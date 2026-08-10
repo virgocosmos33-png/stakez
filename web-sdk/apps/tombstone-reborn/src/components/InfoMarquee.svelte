@@ -3,7 +3,7 @@
 	import { Container, Rectangle, Text } from 'pixi-svelte';
 	import { stateUrlDerived } from 'state-shared';
 	import { socialText } from 'utils-shared/socialText';
-	import { SPECIALS, INFO_SECTIONS } from 'components-ui-html';
+	import { gameInfo, getInfoSection } from 'components-ui-html';
 
 	// Base-game info ticker for the centre HUD well (the slot the FREE SPINS
 	// counter occupies during the bonus). Scrolls the SAME scatter / wild /
@@ -30,19 +30,19 @@
 	// like the pay-table modal does
 	const st = (text: string) => socialText(text, stateUrlDerived.social());
 
-	// Compose ticker items straight from the shared info source of truth.
-	// Specials first (The Sealed / Memory Reset / Observation Pane / It Knows), then
-	// the most player-relevant rule sections (ways, free spins, feature spins, buys).
+	// Compose ticker items straight from the shared info source of truth: the bar
+	// cards and the special-bar / last-lane / bonus / max-win rules, i.e. what a
+	// player needs mid-spin. The rest of the copy stays in the pay-table menu.
 	const SECTION_TITLES = [
-		'WAYS PAYS',
-		'FREE SPINS',
-		'EXTRA BET & FEATURE SPINS',
-		'BONUS BUYS',
+		'GAME INFO',
+		'THE SPECIAL BAR',
+		'THE LAST-REEL LANE',
+		'BONUSES',
 		'MAX WIN',
 	];
 
 	const sectionToText = (title: string) => {
-		const section = INFO_SECTIONS.find((s) => s.title === title);
+		const section = getInfoSection(title);
 		if (!section) return '';
 		const parts: string[] = [];
 		if (section.body) parts.push(section.body);
@@ -57,7 +57,7 @@
 	const SEP = '\u00a0\u00a0\u00a0\u25c6\u00a0\u00a0\u00a0';
 	const message = $derived(
 		[
-			...SPECIALS.map((s) => `${s.name.toUpperCase()} — ${s.desc}`),
+			...gameInfo.specials.map((s) => `${s.name.toUpperCase()} — ${s.desc}`),
 			...SECTION_TITLES.map(sectionToText).filter(Boolean),
 		]
 			.map(st)

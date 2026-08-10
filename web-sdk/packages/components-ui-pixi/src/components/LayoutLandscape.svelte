@@ -7,6 +7,7 @@
 	import { getContext } from '../context';
 	import type { LayoutUiProps } from '../types';
 	import { UI_BASE_SIZE } from '../constants';
+	import { publishHudBarTop } from '../hudBarTop.svelte';
 	import ControlInfoBar, { INFO_BAR_SIZE } from './ControlInfoBar.svelte';
 	import ActionPod from './ActionPod.svelte';
 
@@ -106,6 +107,11 @@
 	const BOTTOM_PAD = 22;
 	const barY = $derived(H - BOTTOM_PAD - (spinW * BAR_SCALE) / 2);
 	const barX = $derived(W / 2);
+
+	// The spin coin is normally the tallest thing in the row, but the fit bump
+	// grows the balance/bet card too, so take whichever reaches highest.
+	const barH = $derived(Math.max(spinW, INFO_BAR_SIZE.height * ELEM_SCALE) * BAR_SCALE);
+	publishHudBarTop(() => barY - barH / 2);
 </script>
 
 <Container x={20}>

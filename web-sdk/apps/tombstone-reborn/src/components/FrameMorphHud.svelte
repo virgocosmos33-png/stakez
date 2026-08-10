@@ -17,7 +17,8 @@
 	 * white padded-quilt photo. A thin blood-red hairline ties it to the brand;
 	 * tiny stencil labels sit over cold bone-white values.
 	 *
-	 * Outer size lockstep with BoardFrame.svelte (GOLD_INNER / FRAME_SCALE / GAP).
+	 * Sits just under BoardPlate; boardLayout lifts the board when the bet/spin
+	 * bar would otherwise force this console up into the reels.
 	 */
 	import * as PIXI from 'pixi.js';
 	import { MainContainer } from 'components-layout';
@@ -27,7 +28,7 @@
 
 	import { getContext } from '../game/context';
 	import config from '../game/config';
-	import { SYMBOL_SIZE, LOCKED_SLOTS_BOTTOM_EXTENT } from '../game/constants';
+	import { BOARD_PLATE_PAD } from '../game/constants';
 	import { COLUMN_ROW_OFFSET } from '../game/chassisArt';
 	import { stateShake } from '../game/stateShake.svelte';
 	import { hudColor } from '../game/hud.generated';
@@ -42,10 +43,10 @@
 	const LABEL_FAMILY = '"Arial Narrow", "Segoe UI Semibold", "Segoe UI", Arial, sans-serif';
 	const VALUE_FAMILY = '"Segoe UI", Arial, Helvetica, sans-serif';
 
-	// Lockstep with BoardFrame.svelte
-	const GOLD_INNER_Y = 101;
-	const FRAME_SCALE = 0.34;
+	// Console sizing (BoardFrame is gone — no gold trim lockstep).
 	const GAP = 6;
+	/** air between BoardPlate bottom lip and the WAYS/WIN console top */
+	const PLATE_CLEAR = 14;
 
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 	let ways = $state(BASE_WAYS);
@@ -82,31 +83,22 @@
 		const bw = board.width;
 		const bh = board.height;
 		const frameY = board.y;
-		const s = FRAME_SCALE;
-		const outerH = bh + 2 * GAP + 2 * GOLD_INNER_Y * s;
-
-		const frameBottom = frameY + outerH / 2;
-		// drop the rail BELOW the reserved bottom locked-slot row (+ small margin)
-		// so WAYS / info / WIN never sit under the locked slots
-		const slotDrop = LOCKED_SLOTS_BOTTOM_EXTENT + SYMBOL_SIZE * 0.12;
-		const yInner = frameY + bh / 2 + GAP + slotDrop;
 
 		// Base rail width = the NORMAL reels' plate exactly (the dark matte behind
-		// reels 1..5), NOT the special side cages and NOT the frame molding: the
-		// old outerW added the molding depth (~50px) and visibly overhung the
-		// plate. Wells only grow PAST this base when a value needs the room.
+		// the cards), NOT side cages. Wells grow PAST this base when a value needs room.
 		const baseW = bw + 2 * GAP;
-		const railH = Math.max(48, Math.min(64, (GOLD_INNER_Y * s + GAP) * 1.55));
+		const railH = 56;
 		// the CARDS (and the plate that hugs them) sit COLUMN_ROW_OFFSET right of
 		// the board box's centre (0.53 reel padding) — centre the rail on the
 		// cards, not the box, or it rides a few px left of the plate
 		const railX = board.x + COLUMN_ROW_OFFSET;
-		// The bet/spin controls hug the REAL screen bottom, not the design box —
-		// so the rail's floor must be computed in screen space (a design-space
-		// guess overshot on wide windows and dragged the rail up onto the
-		// board). The active HUD layout publishes its bar's top edge in screen
-		// px; convert it into main-layout units and clamp ONLY when the rail
-		// would actually run into the controls.
+		// Preferred: console sits JUST BELOW the BoardPlate bottom lip.
+		// (Old math reserved LOCKED_SLOTS_BOTTOM_EXTENT for number plates that
+		// no longer exist, then railFloor clamped the console UP into the plate.)
+		const plateBottom = frameY + bh / 2 + BOARD_PLATE_PAD;
+		const preferredRailY = plateBottom + PLATE_CLEAR + railH / 2;
+		// The bet/spin controls hug the REAL screen bottom — clamp the rail so it
+		// never runs into them (boardLayout also lifts the board when needed).
 		const main = context.stateLayoutDerived.mainLayout();
 		const canvasH = context.stateLayoutDerived.canvasSizes().height;
 		const hudTopScreen = stateUi.hudBarTopScreenY;
@@ -115,7 +107,7 @@
 			hudTopScreen > 0
 				? main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale - railH / 2
 				: Number.POSITIVE_INFINITY;
-		const railY = Math.min(yInner + railH * 0.42, railFloor);
+		const railY = Math.min(preferredRailY, railFloor);
 
 		// --- three recessed wells that GROW to fit their content --------------
 		const railRadius = railH * 0.24;
@@ -186,7 +178,6 @@
 			slots,
 			valueFontSize,
 			labelFontSize,
-			frameBottom,
 		};
 	});
 

@@ -14,6 +14,7 @@
 	import type { LayoutUiProps } from '../types';
 	import { getContext } from '../context';
 	import { UI_BASE_SIZE } from '../constants';
+	import { publishHudBarTop } from '../hudBarTop.svelte';
 
 	const props: LayoutUiProps = $props();
 	const context = getContext();
@@ -75,6 +76,12 @@
 		},
 	);
 
+	// The HUD block starts at the control row (the BALANCE|BET card sits under
+	// it), and the whole row rides down with the drawer as it folds away — so
+	// the game gets the room back while the drawer is closed.
+	const CTRL_ROW_Y = 360; // control row centre, up from the bottom of the design box
+	publishHudBarTop(() => drawerTween.current + H - CTRL_ROW_Y - buyHalf, { alignBottom: true });
+
 	let drawerButtonFadeComplete = $state(() => {});
 
 	context.eventEmitter.subscribeOnMount({
@@ -119,23 +126,23 @@
 	     (235 → 215) so the wide centre gaps roughly halve, while the outer
 	     offset (430 → 415) keeps the row spanning the frame without overflow. -->
 	<Container y={drawerTween.current}>
-		<Container x={W * 0.5 - 415 * fitX} y={H - 360} scale={1.06}>
+		<Container x={W * 0.5 - 415 * fitX} y={H - CTRL_ROW_Y} scale={1.06}>
 			{@render props.buttonBuyBonus({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5 - 215 * fitX} y={H - 360} scale={1.06}>
+		<Container x={W * 0.5 - 215 * fitX} y={H - CTRL_ROW_Y} scale={1.06}>
 			{@render props.buttonAutoSpin({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5} y={H - 360} scale={1.06}>
+		<Container x={W * 0.5} y={H - CTRL_ROW_Y} scale={1.06}>
 			{@render props.buttonBet({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5 + 215 * fitX} y={H - 360} scale={1.06}>
+		<Container x={W * 0.5 + 215 * fitX} y={H - CTRL_ROW_Y} scale={1.06}>
 			{@render props.buttonTurbo({ anchor: 0.5 })}
 		</Container>
 
-		<Container x={W * 0.5 + 415 * fitX} y={H - 360} scale={1.06}>
+		<Container x={W * 0.5 + 415 * fitX} y={H - CTRL_ROW_Y} scale={1.06}>
 			{@render props.buttonMenu({ anchor: 0.5 })}
 		</Container>
 	</Container>
@@ -175,7 +182,7 @@
 			'passive' re-enables it during free spins when the drawer is shown. -->
 		<Container
 			x={W * 0.5 + 415 * fitX}
-			y={H - 360}
+			y={H - CTRL_ROW_Y}
 			scale={1.06}
 			eventMode={stateUi.drawerButtonShow ? 'passive' : 'none'}
 		>
@@ -199,7 +206,7 @@
 	/>
 
 	<MainContainer standard alignVertical="bottom">
-		<Container x={W * 0.5 + 415 * fitX} y={H - 360}>
+		<Container x={W * 0.5 + 415 * fitX} y={H - CTRL_ROW_Y}>
 			<Container y={-190 - 210 * 3}>
 				{@render props.buttonPayTable({ anchor: 0.5 })}
 			</Container>

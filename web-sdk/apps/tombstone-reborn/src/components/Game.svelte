@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-
 	import { EnablePixiExtension } from 'components-pixi';
 	import { EnableHotkey } from 'components-shared';
 	import { MainContainer } from 'components-layout';
@@ -116,7 +114,10 @@
 			'Wilds only win on their own when they connect on every column of the board — 6 wide — at 10× bet per way.',
 	});
 
-	onMount(() => (context.stateLayout.showLoadingScreen = true));
+	// Do NOT force showLoadingScreen=true on mount: StoryGameTemplate sets
+	// showLoadingScreen = !skipLoadingScreen once assets load, and createLayout
+	// already defaults it to true for real sessions. Forcing true here races
+	// Storybook skip and can leave the board unmounted after HMR remounts.
 
 	context.eventEmitter.subscribeOnMount({
 		buyBonusConfirm: () => {
@@ -168,9 +169,14 @@
 			<BoardPlate />
 		</MainContainer>
 
-		<!-- Six sealed special-card cells along the TOP of the board (always
-			visible; cards drop in from the specialBar book event). -->
-		<SpecialBar />
+		<!-- Six special-card nameplates, one per reel, on a plank rail down the
+			LEFT of the board (always visible; a card lights its plaque on the
+			specialBar book event). Lies down above the board when the side margin
+			is too narrow — see SpecialBar.svelte. Needs the MainContainer around
+			it: the rail is a raw nine-slice attached to this parent. -->
+		<MainContainer>
+			<SpecialBar />
+		</MainContainer>
 
 		<MainContainer>
 			<Board />

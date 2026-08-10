@@ -523,12 +523,27 @@ export default {
 	},
 	// (The reserved-slot cage overlay is drawn procedurally by LockedSlots.svelte
 	// now — the old prison_bars_closed/open PNGs are no longer registered.)
-	// SPLIT: a patient's clawed hand fades in over each scored symbol and rakes
-	// down through it. 'spriteSheet' hands the game the frame textures as an
-	// ordered array (JSON key order = play order). Baked by tools/make_claw_atlas.py.
+	// SPLIT (legacy claw atlas — kept loaded so ColumnClawStrike / any leftover
+	// refs do not 404; the symbol split now uses splitHoles instead).
 	splitClaw: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/fx/split_claw.json', import.meta.url).href,
+		preload: true,
+	},
+	// SPLIT: bullet-hole impact decals stamped onto scored cells. Three variants
+	// packed by tools/make_bullet_hole_atlas.py; shot count scales with the
+	// cell's multiplier (up to 4).
+	splitHoles: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/split_holes.json', import.meta.url).href,
+		preload: true,
+	},
+	// SPLIT / lock western VFX (Kenney particle + smoke packs, recolored).
+	// tools/make_tombstone_split_vfx_atlas.py — brass sparks, gunsmoke, scorch,
+	// scope ring. Replaces clinical white brackets / clinic sparkles.
+	tombstoneSplitVfx: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/tombstone_split_vfx.json', import.meta.url).href,
 		preload: true,
 	},
 	// CELL-BLOCK CHASSIS art is GONE: the iron cage columns and beam were
@@ -556,6 +571,45 @@ export default {
 	mirrorFrame: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/mirror_frame_wide.png', import.meta.url).href,
+	},
+	// SPECIAL BAR (the six-cell rail beside the board). Scenario GPT Image 2
+	// transparent PNGs, alpha-cropped by tools/make_special_bar_art.py.
+	// Empty slots use the hollow tintable frame; revealed cards use the
+	// per-kind plaques with baked embossed labels (no runtime Text).
+	barRail: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_rail.webp', import.meta.url).href,
+		preload: true,
+	},
+	barPlaque: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueGang: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_gang.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueOutlaw: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_outlaw.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueSmoke: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_smoke.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueOpen: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_open.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueDigup: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_digup.png', import.meta.url).href,
+		preload: true,
 	},
 	// Bottom morph rail: THREE separated compartments (WAYS | FREE SPINS | WIN).
 	mirrorFrameBottomCompartments: {

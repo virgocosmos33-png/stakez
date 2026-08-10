@@ -1,0 +1,75 @@
+{
+"frames": {
+"progressBar.png": {
+"frame": {
+"x": 1,
+"y": 1,
+"w": 492,
+"h": 87
+},
+"rotated": false,
+"trimmed": false,
+"spriteSourceSize": {
+"x": 0,
+"y": 0,
+"w": 492,
+"h": 87
+},
+"sourceSize": {
+"w": 492,
+"h": 87
+}
+},
+"progressBarBackground.png": {
+"frame": {
+"x": 494,
+"y": 1,
+"w": 492,
+"h": 87
+},
+"rotated": false,
+"trimmed": false,
+"spriteSourceSize": {
+"x": 0,
+"y": 0,
+"w": 492,
+"h": 87
+},
+"sourceSize": {
+"w": 492,
+"h": 87
+}
+},
+"progressBarFrame.png": {
+"frame": {
+"x": 987,
+"y": 1,
+"w": 492,
+"h": 87
+},
+"rotated": false,
+"trimmed": false,
+"spriteSourceSize": {
+"x": 0,
+"y": 0,
+"w": 492,
+"h": 87
+},
+"sourceSize": {
+"w": 492,
+"h": 87
+}
+}
+},
+"meta": {
+"app": "game-builder/make_loading_chrome.py",
+"version": "1.0",
+"image": "progressBar.webp",
+"format": "RGBA8888",
+"size": {
+"w": 1480,
+"h": 89
+},
+"scale": "0.25"
+}
+}

@@ -8,6 +8,7 @@ import { fxWait, fxDur } from './fxTiming';
 import { SYMBOL_SIZE } from './constants';
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
+import { filterVisibleCells } from './boardCells';
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
@@ -105,11 +106,7 @@ const landCells = async (cells: Position[]) => {
 };
 
 /** Keep win overlays on live visible cells only (skip pads / out-of-range). */
-const visibleWinPositions = (positions: Position[]): Position[] =>
-	positions.filter(({ reel, row }) => {
-		const len = stateGame.board[reel]?.reelState.symbols.length ?? 0;
-		return len >= 3 && row >= 1 && row <= len - 2;
-	});
+const visibleWinPositions = (positions: Position[]): Position[] => filterVisibleCells(positions);
 
 // How many ways actually connected this spin (summed in winInfo, shown in setWin).
 let connectedWays = 0;
@@ -121,15 +118,22 @@ const applySplit = async (
 	tone: 'split' | 'stretch' | 'clone',
 ) => {
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+	// Never lock / tear pad rows or cells past a short reel's window — those
+	// sockets are empty graveyard, not symbols (diamond board).
+	const cells = filterVisibleCells(bookEvent.cells);
+	if (!cells.length) {
+		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
+		return;
+	}
 
 	await eventEmitter.broadcastAsync({
 		type: 'targetLockShow',
-		cells: bookEvent.cells.map(({ reel, row }) => ({ reel, row })),
+		cells: cells.map(({ reel, row }) => ({ reel, row })),
 		tone,
 	});
 
 	const newBoard = rawBoardCopy();
-	bookEvent.cells.forEach(({ reel, row, multiplier }) => {
+	cells.forEach(({ reel, row, multiplier }) => {
 		if (newBoard[reel]?.[row]) {
 			newBoard[reel][row] = { ...newBoard[reel][row], multiplier };
 		}
@@ -138,7 +142,7 @@ const applySplit = async (
 
 	await eventEmitter.broadcastAsync({
 		type: 'splitPanesShow',
-		cells: bookEvent.cells.map(({ reel, row, multiplier }) => ({
+		cells: cells.map(({ reel, row, multiplier }) => ({
 			reel,
 			row,
 			count: multiplier,
@@ -288,7 +292,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ------------------------------------------------------------------
 	// TOMBSTONE REBORN custom events
 	// ------------------------------------------------------------------
-	// The top special bar resolves its cards. The cards themselves are shown by
+	// The special bar resolves its cards. The cards themselves are shown by
 	// the SpecialBar component (reads stateGame.specialBar); each card's EFFECT
 	// plays in its own following event.
 	specialBar: async (bookEvent: BookEventOfType<'specialBar'>) => {
@@ -336,13 +340,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// SymbolWrap culls anything outside the live window.
 		grownReels.forEach((reel) => parkReel(reel));
 
-		await eventEmitter.broadcastAsync({
-			type: 'targetLockShow',
-			cells: grown,
-			tone: 'stretch',
-		});
-		shakeBoard({ intensity: 9, duration: fxDur(280) });
-		await landCells(grown);
+		const grownVisible = filterVisibleCells(grown);
+		if (grownVisible.length) {
+			await eventEmitter.broadcastAsync({
+				type: 'targetLockShow',
+				cells: grownVisible,
+				tone: 'stretch',
+			});
+			shakeBoard({ intensity: 9, duration: fxDur(280) });
+			await landCells(grownVisible);
+		}
 
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		await fxWait(150);
@@ -350,33 +357,38 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// GUNSMOKE — every copy of one symbol type morphs into the revolver WILD
 	gunsmoke: async (bookEvent: BookEventOfType<'gunsmoke'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		const cells = filterVisibleCells(bookEvent.cells);
+		if (!cells.length) {
+			eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
+			return;
+		}
 
 		// mark every copy while it is still the old symbol
 		await eventEmitter.broadcastAsync({
 			type: 'targetLockShow',
-			cells: bookEvent.cells.map(({ reel, row }) => ({ reel, row })),
+			cells: cells.map(({ reel, row }) => ({ reel, row })),
 			tone: 'clone',
 		});
 
 		// swap underneath, hidden by the morph overlay (keep any split multiplier)
 		const newBoard = rawBoardCopy();
-		bookEvent.cells.forEach(({ reel, row }) => {
+		cells.forEach(({ reel, row }) => {
 			if (newBoard[reel]?.[row]) {
 				newBoard[reel][row] = { ...newBoard[reel][row], name: 'W' };
 			}
 		});
 		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
-		parkCells(bookEvent.cells);
+		parkCells(cells);
 
 		// play the morph: every copy charges, flashes and becomes the revolver
 		await eventEmitter.broadcastAsync({
 			type: 'cloneMorphShow',
-			cells: bookEvent.cells.map(({ reel, row }) => ({ reel, row })),
+			cells: cells.map(({ reel, row }) => ({ reel, row })),
 			from: bookEvent.symbol,
 			to: 'W',
 		});
 		eventEmitter.broadcast({ type: 'cloneMorphHide' });
-		await animateSymbols({ positions: bookEvent.cells });
+		await animateSymbols({ positions: cells });
 
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		await fxWait(160);
@@ -414,7 +426,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			}
 		});
 		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
-		const splitCells = bookEvent.cells.filter(({ reel }) => reel !== last);
+		const splitCells = filterVisibleCells(bookEvent.cells.filter(({ reel }) => reel !== last));
 		parkCells([{ reel: last, row: 1 }, ...splitCells]);
 
 		await eventEmitter.broadcastAsync({

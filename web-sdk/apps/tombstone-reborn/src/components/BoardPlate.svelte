@@ -10,12 +10,12 @@
 	import { Container, Graphics } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
+	import { SYMBOL_SIZE, CELL_PITCH_X, BOARD_PLATE_PAD } from '../game/constants';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
 
 	const context = getContext();
 
-	const PAD = 18;
+	const PAD = BOARD_PLATE_PAD;
 	const GROUT = 2.25;
 	const SOCKET_RADIUS = 5;
 	const NAIL_R = 2.4;
@@ -86,21 +86,20 @@
 		g.poly(outline);
 		g.stroke({ color: WOOD_EDGE, width: 1.5, alpha: 0.55 });
 
-		// faint plank grain lines across the face
-		const minX = Math.min(...cols.map((c) => c.left)) - PAD;
-		const maxX = Math.max(...cols.map((c) => c.right)) + PAD;
-		const minY = Math.min(...cols.map((c) => c.top)) - PAD;
-		const maxY = Math.max(...cols.map((c) => c.bottom)) + PAD;
-		for (let y = minY + 10; y < maxY; y += 11) {
-			g.moveTo(minX + 4, y);
-			g.lineTo(maxX - 4, y);
-			g.stroke({ color: WOOD_GRAIN, width: 1, alpha: 0.18 });
-		}
-
-		// dusty amber hairline (RIP-style accent, not clinical white)
-		g.moveTo(minX + 10, minY + 2);
-		g.lineTo(maxX - 10, minY + 2);
-		g.stroke({ color: DUST, width: 1, alpha: 0.35 });
+		// Plank grain ONLY inside each column's wood band — never a full-width
+		// stroke across the diamond notches (that read as a floating hairline
+		// over empty air above the short middle/last reels).
+		cols.forEach((col) => {
+			const x0 = col.left + 3;
+			const x1 = col.right - 3;
+			const y0 = col.top - PAD + 8;
+			const y1 = col.bottom + PAD - 4;
+			for (let y = y0; y < y1; y += 11) {
+				g.moveTo(x0, y);
+				g.lineTo(x1, y);
+				g.stroke({ color: WOOD_GRAIN, width: 1, alpha: 0.18 });
+			}
+		});
 
 		cols.forEach((col) => {
 			for (let row = 0; row < col.rows; row++) {

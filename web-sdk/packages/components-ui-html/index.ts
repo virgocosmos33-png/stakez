@@ -1,12 +1,13 @@
 import Modals from './src/components/Modals.svelte';
 import GameVersion from './src/components/GameVersion.svelte';
 import GlobalStyle from './src/components/GlobalStyle.svelte';
+import ReplayPanel from './src/components/ReplayPanel.svelte';
 
 import messagesMap from './src/i18n/messagesMap';
 import { i18nDerived } from './src/i18n/i18nDerived';
 
 export * from './src/types';
 // shared game info / pay-table copy (source of truth for the info marquee too)
-export * from './src/data/gameInfo';
+export * from './src/data/gameInfo.svelte';
 
-export { messagesMap, i18nDerived, Modals, GameVersion, GlobalStyle };
+export { messagesMap, i18nDerived, Modals, GameVersion, GlobalStyle, ReplayPanel };

@@ -27,15 +27,13 @@
 	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
 	import { getSymbolX } from '../game/utils';
 	import { stateShake } from '../game/stateShake.svelte';
+	import { TOMBSTONE_FX, drawPowderSeam } from '../game/tombstoneVfx';
 	import WildColumnLabel from './WildColumnLabel.svelte';
 	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
 
 	const context = getContext();
 	const appContext = getContextApp();
 
-	const BLOOD = 0xff2d2d;
-	const CORE = 0xffffff;
-	const GLASS = 0xdfe6ea;
 	/** same visual pane cap as WildReelSlide — don't import that module (cycle risk) */
 	const WILD_SPLIT_MAX_PANES = 4;
 
@@ -65,7 +63,7 @@
 		// stretch events fire ONE PER CELL (activation order): a reel from an
 		// EARLIER event stays fully stretched (settled) while the new one animates.
 		settled: boolean;
-		/** Madam-Mirror pane count after a SPLIT tears the column (1 = intact) */
+		/** powder-burn pane count after a SPLIT tears the column (1 = intact) */
 		panes: number;
 		/** 0 = whole column, 1 = fully torn into panes */
 		tear: Tween<number>;
@@ -152,16 +150,7 @@
 	};
 
 	const drawWildDivider = (g: import('pixi.js').Graphics, h: number, slim: number) => {
-		const half = (h * 0.5 - 4) * slim;
-		g.moveTo(0, -half);
-		g.lineTo(0, half);
-		g.stroke({ color: BLOOD, width: 5, alpha: 0.55 });
-		g.moveTo(0, -half);
-		g.lineTo(0, half);
-		g.stroke({ color: CORE, width: 1.6, alpha: 0.95 });
-		g.moveTo(-1.2, -half);
-		g.lineTo(-1.2, half);
-		g.stroke({ color: GLASS, width: 0.7, alpha: 0.55 });
+		drawPowderSeam(g, h, slim);
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -286,9 +275,9 @@
 		if (a <= 0.02) return;
 		for (const y of [topY, bottomY]) {
 			g.rect(-w / 2 - 3, y - 1.5, w + 6, 3);
-			g.fill({ color: 0xffffff, alpha: 0.85 * a });
+			g.fill({ color: TOMBSTONE_FX.spentBrass, alpha: 0.8 * a });
 			g.rect(-w / 2 - 5, y - 4, w + 10, 8);
-			g.fill({ color: BLOOD, alpha: 0.22 * a });
+			g.fill({ color: TOMBSTONE_FX.bloodRust, alpha: 0.28 * a });
 		}
 	};
 
@@ -362,7 +351,7 @@
 								{/each}
 							</Container>
 						{:else}
-							<!-- SPLIT tore the wild stretch into Madam-Mirror panes -->
+							<!-- SPLIT tore the wild stretch into powder-burn panes -->
 							{#each Array.from({ length: panes }) as _, i (i)}
 								{@const paneX = (-CELL_PITCH_X / 2 + (i + 0.5) * sliceW) * tear}
 								<Container x={paneX}>

@@ -1,0 +1,34 @@
+﻿Kenney sources for tombstone_split_vfx atlas (CC0)
+Library root: C:\Users\Emex33\Documents\kenney assets\kenney assets
+All frames are Kenney copies (no Scenario fill required).
+
+Atlas contract (tools/make_tombstone_split_vfx_atlas.py → static/assets/sprites/fx/tombstone_split_vfx.*):
+  kenney_particle-pack/PNG (Transparent)/spark_01.png
+  kenney_particle-pack/PNG (Transparent)/spark_03.png
+  kenney_particle-pack/PNG (Transparent)/spark_05.png
+  kenney_particle-pack/PNG (Transparent)/muzzle_01.png
+  kenney_particle-pack/PNG (Transparent)/muzzle_03.png
+  kenney_particle-pack/PNG (Transparent)/dirt_01.png
+  kenney_particle-pack/PNG (Transparent)/dirt_02.png
+  kenney_particle-pack/PNG (Transparent)/scorch_01.png
+  kenney_particle-pack/PNG (Transparent)/scorch_02.png
+  kenney_particle-pack/PNG (Transparent)/smoke_04.png
+  kenney_particle-pack/PNG (Transparent)/smoke_08.png
+  kenney_particle-pack/PNG (Transparent)/circle_03.png
+  kenney_particle-pack/PNG (Transparent)/scratch_01.png
+  kenney_particle-pack/PNG (Transparent)/slash_02.png
+  kenney_smoke-particles/PNG/White puff/whitePuff00.png -> puff_00.png
+  kenney_smoke-particles/PNG/White puff/whitePuff08.png -> puff_08.png
+  kenney_smoke-particles/PNG/Flash/flash02.png -> flash_02.png
+
+Max haul (assets-raw/kenney_haul_western/, 161 PNGs):
+  particles/     full spark/star/muzzle/smoke/dirt/scorch/slash/circle/flame/light families
+  smoke_white/   whitePuff00..24
+  smoke_black/   blackSmoke00..24
+  flash/         flash00..08
+  explosion/     explosion00..08
+  lights/        circle/ring/cone/fan/window masks
+  splat/         splat00..28 subset
+  borders/       fantasy-ui border + divider samples
+
+Also see assets-raw/SCENARIO_REPLACE_STATUS.md for DONE vs BLOCKED SFX.

@@ -71,6 +71,13 @@ export const stateUi = $state({
 	// they always line up at any screen size. Kept here (shared UI state) so the
 	// shared components-ui-pixi layouts can consume it without importing the app.
 	boardFrameWidth: 0,
+	// Top edge of the bottom control bar, in canvas px, as published by whichever
+	// HUD layout is mounted. 0 = not published (or the mounted layout has no
+	// bottom bar). A game that draws its own furniture under the board reads
+	// this to keep clear of the controls: the HUD is laid out in the STANDARD
+	// design box and the game in its own, the two scale to the window
+	// independently, so canvas px is the only space both can agree on.
+	hudBarTopScreenY: 0,
 	config: {
 		mode: 'default' as UIConfigMode,
 	}

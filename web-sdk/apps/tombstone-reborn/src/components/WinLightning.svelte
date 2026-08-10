@@ -17,12 +17,11 @@
 	import { getContext } from '../game/context';
 	import { BOARD_SIZES } from '../game/constants';
 	import { fxNum } from '../game/fx.generated';
-	import { drawPaddedCellStrobe } from '../game/clinicalFx';
+	import { drawPowderStrobe } from '../game/tombstoneVfx';
 
 	const context = getContext();
 
-	// THE WHITE ROOM: padded-cell whiteout — fluorescent strobe + memory-glitch wipe.
-	// Does NOT use reactBitsLightning or PrismaticBurst (Madam Mirror language).
+	// Tombstone: powder flash + dust streaks (not White Room fluorescent strobe).
 	const STROBE_Z = 120;
 	const STROBE_MS = fxNum('winLightning', 'strobeMs', 900);
 	const GLITCH_MS = fxNum('winLightning', 'glitchMs', 2400);
@@ -85,7 +84,7 @@
 						return;
 					}
 
-					// hard fluorescent strobe: sharp rise, stutter, cut
+					// hard powder flash: sharp rise, stutter, cut
 					if (elapsed < strobeSec) {
 						const local = t / (STROBE_MS / 1000);
 						const stutter =
@@ -129,7 +128,7 @@
 
 	const draw = (graphics: import('pixi.js').Graphics) => {
 		if (!active) return;
-		drawPaddedCellStrobe(graphics, canvasSizes.width, canvasSizes.height, {
+		drawPowderStrobe(graphics, canvasSizes.width, canvasSizes.height, {
 			time,
 			strobeAlpha,
 			glitchAlpha,
@@ -141,7 +140,7 @@
 
 <Container zIndex={STROBE_Z}>
 	{#if active}
-		<CanvasSizeRectangle backgroundColor={0xf4f1ec} backgroundAlpha={strobeAlpha * 0.22} />
+		<CanvasSizeRectangle backgroundColor={0xd4c4a8} backgroundAlpha={strobeAlpha * 0.18} />
 		<Graphics draw={draw} />
 	{/if}
 </Container>

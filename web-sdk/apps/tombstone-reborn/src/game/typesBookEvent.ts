@@ -70,7 +70,7 @@ type BookEventCreateBonusSnapshot = {
 /** the card kinds the top special bar can reveal */
 export type SpecialBarKind = 'split_gang' | 'split_outlaws' | 'gunsmoke' | 'digup' | 'coffin';
 
-/** The top special bar resolves: one entry per NON-EMPTY bar cell. */
+/** The special bar resolves: one entry per NON-EMPTY bar cell. */
 type BookEventSpecialBar = {
 	index: number;
 	type: 'specialBar';

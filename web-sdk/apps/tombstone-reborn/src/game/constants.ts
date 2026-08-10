@@ -74,6 +74,10 @@ export const pickWildReelArt = (): WildReelArt =>
 // drops the WAYS/WIN rail by exactly this much.
 export const LOCKED_SLOTS_BOTTOM_EXTENT = CHASSIS_BOTTOM_EXTENT;
 
+/** BoardPlate wood overhang past each reel window (top and bottom). Shared by
+ *  SpecialBar spacing and the WAYS/WIN console clearance math. */
+export const BOARD_PLATE_PAD = 18;
+
 // initial board derived from config: numRows[reel] visible + top/bottom padding.
 export const INITIAL_BOARD: RawSymbol[][] = buildInitialBoard();
 

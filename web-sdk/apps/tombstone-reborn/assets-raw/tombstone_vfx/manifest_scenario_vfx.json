@@ -1,0 +1,39 @@
+{
+  "_note": "VFX frames are Kenney-sourced (see SOURCES.txt). Earlier Scenario jobs below are historical only; remaining 9 leftovers were replaced by Kenney copies 2026-08-10.",
+  "kenney_complete": true,
+  "atlas": "static/assets/sprites/fx/tombstone_split_vfx.png",
+  "historical_scenario_partial": {
+    "spark_01.png": {
+      "jobId": "job_WxUnH8gz2nZ7S3DdqYYKQJwi",
+      "assetId": "asset_zEAWCU1s7FLJA76FPK2MJ8x8"
+    },
+    "spark_03.png": {
+      "jobId": "job_3vk8EuhcWLDRTWTCJuZfsJAj",
+      "assetId": "asset_d645nhJnf86yxFUutPBd3Zg3"
+    },
+    "spark_05.png": {
+      "jobId": "job_qnfgGwsefJ2tzuf4mFoggqbA",
+      "assetId": "asset_oq3aDcwji5zCuk8op67zfURo"
+    },
+    "muzzle_01.png": {
+      "jobId": "job_CGcRQzWxj199DhNGdAkZvnP2",
+      "assetId": "asset_YyiMgUJPKi49qraUsZCQyp7A"
+    },
+    "muzzle_03.png": {
+      "jobId": "job_wXhGt3j4mxHWkBRwQ7uQkGvb",
+      "assetId": "asset_nPHwqvN6UsNJxFegtopJEKmE"
+    },
+    "dirt_01.png": {
+      "jobId": "job_gvtkv8R4mYUVZwrCaU7nnfCf",
+      "assetId": "asset_3TDgQKHtCspBGWUBg2dFQKwQ"
+    },
+    "dirt_02.png": {
+      "jobId": "job_ny7zExcvJLWEewq8tFdTSAvy",
+      "assetId": "asset_VwrAF1in5MSrSAzWrTCLk5He"
+    },
+    "scorch_01.png": {
+      "jobId": "job_hawGvnKw789u8EJXNThEUFdP",
+      "assetId": "asset_81FSNPfKo3vTe5JDLtU19FJV"
+    }
+  }
+}

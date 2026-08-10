@@ -8,9 +8,9 @@
 
 	import ModalSettingsSound from './ModalSettingsSound.svelte';
 	import { i18nDerived } from '../i18n/i18nDerived';
-	// single source of truth for the special-symbol + rules copy (shared with the
-	// in-HUD info marquee so both always show identical text)
-	import { SPECIALS, INFO_SECTIONS } from '../data/gameInfo';
+	// single source of truth for the pay-table + rules copy, installed by the game
+	// (shared with the in-HUD info marquee so both always show identical text)
+	import { gameInfo, type PaySymbol } from '../data/gameInfo.svelte';
 
 	type Props = {
 		children: Snippet;
@@ -21,22 +21,8 @@
 	type Tab = 'info' | 'settings';
 	let tab = $state<Tab>('info');
 
-	// per-way pays (x bet) for 5 / 4 / 3 of a kind — mirrors game_config paytable
-	const HIGH_SYMBOLS = [
-		{ key: 'h1', name: 'Lady Mirror', pays: [10, 3, 1] },
-		{ key: 'h2', name: 'The Wife', pays: [5, 1.5, 0.6] },
-		{ key: 'h3', name: 'The Man', pays: [4, 1.2, 0.5] },
-		{ key: 'h4', name: 'The Maiden', pays: [3, 1, 0.4] },
-		{ key: 'h5', name: 'The Dog', pays: [2.5, 0.8, 0.3] },
-	];
-
-	const LOW_SYMBOLS = [
-		{ key: 'l1', name: 'Ace', pays: [1.2, 0.4, 0.2] },
-		{ key: 'l2', name: 'King', pays: [1.2, 0.4, 0.2] },
-		{ key: 'l3', name: 'Queen', pays: [0.8, 0.3, 0.1] },
-		{ key: 'l4', name: 'Jack', pays: [0.8, 0.3, 0.1] },
-		{ key: 'l5', name: 'Ten', pays: [0.8, 0.3, 0.1] },
-	];
+	const payTable = $derived(gameInfo.payTable);
+	const hasPayTable = $derived(payTable.highs.length > 0 || payTable.lows.length > 0);
 
 	const close = () => {
 		tab = 'info';
@@ -98,53 +84,65 @@
 					</header>
 
 					<div class="scroll">
-						<section class="block payout">
-							<h2>PAYOUT</h2>
-							<h3 class="group">Premium Symbols</h3>
-							<div class="pay-row">
-								{#each HIGH_SYMBOLS as s (s.key)}
-									<div class="pay-cell">
-										<img src="assets/paytable/{s.key}.png" alt={s.name} />
-										<div class="pay-list">
-											<span><em>5</em> {formatPay(s.pays[0])}</span>
-											<span><em>4</em> {formatPay(s.pays[1])}</span>
-											<span><em>3</em> {formatPay(s.pays[2])}</span>
-										</div>
+						{#snippet paySymbols(symbols: PaySymbol[])}
+							{#each symbols as s (s.key)}
+								<div class="pay-cell">
+									<img src="assets/paytable/{s.key}.png" alt={s.name} />
+									<div class="pay-list">
+										{#each s.pays as pay, i (i)}
+											<span><em>{payTable.kinds[i]}</em> {formatPay(pay)}</span>
+										{/each}
 									</div>
-								{/each}
-							</div>
-							<h3 class="group">Royal Symbols</h3>
-							<div class="pay-row lows">
-								{#each LOW_SYMBOLS as s (s.key)}
-									<div class="pay-cell">
-										<img src="assets/paytable/{s.key}.png" alt={s.name} />
-										<div class="pay-list">
-											<span><em>5</em> {formatPay(s.pays[0])}</span>
-											<span><em>4</em> {formatPay(s.pays[1])}</span>
-											<span><em>3</em> {formatPay(s.pays[2])}</span>
-										</div>
-									</div>
-								{/each}
-							</div>
-							<p class="foot">{st('All wins are shown as a multiplier of the total bet, paid per way.')}</p>
-						</section>
+								</div>
+							{/each}
+						{/snippet}
 
-						<section class="block">
-							<h2>SPECIAL SYMBOLS</h2>
-							<div class="specials">
-								{#each SPECIALS as s (s.key)}
-									<div class="special">
-										<img src="assets/paytable/{s.key}.png" alt={s.name} />
-										<div>
-											<strong>{s.name}</strong>
-											<p>{st(s.desc)}</p>
-										</div>
+						{#if hasPayTable}
+							<section class="block payout">
+								<h2>PAYOUT</h2>
+								{#if payTable.highs.length}
+									<h3 class="group">Premium Symbols</h3>
+									<div class="pay-row">
+										{@render paySymbols(payTable.highs)}
 									</div>
-								{/each}
-							</div>
-						</section>
+								{/if}
+								{#if payTable.lows.length}
+									<h3 class="group">Royal Symbols</h3>
+									<div class="pay-row lows">
+										{@render paySymbols(payTable.lows)}
+									</div>
+								{/if}
+								{#if payTable.wilds?.length}
+									<h3 class="group">Wild</h3>
+									<div class="pay-row lows">
+										{@render paySymbols(payTable.wilds)}
+									</div>
+									{#if payTable.wildsNote}
+										<p class="foot">{st(payTable.wildsNote)}</p>
+									{/if}
+								{/if}
+								<p class="foot">{st('All wins are shown as a multiplier of the total bet, paid per way.')}</p>
+							</section>
+						{/if}
 
-						{#each INFO_SECTIONS as r (r.title)}
+						{#if gameInfo.specials.length}
+							<section class="block">
+								<h2>SPECIAL SYMBOLS</h2>
+								<div class="specials">
+									{#each gameInfo.specials as s (s.key)}
+										<div class="special">
+											<img src="assets/paytable/{s.key}.png" alt={s.name} />
+											<div>
+												<strong>{s.name}</strong>
+												<p>{st(s.desc)}</p>
+											</div>
+										</div>
+									{/each}
+								</div>
+							</section>
+						{/if}
+
+						{#each gameInfo.sections as r (r.title)}
 							<section class="block rule">
 								<h2>{st(r.title)}</h2>
 								{#if r.body}

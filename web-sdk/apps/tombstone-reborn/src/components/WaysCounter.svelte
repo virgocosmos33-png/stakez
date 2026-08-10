@@ -22,9 +22,9 @@
 	const rail = $derived(getRailLayout());
 	const frameW = $derived(rail.frameW);
 
-	// canonical full-board ways = product of the rows on each reel (this game:
-	// 4^5 = 1024). Shown persistently in the base game; the live count from
-	// waysCounterUpdate (bookEvent.totalWays) overrides it during splits/bonus.
+	// canonical full-board ways = product of each reel's VISIBLE rows
+	// (diamond [3,4,4,2,2,1] → 192). Live count from waysCounterUpdate overrides
+	// it during splits / bonus.
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 
 	// the plaque is ALWAYS mounted/visible during gameplay (never pops in/out);

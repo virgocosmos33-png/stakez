@@ -8,7 +8,7 @@
 				reels: { reel: number; ways: number }[];
 		  }
 		// a SPLIT tore through a standing wild column: raise what it is worth AND
-		// visually slice the column into panes (same Madam-Mirror treatment the
+		// visually slice the column into panes (same powder-burn treatment the
 		// paying symbols get). `split` is the resulting per-cell ways count that
 		// drives the pane geometry (capped visually at MAX_PANES).
 		| {
@@ -41,6 +41,7 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
 	import { getSymbolX, getReelWindow } from '../game/utils';
+	import { drawPowderSeam } from '../game/tombstoneVfx';
 	import WildColumnLabel from './WildColumnLabel.svelte';
 	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
 
@@ -166,24 +167,15 @@
 	// electric language as the special-cell lightning, but held steady around a
 	// full reel instead of crackling around one cell, so the column reads as
 	// locked-in for the rest of the spin rather than as a momentary event.
-	const CORE = 0xffffff;
-	const GLOW = 0xf2f2f2;
-	const DEEP = 0x0a0a0a;
-	const GLASS = 0xdfe6ea;
-	const BLOOD = 0xff2d2d;
+	const CORE = 0xf0d78c;
+	const GLOW = 0xc9a34a;
+	const DEEP = 0x0a0806;
+	const GLASS = 0x8a6e4a;
+	const BLOOD = 0xb54a2a;
 
-	/** steel seam between two wild panes — same language as SplitPanes */
+	/** powder-burn seam between wild panes — same language as SplitPanes */
 	const drawWildDivider = (g: import('pixi.js').Graphics, h: number, slim: number) => {
-		const half = (h * 0.5 - 4) * slim;
-		g.moveTo(0, -half);
-		g.lineTo(0, half);
-		g.stroke({ color: BLOOD, width: 5, alpha: 0.55 });
-		g.moveTo(0, -half);
-		g.lineTo(0, half);
-		g.stroke({ color: CORE, width: 1.6, alpha: 0.95 });
-		g.moveTo(-1.2, -half);
-		g.lineTo(-1.2, half);
-		g.stroke({ color: GLASS, width: 0.7, alpha: 0.55 });
+		drawPowderSeam(g, h, slim, { time: time / 1000 });
 	};
 	const BORDER_INSET = 2;
 	const PULSE_SPAN = 0.16; // how much of the perimeter the running charge covers

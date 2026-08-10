@@ -19,15 +19,13 @@
 	import { cellFrames } from '../game/chassisArt';
 	import { BOTTOM_START } from '../game/cellUnlock';
 	import { fxNum } from '../game/fx.generated';
-	import { drawMirrorSweep } from '../game/clinicalFx';
+	import { drawGunsmokeSweep } from '../game/tombstoneVfx';
 
 	const context = getContext();
 
-	// THE WHITE ROOM: winning cells get a fast MIRROR glint — one diagonal
-	// light band sliding over each card, staggered column by column, strictly
-	// left to right. Positions may live on the core board OR inside a reserved
-	// socket (bottom cells / side columns): socket cards glint inside their own
-	// frame, so a winning symbol type shines through EVERY card it owns.
+	// Tombstone: winning cells get a brass/gunsmoke glint — one diagonal band
+	// sliding over each card, staggered column by column, left to right.
+	// Positions may live on the core board OR inside a reserved socket.
 	type SweepCell = {
 		key: string;
 		order: number;
@@ -170,7 +168,7 @@
 			<Graphics isMask draw={(g) => drawCardMask(g, cell)} />
 			<Container rotation={SWEEP_TILT}>
 				<Graphics
-					draw={(g) => drawMirrorSweep(g, Math.max(cell.w, cell.h), localFor(cell.order))}
+					draw={(g) => drawGunsmokeSweep(g, Math.max(cell.w, cell.h), localFor(cell.order))}
 				/>
 			</Container>
 		</Container>

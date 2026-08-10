@@ -226,7 +226,8 @@ class GameStateOverride(GameExecutables):
         for row in range(len(self.board[last])):
             self.board[last][row] = self.create_symbol(self.config.wild_symbol)
             wild_cells.append({"reel": last, "row": row})
-        # every paying cell on the board is split
+        # every paying cell on each reel's live visible height (diamond /
+        # coffin-grown) — never invent rows past len(board[reel])
         split_cells = []
         for reel in range(self.config.num_reels):
             for row in range(len(self.board[reel])):

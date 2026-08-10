@@ -36,8 +36,9 @@ web-sdk/apps/ways/static/assets/sprites/symbolsStatic/backup_pre_*/
 # dated art backups (regenerable / intermediate)
 **/backup_*/
 
-# intermediate AI video-generation renders (large, regenerable via tools/)
+# intermediate AI generation renders (large, regenerable via tools/)
 web-sdk/apps/ways/tools/scenario_out/
+web-sdk/apps/tombstone-reborn/tools/scenario_out/
 
 # build/run scratch logs
 *.log

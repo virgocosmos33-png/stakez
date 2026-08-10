@@ -1,6 +1,10 @@
-"""Fetch a Scenario job's status; if successful, download its first asset.
+"""Fetch a Scenario job's status; if successful, download its asset(s).
 
-Usage: python tools/scenario_fetch_job.py <jobId> [out_name.mp4]
+Usage: python tools/scenario_fetch_job.py <jobId> [out_name.mp4] [--all]
+
+Without --all only the first asset is saved (out_name verbatim). With --all every
+asset of the job is saved as out_name with an index suffix, which is what a
+multi-variant image job (numOutputs > 1) needs so the variants can be compared.
 """
 
 import json
@@ -12,8 +16,10 @@ import scenario_api as s  # noqa: E402
 
 OUT = Path(__file__).parent / "scenario_out"
 
-job_id = sys.argv[1]
-out_name = sys.argv[2] if len(sys.argv) > 2 else None
+args = [a for a in sys.argv[1:] if not a.startswith("--")]
+download_all = "--all" in sys.argv
+job_id = args[0]
+out_name = args[1] if len(args) > 1 else None
 
 job = s.request("GET", f"/jobs/{job_id}")
 job_data = job.get("job", job)
@@ -26,8 +32,12 @@ if status != "success":
 
 asset_ids = job_data.get("metadata", {}).get("assetIds") or []
 print(f"assets: {asset_ids}")
+
 if out_name and asset_ids:
-    asset = s.request("GET", f"/assets/{asset_ids[0]}").get("asset", {})
-    dest = OUT / out_name
-    s.download(asset["url"], dest)
-    print(f"saved {dest} ({dest.stat().st_size:,} B)")
+    wanted = asset_ids if download_all else asset_ids[:1]
+    stem, suffix = Path(out_name).stem, Path(out_name).suffix
+    for index, asset_id in enumerate(wanted, start=1):
+        asset = s.request("GET", f"/assets/{asset_id}").get("asset", {})
+        dest = OUT / (out_name if len(wanted) == 1 else f"{stem}_{index}{suffix}")
+        s.download(asset["url"], dest)
+        print(f"saved {dest} ({dest.stat().st_size:,} B)")

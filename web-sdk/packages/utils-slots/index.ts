@@ -1,3 +1,5 @@
+// shared reel state
+export * from './src/stateSlots.svelte';
 // slots machine reel
 export * from './src/createReelForCascading.svelte';
 export * from './src/createReelForSpinning.svelte';
