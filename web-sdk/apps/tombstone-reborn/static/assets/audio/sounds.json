@@ -372,6 +372,10 @@
 		"sfx_bonus_handoff": [
 			311000,
 			982.2902494331066
+		],
+		"sfx_gunshot": [
+			313000,
+			1400.0
 		]
 	},
 	"src": [
@@ -652,6 +656,9 @@
 			"volume": 1
 		},
 		"sfx_bonus_handoff": {
+			"volume": 1
+		},
+		"sfx_gunshot": {
 			"volume": 1
 		}
 	}

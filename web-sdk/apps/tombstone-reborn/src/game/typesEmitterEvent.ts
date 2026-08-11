@@ -19,6 +19,7 @@ import type { EmitterEventTargetLock } from '../components/TargetLock.svelte';
 import type { EmitterEventNudgeSlide } from '../components/NudgeSlide.svelte';
 import type { EmitterEventFeatureBurst } from '../components/FeatureBurst.svelte';
 import type { EmitterEventBonusEntry } from '../components/BonusEntry.svelte';
+import type { EmitterEventLaneCard } from '../components/LaneGoldCard.svelte';
 
 /** No free-spin / bonus-level events exist on this bus by design. Tombstone
  * Reborn's bonuses are SINGLE enhanced spins (math game_config.py declares no
@@ -62,4 +63,5 @@ export type EmitterEventGame =
 	| EmitterEventTargetLock
 	| EmitterEventNudgeSlide
 	| EmitterEventFeatureBurst
-	| EmitterEventBonusEntry;
+	| EmitterEventBonusEntry
+	| EmitterEventLaneCard;

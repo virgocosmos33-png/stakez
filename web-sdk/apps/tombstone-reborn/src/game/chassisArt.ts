@@ -72,11 +72,15 @@ const SIDE_H_SCALE = MAX_ROWS * 1.15 * SIDE_SCALE;
 const SIDE_W_SCALE = (SIDE_H_SCALE * ART.side.w) / ART.side.h;
 
 /**
- * Portrait design width. The main container fits an 800 x 1422 design space to
- * the screen, and on a phone the screen is proportionally taller than that, so
- * the fit is by WIDTH — those 800 units are the phone's screen width exactly.
+ * Portrait design width. The main container fits a PORTRAIT_DESIGN_W x 1422
+ * design space to the screen, and on a phone the screen is proportionally taller
+ * than that, so the fit is by WIDTH — these units are the phone's screen width
+ * exactly. The whole card row (7 columns + 2 cage halves) is solved to add up to
+ * this, so it is the single knob that scales the board + symbols: bigger here =>
+ * bigger everywhere. MUST stay in sync with stateLayout's portrait main width so
+ * the row keeps filling the portrait screen edge-to-edge.
  */
-export const PORTRAIT_DESIGN_W = 800;
+export const PORTRAIT_DESIGN_W = 960;
 
 /**
  * SOLVED, not configured: seven columns and the two cage halves at either end

@@ -1,39 +1,43 @@
 <script lang="ts">
 	/**
-	 * Weathered western reel frame — baked timber-and-iron chassis, cohesive with
-	 * the shipped win-celebration timber plates. The art is baked
-	 * (tools/make_board_frame_art.py); this component only lays it onto the live
-	 * board geometry:
-	 *   - boardPlate         a dark-graded Layer AI plank field, clipped to the
-	 *                        diamond staircase silhouette (the timber behind it all)
-	 *   - boardCellSocket    one crafted recessed window per VISIBLE cell (dark
-	 *                        recess + brass inner lip + corner rivets), drawn at
-	 *                        the exact cell size with a transparent grout margin so
-	 *                        the timber reads as the raised wood between windows
-	 *   - boardCornerBracket a bolted iron corner boss at the four outer corners of
-	 *                        the staircase, inside the plate's PAD overhang
+	 * Weathered western reel frame.
 	 *
-	 * GEOMETRY IS FROZEN: the `columns` + `silhouette` maths below are unchanged
-	 * from the procedural frame this replaced (cell rects, CELL_PITCH_X,
-	 * SYMBOL_SIZE, per-reel rows, getCellLeft/getReelWindow/getReelRows and PAD =
-	 * BOARD_PLATE_PAD). A parallel feature traces fire around this exact cell
-	 * geometry, so only the ART changed — never the skeleton.
+	 *   - boardFrame       ONE baked transparent PNG, pre-shaped to the AUTHORED
+	 *                      staircase (tools/make_board_frame_image.py): grey
+	 *                      timber ring with bevels, keylines, iron bolts and the
+	 *                      shadow it casts inward. Placed 1:1 at the authored
+	 *                      outer box — nothing is cut or masked at runtime.
+	 *                      Re-bake the PNG whenever the board shape changes.
+	 *   - (no field)       the inside of the frame is TRANSPARENT by design —
+	 *                      the graveyard scene shows through between the cards
+	 *                      while they spin.
+	 *   - boardSlotFrame   a thin iron slot border drawn in EVERY visible cell
+	 *                      (behind the card) so the board reads as a grid of
+	 *                      framed slots. Tiles flush at CELL_PITCH_X × row pitch,
+	 *                      so neighbouring borders meet instead of doubling up.
+	 *
+	 * GEOMETRY IS FROZEN: cell rects, CELL_PITCH_X, SYMBOL_SIZE and the per-reel
+	 * windows (getCellLeft/getReelWindow) are unchanged — a parallel feature
+	 * traces fire around this exact geometry, so only the ART changed.
 	 */
-	import type { Graphics as PixiGraphics } from 'pixi.js';
-	import { Container, Graphics, Sprite } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, CELL_PITCH_X, BOARD_PLATE_PAD } from '../game/constants';
+	import { CELL_PITCH_X, SYMBOL_SIZE, NUM_ROWS, MAX_ROWS } from '../game/constants';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
 
 	const context = getContext();
 
-	const PAD = BOARD_PLATE_PAD;
-	/** iron corner boss size — a touch over the PAD overhang so it hugs the corner */
-	const BRACKET = PAD * 2.3;
+	/** MUST match BORDER + MARGIN in tools/make_board_frame_image.py — the frame
+	 * canvas carries an extra margin for the plank ends / chains that overflow
+	 * past the frame line, so the sprite is anchored that much further out.
+	 * (The frame art itself is GENERATED over the exact staircase stencil — see
+	 * tools/_gen_frame_guide.py + tools/wire_generated_frame.py.) */
+	const BORDER = 30 + 60;
 
-	type Column = { left: number; right: number; top: number; bottom: number; rows: number };
+	type Column = { left: number; right: number; top: number; bottom: number };
 
+	/** LIVE columns — follow wild-reel growth / stretch, for the slot grid */
 	const columns = $derived.by(() =>
 		context.stateGame.board.map((_, reel): Column => {
 			const window = getReelWindow(reel);
@@ -42,94 +46,50 @@
 				right: getCellLeft(reel) + CELL_PITCH_X,
 				top: window.top,
 				bottom: window.bottom,
-				rows: getReelRows(reel),
 			};
 		}),
 	);
 
-	/** true staircase on TOP and BOTTOM — each reel's own height, no filled notches */
-	const silhouette = $derived.by(() => {
-		if (columns.length === 0) return [] as number[];
-		const points: number[] = [];
-		const push = (x: number, y: number) => points.push(x, y);
+	/**
+	 * AUTHORED outer box of the baked frame PNG (board-local units). Mirrors the
+	 * bake tool: reels centred on MAX_ROWS, except the LAST reel which centres on
+	 * its left neighbour (utils.getReelYOffset special lane rule). Never reads
+	 * live state, so the frame holds still while reels grow.
+	 */
+	const frameBox = (() => {
+		const tops = NUM_ROWS.map((rows, i) => {
+			if (i === NUM_ROWS.length - 1) {
+				const neighbor = NUM_ROWS[i - 1] ?? rows;
+				return ((MAX_ROWS - neighbor) / 2 + (neighbor - rows) / 2) * SYMBOL_SIZE;
+			}
+			return ((MAX_ROWS - rows) / 2) * SYMBOL_SIZE;
+		});
+		const bottoms = tops.map((top, i) => top + NUM_ROWS[i] * SYMBOL_SIZE);
+		const x = getCellLeft(0) - BORDER;
+		const y = Math.min(...tops) - BORDER;
+		return {
+			x,
+			y,
+			w: getCellLeft(NUM_ROWS.length - 1) + CELL_PITCH_X + BORDER - x,
+			h: Math.max(...bottoms) + BORDER - y,
+		};
+	})();
 
-		const first = columns[0];
-		const last = columns[columns.length - 1];
-
-		// top edge left → right
-		push(first.left - PAD, first.top - PAD);
-		for (let i = 1; i < columns.length; i++) {
-			push(columns[i].left, columns[i - 1].top - PAD);
-			push(columns[i].left, columns[i].top - PAD);
-		}
-		push(last.right + PAD, last.top - PAD);
-
-		// bottom edge right → left (mirror staircase)
-		push(last.right + PAD, last.bottom + PAD);
-		for (let i = columns.length - 1; i >= 1; i--) {
-			push(columns[i].left, columns[i].bottom + PAD);
-			push(columns[i].left, columns[i - 1].bottom + PAD);
-		}
-		push(first.left - PAD, first.bottom + PAD);
-		return points;
-	});
-
-	/** axis-aligned bounds of the silhouette — the timber sprite covers this box
-	 * and the silhouette mask clips it back to the staircase */
-	const bounds = $derived.by(() => {
-		if (columns.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
-		const first = columns[0];
-		const last = columns[columns.length - 1];
-		const x = first.left - PAD;
-		const right = last.right + PAD;
-		const y = Math.min(...columns.map((c) => c.top)) - PAD;
-		const bottom = Math.max(...columns.map((c) => c.bottom)) + PAD;
-		return { x, y, w: right - x, h: bottom - y };
-	});
-
-	/** every VISIBLE cell centre — sockets only ever sit on live rows (getReelRows),
-	 * never on the off-window pad rows the book events index */
-	const cells = $derived.by(() =>
-		columns.flatMap((col) =>
-			Array.from({ length: col.rows }, (_, row) => ({
+	/** one slot per VISIBLE cell. Row pitch is the reel window / row count, so a
+	 * stretched (racked) reel's slots spread with its symbols. */
+	const slots = $derived.by(() =>
+		columns.flatMap((col, reel) => {
+			const rows = getReelRows(reel);
+			if (rows <= 0) return [];
+			const pitch = (col.bottom - col.top) / rows;
+			return Array.from({ length: rows }, (_, r) => ({
+				key: `${reel}:${r}`,
 				cx: col.left + CELL_PITCH_X / 2,
-				cy: col.top + row * SYMBOL_SIZE + SYMBOL_SIZE / 2,
-			})),
-		),
+				cy: col.top + (r + 0.5) * pitch,
+				h: pitch,
+			}));
+		}),
 	);
-
-	/** the four outer corners of the staircase — leftmost + rightmost columns */
-	const brackets = $derived.by(() => {
-		if (columns.length === 0) return [];
-		const first = columns[0];
-		const last = columns[columns.length - 1];
-		return [
-			{ x: first.left - PAD, y: first.top - PAD, ax: 0, ay: 0 },
-			{ x: last.right + PAD, y: last.top - PAD, ax: 1, ay: 0 },
-			{ x: first.left - PAD, y: first.bottom + PAD, ax: 0, ay: 1 },
-			{ x: last.right + PAD, y: last.bottom + PAD, ax: 1, ay: 1 },
-		];
-	});
-
-	/** broad, soft edge only — never a thin bright stroke (minifies to a hairline).
-	 * The plate reads against the background via its cast shadow + this dark burn. */
-	const drawShadow = (g: PixiGraphics, outline: number[]) => {
-		if (outline.length === 0) return;
-		g.poly(outline.map((value, index) => (index % 2 === 1 ? value + 8 : value)));
-		g.fill({ color: 0x000000, alpha: 0.42 });
-	};
-
-	const drawEdge = (g: PixiGraphics, outline: number[]) => {
-		if (outline.length === 0) return;
-		g.poly(outline);
-		g.stroke({ color: 0x090705, width: 6, alpha: 0.85 });
-	};
-
-	const drawMask = (g: PixiGraphics, outline: number[]) => {
-		if (outline.length === 0) return;
-		g.poly(outline);
-		g.fill({ color: 0xffffff, alpha: 1 });
-	};
 </script>
 
 <Container
@@ -138,39 +98,28 @@
 	y={context.stateGameDerived.boardLayout().y -
 		context.stateGameDerived.boardLayout().height * 0.5}
 >
-	<!-- cast shadow so the plate sits on the graveyard behind it -->
-	<Graphics draw={(g) => drawShadow(g, silhouette)} />
+	<!-- NO field under the symbols: the inside of the frame is TRANSPARENT, so
+		the graveyard scene shows through between the cards while they spin. -->
 
-	<!-- weathered timber field, clipped to the diamond staircase -->
-	<Container>
-		<Sprite key="boardPlate" x={bounds.x} y={bounds.y} width={bounds.w} height={bounds.h} />
-		<Graphics isMask draw={(g) => drawMask(g, silhouette)} />
-	</Container>
-
-	<!-- broad burnt edge -->
-	<Graphics draw={(g) => drawEdge(g, silhouette)} />
-
-	<!-- crafted recessed window per visible cell -->
-	{#each cells as cell (`${cell.cx}:${cell.cy}`)}
+	<!-- per-cell slot border, behind the cards; tiles flush so the board reads as
+		a grid of framed slots -->
+	{#each slots as slot (slot.key)}
 		<Sprite
-			key="boardCellSocket"
-			x={cell.cx}
-			y={cell.cy}
+			key="boardSlotFrame"
+			x={slot.cx}
+			y={slot.cy}
 			anchor={0.5}
 			width={CELL_PITCH_X}
-			height={SYMBOL_SIZE}
+			height={slot.h}
 		/>
 	{/each}
 
-	<!-- bolted iron corner bosses on the outer corners -->
-	{#each brackets as b (`${b.ax}:${b.ay}`)}
-		<Sprite
-			key="boardCornerBracket"
-			x={b.x}
-			y={b.y}
-			anchor={{ x: b.ax, y: b.ay }}
-			width={BRACKET}
-			height={BRACKET}
-		/>
-	{/each}
+	<!-- the baked, pre-shaped transparent frame, placed 1:1 (never cut) -->
+	<Sprite
+		key="boardFrame"
+		x={frameBox.x}
+		y={frameBox.y}
+		width={frameBox.w}
+		height={frameBox.h}
+	/>
 </Container>

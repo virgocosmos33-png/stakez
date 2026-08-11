@@ -43,6 +43,9 @@
 	import WinDim from './WinDim.svelte';
 	import TapToSkip from './TapToSkip.svelte';
 	import BonusEntry from './BonusEntry.svelte';
+	import BulletHits from './BulletHits.svelte';
+	import LaneLidLock from './LaneLidLock.svelte';
+	import LaneGoldCard from './LaneGoldCard.svelte';
 
 	const context = getContext();
 
@@ -185,6 +188,16 @@
 			<Board />
 			<Anticipations />
 		</MainContainer>
+
+		<!-- LAST-REEL LANE: boarded-shut cover while the lane is locked (every
+			base/small spin until DIG UP; open all round in the super bonus), and
+			the golden sheriff card that flashes when the lane's special fires. -->
+		<LaneLidLock />
+		<LaneGoldCard />
+
+		<!-- CLICK-TO-SHOOT: left-click the idle reel area to punch a shattered-glass
+			bullet hole at the cursor. Cleared the moment a spin starts. -->
+		<BulletHits />
 
 		<!-- BOUNTY: the landed premium's WIN multiplier badge. -->
 		<StretchWays />

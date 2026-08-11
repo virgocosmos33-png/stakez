@@ -252,19 +252,88 @@ class GameStateOverride(GameExecutables):
             bounty_event(self, symbol, self.win_multiplier)
             return
 
-        # NUDGE: the premium slides LEFT from the last lane across each column.
-        # Every premium it passes climbs the WIN multiplier AND is left as a WILD
-        # so the ways eval that follows sees the scorched cells as wilds.
+        # NUDGE: xNudge sideways. The NUDGE WILD lands in the lane, then racks
+        # LEFT one notch per reel, stepping onto exactly ONE cell of each
+        # column: a random half-step up/down out of the centred lane, straight
+        # or diagonal notches across the middle, and a forced diagonal at the
+        # end so it always comes to rest on the FIRST reel's middle cell.
+        # Every cell it steps through is left as a WILD (one per reel — a full
+        # horizontal wild line), and every premium it crushes on the way adds
+        # to the WIN multiplier.
         add_per = cfg["nudge_add_per_premium"]
-        hits = []
-        for reel in range(last - 1, -1, -1):
-            for row, sym in enumerate(self.board[reel]):
-                if self.is_premium(sym.name):
-                    hits.append({"reel": reel, "row": row, "name": sym.name})
-        passed = len(hits)
+        path = self._nudge_path(last)
+        steps = []
+        passed = 0
+        for reel, row in path:
+            sym_name = self.board[reel][row].name
+            is_prem = self.is_premium(sym_name)
+            passed += 1 if is_prem else 0
+            steps.append({"reel": reel, "row": row, "name": sym_name, "premium": is_prem})
         win_mult = int(base_mult) + passed * add_per
         self.win_multiplier = max(1, win_mult)
-        for h in hits:
-            self.board[h["reel"]][h["row"]] = self.create_symbol(self.config.wild_symbol)
-        # hits listed right-to-left (the order the slide encounters them)
-        nudge_event(self, symbol, int(base_mult), passed, self.win_multiplier, hits)
+        # the lane cell itself is the rider's origin: it keeps a wild too, so
+        # the wake is one wild on every reel, lane included
+        self.board[last][0] = self.create_symbol(self.config.wild_symbol)
+        for reel, row in path:
+            self.board[reel][row] = self.create_symbol(self.config.wild_symbol)
+        nudge_event(self, "W", int(base_mult), passed, self.win_multiplier, steps)
+
+    def _nudge_path(self, last):
+        """The cells the nudge wild steps onto, right-to-left (reel last-1..0).
+
+        Board rows are vertically centred (diamond board), so adjacency is by
+        CENTRE distance, exactly as the frontend lays cells out: a notch may
+        shift the rider at most one symbol-height up or down. The walk is
+        random where the grid allows a choice, but filtered so the first
+        reel's middle cell always stays within reach (one vertical unit per
+        remaining reel).
+        """
+        max_rows = max(len(r) for r in self.board[:last]) if last > 0 else 1
+
+        def centre(reel, row):
+            rows = len(self.board[reel])
+            if reel == last:
+                nb = len(self.board[reel - 1])
+                off = (max_rows - nb) / 2 + (nb - rows) / 2
+            else:
+                off = (max_rows - rows) / 2
+            return off + row + 0.5
+
+        target_row = (len(self.board[0]) - 1) // 2
+
+        # Backward reachability (per-reel row sets), so the walk can NEVER
+        # paint itself into a corner: a row is reachable if some row of the
+        # next reel leftward is both reachable and within one notch of it.
+        # A pure distance-budget bound is NOT enough on coffin-grown boards —
+        # mixed offsets mean a step can't always move a full symbol toward the
+        # target, and the old guard then teleported the rider.
+        reachable = {0: {target_row}}
+        for reel in range(1, last):
+            reachable[reel] = {
+                row
+                for row in range(len(self.board[reel]))
+                if any(
+                    abs(centre(reel, row) - centre(reel - 1, nxt)) <= 1.01
+                    for nxt in reachable[reel - 1]
+                )
+            }
+
+        path = []
+        cy = centre(last, 0)
+        for reel in range(last - 1, -1, -1):
+            candidates = [
+                row
+                for row in sorted(reachable[reel])
+                if abs(centre(reel, row) - cy) <= 1.01
+            ]
+            if not candidates:  # cannot happen by construction; keep a guard
+                candidates = [
+                    min(
+                        sorted(reachable[reel]),
+                        key=lambda row: abs(centre(reel, row) - cy),
+                    )
+                ]
+            row = random.choice(candidates)
+            path.append((reel, row))
+            cy = centre(reel, row)
+        return path

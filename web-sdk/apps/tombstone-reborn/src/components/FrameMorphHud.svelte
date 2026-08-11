@@ -11,13 +11,14 @@
 	/**
 	 * Under-board STEEL CONSOLE — now a FALLBACK / bonus readout only.
 	 *
-	 * WAYS and WIN normally live in the vertical SPECIAL BAR down the left
-	 * (SpecialBar.svelte). This console only draws them when that rail is laid
-	 * FLAT (narrow/portrait) and cannot host them — the vertical decision is
-	 * shared (game/specialBarLayout.ts) so exactly one place shows them. During
-	 * free spins it also carries the FREE SPINS counter. When nothing needs
-	 * showing (the common desktop base game) it renders nothing at all, so no
-	 * console is wedged under the board or over the bet/spin HUD.
+	 * WAYS and WIN normally live as free plaques on the RIGHT (SpecialBar.svelte),
+	 * opposite the left special-symbol bar. This console only draws them when
+	 * that rail is laid FLAT (narrow/portrait) and cannot host them — the
+	 * vertical decision is shared (game/specialBarLayout.ts) so exactly one
+	 * place shows them. During free spins it also carries the FREE SPINS
+	 * counter. When nothing needs showing (the common desktop base game) it
+	 * renders nothing at all, so no console is wedged under the board or over
+	 * the bet/spin HUD.
 	 *
 	 * The old scrolling info marquee was removed for this game.
 	 */
@@ -85,8 +86,8 @@
 		const bh = board.height;
 		const frameY = board.y;
 
-		// WAYS/WIN belong to the vertical rail; only fall back to this console when
-		// the rail is laid flat (narrow). FREE SPINS always shows here in bonus.
+		// WAYS/WIN belong to the free right plaques; only fall back here when the
+		// side rails are laid flat (narrow). FREE SPINS always shows here in bonus.
 		const barVertical = isSpecialBarVertical(board);
 		const waysShow = !barVertical;
 		const winShow = !barVertical;

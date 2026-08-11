@@ -388,6 +388,26 @@ export const SYMBOL_INFO_MAP = {
 	},
 } as const;
 
+// The NUDGE wild wears its own face: spur wheel + left arrows + NUDGE wordmark
+// (same canvas/alpha as wr_wild, see tools/make_nudge_wild_card.py).
+const nudgeWildStatic = {
+	type: 'sprite',
+	assetKey: 'trNudgeWild',
+	sizeRatios: { width: 1, height: 1 },
+};
+
+/** The nudge wild's states. Sprite-only in all of them, exactly like the plain
+ * W, so the card reads identically riding, landing and resting in the wake. */
+export const NUDGE_WILD_INFO = {
+	explosion,
+	postWin: nudgeWildStatic,
+	postWinStatic: nudgeWildStatic,
+	static: nudgeWildStatic,
+	spin: nudgeWildStatic,
+	win: nudgeWildStatic,
+	land: nudgeWildStatic,
+} as const;
+
 /** The expanding wild's states. Sprite-only in all of them, exactly like the
  * plain W, so the arrow survives the land squash and the win pulse. */
 export const WILD_EXPAND_INFO = {

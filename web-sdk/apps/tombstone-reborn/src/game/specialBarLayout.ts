@@ -1,13 +1,14 @@
 /**
- * Shared geometry for the left SPECIAL BAR so two components agree on ONE truth:
- *   - SpecialBar.svelte draws the rail and (when vertical) hosts WAYS + WIN.
+ * Shared geometry for the side rails so two components agree on ONE truth:
+ *   - SpecialBar.svelte draws the LEFT special-symbol rail, and (when vertical)
+ *     free-floating WAYS + WIN plaques on the right (no shared container).
  *   - FrameMorphHud.svelte shows the WAYS + WIN wells ONLY when the bar is NOT
- *     vertical (narrow/portrait), where the bar lies flat above the board and
- *     cannot carry them.
+ *     vertical (narrow/portrait), where the left rail lies flat above the board
+ *     and there is no room for the right plaques.
  *
- * Keeping the vertical decision here stops the two from drifting — if the rail
- * ever stops standing on the left, WAYS/WIN move back into the console
- * automatically, and vice-versa.
+ * Keeping the vertical decision here stops the two from drifting — if the left
+ * rail ever stops standing upright, WAYS/WIN move back into the under-board
+ * console automatically, and vice-versa.
  */
 import { SYMBOL_SIZE, SYMBOL_CARD_W, BOARD_PLATE_PAD } from './constants';
 
@@ -32,6 +33,9 @@ export const specialBarSideWidth = (board: BoardBox): number => {
 	return railRight - EDGE_MARGIN;
 };
 
-/** true when the rail stands upright down the left (and thus owns WAYS/WIN) */
+/**
+ * true when the left special-symbol rail stands upright (desktop/wide). In that
+ * mode SpecialBar also owns WAYS/WIN as separate plaques on the right.
+ */
 export const isSpecialBarVertical = (board: BoardBox): boolean =>
 	specialBarSideWidth(board) >= MIN_SIDE_WIDTH;

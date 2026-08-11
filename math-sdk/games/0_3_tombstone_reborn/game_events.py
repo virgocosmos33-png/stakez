@@ -149,16 +149,22 @@ def bounty_event(gamestate, symbol, win_mult):
     gamestate.book.add_event(event)
 
 
-def nudge_event(gamestate, symbol, base_mult, passed, win_mult, hits=None):
-    """NUDGE: the bounty premium slid left, climbing its WIN multiplier for
-    every premium it passed over. Each hit cell is left as a WILD on the board.
+def nudge_event(gamestate, symbol, base_mult, passed, win_mult, steps=None):
+    """NUDGE: the nudge wild racked LEFT from the lane, one notch per reel,
+    stepping onto exactly one cell of each column and leaving it WILD. Every
+    premium it crushed added to the WIN multiplier.
 
-    symbol:    the sliding premium.
+    symbol:    what rides ("W" — the nudge wild wears its own face).
     baseMult:  the WIN multiplier before the slide.
-    passed:    how many premiums the slide crossed.
-    winMult:   the final WIN multiplier after the slide.
-    hits:      premiums encountered right-to-left (padding-adjusted rows).
+    passed:    how many premiums the walk crushed.
+    winMult:   the final WIN multiplier after the walk.
+    steps:     the full path right-to-left (reel last-1..0), padding-adjusted
+               rows; `name` is the symbol that WAS there, `premium` whether it
+               bumped the multiplier. The last step is always the first reel's
+               middle cell — the rider's resting place.
+    hits:      kept for older frontends: the premium steps only.
     """
+    steps = steps or []
     event = {
         "index": len(gamestate.book.events),
         "type": "nudge",
@@ -166,9 +172,19 @@ def nudge_event(gamestate, symbol, base_mult, passed, win_mult, hits=None):
         "baseMult": base_mult,
         "passed": passed,
         "winMult": win_mult,
+        "steps": [
+            {
+                "reel": s["reel"],
+                "row": s["row"] + 1,
+                "name": s.get("name"),
+                "premium": bool(s.get("premium")),
+            }
+            for s in steps
+        ],
         "hits": [
-            {"reel": h["reel"], "row": h["row"] + 1, "name": h.get("name")}
-            for h in (hits or [])
+            {"reel": s["reel"], "row": s["row"] + 1, "name": s.get("name")}
+            for s in steps
+            if s.get("premium")
         ],
     }
     gamestate.book.add_event(event)

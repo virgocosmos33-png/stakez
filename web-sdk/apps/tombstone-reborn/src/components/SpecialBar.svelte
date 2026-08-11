@@ -1,13 +1,14 @@
 <script lang="ts">
 	/**
-	 * The six special-bar cells — one per reel — as an iron-framed charred
-	 * plank of ornate nameplates standing down the LEFT of the board.
+	 * Side rails around the board:
+	 *   LEFT  — six special-bar cells (one per reel) as an iron-framed charred
+	 *           plank of ornate nameplates. Special symbols only.
+	 *   RIGHT — WAYS (top) + WIN (bottom) as SEPARATE ornate plaques (no shared
+	 *           container plank), only when the left rail stands upright
+	 *           (desktop/wide).
 	 *
-	 * When the rail stands upright (desktop/wide) it also HOSTS the WAYS readout
-	 * at the top and the WIN readout at the bottom, inside the same plank — so the
-	 * board no longer needs a steel console wedged under it (that overlapped the
-	 * board / bet bar). On narrow layouts the rail lies flat above the board and
-	 * cannot carry them, so FrameMorphHud shows WAYS/WIN there instead; the
+	 * On narrow layouts the left rail lies flat above the board and cannot carry
+	 * the readouts, so FrameMorphHud shows WAYS/WIN under the board instead; the
 	 * vertical decision is shared (game/specialBarLayout.ts) so the two never
 	 * both draw them.
 	 *
@@ -16,10 +17,9 @@
 	 *   bar_plaque       — hollow pewter nameplate, tinted for EMPTY slots
 	 *   bar_plaque_*     — per-kind plaques with baked embossed labels
 	 *
-	 * The rail is a nine-slice so the iron corners and rivets stay crisp while
-	 * the wood run stretches to the six plaques. Empty sockets use the hollow
-	 * frame + charcoal fill. Revealed cards use the colored labeled plaque
-	 * sprites (no runtime Text). The column reels with the board.
+	 * The LEFT rail is a nine-slice so the iron corners and rivets stay crisp while
+	 * the wood run stretches. Empty sockets use the hollow frame + charcoal fill.
+	 * Revealed cards use the colored labeled plaque sprites (no runtime Text).
 	 */
 	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
@@ -77,7 +77,9 @@
 	/** wood left above the first well and below the last, in rail widths */
 	const RAIL_PAD_FRACTION = 0.16;
 
-	// --- WAYS / WIN readouts (vertical rail only) -------------------------------
+	// --- WAYS / WIN readouts (separate plaques, vertical layout only) -----------
+	/** scale the free-floating WAYS/WIN plaques past the special-bar cell size */
+	const READOUT_SCALE = 1.28;
 	const VALUE_COLOR = hudColor('text', 0xf0e6d0);
 	const LABEL_COLOR = TR_INK_BRASS;
 	const LABEL_TRACKING = 2;
@@ -139,6 +141,7 @@
 	const layout = $derived.by(() => {
 		const board = context.stateGameDerived.boardLayout();
 		const originX = board.x - board.width * 0.5 + stateShake.x;
+		const originRight = board.x + board.width * 0.5 + stateShake.x;
 		const boardTop = board.y - board.height * 0.5 + stateShake.y;
 		const boardCy = board.y + stateShake.y;
 
@@ -153,23 +156,25 @@
 			const pitch = cellH * PITCH_FACTOR;
 			const stackH = pitch * (REELS - 1) + cellH;
 
-			// WAYS header + WIN footer — ornate nameplates hosted inside the plank.
-			// Height follows the plaque aspect so the cast-iron frame never stretches.
-			const wellW = cellW;
-			const wellH = wellW / READOUT_ASPECT;
-			const wellGap = cellH * 0.5;
-			const endsH = (wellH + wellGap) * 2;
-
+			// LEFT rail: special-symbol plaques only (no WAYS/WIN ends).
 			const pad = railW * RAIL_PAD_FRACTION;
-			const railH = stackH + pad * 2 + endsH;
+			const railH = stackH + pad * 2;
 			const cx = railRight - railW * 0.5;
 			const railTop = boardCy - railH * 0.5;
-
-			const waysCy = railTop + pad + wellH * 0.5;
 			// centre the FRAMES on the stack, not their textures: the skull hangs
 			// below each frame, so a box-centred stack reads as sitting high
 			const skullBias = (0.5 - OPENING_CY) * cellH;
-			const firstCy = waysCy + wellH * 0.5 + wellGap + cellH * 0.5 + skullBias;
+			const firstCy = railTop + pad + cellH * 0.5 + skullBias;
+
+			// RIGHT: two free-floating ornate plaques (WAYS top, WIN bottom) —
+			// no shared container plank. Slightly larger than a special-bar cell,
+			// centered in the side strip and pinned near the top/bottom of the
+			// left rail so they still bookend the board.
+			const railLeftR = originRight + PLATE_OVERHANG + BOARD_GAP;
+			const wellW = cellW * READOUT_SCALE;
+			const wellH = wellW / READOUT_ASPECT;
+			const cxR = railLeftR + railW * 0.5;
+			const waysCy = railTop + pad + wellH * 0.5;
 			const winCy = railTop + railH - pad - wellH * 0.5;
 
 			return {
@@ -182,13 +187,13 @@
 					cy: firstCy + pitch * reel,
 				})),
 				rail: { x: railRight - railW, y: railTop, w: railW, h: railH },
-				waysWell: { cx, cy: waysCy, w: wellW, h: wellH },
-				winWell: { cx, cy: winCy, w: wellW, h: wellH },
+				waysWell: { cx: cxR, cy: waysCy, w: wellW, h: wellH },
+				winWell: { cx: cxR, cy: winCy, w: wellW, h: wellH },
 			};
 		}
 
 		// narrow: the rail lies down above the board, one plaque over each reel.
-		// WAYS/WIN move to FrameMorphHud here (no room on a flat rail).
+		// WAYS/WIN move to FrameMorphHud here (no room for a right readout column).
 		// MAX_RAIL_W * PLAQUE_WIDTH_FRACTION === one card wide (SYMBOL_CARD_W).
 		const cellW = MAX_RAIL_W * PLAQUE_WIDTH_FRACTION;
 		const cellH = cellW / PLAQUE_ASPECT;
@@ -219,39 +224,49 @@
 	 * eases the plaque back down. */
 	const strike = $derived(1 - enter.current);
 
-	// pixi-svelte has no NineSlice component — same escape hatch as BoardFrame
-	const railSprite = new PIXI.NineSliceSprite({
-		texture: PIXI.Texture.EMPTY,
-		leftWidth: RAIL_INSET,
-		topHeight: RAIL_INSET,
-		rightWidth: RAIL_INSET,
-		bottomHeight: RAIL_INSET,
-	});
-	railSprite.eventMode = 'none';
-	railSprite.zIndex = -1;
-	parentContext.addToParent(railSprite);
+	// pixi-svelte has no NineSlice component — same escape hatch as BoardFrame.
+	// LEFT specials rail only; WAYS/WIN are free plaques (no right container).
+	const railSprite = (() => {
+		const s = new PIXI.NineSliceSprite({
+			texture: PIXI.Texture.EMPTY,
+			leftWidth: RAIL_INSET,
+			topHeight: RAIL_INSET,
+			rightWidth: RAIL_INSET,
+			bottomHeight: RAIL_INSET,
+		});
+		s.eventMode = 'none';
+		s.zIndex = -1;
+		parentContext.addToParent(s);
+		return s;
+	})();
 
 	onDestroy(() => {
 		railSprite.removeFromParent();
 		railSprite.destroy();
 	});
 
-	$effect(() => {
-		const texture = context.stateApp.loadedAssets?.['barRail'] as PIXI.Texture | undefined;
-		if (texture && railSprite.texture !== texture) railSprite.texture = texture;
-
-		const { rail, vertical } = layout;
+	const placeRail = (
+		sprite: PIXI.NineSliceSprite,
+		rail: { x: number; y: number; w: number; h: number },
+		vertical: boolean,
+	) => {
 		// panel is drawn upright: upright = rail size, laid down = thickness×span
 		// then a quarter turn. Uniform scale keeps iron rivets round.
 		const thickness = vertical ? rail.w : rail.h;
 		const span = vertical ? rail.h : rail.w;
 		const scale = thickness / RAIL_TEXTURE_W;
-		railSprite.scale.set(scale);
-		railSprite.width = RAIL_TEXTURE_W;
-		railSprite.height = span / scale;
-		railSprite.rotation = vertical ? 0 : -Math.PI / 2;
-		railSprite.x = rail.x;
-		railSprite.y = vertical ? rail.y : rail.y + thickness;
+		sprite.scale.set(scale);
+		sprite.width = RAIL_TEXTURE_W;
+		sprite.height = span / scale;
+		sprite.rotation = vertical ? 0 : -Math.PI / 2;
+		sprite.x = rail.x;
+		sprite.y = vertical ? rail.y : rail.y + thickness;
+	};
+
+	$effect(() => {
+		const texture = context.stateApp.loadedAssets?.['barRail'] as PIXI.Texture | undefined;
+		if (texture && railSprite.texture !== texture) railSprite.texture = texture;
+		placeRail(railSprite, layout.rail, layout.vertical);
 	});
 
 </script>
@@ -273,6 +288,7 @@
 		blankTint={EMPTY_TINT}
 		blankAlpha={EMPTY_ALPHA}
 		{pop}
+		active={Boolean(card) && context.stateGame.specialBarActiveKind === card?.kind}
 	/>
 
 	<!-- SPECIAL BAR HIT: a card struck into its socket throws powder smoke and

@@ -10,6 +10,7 @@ import {
 	SYMBOL_INFO_MAP,
 	SCATTER_WORD_INFO,
 	WILD_EXPAND_INFO,
+	NUDGE_WILD_INFO,
 	BOARD_DIMENSIONS,
 	NUM_ROWS,
 	MAX_ROWS,
@@ -170,9 +171,11 @@ export const getSymbolInfo = ({
 	rawSymbol: RawSymbol;
 	state: SymbolState;
 }) => {
-	// Two symbols wear a different face than their math name alone implies: the
-	// wild that expands a reel, and each scatter by its position on the board.
+	// Three symbols wear a different face than their math name alone implies:
+	// the wild that expands a reel, the nudge rider's wild wake, and each
+	// scatter by its position on the board.
 	if (rawSymbol.name === 'W' && rawSymbol.expanding) return WILD_EXPAND_INFO[state];
+	if (rawSymbol.name === 'W' && rawSymbol.nudged) return NUDGE_WILD_INFO[state];
 	if (rawSymbol.name === 'S') {
 		const face = SCATTER_WORD_INFO[rawSymbol.scatterIndex as keyof typeof SCATTER_WORD_INFO];
 		if (face) return face[state];

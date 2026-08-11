@@ -248,6 +248,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// 3/4/4/2/2/1 heights before this fresh reveal so the board spins in clean.
 		stateGame.board.forEach((reel) => reel.resetToInitialHeight());
 		stateGame.specialBar = [];
+		stateGame.specialBarActiveKind = null;
+		// the lane relocks every spin unless the SUPER bonus dug it up for the
+		// whole round; leaving the bonus drops that too
+		if (bookEvent.gameType === 'basegame') stateGame.laneSuper = false;
+		stateGame.lidOpen = stateGame.laneSuper;
 		stateGame.slotWinPositions = [];
 		stateGame.featureCells = [];
 		stateGame.reelStretch = stateGame.reelStretch.map(() => null);
@@ -341,6 +346,12 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// plays in its own following event.
 	specialBar: async (bookEvent: BookEventOfType<'specialBar'>) => {
 		stateGame.specialBar = bookEvent.cells;
+		// the SUPER bonus starts with the lane already dug up — blast the boards
+		// off the moment the bar resolves and keep them off for the whole round
+		if (bookEvent.barMode === 'super') {
+			stateGame.laneSuper = true;
+			stateGame.lidOpen = true;
+		}
 		if (bookEvent.cells.length > 0) {
 			// a round hitting the iron plaques on the rail
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
@@ -354,20 +365,26 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// The strike is announced ONCE for the whole event, not once per cell: the
 	// spades land in a staggered volley and per-cell triggers machine-gun.
 	digUp: async (bookEvent: BookEventOfType<'digUp'>) => {
+		stateGame.specialBarActiveKind = 'digup';
 		// the shovel strikes themselves are scheduled by FeatureBurst, which
 		// knows the per-cell stagger; nothing else announces the dig
 		shakeBoard({ intensity: 7, duration: fxDur(260) });
+		// the spade blasts the boarded cover off the lane — LaneLidLock plays
+		// its break-away the moment this flips
+		stateGame.lidOpen = true;
 		const lane = filterVisibleCells([{ reel: bookEvent.reel, row: 1 }]);
 		await Promise.all([
 			eventEmitter.broadcastAsync({ type: 'featureBurstShow', kind: 'digUp', cells: lane }),
 			animateSymbols({ positions: [{ reel: bookEvent.reel, row: 1 }] }),
 		]);
 		await fxWait(200);
+		stateGame.specialBarActiveKind = null;
 	},
 	// TOMBSTONE OPEN — the reel under each coffin card grows by at most +1.
 	// The last-reel special lane is never grown. Grown height + buried symbol
 	// stay on the board until the next reveal resets authored heights.
 	coffinOpen: async (bookEvent: BookEventOfType<'coffinOpen'>) => {
+		stateGame.specialBarActiveKind = 'coffin';
 		// the slab grinding open is fired by FeatureBurst with the burst itself
 		const last = stateGame.board.length - 1;
 
@@ -415,9 +432,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		await fxWait(150);
+		stateGame.specialBarActiveKind = null;
 	},
 	// GUNSMOKE — every copy of one symbol type morphs into the revolver WILD
 	gunsmoke: async (bookEvent: BookEventOfType<'gunsmoke'>) => {
+		stateGame.specialBarActiveKind = 'gunsmoke';
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		const cells = filterVisibleCells(bookEvent.cells);
 		if (!cells.length) {
@@ -463,18 +482,26 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		await fxWait(160);
+		stateGame.specialBarActiveKind = null;
 	},
 	// SPLIT-GANG — every premium on the board splits (+factor ways each)
 	splitGang: async (bookEvent: BookEventOfType<'splitGang'>) => {
+		stateGame.specialBarActiveKind = 'split_gang';
 		await applySplit(bookEvent, 'split');
+		stateGame.specialBarActiveKind = null;
 	},
 	// SPLIT-OUTLAWS — every low on the board splits (+factor ways each)
 	splitOutlaws: async (bookEvent: BookEventOfType<'splitOutlaws'>) => {
+		stateGame.specialBarActiveKind = 'split_outlaws';
 		await applySplit(bookEvent, 'stretch');
+		stateGame.specialBarActiveKind = null;
 	},
 	// SUPERSPLIT — the last-reel lane turns wild (stays 1-high) and every
 	// paying symbol on the board splits
 	superSplit: async (bookEvent: BookEventOfType<'superSplit'>) => {
+		stateGame.lidOpen = true; // the lane fired, so it can't still be boarded
+		// the lane announces itself: golden crossed revolvers flash in the cell
+		await eventEmitter.broadcastAsync({ type: 'laneCardShow', kind: 'supersplit' });
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 		const last = stateGame.board.length - 1;
 
@@ -522,70 +549,90 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	},
 	// BOUNTY — a premium drops into the last-reel lane with a WIN multiplier
 	bounty: async (bookEvent: BookEventOfType<'bounty'>) => {
+		stateGame.lidOpen = true; // the lane fired, so it can't still be boarded
+		// golden sheriff star flashes in the lane before the mark is named
+		await eventEmitter.broadcastAsync({ type: 'laneCardShow', kind: 'bounty' });
 		await applyBounty(bookEvent);
 		await fxWait(150);
 	},
-	// NUDGE — premium is blasted out of the last lane and rides LEFT; WIN mult
-	// climbs for every premium it reaches, and every cell it hits is left as a
-	// WILD. Like gunsmoke, the board is swapped UP FRONT and NudgeSlide covers
-	// each cell with a ghost of the old card until its shunt uncovers the wild.
+	// NUDGE — xNudge sideways. The NUDGE WILD (its own card) drops into the last
+	// lane, then racks LEFT one mechanical notch per reel, stepping onto exactly
+	// one cell of each column (half-steps and diagonals where the diamond rows
+	// don't line up) and coming to rest on the FIRST reel's middle cell. Every
+	// cell it steps through is left as a nudge-branded WILD, and every premium
+	// it crushes bumps the WIN multiplier. Like gunsmoke, the board is swapped
+	// UP FRONT and NudgeSlide covers each cell with a ghost of the old card
+	// until the rider's impact knocks that card out.
 	nudge: async (bookEvent: BookEventOfType<'nudge'>) => {
+		stateGame.lidOpen = true; // the lane fired, so it can't still be boarded
+		// the golden spur flashes in the lane before the rider is blasted out
+		await eventEmitter.broadcastAsync({ type: 'laneCardShow', kind: 'nudge' });
 		const reel = stateGame.board.length - 1;
 		const cell = { reel, row: 1 };
+		const premiums = new Set(['H1', 'H2', 'H3', 'H4', 'H5']);
 
-		// land the premium in the lane first (base mult), then slide
+		// the NUDGE WILD lands in the lane wearing its own face (the lane cell
+		// is the rider's origin, so its wild is part of the wake too)
 		const newBoard = rawBoardCopy();
 		if (newBoard[reel]?.[1]) {
-			newBoard[reel][1] = { ...newBoard[reel][1], name: bookEvent.symbol };
+			newBoard[reel][1] = { ...newBoard[reel][1], name: 'W', nudged: true };
 		}
 		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
 		parkCells([cell]);
 
-		// derive a hit path from the live board if the book is older and has no hits
-		const rawHits = bookEvent.hits?.map(({ reel: r, row }) => ({ reel: r, row })) ?? [];
-		if (!rawHits.length) {
-			const premiums = new Set(['H1', 'H2', 'H3', 'H4', 'H5']);
+		// the walk comes from the book; for older books (premium hits only)
+		// derive a straight-as-possible walk that still visits every reel
+		let rawSteps = bookEvent.steps?.map((s) => ({ ...s })) ?? [];
+		if (!rawSteps.length) {
+			const byReel = new Map((bookEvent.hits ?? []).map((h) => [h.reel, h]));
 			for (let r = reel - 1; r >= 0; r--) {
 				const strip = stateGameDerived.boardRaw()[r] ?? [];
-				for (let row = 1; row < strip.length - 1; row++) {
-					if (premiums.has(strip[row]?.name)) rawHits.push({ reel: r, row });
-				}
+				const mid = Math.floor((strip.length - 1) / 2);
+				const hit = byReel.get(r);
+				rawSteps.push({ reel: r, row: hit?.row ?? mid, name: hit?.name });
 			}
 		}
 
-		// the diamond board pads short reels — only score cells that are on screen
-		const hitCells = filterVisibleCells(rawHits).filter(({ reel: r }) => r !== reel);
-		const hits = hitCells.map(({ reel: r, row }) => ({
-			reel: r,
-			row,
-			from: (stateGameDerived.boardRaw()[r]?.[row]?.name ?? 'H1') as RawSymbol['name'],
-		}));
+		// the diamond board pads short reels — only step on cells that exist
+		const stepCells = rawSteps.filter(
+			({ reel: r, row }) => filterVisibleCells([{ reel: r, row }]).length && r !== reel,
+		);
+		const steps = stepCells.map((s) => {
+			const from = (stateGameDerived.boardRaw()[s.reel]?.[s.row]?.name ??
+				'H1') as RawSymbol['name'];
+			return {
+				reel: s.reel,
+				row: s.row,
+				from,
+				premium: s.premium ?? premiums.has(from),
+			};
+		});
 
-		// swap every hit cell to WILD before the ride; each one stays hidden
-		// behind its ghost card until the rider knocks that card out
-		if (hits.length) {
+		// swap the whole wake to nudge wilds before the ride; each one stays
+		// hidden behind its ghost card until the rider knocks that card out
+		if (steps.length) {
 			const wildBoard = rawBoardCopy();
-			hits.forEach(({ reel: r, row }) => {
+			steps.forEach(({ reel: r, row }) => {
 				if (wildBoard[r]?.[row]) {
-					wildBoard[r][row] = { ...wildBoard[r][row], name: 'W' };
+					wildBoard[r][row] = { ...wildBoard[r][row], name: 'W', nudged: true };
 				}
 			});
 			eventEmitter.broadcast({ type: 'boardSettle', board: wildBoard });
-			parkCells(hitCells);
+			parkCells(steps);
 		}
 
 		await eventEmitter.broadcastAsync({
 			type: 'nudgeSlideShow',
-			symbol: bookEvent.symbol,
 			baseMult: bookEvent.baseMult,
 			winMult: bookEvent.winMult,
-			hits,
+			steps,
 		});
 
-		// leave the final WIN mult badge on the lane
+		// leave the final WIN mult badge where the rider came to rest
+		const rest = steps[steps.length - 1] ?? cell;
 		await eventEmitter.broadcastAsync({
 			type: 'stretchWaysShow',
-			cells: [{ ...cell, multiplier: bookEvent.winMult }],
+			cells: [{ reel: rest.reel, row: rest.row, multiplier: bookEvent.winMult }],
 		});
 		await fxWait(120);
 	},

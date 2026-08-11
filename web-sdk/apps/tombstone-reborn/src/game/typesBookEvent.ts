@@ -144,8 +144,9 @@ type BookEventBounty = {
 	winMult: number;
 };
 
-/** NUDGE: the bounty premium slid left, climbing its WIN multiplier for every
- * premium it passed over. */
+/** NUDGE: the nudge wild racked LEFT from the lane one notch per reel,
+ * stepping onto exactly one cell per column and leaving it WILD, climbing its
+ * WIN multiplier for every premium it crushed. */
 type BookEventNudge = {
 	index: number;
 	type: 'nudge';
@@ -153,7 +154,11 @@ type BookEventNudge = {
 	baseMult: number;
 	passed: number;
 	winMult: number;
-	/** premiums encountered right-to-left as the slide crosses them */
+	/** the full walk, right-to-left (reel last-1..0, ending on the first
+	 * reel's middle cell); `name` is the symbol that WAS there, `premium`
+	 * whether crushing it bumped the multiplier */
+	steps?: (Position & { name?: SymbolName; premium?: boolean })[];
+	/** legacy books: the premium steps only */
 	hits?: (Position & { name?: SymbolName })[];
 };
 

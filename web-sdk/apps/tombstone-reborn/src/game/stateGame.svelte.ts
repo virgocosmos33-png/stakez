@@ -21,11 +21,16 @@ import {
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
 import { COLUMN_ROW_OFFSET } from './chassisArt';
+import { isSpecialBarVertical } from './specialBarLayout';
 
 /** Must match FrameMorphHud rail height + plate clearance. */
 const HUD_RAIL_H = 56;
 const HUD_PLATE_CLEAR = 14;
 const HUD_CLEAR_PX = 12;
+/** Minimum breathing room kept above the board, so it never hugs the top edge. */
+const BOARD_TOP_MARGIN = 24;
+/** Bias the vertically-centred board a bit toward the HUD (positive = lower). */
+const BOARD_Y_BIAS = 48;
 
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	if (rawSymbol.name === 'S') {
@@ -95,6 +100,16 @@ export const stateGame = $state({
 	// TOMBSTONE REBORN: the special bar's revealed cards this spin (one entry per
 	// non-empty bar cell). Set by the specialBar book event, cleared on reveal.
 	specialBar: [] as { reel: number; kind: string }[],
+	// which bar card's EFFECT is currently resolving — its plaque lights up on
+	// the rail while the feature plays (top-to-bottom, in book order). Null when
+	// nothing is firing. Set/cleared by the feature book event handlers.
+	specialBarActiveKind: null as string | null,
+	// LAST-REEL LANE lock. The lane is boarded shut (LaneLidLock cover) on every
+	// base/small-bonus spin until a DIG UP card blasts it open mid-spin; the
+	// super bonus digs it up for the whole round. `laneSuper` persists that
+	// whole-bonus unlock across reveals (reset on a base-game reveal).
+	lidOpen: false,
+	laneSuper: false,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
 	// bumped on every reveal. Drives LockedSlots to re-roll and re-drop the
@@ -167,25 +182,39 @@ export const stateGame = $state({
 
 const boardLayout = () => {
 	const main = stateLayoutDerived.mainLayout();
-	// Slight upward nudge so logo / special-bar strip clear the top; may lift
-	// further so BoardPlate + WAYS/WIN console never collide with bet/spin HUD.
-	const preferredY = main.height * 0.5 - 36;
-	let y = preferredY;
+	// centres the seven columns of CARDS, not the box they live in — see
+	// COLUMN_ROW_OFFSET
+	const x = main.width * 0.5 - COLUMN_ROW_OFFSET;
+
+	// The under-board WAYS/WIN console (FrameMorphHud) only renders when the
+	// special bar is laid FLAT (narrow/portrait). When the bar stands vertical
+	// (desktop/landscape) nothing sits under the board, so reserving a rail's
+	// worth of space there just pins the board against the top edge — only
+	// reserve it when the console is actually shown.
+	const barVertical = isSpecialBarVertical({ x, width: BOARD_SIZES.width });
+	// half the board plate block (board + top/bottom wood overhang)
+	const halfBlock = BOARD_SIZES.height / 2 + BOARD_PLATE_PAD;
+
+	// floorY = the lowest line the board plate may reach, in main-space y. Until
+	// the HUD bar reports its position, fall back to the canvas bottom.
 	const hudTopScreen = stateUi.hudBarTopScreenY;
+	let floorY = main.height - HUD_PLATE_CLEAR;
 	if (hudTopScreen > 0) {
 		const canvasH = stateLayoutDerived.canvasSizes().height;
-		const railFloor =
-			main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale - HUD_RAIL_H / 2;
-		// When the console is clamped to railFloor, keep plateBottom + CLEAR
-		// at or above the console top (railFloor - HUD_RAIL_H/2).
-		const maxBoardY =
-			railFloor - HUD_RAIL_H / 2 - BOARD_SIZES.height / 2 - BOARD_PLATE_PAD - HUD_PLATE_CLEAR;
-		y = Math.min(preferredY, maxBoardY);
+		const hudTopMain =
+			main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale;
+		const reserve = barVertical ? HUD_PLATE_CLEAR : HUD_RAIL_H + HUD_PLATE_CLEAR;
+		floorY = hudTopMain - reserve;
 	}
+
+	// Centre the board in the play area between the top edge and floorY, then
+	// bias it a bit toward the HUD so more air sits above and less below. Keep
+	// a small top margin, and never let the plate cross floorY.
+	let y = Math.max(BOARD_TOP_MARGIN + halfBlock, floorY / 2 + BOARD_Y_BIAS);
+	y = Math.min(y, floorY - halfBlock);
+
 	return {
-		// centres the seven columns of CARDS, not the box they live in — see
-		// COLUMN_ROW_OFFSET
-		x: main.width * 0.5 - COLUMN_ROW_OFFSET,
+		x,
 		y,
 		anchor: { x: 0.5, y: 0.5 },
 		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
