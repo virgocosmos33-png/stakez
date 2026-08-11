@@ -1,15 +1,12 @@
 import { createSound } from 'utils-sound';
 
+// There is no bgm_freespin bed. This game has no free-spins feature: the math
+// declares no freespin triggers, both buy modes are a single enhanced spin, and
+// the FreeSpin overlays were deleted. A second bed had nothing that could ever
+// start it, so it was retired rather than left pointing at a music file.
 export type MusicName =
 	| 'bgm_main'
-	| 'bgm_freespin'
-	| 'bgm_winlevel_big'
-	| 'bgm_winlevel_epic'
-	| 'bgm_winlevel_max'
-	| 'bgm_winlevel_mega'
-	| 'bgm_winlevel_superwin'
-	// staged big-win composition: contiguous slices of one escalating piece,
-	// the celebration hops slice -> slice so skips cue the music forward
+	// six escalating western celebration beds, one per win-level stage
 	| 'bgm_celeb_1'
 	| 'bgm_celeb_2'
 	| 'bgm_celeb_3'
@@ -51,18 +48,44 @@ export type SoundEffectName =
 	| 'sfx_scatter_win_v2'
 	| 'sfx_superfreespin'
 	| 'sfx_symbols_landing'
+	| 'sfx_ui_click'
+	| 'sfx_ui_click_heavy'
+	| 'sfx_ui_click_soft'
 	| 'sfx_wild_explode'
-	| 'sfx_madams_eye'
+	| 'sfx_tombstone_toll'
 	| 'sfx_thunder'
-	| 'sfx_xways_split'
 	| 'sfx_cell_seal_expand'
 	| 'sfx_cell_seal_harden'
 	| 'sfx_cell_seal_h3_expand'
-	| 'sfx_cell_seal_h3_loop'
-	| 'sfx_mirror_break'
-	| 'sfx_claw_split'
 	| 'sfx_bullet_wood'
 	| 'sfx_bullet_ricochet'
+	| 'sfx_split_seam_tear'
+	// fire on linked cells / reel edges: ignite one-shot, sustained burn bed,
+	// escalation flare, burn-out tail
+	| 'sfx_fire_ignite'
+	| 'sfx_fire_loop'
+	| 'sfx_fire_flare'
+	| 'sfx_fire_out'
+	| 'sfx_lock_snap'
+	| 'sfx_lock_release'
+	| 'sfx_fuse_crackle'
+	| 'sfx_ember_whoosh'
+	| 'sfx_reel_nudge'
+	| 'sfx_gunsmoke'
+	| 'sfx_tombstone_open'
+	| 'sfx_special_hit'
+	| 'sfx_bounty'
+	// digUp: three genuinely different takes so staggered multi-cell digs never
+	// sound copy-pasted, plus the handle settling once the blades are planted
+	| 'sfx_shovel_strike_1'
+	| 'sfx_shovel_strike_2'
+	| 'sfx_shovel_strike_3'
+	| 'sfx_shovel_settle'
+	// bonus-entry banner: one sting per bought mode, then the hand-off accent as
+	// the banner clears into the single enhanced spin the player paid for
+	| 'sfx_bonus_entry_small'
+	| 'sfx_bonus_entry_super'
+	| 'sfx_bonus_handoff'
 	| 'sfx_celeb_whoosh'
 	| 'sfx_celeb_swell'
 	| 'sfx_celeb_wobble'
@@ -80,7 +103,8 @@ export type SoundEffectName =
 	| 'tumble_win_1'
 	| 'tumble_win_2'
 	| 'tumble_win_3'
-	| 'tumble_win_4';
+	| 'tumble_win_4'
+	| 'tumble_win_5';
 
 export type SoundName = MusicName | SoundEffectName;
 

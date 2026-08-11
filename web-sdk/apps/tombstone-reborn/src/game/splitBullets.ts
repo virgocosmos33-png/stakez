@@ -15,8 +15,22 @@ export const shotsForMultiplier = (count: number) => {
 /** Gap between volleys so stacked hits still read as separate rounds. */
 export const SHOT_GAP_MS = 105;
 
-/** Chance a wood hit is followed by a ricochet whine. */
-export const RICOCHET_CHANCE = 0.38;
+/**
+ * Beat held AFTER the last bullet volley (multiplier badge fully up) and BEFORE
+ * a big cell detonates, so the player can READ the Nx before it blows up. The
+ * explosion is the final step of the strike, never simultaneous with the shots.
+ */
+export const EXPLOSION_READ_MS = 520;
+
+/**
+ * A split cell whose multiplier is STRICTLY above this detonates: instead of only
+ * taking more bullet holes, the cell blows up (SplitExplosion flipbook + boom).
+ * 10x is the "big hit" line the player already reads off the Nx badge.
+ */
+export const EXPLOSION_MIN_MULT = 10;
+
+/** Splintered-hole variants packed by tools/make_bullet_hole_atlas.py. */
+export const HOLE_VARIANTS = 6;
 
 export type HoleMark = {
 	id: string;
@@ -25,7 +39,7 @@ export type HoleMark = {
 	x: number;
 	/** card-local y */
 	y: number;
-	/** atlas frame index 0..2 */
+	/** atlas frame index, 0..HOLE_VARIANTS-1 */
 	tex: number;
 	scale: number;
 	/** radians */
@@ -45,8 +59,10 @@ export const holePose = (seed: number, index: number, cardW: number, cardH: numb
 	return {
 		x: (rand(s) - 0.5) * cardW * 0.62,
 		y: (rand(s + 1) - 0.5) * cardH * 0.58,
-		tex: Math.floor(rand(s + 2) * 3) % 3,
-		scale: 0.42 + rand(s + 3) * 0.22,
+		tex: Math.floor(rand(s + 2) * HOLE_VARIANTS) % HOLE_VARIANTS,
+		// kept small: at the old 0.42-0.64 a single hole spanned most of the card
+		// and its splinter ring read as a sparkle decal over the symbol
+		scale: 0.26 + rand(s + 3) * 0.14,
 		rot: (rand(s + 4) - 0.5) * 0.7,
 	};
 };

@@ -1,0 +1,127 @@
+/* ---------------------------------------------------------------------------
+   TOMBSTONE REBORN western type system — @font-face declarations.
+
+   Imported by src/game/typography.ts, so any surface that consumes a role token
+   necessarily pulls these faces in too (app AND Storybook, which never renders
+   +layout.svelte). Vite rewrites the url()s and emits the woff2 as hashed build
+   assets.
+
+   Stake Engine XSS policy: the build must be fully static with no external
+   requests, so every face is vendored under static/assets/fonts/webfont/.
+   Licences and attribution live in that folder's README.md.
+
+   font-display: block matches the house convention in
+   components-ui-html/global.scss — the browser holds the text invisible rather
+   than flashing a system fallback, which matters far more here because PIXI
+   rasterizes text to a texture and does not re-rasterize when a face lands late.
+
+   Subsets are Google's stock latin / latin-ext split. latin-ext is what carries
+   the exotic currency symbols (₹ ₽ ₱ ₩ live in U+20A0-20AB / U+20AD-20C0), so
+   the value face MUST keep both blocks or long-currency amounts lose glyphs.
+--------------------------------------------------------------------------- */
+
+/* --- display: Rye (SIL OFL 1.1) — western wood-type slab, hero titles only --- */
+@font-face {
+	font-family: 'Rye';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/rye-400-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+		U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: 'Rye';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/rye-400-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+		U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+		U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --- label: Oswald (SIL OFL 1.1) — condensed signage caps, 8-12px HUD labels --- */
+@font-face {
+	font-family: 'Oswald';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/oswald-var-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+		U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: 'Oswald';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/oswald-var-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+		U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+		U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* --- value: Archivo Narrow (SIL OFL 1.1) — tabular figures, currency + counters --- */
+@font-face {
+	font-family: 'Archivo Narrow';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/archivo-narrow-var-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+		U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: 'Archivo Narrow';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/archivo-narrow-var-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+		U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+		U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* ---------------------------------------------------------------------------
+   HTML UI (pay-table, bet menu, settings, buy-bonus confirm, tooltips).
+
+   components-ui-html drives every one of those surfaces from two custom
+   properties, so the whole DOM side is rebranded here instead of by editing the
+   shared package: --mono-font for body copy and values, --ui-title-font for
+   modal headings.
+
+   Body copy takes the VALUE face, not the label face: the pay-table runs real
+   multi-line prose, and Oswald is a signage face that gets tiring at paragraph
+   length, while Archivo Narrow is a text-grade narrow grotesque. Both are
+   already loaded, so this costs no extra payload.
+
+   `html:root` rather than `:root` deliberately — it outranks the package's own
+   `:root` block on specificity, so the override holds no matter which of the two
+   stylesheets the bundler emits last.
+--------------------------------------------------------------------------- */
+html:root {
+	--mono-font: 'Archivo Narrow', 'Arial Narrow', 'Segoe UI', Arial, sans-serif;
+	--ui-title-font: 'Rye', 'Bookman Old Style', Georgia, serif;
+}
+
+/* --- accent: Special Elite (Apache 2.0) — distressed press, hero subtitles --- */
+@font-face {
+	font-family: 'Special Elite';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/special-elite-400-latin.woff2') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304,
+		U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: 'Special Elite';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src: url('../../assets/fonts/webfont/special-elite-400-latin-ext.woff2') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308,
+		U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113,
+		U+2C60-2C7F, U+A720-A7FF;
+}

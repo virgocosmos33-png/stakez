@@ -14,7 +14,7 @@
 	 */
 	import { eventEmitter } from '../game/eventEmitter';
 	import { fxDur } from '../game/fxTiming';
-	import { RICOCHET_CHANCE, SHOT_GAP_MS, shotsForMultiplier } from '../game/splitBullets';
+	import { SHOT_GAP_MS, shotsForMultiplier } from '../game/splitBullets';
 
 	/** Default column multi when the caller does not pass one — mid pack. */
 	const DEFAULT_COLUMN_COUNT = 5;
@@ -26,7 +26,7 @@
 	/**
 	 * run one strike, calling `onImpact` after the first volley.
 	 *
-	 * Audio matches SplitPanes: wood hit every round, ricochet sometimes.
+	 * Audio matches SplitPanes: wood punch AND ricochet whine on every round.
 	 * forcePlay so stacked hits are not swallowed by the once-player.
 	 */
 	export const playColumnClaw = (set: (t: number) => void, onImpact?: () => void) =>
@@ -35,28 +35,15 @@
 			let fired = false;
 			let lastVolley = -1;
 			set(0);
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+			// the column's planks tearing open, same cue as a split seam
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_split_seam_tear' });
 			const strikeMs = fxDur(STRIKE_MS);
 			const step = (now: number) => {
 				const t = (now - start) / strikeMs;
 				const volley = Math.min(COLUMN_VOLLEYS - 1, Math.floor(t * COLUMN_VOLLEYS));
 				if (volley > lastVolley) {
 					lastVolley = volley;
-					eventEmitter.broadcast({
-						type: 'soundOnce',
-						name: 'sfx_bullet_wood',
-						forcePlay: true,
-					});
-					if (Math.random() < RICOCHET_CHANCE) {
-						eventEmitter.broadcast({
-							type: 'soundOnce',
-							name: 'sfx_bullet_ricochet',
-							forcePlay: true,
-						});
-					}
-				}
-				if (!fired && t >= IMPACT_AT) {
-					fired = true;
+					// every hit rings: wood punch + metal ricochet whine, layered
 					eventEmitter.broadcast({
 						type: 'soundOnce',
 						name: 'sfx_bullet_wood',
@@ -67,6 +54,11 @@
 						name: 'sfx_bullet_ricochet',
 						forcePlay: true,
 					});
+				}
+				if (!fired && t >= IMPACT_AT) {
+					fired = true;
+					// no bullet cue here: the impact frame falls inside a volley that
+					// already fired one, and doubling up breaks one hit per volley
 					onImpact?.();
 				}
 				if (t >= 1) {

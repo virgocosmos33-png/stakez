@@ -240,16 +240,7 @@
     "loading": "mirror/loading.webp",
     "studioLoader": "loader.gif",
     "introVideo": "mirror/intro_mirror.mp4",
-    "carousel": [
-      "mirror/intro_seance.webp",
-      "mirror/intro_otherside.webp",
-      "mirror/intro_bloodmoon.webp"
-    ],
-    "carouselLabels": [
-      "THE_INTAKE",
-      "HER_SIDE",
-      "WHITEOUT"
-    ]
+    "carouselNote": "carousel + carouselLabels REMOVED. They listed mirror/intro_seance|otherside|bloodmoon.webp under the Madam Mirror bonus-level names THE_INTAKE / HER_SIDE / WHITEOUT — this game has no bonus levels, the .webp files are deleted, and IntroCarousel.svelte draws in-game feature cards instead. Do not re-add: a regen from these keys would restore White Room art."
   },
   "loading": {
     "label": "Loading chrome (progress bar + falling debris)",
@@ -273,14 +264,10 @@
     "note": "PRIMARY bonus enter/exit (Transition.svelte). rock1..rock8 = ceramic chips + pills + PATIENT 404 paper + lint + fluorescent dust + buckle scraps. ZERO Madam purple diamonds / amethyst crystals. Regen: regenerate_assets scope=transition \u2192 make_transition_debris.py. Old purple atlases quarantined under assets-raw/_OLD_PURPLE_DIAMONDS/."
   },
   "bonusCards": [
-    "mirror/buy_seance.webp",
-    "mirror/buy_otherside.webp",
-    "mirror/buy_bloodmoon.webp",
-    "mirror/buy_feature1.webp",
-    "mirror/buy_feature2.webp",
-    "mirror/buy_feature3.webp",
-    "mirror/buy_ante.webp"
+    "sprites/tombstone/buy_small.png",
+    "sprites/tombstone/buy_super.png"
   ],
+  "bonusCardsNote": "TWO buy cards only, matching the two real bet modes in src/game/betModeMeta.ts (bonus_small 80x, bonus_super 1000x). This list previously named seven Madam Mirror cards (buy_seance / buy_otherside / buy_bloodmoon for the THE INTAKE / HER SIDE / WHITEOUT bonus levels, plus buy_feature1..3 and buy_ante) which the buy menu never loaded — stale entries that would have let a regen restore White Room card art for bonus levels this game does not have.",
   "bonusBuyChrome": [
     "mirror/buy_ui/cta_activate.png",
     "mirror/buy_ui/cta_buy.png",
@@ -297,13 +284,25 @@
     "mirror/buy_ui/accent_stain.png"
   ],
   "celebration": [
-    "celeb/celeb_t2",
-    "celeb/celeb_t3",
-    "celeb/celeb_t4",
-    "celeb/celeb_t5",
-    "celeb/celeb_t6",
-    "celeb/celeb_t7"
+    "celeb/win_tier_bounty",
+    "celeb/win_tier_showdown",
+    "celeb/win_tier_highnoon",
+    "celeb/win_tier_laststand",
+    "celeb/win_tier_bloodmoney",
+    "celeb/win_tier_boothill",
+    "celeb/win_frame",
+    "fx/win_celeb_light",
+    "fx/win_celeb_vfx",
+    "fx/win_scatter"
   ],
+  "celebrationNote": "Dark western win ladder BOUNTY..BOOT HILL. Hero plates generated on Layer AI (FLUX.1 [dev]); light/particle atlases from Kenney CC0 families plus pre-existing Scenario library renders (starburst, spark streak, spiked star, revolver, dust plume) that were downloaded only. Baked by tools/make_win_celebration_art.py. REPLACED celeb/celeb_t2..t7 (+ mp4 folders, celeb_whiteout) — Madam Mirror White Room asylum footage, deleted. celeb/win_frame carries NO thin outline: its baked gold inlay hairline, iron edge line, strap outlines and nail rims were removed because a 1-3px stroke baked at 1428px and drawn at ~563px minifies into a crisp bright line tracing the panel. The takeover's edge is the warm window spill plus the runtime god-rays and lantern bloom; tools/check_frame_edges.py fails the build if a stroke returns.",
+  "bonusEntry": [
+    "celeb/bonus_entry_small",
+    "celeb/bonus_entry_super",
+    "celeb/bonus_frame_small",
+    "celeb/bonus_frame_super"
+  ],
+  "bonusEntryNote": "Bonus-entry banner, TWO tiers matching the two real buy modes: DEAD MAN'S HAND (bonus_small 80x) and OPEN GRAVE (bonus_super 1000x), each a SINGLE enhanced spin. Hero plates generated on Layer AI (FLUX.1 [dev], same model and grade as the win tiers); bonus_frame_super adds Kenney CC0 fantasy-ui DOUBLE border/divider families over the same timber field. Baked by tools/make_bonus_entry_art.py, raw art fetched by tools/fetch_layer_bonus_entry.py. Contract: src/game/bonusEntryArt.ts. BOTH tiers reuse fx/win_celeb_light + fx/win_celeb_vfx, so there is no parallel bonus VFX set to regenerate. bonus_frame_small started as a copy of celeb/win_frame and is now its own file on purpose: the win takeover was asked to lose the thin outline tracing its panel (that inlay hairline is gone from win_frame and must not come back), while the banner was asked to keep its framing, so the banner owns the outlined build. tools/check_frame_edges.py asserts both expectations at real display size. This list is NOT the deleted free-spin/bonus-level art (mirror/intro_seance|otherside|bloodmoon, mirror/fs_intro*, mirror/fs_outro — THE INTAKE / HER SIDE / WHITEOUT): those stay deleted and unregistered.",
   "cellSeal": {
     "label": "Cell Seal expand reels",
     "symbols": [
@@ -396,21 +395,23 @@
     "spinePattern": "spines/cellSeal/{id}.json"
   },
   "winParticles": {
-    "gems": {
-      "label": "White Room clinical debris cascade",
-      "sheet": "sprites/coin/SD2_Coin.json",
-      "texture": "sprites/coin/SD2_Coin.png",
-      "note": "PRIMARY: ceramic tile chips + pill capsules + torn PATIENT 404 paper + padded-wall lint + fluorescent dust + restraint buckle scraps. ZERO Madam Mirror glass shards / triangle knives / crystals. Pack via regenerate_assets scope=winParticles."
+    "scatter": {
+      "label": "Bounty payout scatter",
+      "sheet": "sprites/fx/win_scatter.json",
+      "texture": "sprites/fx/win_scatter.png",
+      "note": "Aged gold coins at many rotation angles plus brass rifle cartridges and spent casings, black-keyed out of a Layer AI sheet. REPLACED sprites/coin/SD2_Coin.{json,png} — the Samurai Dogs 2 template coin atlas behind the generic gold-coin confetti, deleted. Bake via tools/make_win_celebration_art.py."
     }
   },
   "features": {
     "freeSpins": {
-      "label": "Her Side",
-      "enabled": true
+      "label": "None. Bonuses are single enhanced spins.",
+      "enabled": false
     },
     "bonusLevels": {
-      "enabled": true
+      "label": "None. This game has no bonus levels.",
+      "enabled": false
     },
+    "featuresNote": "freeSpins was labelled \"Her Side\" and both flags were true, inherited from Madam Mirror's 3-level free-spins ladder. The math declares no freespin triggers (math-sdk game_config.py) and gameInfo.ts tells the player both bonuses are a SINGLE enhanced spin, so both are now false. The FreeSpinIntro / FreeSpinOutro / FreeSpinCounter / BonusLevelBanner / BonusUpgradeBanner overlays are deleted.",
     "mirror": {
       "label": "Cell Fracture",
       "enabled": true
@@ -441,7 +442,6 @@
     "cues": {
       "music": [
         "bgm_main",
-        "bgm_freespin",
         "bgm_celeb_1",
         "bgm_celeb_2",
         "bgm_celeb_3",
@@ -451,7 +451,10 @@
       ],
       "ui": [
         "sfx_btn_general",
-        "sfx_btn_spin"
+        "sfx_btn_spin",
+        "sfx_ui_click",
+        "sfx_ui_click_heavy",
+        "sfx_ui_click_soft"
       ],
       "reels": [
         "sfx_reel_stop_1",
@@ -470,15 +473,12 @@
         "sfx_bigwin_coinloop"
       ],
       "themeSpecific": [
-        "sfx_xways_split",
-        "sfx_mirror_break",
-        "sfx_madams_eye",
+        "sfx_tombstone_toll",
+        "sfx_thunder",
         "sfx_youwon_panel",
         "sfx_cell_seal_expand",
         "sfx_cell_seal_harden",
         "sfx_cell_seal_h3_expand",
-        "sfx_cell_seal_h3_loop",
-        "sfx_claw_split",
         "sfx_bullet_wood",
         "sfx_bullet_ricochet"
       ]
@@ -495,7 +495,7 @@
         "bgm_celeb_5",
         "bgm_celeb_6"
       ],
-      "note": "FE playStageMusic() stops old Madam cues then plays stage bed; no sfx_celeb whoosh/hit/maxslam during takeover.",
+      "note": "FE playStageMusic() stops any running stage bed then plays the next one; no sfx_celeb whoosh/hit/maxslam during takeover.",
       "noLegacySfxLayer": true,
       "runtime": "WinCelebration.playStageMusic"
     }
@@ -712,14 +712,14 @@
     "winAmountFont": {
       "label": "Win Amount Font",
       "tag": "win text",
-      "desc": "PER-GAME FONT (must be unique). Player-facing win/outro/celebration amounts + PRESS ANYWHERE chrome. fontFamily = BitmapText face (clinical = White Room whiteRoomFont). BANNED defaults: silver (Mining-Mayhem western slab template), gold/amethyst/ghost (Madam drip). colors[0] = Pixi tint. Regen: regenerate_assets scope=fonts.",
-      "fontFamily": "clinical",
+      "desc": "PER-GAME FONT (must be unique). Player-facing win/outro/celebration amounts + PRESS ANYWHERE chrome. fontFamily = BitmapText face (tombstone = wanted-poster gold serif, tombstoneFont, tools/make_tombstone_font.py). BANNED defaults: clinical (Madam Mirror White Room plaque face, deleted), silver (Mining-Mayhem western slab template), gold/amethyst/ghost (Madam drip). colors[0] = Pixi tint. Regen: regenerate_assets scope=fonts.",
+      "fontFamily": "tombstone",
       "fontSizeScale": 1,
       "swatchNames": [
         "tint"
       ],
       "colors": [
-        "0xf4f1ec"
+        "0xe8d6a8"
       ]
     }
   },

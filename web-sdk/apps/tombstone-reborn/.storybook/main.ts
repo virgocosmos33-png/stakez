@@ -13,6 +13,10 @@ const config: StorybookConfig = {
 		cfg.server = cfg.server ?? {};
 		cfg.server.fs = cfg.server.fs ?? {};
 		cfg.server.fs.allow = [...(cfg.server.fs.allow ?? []), root];
+		// Two dev servers sharing node_modules/.vite thrash each other's
+		// dep-optimizer output, which serves stale package builds. Set
+		// STORYBOOK_VITE_CACHE_DIR to give a second instance its own cache.
+		if (process.env.STORYBOOK_VITE_CACHE_DIR) cfg.cacheDir = process.env.STORYBOOK_VITE_CACHE_DIR;
 		return cfg;
 	},
 };

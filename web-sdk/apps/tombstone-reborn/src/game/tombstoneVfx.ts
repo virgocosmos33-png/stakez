@@ -1,13 +1,20 @@
 /**
- * Tombstone Reborn western FX language for SPLIT seams + target lock.
+ * Tombstone Reborn western FX language for the SPLIT strike + target lock.
  * Atlas: tools/make_tombstone_split_vfx_atlas.py → asset key `tombstoneSplitVfx`.
- * Source: Kenney particle-pack + smoke-particles (CC0), recolored dusty amber /
- * gunsmoke / spent brass — not clinical white / Madam Mirror gold panes.
+ *
+ * Hero plates (revolver muzzle flash, dust plume, gold starburst, sparkler)
+ * come from the Scenario team library; the supporting sparks, scorch, dirt and
+ * gunsmoke are Kenney particle-pack / smoke-particles (CC0), recoloured to the
+ * dusty amber + powder-burn palette below.
+ *
+ * A split cell carries NO divider of any kind. The strip that used to be drawn
+ * down each tear read as a pale bar ruled over the symbol; a split is now told
+ * by its bullet holes and its multiplier badge alone.
  */
 
 export const TOMBSTONE_SPLIT_VFX_ASSET = 'tombstoneSplitVfx';
 
-/** Dusty western palette shared by TargetLock, SplitPanes, wild seams. */
+/** Dusty western palette shared by TargetLock, SplitPanes and the wild columns. */
 export const TOMBSTONE_FX = {
 	brass: 0xc9a34a,
 	spentBrass: 0xf0d78c,
@@ -21,12 +28,20 @@ export const TOMBSTONE_FX = {
 	dark: 0x0a0806,
 } as const;
 
-/** Frame indices into the `tombstoneSplitVfx` spritesheet (row order). */
+/**
+ * Frame indices into the `tombstoneSplitVfx` spritesheet (row order).
+ * Must stay in step with FRAMES in tools/make_tombstone_split_vfx_atlas.py.
+ *
+ * There is deliberately no ring/`scope` frame and no bright `flash` disc: those
+ * were the yellow-circle reticle and the cream sticker that buried the symbols.
+ */
 export const VFX = {
 	sparkA: 0,
 	sparkB: 1,
 	sparkC: 2,
+	/** Scenario: wood-grip revolver blast, gun cut away */
 	muzzleA: 3,
+	/** Scenario: chrome revolver blast, gun cut away */
 	muzzleB: 4,
 	dirtA: 5,
 	dirtB: 6,
@@ -34,61 +49,37 @@ export const VFX = {
 	scorchB: 8,
 	smokeA: 9,
 	smokeB: 10,
-	scope: 11,
+	/** Scenario: tall sand plume kicked off the ground */
+	dustPlume: 11,
 	scratch: 12,
 	slash: 13,
 	puffA: 14,
 	puffB: 15,
-	flash: 16,
+	/** Scenario: gold multi-point starburst — multiplier pop */
+	starburst: 16,
+	/** Scenario: gold sparkler streak with a flare head */
+	sparkStreak: 17,
+	/** Scenario: dark jagged impact silhouette */
+	burstDark: 18,
 } as const;
 
 /**
- * Accent per feature — dark iron / rust ONLY (no brass, no spentBrass, no dust
- * that reads gold on screen). Storybook proved warm accents still looked yellow.
+ * Accent per feature — dark iron only. No brass, no spentBrass, no dust: warm
+ * accents still read as yellow on screen. `split` was blood rust, which is what
+ * put red ticks on the corner brackets; the three features are separated by
+ * iron value now, not by hue.
  */
 export const TARGET_ACCENT: Record<'split' | 'clone' | 'stretch', number> = {
-	split: TOMBSTONE_FX.bloodRust,
-	clone: TOMBSTONE_FX.ironEdge,
+	split: TOMBSTONE_FX.ironEdge,
+	clone: TOMBSTONE_FX.gunsmoke,
 	stretch: TOMBSTONE_FX.iron,
 };
 
-/**
- * Draw a powder-burn / thin brass-wire seam (replaces glossy Madam gold panes
- * and WildReelSlide clinical white cores).
- */
-export const drawPowderSeam = (
-	g: import('pixi.js').Graphics,
-	h: number,
-	slim: number,
-	opts?: { time?: number; seed?: number },
-) => {
-	const half = Math.max(4, (h * 0.5 - 4) * slim);
-	const t = opts?.time ?? 0;
-	const seed = opts?.seed ?? 0;
-	const flicker = 0.88 + 0.12 * Math.sin(t * 9 + seed * 2.1);
-
-	// powder-burn halo (charred wood, not a neon gold pane)
-	g.moveTo(0, -half);
-	g.lineTo(0, half);
-	g.stroke({ color: TOMBSTONE_FX.powder, width: 8 * slim + 1.5, alpha: 0.72 * flicker });
-	// rust bleed
-	g.moveTo(0, -half);
-	g.lineTo(0, half);
-	g.stroke({ color: TOMBSTONE_FX.bloodRust, width: 3.4 * slim + 0.7, alpha: 0.42 * flicker });
-	// thin spent-brass hairline (kept dim so it never reads as Madam gold strip)
-	g.moveTo(0, -half);
-	g.lineTo(0, half);
-	g.stroke({ color: TOMBSTONE_FX.dust, width: 1.05 * slim + 0.2, alpha: 0.55 * flicker });
-	// wood-score nick marks along the seam
-	const nicks = 6;
-	for (let i = 0; i < nicks; i++) {
-		const y = -half + ((i + 0.5) / nicks) * half * 2;
-		const side = i % 2 === 0 ? 1 : -1;
-		g.moveTo(0, y);
-		g.lineTo(side * (3 + (i % 3)), y + side * 1.4);
-		g.stroke({ color: TOMBSTONE_FX.iron, width: 1.15, alpha: 0.55 * flicker });
-	}
-};
+// Two generations of split divider used to live here: a procedural
+// `drawPowderSeam` (stacked full-height strokes) and then a baked torn-plank
+// strip. Both still read as a bar ruled across the symbol at a glance, so
+// SplitPanes, StretchFx and WildReelSlide now draw nothing down a tear — the
+// panes simply part over the dark backing.
 
 const seeded = (n: number) => {
 	const value = Math.sin(n * 12.9898 + 78.233) * 43758.5453;

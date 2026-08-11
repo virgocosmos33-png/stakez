@@ -1,9 +1,11 @@
 <script lang="ts" module>
 	import type { SymbolName } from '../game/types';
 
-	// SPLIT: the winning symbol is sliced into N center-cropped vertical panes that
-	// snap apart along powder-burn / brass-wire seams (Tombstone western), with
-	// a slim-seam "XN" badge.
+	// SPLIT (no-tear): the scored symbol is NEVER cut apart. The cell stays a
+	// single whole card and the multiplier is told by a bullet volley stamping
+	// holes into it plus an "Nx" wanted-poster badge. The user rejected every
+	// version that visibly split / parted / sliced the cell — bullet holes and
+	// the badge are the entire read.
 	export type EmitterEventSplitPanes =
 		| { type: 'splitPanesShow'; cells: { reel: number; row: number; count: number; name?: SymbolName }[] }
 		| { type: 'splitPanesHide' };
@@ -12,9 +14,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Rectangle, Text } from 'pixi-svelte';
+	import { Container, Graphics, Text } from 'pixi-svelte';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { fxDur, fxWait } from '../game/fxTiming';
@@ -29,20 +30,20 @@
 	import {
 		type HoleMark,
 		SHOT_GAP_MS,
-		RICOCHET_CHANCE,
+		EXPLOSION_MIN_MULT,
+		EXPLOSION_READ_MS,
 		holePose,
 		shotsForMultiplier,
 	} from '../game/splitBullets';
+	import { EXPLOSION_LIFE_MS } from '../game/splitExplosion';
 	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
-	import { TOMBSTONE_FX, VFX, drawPowderSeam } from '../game/tombstoneVfx';
+	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
+	import { trValueStyle, TR_INK_GOLD, TR_INK_IRON } from '../game/typography';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import BulletHoleMark from './BulletHoleMark.svelte';
-	import TombstoneFxSprite from './TombstoneFxSprite.svelte';
+	import SplitExplosion from './SplitExplosion.svelte';
 
 	const context = getContext();
-
-	const BLOOD = TOMBSTONE_FX.bloodRust;
-	const DARK = TOMBSTONE_FX.dark;
 
 	type SplitCell = {
 		key: string;
@@ -63,38 +64,38 @@
 
 	let cells = $state<SplitCell[]>([]);
 	let show = $state(false);
-	let time = $state(0);
 	/** wall clock for muzzle flashes on stamped holes */
 	let nowMs = $state(performance.now());
 	/** stamped bullet holes that stay on their cells until fall-out */
 	let holeMarks = $state<HoleMark[]>([]);
-	// rides the panes off the bottom edge when the next spin starts
+	/** one-shot detonations on cells whose multiplier cleared EXPLOSION_MIN_MULT */
+	let explosionMarks = $state<{ id: string; cellKey: string; born: number }[]>([]);
+	// rides the scored cells off the bottom edge when the next spin starts
 	const fallOut = new Tween(0);
 
-	// 0 = whole symbol, 1 = fully split into panes
-	const splitProgress = new Tween(1);
-	// blade head sweeps top -> bottom carving the seams
-	const cutSweep = new Tween(0);
-	const seamFlare = new Tween(0);
-	const detonation = new Tween(0);
-	const pulse = new Tween(1);
+	// Rotated so several cells detonating on one board are not the same boom
+	// three times. forcePlay so a stacked chain still rings each blast.
+	const EXPLOSION_SFX = [
+		'sfx_multiplier_explosion_a',
+		'sfx_multiplier_explosion_b',
+		'sfx_multiplier_explosion_c',
+	] as const;
 
-	const playShotSfx = (seed: number) => {
-		// forcePlay: stacked volleys must not get swallowed by the once-player
+	const playShotSfx = () => {
+		// forcePlay: stacked volleys must not get swallowed by the once-player.
+		// EVERY bullet hit rings: the wood punch and the metal ricochet whine are
+		// layered on each volley — the ricochet is the signature of a hit and must
+		// never be a coin-flip (a silent-thud-only hit reads as "no ricochet").
 		context.eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: 'sfx_bullet_wood',
 			forcePlay: true,
 		});
-		// ~38% of hits get a ricochet; seed keeps it stable per shot
-		const ricochetRoll = Math.sin(seed * 91.7 + 12.3) * 0.5 + 0.5;
-		if (ricochetRoll < RICOCHET_CHANCE) {
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_bullet_ricochet',
-				forcePlay: true,
-			});
-		}
+		context.eventEmitter.broadcast({
+			type: 'soundOnce',
+			name: 'sfx_bullet_ricochet',
+			forcePlay: true,
+		});
 	};
 
 	/** Stamp one hole on a cell (SFX is fired once per volley, not per cell). */
@@ -114,19 +115,6 @@
 				born,
 			},
 		];
-	};
-
-	// Every split cell gets the SAME treatment no matter its size: panes plus an
-	// exact "Nx" stamp. The pane count is only a visual — past this many the
-	// slices get too thin to read, so the geometry caps and the stamp carries
-	// the real number. (It used to be three different looks: real panes below 5,
-	// an untouched symbol at 5+, and a number only above 8 — which read as three
-	// unrelated features.)
-	const MAX_PANES = 4;
-
-	const rand = (seed: number) => {
-		const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-		return value - Math.floor(value);
 	};
 
 	/**
@@ -222,54 +210,45 @@
 			.filter((cell): cell is DrawnCell => cell.name != null),
 	);
 
+	/**
+	 * Detonate the given big cells: a one-shot gunpowder blast on each card plus a
+	 * rotated boom, and a heavier board shake so a big hit is FELT, not just seen.
+	 *
+	 * This is the FINAL step of the strike — it runs after the whole bullet volley
+	 * has stamped the multiplier AND a read-beat has passed, so the explosion
+	 * never covers the Nx before the player can read it. Only cells over
+	 * EXPLOSION_MIN_MULT ever reach here, and each detonates exactly once.
+	 */
+	const detonateBigCells = (big: SplitCell[]) => {
+		if (!big.length) return;
+		const born = performance.now();
+		explosionMarks = [
+			...explosionMarks,
+			...big.map((cell) => ({ id: `${cell.key}-boom-${born}`, cellKey: cell.key, born })),
+		];
+		big.forEach((cell, i) => {
+			context.eventEmitter.broadcast({
+				type: 'soundOnce',
+				name: EXPLOSION_SFX[i % EXPLOSION_SFX.length],
+				forcePlay: true,
+			});
+		});
+		shakeBoard({ intensity: 20, duration: fxDur(340) });
+	};
+
 	// BULLET STRIKE: each fresh cell takes 1–4 rounds (scaled by its multiplier).
-	// Volleys fire across the board so a big multi gets more holes before the
-	// panes peel. Wood hit every shot; ricochet sometimes. Impact (panes apart)
-	// lands after the first volley so later rounds punch into the opening card.
+	// Volleys fire across the board so a big multi gets more holes. Wood + ricochet
+	// on every shot. The cell is NEVER cut — the holes and the badge carry the
+	// read; cells over EXPLOSION_MIN_MULT also DETONATE. One shake on the first
+	// volley for impact (upgraded to a heavier one when something blows up).
 	const runSplit = async () => {
-		splitProgress.set(0, { duration: 0 });
-		cutSweep.set(0, { duration: 0 });
-		seamFlare.set(0, { duration: 0 });
-		detonation.set(0, { duration: 0 });
-		pulse.set(1.32, { duration: 0 });
 		const fresh = cells.filter((c) => c.fresh);
 		// drop prior marks on cells that are re-striking this event
 		const freshKeys = new Set(fresh.map((c) => c.key));
 		holeMarks = holeMarks.filter((m) => !freshKeys.has(m.cellKey));
-
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		explosionMarks = explosionMarks.filter((m) => !freshKeys.has(m.cellKey));
 
 		const maxShots = Math.max(1, ...fresh.map((c) => shotsForMultiplier(c.count)));
-		const swipeMs = fxDur(SHOT_GAP_MS * maxShots + 180);
-		cutSweep.set(1, { duration: swipeMs * 0.85, easing: cubicIn });
-
-		let settle: Promise<unknown> = Promise.resolve();
-		let opened = false;
-		const openPanes = () => {
-			if (opened) return;
-			opened = true;
-			// wood crack / dust settle — not old-game mirror combine + wild explode
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_bullet_wood',
-				forcePlay: true,
-			});
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_bullet_ricochet',
-				forcePlay: true,
-			});
-			seamFlare.set(1, { duration: fxDur(20) });
-			seamFlare.set(0, { duration: fxDur(160) });
-			shakeBoard({
-				intensity: Math.min(10 + fresh.length * 2.5, 18),
-				duration: fxDur(240),
-			});
-			const fx = detonation.set(1, { duration: fxDur(320), easing: cubicOut });
-			const punch = pulse.set(1, { duration: fxDur(420), easing: backOut });
-			const apart = splitProgress.set(1, { duration: fxDur(150), easing: backOut });
-			settle = Promise.all([fx, punch, apart]);
-		};
 
 		for (let shot = 0; shot < maxShots; shot++) {
 			let stamped = 0;
@@ -278,11 +257,29 @@
 				stampHole(cell, shot);
 				stamped += 1;
 			}
-			if (stamped > 0) playShotSfx(shot * 17 + stamped);
-			if (shot === 0) openPanes();
+			if (stamped > 0) {
+				playShotSfx();
+				// one light impact shake on the first volley — the HEAVY blast shake
+				// belongs to the detonation, which now comes last (below)
+				if (shot === 0) {
+					shakeBoard({
+						intensity: Math.min(10 + fresh.length * 2.5, 18),
+						duration: fxDur(240),
+					});
+				}
+			}
 			if (shot < maxShots - 1) await fxWait(SHOT_GAP_MS);
 		}
-		await settle;
+
+		// SEQUENCE (the whole point of this feature's read):
+		//   flame → bullets stamp the multiplier (Nx badge up) → HOLD so the
+		//   player can READ the Nx → THEN only cells over EXPLOSION_MIN_MULT
+		//   detonate, exactly once, as the final beat. Never during the volley.
+		const big = fresh.filter((c) => c.count > EXPLOSION_MIN_MULT);
+		if (big.length) {
+			await fxWait(EXPLOSION_READ_MS);
+			detonateBigCells(big);
+		}
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -291,6 +288,14 @@
 			// nothing new to strike (e.g. the split only hit wild columns):
 			// leave the surviving panes exactly as they are
 			if (!anyFresh || !cells.length) return;
+			// scored cells burn while the strike plays: with no divider drawn
+			// down a split, the fire is what ties the struck cells together,
+			// and it climbs with the biggest multiplier on the board.
+			context.eventEmitter.broadcast({
+				type: 'cellFireShow',
+				cells: cells.map((c) => ({ reel: c.reel, row: c.row })),
+				level: Math.max(...cells.map((c) => c.count)),
+			});
 			await runSplit();
 			// strike done: the fresh cells settle in with the persisted ones
 			cells = cells.map((cell) => (cell.fresh ? { ...cell, fresh: false } : cell));
@@ -298,177 +303,51 @@
 		// the next spin is under way: the panes ride down and off with the symbols
 		// they were cut into, rather than popping when the reveal lands.
 		featureFxFallOut: async () => {
+			context.eventEmitter.broadcast({ type: 'cellFireHide' });
 			await fallOutFeatureFx(fallOut, show && cells.length > 0);
 			show = false;
 			cells = [];
 			holeMarks = [];
+			explosionMarks = [];
 			fallOut.set(0, { duration: 0 });
 		},
 		splitPanesHide: () => {
+			context.eventEmitter.broadcast({ type: 'cellFireHide' });
 			show = false;
 			cells = [];
 			holeMarks = [];
+			explosionMarks = [];
 			fallOut.set(0, { duration: 0 });
 		},
 	});
 
 	onMount(() => {
 		let raf = 0;
-		const start = performance.now();
 		const tick = (now: number) => {
-			time = (now - start) / 1000;
 			nowMs = now;
+			// drop detonations that have finished playing so the list never grows
+			// unbounded across a long session of big hits
+			if (explosionMarks.length) {
+				const live = explosionMarks.filter((m) => now - m.born < EXPLOSION_LIFE_MS);
+				if (live.length !== explosionMarks.length) explosionMarks = live;
+			}
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
 	});
 
-	const drawUnderGlow = (g: import('pixi.js').Graphics) => {
-		g.roundRect(-CARD_W / 2 - 2, -CARD_H / 2 - 2, CARD_W + 4, CARD_H + 4, 10);
-		g.fill({ color: DARK, alpha: 0.9 });
-	};
-
-	// weathered wood frame around the settled split cell
+	// Weathered iron frame around the settled scored cell. High symbols used to
+	// get a bright brass stroke, which drew a glossy gold rounded rectangle
+	// around the card — the exact gilded-pane look the reskin is removing. Both
+	// tiers are dark iron now; the tier reads from the warmth, not the shine.
 	const drawFrame = (g: import('pixi.js').Graphics, isHigh: boolean) => {
 		g.roundRect(-CARD_W / 2 - 3, -CARD_H / 2 - 3, CARD_W + 6, CARD_H + 6, 8);
 		g.stroke({
-			color: isHigh ? TOMBSTONE_FX.brass : TOMBSTONE_FX.ironEdge,
+			color: isHigh ? TOMBSTONE_FX.ironEdge : TOMBSTONE_FX.iron,
 			width: 2,
-			alpha: 0.75,
+			alpha: isHigh ? 0.8 : 0.62,
 		});
-	};
-
-	// settled seam: powder burn + thin brass wire (not glossy gold Madam panes)
-	const drawDivider = (
-		g: import('pixi.js').Graphics,
-		cell: SplitCell,
-		dividerIndex: number,
-		slim: number,
-	) => {
-		drawPowderSeam(g, CARD_H, slim, {
-			time,
-			seed: cell.seed + dividerIndex,
-		});
-	};
-
-	// bullet score / powder trail sweeping down a seam while the symbol is whole
-	const drawCutBlade = (
-		g: import('pixi.js').Graphics,
-		_cell: SplitCell,
-		_dividerIndex: number,
-		sweepValue: number,
-	) => {
-		if (sweepValue <= 0) return;
-		const s = CARD_H;
-		const half = s / 2;
-		const margin = 22;
-		const travel = s + margin * 2;
-		const headY = -half - margin + Math.min(sweepValue, 1) * travel;
-		const trailTop = -half - margin;
-		const segments = 7;
-		const trailEnd = Math.min(headY, half + margin);
-		for (let i = 0; i < segments; i++) {
-			const y0 = trailTop + ((trailEnd - trailTop) / segments) * i;
-			const y1 = trailTop + ((trailEnd - trailTop) / segments) * (i + 1);
-			const heat = (i + 1) / segments;
-			g.rect(-2.6, y0, 5.2, y1 - y0);
-			g.fill({ color: TOMBSTONE_FX.powder, alpha: 0.5 * heat });
-			g.rect(-0.8, y0, 1.6, y1 - y0);
-			g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.55 * heat });
-		}
-		if (sweepValue < 1) {
-			g.ellipse(0, headY, 11, 3.2);
-			g.fill({ color: BLOOD, alpha: 0.4 });
-			g.ellipse(0, headY, 5, 1.6);
-			g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.55 });
-		}
-	};
-
-	const drawSeamFlare = (g: import('pixi.js').Graphics, flare: number) => {
-		if (flare <= 0.01) return;
-		const s = CARD_H;
-		const half = s / 2;
-		g.roundRect(-7, -half, 14, s, 5);
-		g.fill({ color: TOMBSTONE_FX.powder, alpha: 0.65 * flare });
-		g.roundRect(-1.8, -half, 3.6, s, 1.6);
-		g.fill({ color: TOMBSTONE_FX.bloodRust, alpha: 0.55 * flare });
-	};
-
-	const drawDetonation = (g: import('pixi.js').Graphics, d: number) => {
-		if (d <= 0 || d >= 1) return;
-		const fade = 1 - d;
-		// dusty amber shock, not a bright clinic wash
-		g.roundRect(-CARD_W / 2 - 4, -CARD_H / 2 - 4, CARD_W + 8, CARD_H + 8, 10);
-		g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.35 * fade * fade });
-		const ringRadius = CARD_H * (0.2 + 0.75 * d);
-		g.circle(0, 0, ringRadius);
-		g.stroke({ color: BLOOD, width: 5 * fade + 1, alpha: 0.35 * fade });
-		g.circle(0, 0, ringRadius * 0.92);
-		g.stroke({ color: TOMBSTONE_FX.brass, width: 1.6 * fade + 0.4, alpha: 0.55 * fade });
-	};
-
-	/** Kenney burst poses for the open-pane moment (smoke + brass sparks + dust). */
-	const burstSprites = (cell: SplitCell, panes: number, d: number, split: number) => {
-		if (d <= 0.02 || d >= 0.98) return [] as {
-			key: string;
-			tex: number;
-			x: number;
-			y: number;
-			size: number;
-			rot: number;
-			alpha: number;
-		}[];
-		const fade = 1 - d;
-		const out: {
-			key: string;
-			tex: number;
-			x: number;
-			y: number;
-			size: number;
-			rot: number;
-			alpha: number;
-		}[] = [];
-		// gunsmoke + dust only — skip pale flash discs that read as clinic sparkles
-		out.push({
-			key: `${cell.key}-puff`,
-			tex: cell.seed % 2 === 0 ? VFX.puffA : VFX.puffB,
-			x: 0,
-			y: -6 * d,
-			size: 110 + 40 * d,
-			rot: d * 0.35,
-			alpha: 0.62 * fade,
-		});
-		out.push({
-			key: `${cell.key}-smoke`,
-			tex: VFX.smokeA,
-			x: 8,
-			y: 10 * d,
-			size: 80 + 30 * d,
-			rot: -d * 0.2,
-			alpha: 0.45 * fade,
-		});
-		for (let seamIndex = 0; seamIndex < panes - 1; seamIndex++) {
-			const seamX = (-CARD_W / 2 + ((seamIndex + 1) / panes) * CARD_W) * split;
-			for (let k = 0; k < 3; k++) {
-				const sparkSeed = cell.seed * 17 + seamIndex * 71 + k * 13;
-				const side = rand(sparkSeed) > 0.5 ? 1 : -1;
-				const y0 = (rand(sparkSeed + 1) - 0.5) * CARD_H * 0.65;
-				const dist = (14 + rand(sparkSeed + 2) * 28) * d;
-				// brass spark / muzzle / dirt — never soft white circles
-				const tex = k === 0 ? VFX.sparkB : k === 1 ? VFX.muzzleB : VFX.dirtB;
-				out.push({
-					key: `${cell.key}-s${seamIndex}-k${k}`,
-					tex,
-					x: seamX + side * dist,
-					y: y0 + 10 * d,
-					size: 22 + rand(sparkSeed + 3) * 20,
-					rot: rand(sparkSeed + 4) * Math.PI,
-					alpha: 0.7 * fade,
-				});
-			}
-		}
-		return out;
 	};
 
 	const drawBadgePlate = (g: import('pixi.js').Graphics) => {
@@ -480,145 +359,19 @@
 		g.stroke({ color: TOMBSTONE_FX.bloodRust, width: 1, alpha: 0.45 });
 	};
 
-	const cutHeadSprites = (
-		cell: SplitCell,
-		dividerIndex: number,
-		sweepValue: number,
-		seamX: number,
-	) => {
-		if (sweepValue <= 0 || sweepValue >= 1) return [] as {
-			key: string;
-			tex: number;
-			x: number;
-			y: number;
-			size: number;
-			rot: number;
-			alpha: number;
-		}[];
-		const half = CARD_H / 2;
-		const margin = 22;
-		const travel = CARD_H + margin * 2;
-		const headY = -half - margin + sweepValue * travel;
-		return [
-			{
-				key: `${cell.key}-cut-${dividerIndex}-m`,
-				tex: VFX.muzzleB,
-				x: seamX,
-				y: headY,
-				size: 42,
-				rot: 0,
-				alpha: 0.7,
-			},
-			{
-				key: `${cell.key}-cut-${dividerIndex}-s`,
-				tex: VFX.sparkC,
-				x: seamX + 6,
-				y: headY - 4,
-				size: 28,
-				rot: time * 4,
-				alpha: 0.65,
-			},
-		];
-	};
-
 </script>
 
 {#snippet splitCell(cell: DrawnCell)}
-	{@const panes = Math.min(cell.count, MAX_PANES)}
-	{@const sliceWidth = CARD_W / panes}
 	{@const symbolInfo = getSymbolInfo({ rawSymbol: { name: cell.name }, state: 'postWinStatic' })}
 	{@const isHigh = HIGH_SYMBOLS.includes(cell.name)}
-	<!-- cells persisted from an earlier event sit fully split and ignore the
-		shared strike tweens, or a later split would visibly re-cut them -->
-	{@const split = cell.fresh ? splitProgress.current : 1}
-	{@const slim = Math.min(1, 3 / panes)}
-	{@const gap = CARD_W * Math.min(0.025, 0.09 / panes)}
-	{@const paneWidth = Math.max((sliceWidth - gap) * split + CARD_W * (1 - split), 2)}
-	<Container x={cell.cx} y={cell.cy} scale={cell.fresh ? pulse.current : 1}>
-		<Graphics draw={drawUnderGlow} />
-		{#each Array.from({ length: panes }) as _, i (i)}
-			{@const paneX = (-CARD_W / 2 + (i + 0.5) * sliceWidth) * split}
-			<Container x={paneX}>
-				<Rectangle isMask anchor={0.5} width={paneWidth} height={CARD_H} />
-				<SymbolSprite {symbolInfo} />
-			</Container>
-		{/each}
-		{#each Array.from({ length: panes - 1 }) as _, i (i)}
-			<Container x={(-CARD_W / 2 + (i + 1) * sliceWidth) * split} alpha={split}>
-				<!-- Kenney scorch strip under the hairline — powder burn, not gold pane -->
-				<TombstoneFxSprite
-					tex={i % 2 === 0 ? VFX.scorchA : VFX.scorchB}
-					width={22}
-					height={CARD_H * 0.98}
-					alpha={0.72}
-					rotation={0}
-				/>
-				<TombstoneFxSprite
-					tex={VFX.scratch}
-					width={18}
-					height={CARD_H * 0.9}
-					alpha={0.4}
-					rotation={Math.PI / 2}
-				/>
-				<Graphics draw={(g) => drawDivider(g, cell, i, slim)} />
-			</Container>
-		{/each}
-		{@const nDividers = panes - 1}
-		{#if cell.fresh}
-			{#each Array.from({ length: nDividers }) as _, i (i)}
-				{@const seamX = -CARD_W / 2 + (i + 1) * sliceWidth}
-				{@const sweep = Math.min(Math.max(cutSweep.current * (1 + 0.15 * (nDividers - 1)) - 0.15 * i, 0), 1)}
-				<Container x={seamX} alpha={1 - split * 0.9}>
-					<Graphics draw={(g) => drawCutBlade(g, cell, i, sweep)} />
-				</Container>
-				{#each cutHeadSprites(cell, i, sweep, 0) as fx (fx.key)}
-					<Container x={seamX} alpha={1 - split * 0.9}>
-						<TombstoneFxSprite
-							tex={fx.tex}
-							x={fx.x}
-							y={fx.y}
-							width={fx.size}
-							height={fx.size}
-							rotation={fx.rot}
-							alpha={fx.alpha}
-						/>
-					</Container>
-				{/each}
-			{/each}
-			{#each Array.from({ length: nDividers }) as _, i (i)}
-				{@const seamX = -CARD_W / 2 + (i + 1) * sliceWidth}
-				<Container x={seamX}>
-					<Graphics draw={(g) => drawSeamFlare(g, seamFlare.current)} />
-					{#if seamFlare.current > 0.05}
-						<TombstoneFxSprite
-							tex={VFX.scorchA}
-							width={36}
-							height={CARD_H * 0.95}
-							alpha={0.55 * seamFlare.current}
-						/>
-					{/if}
-				</Container>
-			{/each}
-		{/if}
-		<Container alpha={split}>
-			<Graphics draw={(g) => drawFrame(g, isHigh)} />
-		</Container>
-		{#if cell.fresh}
-			<Container>
-				<Graphics draw={(g) => drawDetonation(g, detonation.current)} />
-				{#each burstSprites(cell, panes, detonation.current, split) as fx (fx.key)}
-					<TombstoneFxSprite
-						tex={fx.tex}
-						x={fx.x}
-						y={fx.y}
-						width={fx.size}
-						height={fx.size}
-						rotation={fx.rot}
-						alpha={fx.alpha}
-					/>
-				{/each}
-			</Container>
-		{/if}
+	<!-- The cell is a SINGLE whole card. It is never cut, sliced, parted or
+		masked into panes — that was rejected repeatedly. The scored symbol is
+		redrawn here (so a clone/stretch that moved the board stays correct),
+		wearing a thin iron frame, and the ONLY feature marks are the bullet
+		holes stamped into it and the multiplier badge above it. -->
+	<Container x={cell.cx} y={cell.cy}>
+		<SymbolSprite {symbolInfo} />
+		<Graphics draw={(g) => drawFrame(g, isHigh)} />
 		<!-- bullet holes sit ON the card — stamped into the wood, not a hand in front -->
 		{#each holeMarks.filter((m) => m.cellKey === cell.key) as mark (mark.id)}
 			<BulletHoleMark
@@ -631,24 +384,27 @@
 				now={nowMs}
 			/>
 		{/each}
+		<!-- big-multiplier detonation, drawn ABOVE the holes so the blast reads
+			over the freshly punched wood -->
+		{#each explosionMarks.filter((m) => m.cellKey === cell.key) as boom (boom.id)}
+			<SplitExplosion x={0} y={0} born={boom.born} now={nowMs} size={CARD_W * 1.85} />
+		{/each}
 	</Container>
 {/snippet}
 
 {#snippet badgeMarker(cell: SplitCell)}
-	<!-- EVERY split cell states exactly what it is worth. Wanted-poster plaque
+	<!-- EVERY scored cell states exactly what it is worth. Wanted-poster plaque
 		— dusty amber on iron, not clinical white "3x" HUD text. -->
-	<Container x={cell.cx} y={cell.cy} scale={cell.fresh ? pulse.current : 1}>
+	<Container x={cell.cx} y={cell.cy}>
 		<Graphics draw={drawBadgePlate} />
 		<Text
 			anchor={0.5}
 			text={`${cell.count}x`}
-			style={{
-				fontFamily: 'Georgia, Times New Roman, serif',
-				fontWeight: '900',
+			style={trValueStyle({
 				fontSize: 28,
-				fill: 0xc9a34a,
-				stroke: { color: 0x0a0806, width: 5 },
-			}}
+				fill: TR_INK_GOLD,
+				stroke: { color: TR_INK_IRON, width: 5, join: 'round' },
+			})}
 		/>
 	</Container>
 {/snippet}

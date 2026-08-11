@@ -1,18 +1,52 @@
 <script lang="ts">
+	/**
+	 * Tombstone Reborn big-win takeover.
+	 *
+	 * Each tier shows a dark western hero plate inside a weathered timber and
+	 * branded-iron frame, lit by god-rays, drifting grave dust and rising gold
+	 * embers, and punched on entry by a gold starburst with radiating spark
+	 * streaks. BOOT HILL (max win) adds slow expanding bell rings.
+	 *
+	 * What this replaced: the ladder used to play Madam Mirror's `celebT2..celebT7`
+	 * media — photographic "White Room" footage of a straitjacketed woman in a
+	 * padded asylum cell, tier 7 a literal white-out — inside a thin amber
+	 * CCTV-monitor bezel with CRT screen-tear and scanline damage, titled
+	 * INTAKE / RESTRAINT / STRUGGLE / BREAKOUT / SCRATCH / WHITEOUT in the
+	 * condensed light-grey `clinical` face.
+	 *
+	 * Art: tools/make_win_celebration_art.py, contract in game/winCelebrationArt.ts.
+	 *
+	 * Performance: the amount count-up runs every frame, so every animated layer
+	 * here is a sprite transform (x/y/rotation/scale/alpha). The only Graphics in
+	 * the tree are `Rectangle`s with constant geometry, which therefore never
+	 * redraw during a count-up. Do not add a time-dependent `draw` callback.
+	 */
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import { Rectangle as HitRectangle, type Texture, type VideoSource } from 'pixi.js';
-	import { Container, Graphics, Rectangle, Sprite, BitmapText } from 'pixi-svelte';
+	import { Rectangle as HitRectangle, type Texture } from 'pixi.js';
+	import { BaseSprite, Container, Rectangle, Sprite, BitmapText } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { drawGlassPill } from '../game/glassChrome';
 	import { getTiersPassed } from '../game/winCelebrationMap';
+	import { waysLabel } from '../game/waysFormat';
 	import type { MusicName, SoundEffectName } from '../game/sound';
 	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
+	import {
+		WIN_CELEB_LIGHT_ASSET,
+		WIN_CELEB_VFX_ASSET,
+		WIN_FRAME_ASSET,
+		WIN_LIGHT,
+		WIN_PALETTE,
+		WIN_VFX,
+		WIN_VFX_CELL,
+		winRand,
+		winTierIntensity,
+		winTierPlateKey,
+	} from '../game/winCelebrationArt';
 
 	type Props = {
 		finalAmount: number; // book amount (100 = 1x bet)
@@ -26,15 +60,15 @@
 	const AMOUNT_TINT = winFontTint();
 
 	// ------------------------------------------------------------------
-	// staged counter: the reel switches EXACTLY when the rolling amount
+	// staged counter: the tier switches EXACTLY when the rolling amount
 	// crosses each real trigger (25x / 50x / 100x / 500x / 2500x / maxwin),
 	// with per-segment pacing:
-	//   BIG 25-50x     linear
-	//   SUPER 50-100x  linear
-	//   MEGA 100-500x  a bit fast at start, slowing near the target
-	//   EPIC 500-2500x super fast start, braking to a total stop
-	//   WHITEOUT 2500x+  starts slow, keeps building speed
-	//   MAX WIN        tab appears, counter parked, CONTINUE gate
+	//   BOUNTY 25-50x      linear
+	//   SHOWDOWN 50-100x   linear
+	//   HIGH NOON 100-500x a bit fast at start, slowing near the target
+	//   LAST STAND 500-2500x super fast start, braking to a total stop
+	//   BLOOD MONEY 2500x+ starts slow, keeps building speed
+	//   BOOT HILL          tab appears, counter parked, CONTINUE gate
 	// ------------------------------------------------------------------
 	const finalMult = $derived(props.finalAmount / 100);
 	const tiers = $derived(getTiersPassed(props.finalAmount));
@@ -73,37 +107,33 @@
 	let finished = $state(false);
 	let waitContinue = $state(false);
 	let displayedIndex = $state(0);
-	// the MAX WIN scene recounts from 0: fast start, even faster ending
+	// the BOOT HILL scene recounts from 0: fast start, even faster ending
 	let maxRecountStart = $state<number | null>(null);
 	const MAX_RECOUNT_DURATION = 3500;
 	const fastFaster = (f: number) => 0.55 * f + 0.45 * Math.pow(f, 4);
 
 	// ------------------------------------------------------------------
-	// transition fx: micro-fade + glitch/screen-tear interference between
-	// the outgoing and incoming reels
+	// transition fx: micro-fade, slam, gunsmoke wipe and a starburst punch
+	// between the outgoing and incoming tier
 	// ------------------------------------------------------------------
 	const reelAlpha = new Tween(1);
-	const glitch = new Tween(0);
+	/** 1 → 0 over the transition: drives the gunsmoke wipe and the entry kick */
+	const wipe = new Tween(0);
+	/** 1 → 0 over the entry punch: drives the starburst and spark streaks */
+	const pop = new Tween(0);
 	const slam = new Tween(1);
 	const zoom = new Tween(1);
 	let fadeToken = 0;
-	type TearBand = { v: number; height: number; offset: number; speed: number };
-	let tearBands = $state<TearBand[]>([]);
 
-	// One evolving ElevenLabs asylum score, cut into contiguous 8s stage
-	// slices (bgm_celeb_1..6 = BIG..MAX). Music alone carries the celebration —
-	// do NOT layer Madam-era sfx_celeb_* whooshes/hits/slams (they drown the bed).
+	// One evolving score cut into contiguous stage slices (bgm_celeb_1..6 =
+	// BOUNTY..BOOT HILL). Music alone carries the celebration — do NOT layer
+	// the sfx_celeb_* whooshes/hits/slams on top (they drown the bed).
 	const stageCue = (target: number): MusicName => {
 		const tier = tiers[target]?.tier ?? 2;
 		return `bgm_celeb_${Math.min(Math.max(tier - 1, 1), 6)}` as MusicName;
 	};
 
 	const OLD_CELEB_MUSIC: MusicName[] = [
-		'bgm_winlevel_big',
-		'bgm_winlevel_superwin',
-		'bgm_winlevel_mega',
-		'bgm_winlevel_epic',
-		'bgm_winlevel_max',
 		'bgm_celeb_1',
 		'bgm_celeb_2',
 		'bgm_celeb_3',
@@ -111,7 +141,6 @@
 		'bgm_celeb_5',
 		'bgm_celeb_6',
 		'bgm_main',
-		'bgm_freespin',
 	];
 	const OLD_CELEB_SFX: SoundEffectName[] = [
 		'sfx_celeb_whoosh',
@@ -135,8 +164,8 @@
 	};
 
 	const playStageMusic = (target: number) => {
-		// Stop prior stage / Madam winlevel beds so Howler starts the slice
-		// from its downbeat (pause-resume would keep old Madam audio alive).
+		// Stop any prior stage bed so Howler starts the slice from its
+		// downbeat (pause-resume would keep the previous stage alive).
 		silenceOldCelebrationAudio();
 		context.eventEmitter.broadcast({ type: 'soundMusic', name: stageCue(target) });
 	};
@@ -145,23 +174,19 @@
 		if (target === displayedIndex) return;
 		playStageMusic(target);
 		const token = ++fadeToken;
-		// screen tear bands regenerate per transition
-		tearBands = Array.from({ length: 7 }, (_, i) => ({
-			v: Math.random(),
-			height: 0.04 + Math.random() * 0.09,
-			offset: (Math.random() - 0.5) * 2,
-			speed: 4 + Math.random() * 14,
-		}));
-		glitch.set(1, { duration: 0 });
-		glitch.set(0, { duration: 520, easing: cubicOut });
+		wipe.set(1, { duration: 0 });
+		wipe.set(0, { duration: 620, easing: cubicOut });
 		(async () => {
 			await reelAlpha.set(0, { duration: 70 });
 			if (token !== fadeToken) return;
 			displayedIndex = target;
 			slam.set(1.12, { duration: 0 });
 			slam.set(1, { duration: 450, easing: backOut });
+			pop.set(1, { duration: 0 });
+			pop.set(0, { duration: 900, easing: cubicOut });
+			// slow Ken-Burns push for the tier's dwell
 			zoom.set(1, { duration: 0 });
-			zoom.set(1.09, { duration: 8000, easing: cubicOut });
+			zoom.set(intensity.push, { duration: 8000, easing: cubicOut });
 			await reelAlpha.set(1, { duration: 90 });
 		})();
 	};
@@ -174,7 +199,7 @@
 
 	const finishCounting = () => {
 		if (hasMax) {
-			// the MAX WIN tab appears and the amount rolls again from zero
+			// the BOOT HILL tab appears and the amount rolls again from zero
 			countMult = 0;
 			maxRecountStart = performance.now();
 			showTier(tiers.length - 1);
@@ -247,8 +272,11 @@
 
 	let time = $state(0);
 	onMount(() => {
-		// Takeover owns music: kill Madam winlevel/celeb SFX, start evolving bed stage 1
+		// Takeover owns music: kill Madam winlevel/celeb SFX, start the bed at stage 1
 		playStageMusic(0);
+		pop.set(1, { duration: 0 });
+		pop.set(0, { duration: 900, easing: cubicOut });
+		zoom.set(intensity.push, { duration: 8000, easing: cubicOut });
 		let raf = 0;
 		const start = performance.now();
 		segStart = start;
@@ -280,255 +308,369 @@
 		raf = requestAnimationFrame(tick);
 		return () => {
 			cancelAnimationFrame(raf);
-			// hand the music back to the room the player is actually in
-			context.eventEmitter.broadcast({
-				type: 'soundMusic',
-				name: context.stateGame.gameType === 'freegame' ? 'bgm_freespin' : 'bgm_main',
-			});
+			// hand the music back to the base bed — the only bed this game has
+			context.eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 		};
 	});
 
-	const rand = (seed: number) => {
-		const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
-		return value - Math.floor(value);
-	};
-
+	// ------------------------------------------------------------------
+	// tier + art
+	// ------------------------------------------------------------------
 	const celebration = $derived(tiers[displayedIndex] ?? tiers[0]);
-	const title = $derived(celebration?.title ?? 'INTAKE');
-	const stillKey = $derived(`celebT${celebration?.tier ?? 2}`);
-	const animKey = $derived(`celebT${celebration?.tier ?? 2}Anim`);
-	const videoTexture = $derived(
-		context.stateApp.loadedAssets?.[animKey] as Texture | undefined,
+	const title = $derived(celebration?.title ?? 'BOUNTY');
+	const intensity = $derived(winTierIntensity(celebration?.tier ?? 2));
+	const plateKey = $derived(winTierPlateKey(celebration?.slug || 'bounty'));
+
+	const lightTextures = $derived(
+		(context.stateApp.loadedAssets?.[WIN_CELEB_LIGHT_ASSET] as Texture[] | undefined) ?? [],
 	);
-	const reelKey = $derived(videoTexture ? animKey : stillKey);
+	const vfxTextures = $derived(
+		(context.stateApp.loadedAssets?.[WIN_CELEB_VFX_ASSET] as Texture[] | undefined) ?? [],
+	);
+	const light = (index: number) => lightTextures[index];
+	const vfx = (index: number) => vfxTextures[index];
 
-	$effect(() => {
-		const source = videoTexture?.source as VideoSource | undefined;
-		const video = source?.resource as HTMLVideoElement | undefined;
-		if (video) {
-			video.loop = true;
-			video.muted = true;
-			if (video.paused) video.play().catch(() => {});
-		}
-	});
-
+	// ------------------------------------------------------------------
+	// geometry
+	// ------------------------------------------------------------------
 	const boardW = $derived(context.stateGameDerived.boardLayout().width);
 	const frameW = $derived(boardW * 1.02);
-	// Clinical monitor viewport — 16:9 matches Seedance celeb masters (cover-crop fills).
 	const frameH = $derived(frameW * (9 / 16));
-	const holeColW = $derived(frameW * 0.055);
+	// win_frame.png is the 1280x720 plate plus a uniform 74px timber/iron band,
+	// so the frame scales with the plate and its window stays aligned.
+	const FRAME_PAD_FRAC = 74 / 1280;
+	const frameOuterW = $derived(frameW * (1 + FRAME_PAD_FRAC * 2));
+	const frameOuterH = $derived(frameH + frameW * FRAME_PAD_FRAC * 2);
 
-	/** CSS object-fit: cover — fill the monitor, crop overflow (never letterbox/stretch bars). */
-	const coverFit = (boxW: number, boxH: number, artW: number, artH: number) => {
-		const scale = Math.max(boxW / Math.max(1, artW), boxH / Math.max(1, artH));
-		return { width: artW * scale, height: artH * scale };
-	};
-	const reelArtSize = $derived.by(() => {
-		const tex = context.stateApp.loadedAssets?.[reelKey] as Texture | undefined;
-		const w = Number(tex?.width) || Number(tex?.source?.width) || 0;
-		const h = Number(tex?.height) || Number(tex?.source?.height) || 0;
-		if (w > 1 && h > 1) return { width: w, height: h };
-		// Seedance / assembled masters are 16:9
-		return { width: 1280, height: 720 };
+	/** CSS object-fit: cover — fill the window, crop overflow (never letterbox). */
+	const plateCover = $derived.by(() => {
+		const scale = Math.max(frameW / 1280, frameH / 720);
+		return { width: 1280 * scale, height: 720 * scale };
 	});
-	const reelCover = $derived(coverFit(frameW, frameH, reelArtSize.width, reelArtSize.height));
 
-	const jitterY = $derived((rand(Math.floor(time * 24)) - 0.5) * (3.2 + glitch.current * 9));
-	const jitterX = $derived((rand(Math.floor(time * 24) * 7 + 3) - 0.5) * (1.6 + glitch.current * 7));
-	const flicker = $derived(0.86 + 0.14 * rand(Math.floor(time * 18) * 13 + 1));
+	const mainW = $derived(context.stateLayoutDerived.mainLayout().width);
+	const mainH = $derived(context.stateLayoutDerived.mainLayout().height);
+	// content spans the framed panel plus the title / amount / ways stack below
+	const contentH = $derived(frameOuterH + SYMBOL_SIZE * 2.35);
+	const fit = $derived(Math.min(1, (mainH * 0.94) / contentH));
+	const centerShift = $derived(SYMBOL_SIZE * 1.05);
+	// ember / ray field has to cover the canvas after the `fit` downscale
+	const fieldW = $derived(mainW / Math.max(fit, 0.2));
+	const fieldH = $derived(mainH / Math.max(fit, 0.2));
 
-	// Dust / grit damage over the celebration plate (not CRT scanlines)
-	const drawFilmDamage = (graphics: import('pixi.js').Graphics, timeValue: number) => {
-		const w = frameW;
-		const h = frameH;
-		const chunk = Math.floor(timeValue * 14);
-		for (let i = 0; i < 10; i++) {
-			const y = -h / 2 + (i / 10) * h;
-			graphics.rect(-w / 2, y, w, 1);
-			graphics.fill({ color: 0x8a6e4a, alpha: 0.025 + (i % 3 === 0 ? 0.03 : 0) });
-		}
-		for (let i = 0; i < 9; i++) {
-			if (rand(chunk * 41 + i * 13) > 0.55) continue;
-			const x = (rand(chunk * 19 + i * 29) - 0.5) * w;
-			const y = (rand(chunk * 23 + i * 37) - 0.5) * h;
-			graphics.rect(x, y, 2 + rand(chunk + i) * 6, 2 + rand(chunk + i * 2) * 4);
-			graphics.fill({ color: 0x0a0806, alpha: 0.55 });
-		}
-		if (rand(chunk * 61) > 0.7) {
-			const y = (rand(chunk * 71) - 0.5) * h;
-			graphics.rect(-w / 2, y, w, 6 + rand(chunk) * 14);
-			graphics.fill({ color: 0xc9a34a, alpha: 0.06 });
-		}
-	};
+	// ------------------------------------------------------------------
+	// animated layers — all sprite transforms, never a per-frame redraw
+	// ------------------------------------------------------------------
+	// Allocated once at the top-tier count and modulated by alpha, so escalating
+	// through the ladder never churns the display list.
+	const MAX_RAYS = 12;
+	const MAX_EMBERS = 76;
+	const MAX_STREAKS = 26;
+	const MAX_DUST = 8;
+	const RAYS = Array.from({ length: MAX_RAYS }, (_, i) => i);
+	const EMBERS = Array.from({ length: MAX_EMBERS }, (_, i) => i);
+	const STREAKS = Array.from({ length: MAX_STREAKS }, (_, i) => i);
+	const DUST = Array.from({ length: MAX_DUST }, (_, i) => i);
 
-	// Dust-storm tear / powder streak transition (not CRT memory wipe)
-	const drawGlitchNoise = (graphics: import('pixi.js').Graphics, amount: number, timeValue: number) => {
-		if (amount <= 0.01) return;
-		const w = frameW;
-		const h = frameH;
-		const chunk = Math.floor(timeValue * 48);
-		for (let i = 0; i < 14; i++) {
-			if (rand(chunk * 13 + i * 7) > amount) continue;
-			const y = (rand(chunk * 17 + i * 11) - 0.5) * h;
-			const shear = (rand(chunk + i * 3) - 0.5) * w * 0.12 * amount;
-			graphics.rect(-w / 2 + shear, y, w, 2 + rand(chunk + i) * 5);
-			graphics.fill({
-				color: rand(chunk * 5 + i) > 0.4 ? 0xc9a34a : 0x6e6860,
-				alpha: 0.18 * amount + rand(chunk * 3 + i) * 0.22 * amount,
-			});
-		}
-		for (let i = 0; i < 3; i++) {
-			if (rand(chunk * 29 + i) > amount) continue;
-			const x = (rand(chunk * 31 + i * 5) - 0.5) * w;
-			graphics.rect(x, -h / 2, 3 + rand(chunk + i) * 18, h);
-			graphics.fill({ color: 0x3a2418, alpha: 0.12 * amount });
-		}
-	};
-
-	// Weathered wood / iron saloon bezel (not CCTV clinical monitor)
-	const drawFilmFrame = (graphics: import('pixi.js').Graphics) => {
-		const w = frameW;
-		const h = frameH;
-		const bezel = holeColW * 0.85;
-		graphics.roundRect(-w / 2 - bezel, -h / 2 - bezel * 0.7, w + bezel * 2, h + bezel * 1.4, 6);
-		graphics.fill({ color: 0x1a1410, alpha: 0.97 });
-		graphics.roundRect(-w / 2 - bezel, -h / 2 - bezel * 0.7, w + bezel * 2, h + bezel * 1.4, 6);
-		graphics.stroke({ color: 0x5a4e42, width: 3, alpha: 0.9 });
-		for (let i = 0; i < 3; i++) {
-			const x = -w / 2 - bezel * 0.45;
-			const y = -h / 2 + h * (0.2 + i * 0.25);
-			graphics.circle(x, y, 4);
-			graphics.fill({ color: i === 0 ? 0xc9a34a : 0xb54a2a, alpha: i === 0 ? 0.9 : 0.55 });
-		}
-		graphics.roundRect(-w / 2, -h / 2, w, h, 2);
-		graphics.stroke({ color: 0xc9a34a, width: 2, alpha: 0.55 });
-		graphics.rect(w / 2 - 52, -h / 2 + 10, 40, 14);
-		graphics.fill({ color: 0xb54a2a, alpha: 0.75 });
-	};
-
-	const drawVignette = (graphics: import('pixi.js').Graphics) => {
-		const w = frameW;
-		const h = frameH;
-		for (let i = 0; i < 3; i++) {
-			graphics.rect(-w / 2 + i * 4, -h / 2 + i * 4, w - i * 8, h - i * 8);
-			graphics.stroke({ color: 0x0a0806, width: 10, alpha: 0.2 - i * 0.04 });
-		}
-	};
+	const kick = $derived(wipe.current * intensity.kick);
+	const kickX = $derived((winRand(Math.floor(time * 40) * 7 + 3) - 0.5) * kick);
+	const kickY = $derived((winRand(Math.floor(time * 40)) - 0.5) * kick);
+	// lantern breathe — never a hard strobe, the plates are already high contrast
+	const lantern = $derived(0.9 + 0.1 * Math.sin(time * 1.7));
 
 	const amountPulse = $derived(1 + 0.025 * Math.sin(time * 3.4));
 	const continuePulse = $derived(1 + 0.04 * Math.sin(time * 4.2));
 	const displayAmount = $derived(countMult * 100);
 
-	// fit the whole takeover (frame + title + amount) inside the canvas: scale
-	// down when needed and center the full content block vertically
-	const mainH = $derived(context.stateLayoutDerived.mainLayout().height);
-	// content spans -frameH/2 (frame top) to frameH/2 + 1.85 * SYMBOL_SIZE (amount bottom)
-	const contentH = $derived(frameH + SYMBOL_SIZE * 1.85);
-	const fit = $derived(Math.min(1, (mainH * 0.92) / contentH));
-	const centerShift = $derived(((SYMBOL_SIZE * 1.85) / 2) * fit);
+	// title / amount chrome: constant geometry, so these Rectangles are drawn
+	// once per layout change and not during the count-up
+	const titlePlateW = $derived(frameW * 0.66);
+	const titlePlateH = $derived(SYMBOL_SIZE * 0.74);
+	const amountPlateW = $derived(frameW * 0.82);
+	const amountPlateH = $derived(SYMBOL_SIZE * 1.18);
+	const titleY = $derived(frameOuterH / 2 + SYMBOL_SIZE * 0.44);
+	const amountY = $derived(frameOuterH / 2 + SYMBOL_SIZE * 1.34);
+	const waysY = $derived(frameOuterH / 2 + SYMBOL_SIZE * 2.08);
 </script>
 
-<Container x={jitterX} y={jitterY - centerShift} scale={fit}>
+<Container x={kickX} y={kickY - centerShift} scale={fit}>
+	<!-- god-rays behind the frame: lantern / heaven light raking down -->
+	{#if light(WIN_LIGHT.rayFan)}
+		<Container alpha={intensity.rayAlpha * lantern}>
+			{#each RAYS as index (index)}
+				{#if index < intensity.rays}
+					{@const seed = index * 3 + 1}
+					{@const sway = Math.sin(time * (0.16 + winRand(seed) * 0.22) + index) * 0.09}
+					{@const spread = (index / Math.max(intensity.rays - 1, 1) - 0.5) * 1.5}
+					<BaseSprite
+						texture={index % 3 === 0
+							? light(WIN_LIGHT.rayStreaks)
+							: index % 3 === 1
+								? light(WIN_LIGHT.rayFan)
+								: light(WIN_LIGHT.rayCone)}
+						anchor={{ x: 0.5, y: 0 }}
+						x={spread * frameW * 0.42}
+						y={-frameOuterH * 0.62}
+						width={frameW * (0.30 + winRand(seed * 5) * 0.22)}
+						height={fieldH * 0.92}
+						rotation={spread * 0.30 + sway}
+						blendMode="add"
+						alpha={0.55 + 0.45 * winRand(seed * 11)}
+					/>
+				{/if}
+			{/each}
+		</Container>
+	{/if}
+
+	<!-- warm lantern bloom behind the panel -->
+	{#if light(WIN_LIGHT.glowWarm)}
+		<BaseSprite
+			texture={light(WIN_LIGHT.glowWarm)}
+			anchor={0.5}
+			width={frameOuterW * 1.5}
+			height={frameOuterH * 1.7}
+			blendMode="add"
+			alpha={0.20 + intensity.rayAlpha * 0.45 * lantern}
+		/>
+	{/if}
+
+	<!-- BOOT HILL bell tolls: slow bronze rings rolling out of the graveyard -->
+	{#if intensity.bellTolls > 0 && light(WIN_LIGHT.ringSoft)}
+		{#each [0, 1, 2] as ring (ring)}
+			{@const phase = (time * intensity.bellTolls + ring / 3) % 1}
+			<BaseSprite
+				texture={ring % 2 === 0 ? light(WIN_LIGHT.ringSoft) : light(WIN_LIGHT.ringHard)}
+				anchor={0.5}
+				width={frameOuterW * (0.35 + phase * 1.5)}
+				height={frameOuterW * (0.35 + phase * 1.5)}
+				blendMode="add"
+				alpha={0.5 * (1 - phase) * (1 - phase)}
+			/>
+		{/each}
+	{/if}
+
 	<Container scale={slam.current}>
-		<Graphics draw={drawFilmFrame} />
-		<Container scale={zoom.current} alpha={flicker * reelAlpha.current}>
-			<!-- Cover-fit + mask: video fills the monitor edge-to-edge, crop overflow.
-			     Never stretch-letterbox (width/height alone on padded mp4 left bars). -->
-			<Rectangle isMask anchor={0.5} width={frameW} height={frameH} borderRadius={3} />
-			<Sprite key={reelKey} anchor={0.5} width={reelCover.width} height={reelCover.height} />
-			<!-- brass / gunsmoke ghost (western dust storm, not clinical CRT) -->
-			{#if glitch.current > 0.02}
-				<Sprite
-					key={reelKey}
-					anchor={0.5}
-					width={reelCover.width}
-					height={reelCover.height}
-					x={glitch.current * 7}
-					tint={0xc9a34a}
-					alpha={0.28 * glitch.current}
-				/>
-				<Sprite
-					key={reelKey}
-					anchor={0.5}
-					width={reelCover.width}
-					height={reelCover.height}
-					y={glitch.current * 5}
-					tint={0x6e6860}
-					alpha={0.22 * glitch.current}
-				/>
+		<!-- hero panel: tier plate cover-fit into the frame window, Ken-Burns push -->
+		<Container alpha={reelAlpha.current * lantern}>
+			<Rectangle isMask anchor={0.5} width={frameW} height={frameH} borderRadius={2} />
+			<Sprite
+				key={plateKey}
+				anchor={0.5}
+				width={plateCover.width * zoom.current}
+				height={plateCover.height * zoom.current}
+				x={Math.sin(time * 0.22) * frameW * 0.008}
+			/>
+
+			<!-- grave dust drifting across the plate -->
+			{#if vfx(WIN_VFX.dustPuffA)}
+				{#each DUST as index (index)}
+					{#if index < intensity.dust}
+						{@const seed = index * 7 + 2}
+						{@const drift = (time * (0.045 + winRand(seed) * 0.05) + winRand(seed * 3)) % 1}
+						<BaseSprite
+							texture={index % 3 === 0
+								? vfx(WIN_VFX.dustPlume)
+								: index % 2 === 0
+									? vfx(WIN_VFX.dustPuffA)
+									: vfx(WIN_VFX.dustPuffB)}
+							anchor={0.5}
+							x={(drift - 0.5) * frameW * 1.7}
+							y={(winRand(seed * 5) - 0.3) * frameH * 0.62}
+							width={frameW * (0.24 + winRand(seed * 9) * 0.3)}
+							height={frameW * (0.24 + winRand(seed * 9) * 0.3)}
+							rotation={winRand(seed * 13) * 6.28}
+							alpha={0.30 * Math.sin(drift * Math.PI)}
+						/>
+					{/if}
+				{/each}
+			{/if}
+
+			<!-- gunsmoke wipe between tiers (replaces the CRT screen-tear bands) -->
+			{#if wipe.current > 0.02 && vfx(WIN_VFX.smokeA)}
+				{#each [0, 1, 2, 3, 4] as index (index)}
+					{@const seed = index * 11 + 5}
+					<BaseSprite
+						texture={index % 2 === 0 ? vfx(WIN_VFX.smokeA) : vfx(WIN_VFX.smokeB)}
+						anchor={0.5}
+						x={(winRand(seed) - 0.5) * frameW * (1.1 - wipe.current * 0.5)}
+						y={(winRand(seed * 3) - 0.5) * frameH * 0.8}
+						width={frameW * (0.5 + winRand(seed * 5) * 0.4)}
+						height={frameW * (0.5 + winRand(seed * 5) * 0.4)}
+						rotation={time * (0.3 + winRand(seed * 7) * 0.4)}
+						alpha={0.5 * wipe.current}
+					/>
+				{/each}
 			{/if}
 		</Container>
-		<!-- screen tearing: horizontal bands of the reel ripped sideways -->
-		{#if glitch.current > 0.02}
-			{#each tearBands as band, i (i)}
-				{@const bandY = (band.v - 0.5) * frameH}
-				{@const bandH = band.height * frameH}
-				{@const shear =
-					band.offset * glitch.current * frameW * 0.09 * (0.6 + 0.4 * Math.sin(time * band.speed + i))}
-				<Container>
-					<Rectangle
-						isMask
-						anchor={0.5}
-						y={bandY}
-						width={frameW}
-						height={bandH}
-					/>
-					<Sprite
-						key={reelKey}
-						anchor={0.5}
-						x={shear}
-						width={reelCover.width}
-						height={reelCover.height}
-						alpha={0.9}
-					/>
-				</Container>
-			{/each}
-		{/if}
-		<Graphics draw={drawVignette} />
-		<Graphics draw={(graphics) => drawFilmDamage(graphics, time)} />
-		<Graphics draw={(graphics) => drawGlitchNoise(graphics, glitch.current, time)} />
+
+		<!-- weathered timber + branded-iron frame, over the panel edges -->
+		<Sprite key={WIN_FRAME_ASSET} anchor={0.5} width={frameOuterW} height={frameOuterH} />
 	</Container>
 
-	<Container y={frameH / 2 + SYMBOL_SIZE * 0.52} scale={slam.current} alpha={reelAlpha.current}>
+	<!-- entry punch: gold starburst + radiating spark streaks over the frame -->
+	{#if pop.current > 0.01 && vfx(WIN_VFX.starburst)}
+		{@const burst = 1 - pop.current}
+		<BaseSprite
+			texture={vfx(WIN_VFX.starburst)}
+			anchor={0.5}
+			width={frameW * intensity.popScale * (0.35 + burst * 1.1)}
+			height={frameW * intensity.popScale * (0.35 + burst * 1.1)}
+			rotation={burst * 0.5}
+			blendMode="add"
+			alpha={pop.current}
+		/>
+		<BaseSprite
+			texture={vfx(WIN_VFX.flashPop)}
+			anchor={0.5}
+			width={frameW * intensity.popScale * (0.2 + burst * 0.9)}
+			height={frameW * intensity.popScale * (0.2 + burst * 0.9)}
+			blendMode="add"
+			alpha={pop.current * 0.85}
+		/>
+		{#each STREAKS as index (index)}
+			{#if index < intensity.streaks}
+				{@const angle = (index / intensity.streaks) * Math.PI * 2 + winRand(index) * 0.3}
+				{@const reach = burst * frameW * 0.5 * (0.6 + winRand(index * 3) * 0.7)}
+				<BaseSprite
+					texture={index % 4 === 0 ? vfx(WIN_VFX.starPoint) : vfx(WIN_VFX.sparkStreak)}
+					anchor={0.5}
+					x={Math.cos(angle) * reach}
+					y={Math.sin(angle) * reach}
+					width={frameW * 0.12}
+					height={frameW * 0.12}
+					rotation={angle + Math.PI / 2}
+					blendMode="add"
+					alpha={pop.current * 0.9}
+				/>
+			{/if}
+		{/each}
+	{/if}
+
+	<!-- rising gold embers over the whole takeover -->
+	{#if vfx(WIN_VFX.emberMote)}
+		{#each EMBERS as index (index)}
+			{#if index < intensity.embers}
+				{@const seed = index * 13 + 4}
+				{@const speed = 0.055 + winRand(seed) * 0.12}
+				{@const phase = (time * speed + winRand(seed * 3)) % 1}
+				{@const size = fieldW * (0.006 + winRand(seed * 7) * 0.014)}
+				<BaseSprite
+					texture={index % 5 === 0 ? vfx(WIN_VFX.starSmall) : vfx(WIN_VFX.emberMote)}
+					anchor={0.5}
+					x={(winRand(seed * 5) - 0.5) * fieldW +
+						Math.sin(time * 0.7 + index) * fieldW * 0.012}
+					y={(0.55 - phase) * fieldH}
+					width={size}
+					height={size}
+					rotation={time * (0.4 + winRand(seed * 11))}
+					blendMode="add"
+					alpha={0.75 * Math.sin(phase * Math.PI)}
+				/>
+			{/if}
+		{/each}
+	{/if}
+
+	<!-- tier title: branded iron plate, revolver emblems flanking.
+	     LIT, NOT LINED: the plate used to carry a 2px gold border, which read as a
+	     stray vector outline on top of the art. A warm bloom behind it separates it
+	     from the dark instead — same treatment as the amount plate and the CONTINUE
+	     gate below, and the same reason win_frame.png lost its inlay hairline. -->
+	<Container y={titleY} scale={slam.current} alpha={reelAlpha.current}>
+		{#if light(WIN_LIGHT.glowWarm)}
+			<BaseSprite
+				texture={light(WIN_LIGHT.glowWarm)}
+				anchor={0.5}
+				width={titlePlateW * 1.35}
+				height={titlePlateH * 3.4}
+				blendMode="add"
+				alpha={0.34 * lantern}
+			/>
+		{/if}
+		<Rectangle
+			anchor={0.5}
+			width={titlePlateW}
+			height={titlePlateH}
+			borderRadius={4}
+			backgroundColor={WIN_PALETTE.iron}
+			backgroundAlpha={0.9}
+		/>
+		{#if vfx(WIN_VFX.revolverEmblem)}
+			{#each [-1, 1] as side (side)}
+				{@const emblem = (titlePlateH * 1.6) / WIN_VFX_CELL}
+				<!-- negative x scale mirrors the revolver so the pair face outward;
+				     scale is used instead of width/height because the two props
+				     fight each other on a PIXI.Sprite -->
+				<BaseSprite
+					texture={vfx(WIN_VFX.revolverEmblem)}
+					anchor={0.5}
+					x={side * titlePlateW * 0.6}
+					scale={{ x: side * emblem, y: emblem }}
+					alpha={0.85}
+				/>
+			{/each}
+		{/if}
 		<ResponsiveBitmapText
 			anchor={0.5}
-			maxWidth={frameW * 0.7}
+			maxWidth={titlePlateW * 0.88}
 			text={title}
 			tint={AMOUNT_TINT}
 			style={{
 				fontFamily: AMOUNT_FAMILY,
-				fontSize: winFontSize(0.52),
+				fontSize: winFontSize(0.5),
 				align: 'center',
 				fontWeight: 'bold',
 				letterSpacing: 3,
 			}}
 		/>
 	</Container>
-	<Container y={frameH / 2 + SYMBOL_SIZE * 1.25} scale={amountPulse * slam.current}>
-		<ResponsiveBitmapText
+
+	<!-- amount: dark iron plate keeps gold numerals readable over any plate -->
+	<Container y={amountY}>
+		{#if light(WIN_LIGHT.glowWarm)}
+			<BaseSprite
+				texture={light(WIN_LIGHT.glowWarm)}
+				anchor={0.5}
+				width={amountPlateW * 1.3}
+				height={amountPlateH * 2.6}
+				blendMode="add"
+				alpha={0.4 * lantern}
+			/>
+		{/if}
+		<Rectangle
 			anchor={0.5}
-			maxWidth={frameW * 0.85}
-			text={bookEventAmountToCurrencyString(displayAmount)}
-			tint={AMOUNT_TINT}
-			style={{
-				fontFamily: AMOUNT_FAMILY,
-				fontSize: winFontSize(1.05),
-				align: 'center',
-				fontWeight: 'bold',
-				letterSpacing: 0,
-			}}
+			width={amountPlateW}
+			height={amountPlateH}
+			borderRadius={5}
+			backgroundColor={WIN_PALETTE.dark}
+			backgroundAlpha={0.82}
 		/>
-	</Container>
-	{#if (props.ways ?? 0) > 0}
-		<Container y={frameH / 2 + SYMBOL_SIZE * 2.0} scale={slam.current} alpha={reelAlpha.current}>
+		<Container scale={amountPulse * slam.current}>
 			<ResponsiveBitmapText
 				anchor={0.5}
-				maxWidth={frameW * 0.7}
-				text={props.ways === 1 ? '1 WAY' : `${props.ways} WAYS`}
+				maxWidth={amountPlateW * 0.9}
+				text={bookEventAmountToCurrencyString(displayAmount)}
 				tint={AMOUNT_TINT}
 				style={{
 					fontFamily: AMOUNT_FAMILY,
-					fontSize: winFontSize(0.34),
+					fontSize: winFontSize(1.0),
+					align: 'center',
+					fontWeight: 'bold',
+					letterSpacing: 0,
+				}}
+			/>
+		</Container>
+	</Container>
+
+	{#if (props.ways ?? 0) > 0}
+		<Container y={waysY} scale={slam.current} alpha={reelAlpha.current}>
+			<ResponsiveBitmapText
+				anchor={0.5}
+				maxWidth={frameW * 0.7}
+				text={waysLabel(props.ways ?? 0)}
+				tint={WIN_PALETTE.goldPale}
+				style={{
+					fontFamily: AMOUNT_FAMILY,
+					fontSize: winFontSize(0.32),
 					align: 'center',
 					fontWeight: 'bold',
 					letterSpacing: 3,
@@ -537,25 +679,43 @@
 		</Container>
 	{/if}
 
-	<!-- MAX WIN gate: CONTINUE pill + Space/stopButtonClick (see skip()).
-	     Explicit hitArea so sparse Graphics fills still receive Storybook taps. -->
+	<!-- BOOT HILL gate: CONTINUE plate + Space/stopButtonClick (see skip()).
+	     Explicit hitArea so the plate still receives Storybook taps. -->
 	{#if waitContinue}
 		{@const pillW = SYMBOL_SIZE * 2.6}
 		{@const pillH = SYMBOL_SIZE * 0.62}
 		<Container
-			y={frameH / 2 - SYMBOL_SIZE * 0.62}
+			y={frameOuterH / 2 - SYMBOL_SIZE * 0.62}
 			scale={continuePulse}
 			eventMode="static"
 			cursor="pointer"
 			hitArea={new HitRectangle(-pillW / 2, -pillH / 2, pillW, pillH)}
 			onpointerup={() => props.oncomplete()}
 		>
-			<Graphics
+			<!-- the pulsing bloom is what marks this as pressable now that the pill
+			     carries no gold rim; the pill itself stays a dark iron plate. -->
+			{#if light(WIN_LIGHT.glowCore)}
+				<BaseSprite
+					texture={light(WIN_LIGHT.glowCore)}
+					anchor={0.5}
+					width={pillW * 1.5}
+					height={pillH * 4.2}
+					blendMode="add"
+					alpha={0.3 + 0.14 * Math.sin(time * 4.2)}
+					eventMode="none"
+				/>
+			{/if}
+			<Rectangle
+				anchor={0.5}
+				width={pillW}
+				height={pillH}
+				borderRadius={pillH / 2}
+				backgroundColor={WIN_PALETTE.iron}
+				backgroundAlpha={0.94}
 				eventMode="static"
 				cursor="pointer"
 				hitArea={new HitRectangle(-pillW / 2, -pillH / 2, pillW, pillH)}
 				onpointerup={() => props.oncomplete()}
-				draw={(g) => drawGlassPill(g, { width: pillW, height: pillH })}
 			/>
 			<BitmapText
 				anchor={0.5}
@@ -566,13 +726,12 @@
 			/>
 		</Container>
 	{:else if skipHint}
-		<!-- brass plate under the amount — dismiss prompt only -->
-		<Container y={frameH / 2 + SYMBOL_SIZE * 1.72} alpha={0.72 + 0.18 * Math.sin(time * 3.2)}>
+		<Container y={waysY + SYMBOL_SIZE * 0.62} alpha={0.72 + 0.18 * Math.sin(time * 3.2)}>
 			<BitmapText
 				anchor={0.5}
 				text={skipHint}
 				eventMode="none"
-				tint={AMOUNT_TINT}
+				tint={WIN_PALETTE.goldPale}
 				style={{ fontFamily: AMOUNT_FAMILY, fontSize: winFontSize(0.18), letterSpacing: 3 }}
 			/>
 		</Container>

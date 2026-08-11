@@ -5,7 +5,7 @@
 
 	import { drawWindowShade } from '../game/glassChrome';
 	import { PLAQUE_RATIO } from '../game/plaqueMount';
-	import { winFontFamily, winFontTint } from '../game/winFont';
+	import { trAmountFamily, trAmountTint } from '../game/typography';
 	import FittedText from './FittedText.svelte';
 
 	// Shared clinical nameplate (mirrorWaysFrame art + dark-glass window).
@@ -21,8 +21,8 @@
 		pop?: number; // external pop scale (1 = none)
 	};
 	const { caption, value, frameW, x, y, show, pop = 1 }: Props = $props();
-	const AMOUNT_FAMILY = winFontFamily();
-	const AMOUNT_TINT = winFontTint();
+	const AMOUNT_FAMILY = trAmountFamily();
+	const AMOUNT_TINT = trAmountTint();
 	const CAPTION_TINT = 0xc8c4bc;
 
 	const frameH = $derived(frameW * PLAQUE_RATIO);

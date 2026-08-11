@@ -59,15 +59,83 @@
     "w": 256,
     "h": 256
    }
+  },
+  "hole_03.png": {
+   "frame": {
+    "x": 768,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "sourceSize": {
+    "w": 256,
+    "h": 256
+   }
+  },
+  "hole_04.png": {
+   "frame": {
+    "x": 1024,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "sourceSize": {
+    "w": 256,
+    "h": 256
+   }
+  },
+  "hole_05.png": {
+   "frame": {
+    "x": 1280,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 256,
+    "h": 256
+   },
+   "sourceSize": {
+    "w": 256,
+    "h": 256
+   }
   }
  },
  "meta": {
   "image": "split_holes.png",
   "format": "RGBA8888",
   "size": {
-   "w": 768,
+   "w": 1536,
    "h": 256
   },
-  "scale": "1"
+  "scale": "1",
+  "scenario_sources": [
+   "holes_sheet_a#0",
+   "holes_sheet_a#1",
+   "holes_sheet_a#2",
+   "holes_sheet_b#0",
+   "holes_sheet_b#2",
+   "holes_sheet_c#2"
+  ]
  }
 }

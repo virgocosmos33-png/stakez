@@ -8,8 +8,8 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { stateShake } from '../game/stateShake.svelte';
-	import { fxNum, fxColors } from '../game/fx.generated';
-	import { drawFluorescentFrame, type ClinicalPalette } from '../game/clinicalFx';
+	import { fxNum } from '../game/fx.generated';
+	import { drawLanternFrame, GRAVEYARD_PALETTE } from '../game/graveyardFx';
 
 	const context = getContext();
 	const POSITION_ADJUSTMENT = 1.01;
@@ -32,14 +32,9 @@
 		context.stateGameDerived.boardLayout().y * POSITION_ADJUSTMENT + stateShake.y,
 	);
 
-	const PAL_FALLBACK = [0x3a3632, 0x8a8680, 0xc8c4bc, 0xf4f1ec];
-	const palColors = fxColors('framePlasma', 'colors', PAL_FALLBACK);
-	const PALETTE: ClinicalPalette = {
-		charcoal: palColors[0] ?? PAL_FALLBACK[0],
-		steel: palColors[1] ?? PAL_FALLBACK[1],
-		silver: palColors[2] ?? PAL_FALLBACK[2],
-		bone: palColors[3] ?? PAL_FALLBACK[3],
-	};
+	// The generated framePlasma.colors entry is still the old clinical grey/white
+	// set. It is deliberately not consumed: this frame is graveyard lantern light.
+	const PALETTE = GRAVEYARD_PALETTE;
 
 	const envelope = new Tween(0, { duration: ENVELOPE_MS, easing: cubicOut });
 	let glowActive = $state(false);
@@ -80,7 +75,7 @@
 		<Container x={frameX} y={frameY}>
 			<Graphics
 				draw={(graphics) =>
-					drawFluorescentFrame(
+					drawLanternFrame(
 						graphics,
 						bw * 0.5 + SYMBOL_SIZE * MARGIN_SCALE,
 						bh * 0.5 + SYMBOL_SIZE * MARGIN_SCALE,

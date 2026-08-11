@@ -339,20 +339,88 @@
     "w": 128,
     "h": 128
    }
+  },
+  "vfx_17.png": {
+   "frame": {
+    "x": 2176,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
+  },
+  "vfx_18.png": {
+   "frame": {
+    "x": 2304,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "rotated": false,
+   "trimmed": false,
+   "spriteSourceSize": {
+    "x": 0,
+    "y": 0,
+    "w": 128,
+    "h": 128
+   },
+   "sourceSize": {
+    "w": 128,
+    "h": 128
+   }
   }
  },
  "meta": {
   "image": "tombstone_split_vfx.png",
   "format": "RGBA8888",
   "size": {
-   "w": 2176,
+   "w": 2432,
    "h": 128
   },
   "scale": "1",
+  "frame_order": [
+   "sparkA",
+   "sparkB",
+   "sparkC",
+   "muzzleA",
+   "muzzleB",
+   "dirtA",
+   "dirtB",
+   "scorchA",
+   "scorchB",
+   "smokeA",
+   "smokeB",
+   "dustPlume",
+   "scratch",
+   "slash",
+   "puffA",
+   "puffB",
+   "starburst",
+   "sparkStreak",
+   "burstDark"
+  ],
+  "scenario_sources": [
+   "muzzle_flash_wood",
+   "muzzle_flash_chrome",
+   "dust_plume",
+   "starburst_gold",
+   "spark_streak_gold",
+   "burst_dark"
+  ],
   "kenney_sources": [
    "kenney_particle-pack/PNG (Transparent)",
-   "kenney_smoke-particles/PNG/White puff",
-   "kenney_smoke-particles/PNG/Flash"
+   "kenney_smoke-particles/PNG/Black smoke"
   ]
  }
 }

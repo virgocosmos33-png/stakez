@@ -1,13 +1,26 @@
 <script lang="ts">
 	/**
-	 * Weathered wooden reel frame — Tombstone RIP reference: dark plank face,
-	 * recessed sockets per cell, nail heads on the seams. No White Room steel.
+	 * Weathered western reel frame — baked timber-and-iron chassis, cohesive with
+	 * the shipped win-celebration timber plates. The art is baked
+	 * (tools/make_board_frame_art.py); this component only lays it onto the live
+	 * board geometry:
+	 *   - boardPlate         a dark-graded Layer AI plank field, clipped to the
+	 *                        diamond staircase silhouette (the timber behind it all)
+	 *   - boardCellSocket    one crafted recessed window per VISIBLE cell (dark
+	 *                        recess + brass inner lip + corner rivets), drawn at
+	 *                        the exact cell size with a transparent grout margin so
+	 *                        the timber reads as the raised wood between windows
+	 *   - boardCornerBracket a bolted iron corner boss at the four outer corners of
+	 *                        the staircase, inside the plate's PAD overhang
 	 *
-	 * Silhouette hugs every reel top AND bottom (true staircase), so the
-	 * last-reel special lane stays a single grave cell bolted to the board floor.
+	 * GEOMETRY IS FROZEN: the `columns` + `silhouette` maths below are unchanged
+	 * from the procedural frame this replaced (cell rects, CELL_PITCH_X,
+	 * SYMBOL_SIZE, per-reel rows, getCellLeft/getReelWindow/getReelRows and PAD =
+	 * BOARD_PLATE_PAD). A parallel feature traces fire around this exact cell
+	 * geometry, so only the ART changed — never the skeleton.
 	 */
 	import type { Graphics as PixiGraphics } from 'pixi.js';
-	import { Container, Graphics } from 'pixi-svelte';
+	import { Container, Graphics, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, CELL_PITCH_X, BOARD_PLATE_PAD } from '../game/constants';
@@ -16,18 +29,8 @@
 	const context = getContext();
 
 	const PAD = BOARD_PLATE_PAD;
-	const GROUT = 2.25;
-	const SOCKET_RADIUS = 5;
-	const NAIL_R = 2.4;
-
-	const WOOD_FACE = 0x2a2118;
-	const WOOD_DEEP = 0x14100c;
-	const WOOD_EDGE = 0x4a3a28;
-	const WOOD_GRAIN = 0x3a2c1e;
-	const SOCKET = 0x0a0806;
-	const NAIL = 0x6a5a40;
-	const NAIL_GLINT = 0xc9b48a;
-	const DUST = 0x8a6a40;
+	/** iron corner boss size — a touch over the PAD overhang so it hugs the corner */
+	const BRACKET = PAD * 2.3;
 
 	type Column = { left: number; right: number; top: number; bottom: number; rows: number };
 
@@ -71,70 +74,61 @@
 		return points;
 	});
 
-	const drawPlate = (g: PixiGraphics, outline: number[], cols: Column[]) => {
-		if (outline.length === 0) return;
+	/** axis-aligned bounds of the silhouette — the timber sprite covers this box
+	 * and the silhouette mask clips it back to the staircase */
+	const bounds = $derived.by(() => {
+		if (columns.length === 0) return { x: 0, y: 0, w: 0, h: 0 };
+		const first = columns[0];
+		const last = columns[columns.length - 1];
+		const x = first.left - PAD;
+		const right = last.right + PAD;
+		const y = Math.min(...columns.map((c) => c.top)) - PAD;
+		const bottom = Math.max(...columns.map((c) => c.bottom)) + PAD;
+		return { x, y, w: right - x, h: bottom - y };
+	});
 
-		// cast shadow
+	/** every VISIBLE cell centre — sockets only ever sit on live rows (getReelRows),
+	 * never on the off-window pad rows the book events index */
+	const cells = $derived.by(() =>
+		columns.flatMap((col) =>
+			Array.from({ length: col.rows }, (_, row) => ({
+				cx: col.left + CELL_PITCH_X / 2,
+				cy: col.top + row * SYMBOL_SIZE + SYMBOL_SIZE / 2,
+			})),
+		),
+	);
+
+	/** the four outer corners of the staircase — leftmost + rightmost columns */
+	const brackets = $derived.by(() => {
+		if (columns.length === 0) return [];
+		const first = columns[0];
+		const last = columns[columns.length - 1];
+		return [
+			{ x: first.left - PAD, y: first.top - PAD, ax: 0, ay: 0 },
+			{ x: last.right + PAD, y: last.top - PAD, ax: 1, ay: 0 },
+			{ x: first.left - PAD, y: first.bottom + PAD, ax: 0, ay: 1 },
+			{ x: last.right + PAD, y: last.bottom + PAD, ax: 1, ay: 1 },
+		];
+	});
+
+	/** broad, soft edge only — never a thin bright stroke (minifies to a hairline).
+	 * The plate reads against the background via its cast shadow + this dark burn. */
+	const drawShadow = (g: PixiGraphics, outline: number[]) => {
+		if (outline.length === 0) return;
 		g.poly(outline.map((value, index) => (index % 2 === 1 ? value + 8 : value)));
 		g.fill({ color: 0x000000, alpha: 0.42 });
+	};
 
-		// wood face
+	const drawEdge = (g: PixiGraphics, outline: number[]) => {
+		if (outline.length === 0) return;
 		g.poly(outline);
-		g.fill({ color: WOOD_FACE, alpha: 0.98 });
+		g.stroke({ color: 0x090705, width: 6, alpha: 0.85 });
+	};
+
+	const drawMask = (g: PixiGraphics, outline: number[]) => {
+		if (outline.length === 0) return;
 		g.poly(outline);
-		g.stroke({ color: WOOD_DEEP, width: 6, alpha: 0.7 });
-		g.poly(outline);
-		g.stroke({ color: WOOD_EDGE, width: 1.5, alpha: 0.55 });
-
-		// Plank grain ONLY inside each column's wood band — never a full-width
-		// stroke across the diamond notches (that read as a floating hairline
-		// over empty air above the short middle/last reels).
-		cols.forEach((col) => {
-			const x0 = col.left + 3;
-			const x1 = col.right - 3;
-			const y0 = col.top - PAD + 8;
-			const y1 = col.bottom + PAD - 4;
-			for (let y = y0; y < y1; y += 11) {
-				g.moveTo(x0, y);
-				g.lineTo(x1, y);
-				g.stroke({ color: WOOD_GRAIN, width: 1, alpha: 0.18 });
-			}
-		});
-
-		cols.forEach((col) => {
-			for (let row = 0; row < col.rows; row++) {
-				const x = col.left + GROUT;
-				const y = col.top + row * SYMBOL_SIZE + GROUT;
-				const w = CELL_PITCH_X - GROUT * 2;
-				const h = SYMBOL_SIZE - GROUT * 2;
-
-				g.roundRect(x, y, w, h, SOCKET_RADIUS);
-				g.fill({ color: SOCKET, alpha: 0.94 });
-				g.roundRect(x, y, w, h, SOCKET_RADIUS);
-				g.stroke({ color: 0x000000, width: 3, alpha: 0.55 });
-				// warm lip catch-light
-				g.moveTo(x + SOCKET_RADIUS, y + h - 0.5);
-				g.lineTo(x + w - SOCKET_RADIUS, y + h - 0.5);
-				g.stroke({ color: DUST, width: 1, alpha: 0.12 });
-			}
-		});
-
-		// nail heads on the plank seams
-		cols.forEach((col, index) => {
-			const spots: { x: number; y: number }[] = [];
-			spots.push({ x: col.left + (col.right - col.left) * 0.5, y: col.top - PAD * 0.45 });
-			spots.push({ x: col.left + (col.right - col.left) * 0.5, y: col.bottom + PAD * 0.45 });
-			if (index > 0) {
-				spots.push({ x: col.left, y: col.top + 8 });
-				spots.push({ x: col.left, y: col.bottom - 8 });
-			}
-			spots.forEach(({ x, y }) => {
-				g.circle(x, y, NAIL_R);
-				g.fill({ color: NAIL, alpha: 0.7 });
-				g.circle(x - 0.5, y - 0.5, NAIL_R * 0.4);
-				g.fill({ color: NAIL_GLINT, alpha: 0.35 });
-			});
-		});
+		g.fill({ color: 0xffffff, alpha: 1 });
 	};
 </script>
 
@@ -144,5 +138,39 @@
 	y={context.stateGameDerived.boardLayout().y -
 		context.stateGameDerived.boardLayout().height * 0.5}
 >
-	<Graphics draw={(g) => drawPlate(g, silhouette, columns)} />
+	<!-- cast shadow so the plate sits on the graveyard behind it -->
+	<Graphics draw={(g) => drawShadow(g, silhouette)} />
+
+	<!-- weathered timber field, clipped to the diamond staircase -->
+	<Container>
+		<Sprite key="boardPlate" x={bounds.x} y={bounds.y} width={bounds.w} height={bounds.h} />
+		<Graphics isMask draw={(g) => drawMask(g, silhouette)} />
+	</Container>
+
+	<!-- broad burnt edge -->
+	<Graphics draw={(g) => drawEdge(g, silhouette)} />
+
+	<!-- crafted recessed window per visible cell -->
+	{#each cells as cell (`${cell.cx}:${cell.cy}`)}
+		<Sprite
+			key="boardCellSocket"
+			x={cell.cx}
+			y={cell.cy}
+			anchor={0.5}
+			width={CELL_PITCH_X}
+			height={SYMBOL_SIZE}
+		/>
+	{/each}
+
+	<!-- bolted iron corner bosses on the outer corners -->
+	{#each brackets as b (`${b.ax}:${b.ay}`)}
+		<Sprite
+			key="boardCornerBracket"
+			x={b.x}
+			y={b.y}
+			anchor={{ x: b.ax, y: b.ay }}
+			width={BRACKET}
+			height={BRACKET}
+		/>
+	{/each}
 </Container>

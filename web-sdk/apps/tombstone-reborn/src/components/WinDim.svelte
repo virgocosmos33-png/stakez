@@ -58,7 +58,7 @@
 				if (id !== cycleId) return;
 				winKeys = keysOf(positions);
 				context.stateGame.slotWinPositions = positions;
-				// the mirror glint runs across every one of its cards
+				// the gunsmoke glint runs across every one of its cards
 				await context.eventEmitter.broadcastAsync({ type: 'winSweep', positions });
 				if (id !== cycleId) return;
 				await wait(220);
@@ -113,7 +113,7 @@
 			reel.reelState.symbols.forEach((_, rowIndex) => {
 				if (rowIndex === 0 || rowIndex === reel.reelState.symbols.length - 1) return;
 				if (keys.has(`${reelIndex}-${rowIndex}`)) return;
-				// sharp padded-cell mask (hard corners, not soft gothic rounds)
+				// sharp grave-plot mask (hard corners, not soft gothic rounds)
 				graphics.rect(
 					originX + getCellLeft(reelIndex) + 1,
 					originY + pitch * (rowIndex - 1) + 1 + getReelYOffset(reelIndex),

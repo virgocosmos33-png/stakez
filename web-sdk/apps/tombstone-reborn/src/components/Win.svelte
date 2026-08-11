@@ -20,6 +20,7 @@
 	import PressToContinue from './PressToContinue.svelte';
 	import { getContext } from '../game/context';
 	import { getWinCelebration } from '../game/winCelebrationMap';
+	import { waysLabel } from '../game/waysFormat';
 	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
 
 	const context = getContext();
@@ -87,9 +88,16 @@
 <FadeContainer {show}>
 	{#if hasWin}
 		{#if celebration.type === 'big'}
-			<!-- film-reel takeover: WinCelebration listens to stopButtonClick
+			<!-- western hero-plate takeover: WinCelebration listens to stopButtonClick
 				(TapToSkip Space / reel tap / HUD stop / full-screen press below) -->
-			<CanvasSizeRectangle backgroundColor={0x000000} backgroundAlpha={0.94} />
+			<!-- not a full black-out: the graveyard and reels stay faintly legible
+				behind the takeover instead of cutting to a void -->
+			<CanvasSizeRectangle backgroundColor={0x07060a} backgroundAlpha={0.88} />
+			<!-- Bounty payout raining behind the panel. The big tiers used to get no
+				scatter at all — only the small-win branch emitted — so the whole
+				coin-and-cartridge layer was missing from every celebration. It stops
+				when the max-win CONTINUE gate takes over. -->
+			<WinCoins emit={!gateUp} levelAlias={celebration.alias} />
 			<MainContainer>
 				<!-- centered on the canvas, not the board, so nothing hangs off-screen -->
 				<Container
@@ -132,7 +140,7 @@
 										anchor={0.5}
 										maxWidth={context.stateLayoutDerived.canvasSizes().width /
 											context.stateLayoutDerived.mainLayout().scale}
-										text={ways === 1 ? '1 WAY' : `${ways} WAYS`}
+										text={waysLabel(ways)}
 										tint={WIN_FONT_TINT}
 										style={{
 											fontFamily: WIN_FONT_FAMILY,

@@ -1,0 +1,16 @@
+Scenario team library pulls (team_SDcGAc7TMcpPtTw2DUYM9WqB /
+proj_va6b2WpUFBeUgJKVMo1VfaLZ), fetched by tools/fetch_scenario_western_vfx.py
+
+muzzle_flash_wood.png  <-  asset_nPHwqvN6UsNJxFegtopJEKmE  # vintage revolver, wooden grips, firing — warm yellow flash + smoke
+muzzle_flash_chrome.png  <-  asset_YyiMgUJPKi49qraUsZCQyp7A  # black revolver firing — orange/yellow muzzle flash
+dust_plume.png  <-  asset_3TDgQKHtCspBGWUBg2dFQKwQ  # brown dust devil rising off dirt, tapering to a wispy cloud
+dust_kick_outlaw.png  <-  asset_VwrAF1in5MSrSAzWrTCLk5He  # skeletal cowboy scattering dirt and dust from the ground
+starburst_gold.png  <-  asset_d645nhJnf86yxFUutPBd3Zg3  # gold multi-point starburst
+spark_streak_gold.png  <-  asset_zEAWCU1s7FLJA76FPK2MJ8x8  # gold sparkler streak with a bright flare head
+star_spiked_iron.png  <-  asset_oq3aDcwji5zCuk8op67zfURo  # metallic spiked star with amber inlays — lock emblem
+burst_dark.png  <-  asset_81FSNPfKo3vTe5JDLtU19FJV  # dark jagged starburst with a hot core
+holes_sheet_a.png  <-  asset_9To3efFkAjWKGQsiTx1zk6WP  # four bullet holes splintered in wood (2x2 sheet)
+holes_sheet_b.png  <-  asset_uuJceMUv11jWQWgXJFGjocBz  # three radial splinter holes + one clean hole in a post (2x2 sheet)
+holes_sheet_c.png  <-  asset_p9SKDPb2A153w92wFjGKmtA9  # circular splintered holes with cracks (2x2 sheet)
+plank_iron_a.png  <-  asset_hxDbGe5HXL4Wn855hdj2akSD  # tall dark wooden plank sign in a riveted iron frame
+plank_iron_b.png  <-  asset_148CBZCoCgzNPx7wSYJ15KCQ  # vertical wood panel, dark metal border with rivets

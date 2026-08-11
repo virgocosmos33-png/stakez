@@ -20,21 +20,53 @@ BOOKS = os.path.join(HERE, "library", "books")
 
 MODES = ["base", "bonus_small", "bonus_super"]
 
+# The 99,999x cap. A feature story must stay BELOW this: the selector takes the
+# first library book whose predicate matches, so any unbounded `p > 0` predicate
+# happily picked a wincap book and then presented BOOT HILL / MAX WIN instead of
+# the feature it was named after. That made small_bonus_win, base_special,
+# dig_up and super_split four copies of the max_win presentation.
+WINCAP_X = 99999
+# headroom under the cap, so a near-cap book can't sneak in either
+FEATURE_MAX_X = 90000
+
+
+def feature(*names, lo=0.01, hi=FEATURE_MAX_X, any_of=False):
+    """Predicate: the book contains the named event(s) and pays inside a band.
+
+    Bounding the top end is what keeps a feature story representative of its
+    mechanic rather than of the win cap.
+    """
+    def check(types, payout):
+        if any_of:
+            if not any(n in types for n in names):
+                return False
+        elif not all(n in types for n in names):
+            return False
+        return lo <= payout < hi
+
+    return check
+
+
 # label -> (mode preference order, predicate on the set of event types)
 WANTS = [
     ("base_dead",      ["base"],        lambda t, p: p == 0),
-    ("base_special",   ["base"],        lambda t, p: ("splitGang" in t or "gunsmoke" in t or "coffinOpen" in t) and p > 0),
-    ("coffin_open",    ["bonus_small", "bonus_super"], lambda t, p: "coffinOpen" in t and p > 0),
-    ("gunsmoke",       ["bonus_small", "bonus_super"], lambda t, p: "gunsmoke" in t and p > 0),
-    ("split_gang",     ["bonus_small", "bonus_super"], lambda t, p: "splitGang" in t and p > 0),
-    ("split_outlaws",  ["bonus_small", "bonus_super"], lambda t, p: "splitOutlaws" in t and p > 0),
-    ("dig_up",         ["bonus_small"], lambda t, p: "digUp" in t and p > 0),
-    ("bounty",         ["bonus_super", "bonus_small"], lambda t, p: "bounty" in t and p > 0),
-    ("nudge",          ["bonus_super", "bonus_small"], lambda t, p: "nudge" in t and p > 0),
-    ("super_split",    ["bonus_super"], lambda t, p: "superSplit" in t and p > 0),
-    ("small_bonus_win", ["bonus_small"], lambda t, p: p >= 200),
-    ("super_bonus_win", ["bonus_super"], lambda t, p: 2000 <= p < 90000),
-    ("max_win",        ["bonus_super", "bonus_small", "base"], lambda t, p: p >= 99999),
+    ("base_special",   ["base"],        feature("splitGang", "gunsmoke", "coffinOpen", any_of=True)),
+    ("coffin_open",    ["bonus_small", "bonus_super"], feature("coffinOpen")),
+    ("gunsmoke",       ["bonus_small", "bonus_super"], feature("gunsmoke")),
+    ("split_gang",     ["bonus_small", "bonus_super"], feature("splitGang")),
+    ("split_outlaws",  ["bonus_small", "bonus_super"], feature("splitOutlaws")),
+    ("dig_up",         ["bonus_small"], feature("digUp")),
+    ("bounty",         ["bonus_super", "bonus_small"], feature("bounty")),
+    ("nudge",          ["bonus_super", "bonus_small"], feature("nudge")),
+    ("super_split",    ["bonus_super"], feature("superSplit")),
+    # A genuinely small win. This used to be an unbounded `p >= 200`, which kept
+    # resolving to a 99,999x wincap book — the same presentation as max_win, so
+    # the low end of the win ladder could never be verified from the showcase.
+    # 25x..50x is the BOUNTY band, the lowest TITLED celebration tier in
+    # web-sdk/apps/tombstone-reborn/src/game/winCelebrationMap.ts.
+    ("small_bonus_win", ["bonus_small"], lambda t, p: 25 <= p < 50),
+    ("super_bonus_win", ["bonus_super"], lambda t, p: 2000 <= p < FEATURE_MAX_X),
+    ("max_win",        ["bonus_super", "bonus_small", "base"], lambda t, p: p >= WINCAP_X),
 ]
 
 

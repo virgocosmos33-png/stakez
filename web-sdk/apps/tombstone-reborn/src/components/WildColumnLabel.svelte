@@ -23,6 +23,8 @@
 <script lang="ts">
 	import { Container, Graphics, Text } from 'pixi-svelte';
 
+	import { trLabelStyle, trValueStyle } from '../game/typography';
+
 	type Props = {
 		x: number;
 		y: number;
@@ -58,27 +60,24 @@
 			anchor={0.5}
 			y={-SYMBOL_SIZE * 0.26}
 			text="WILD"
-			style={{
-				fontFamily: 'Arial',
-				fontWeight: '900',
+			style={trLabelStyle({
+				fontWeight: '700',
 				fontSize: WILD_FONT,
 				fill: 0xffffff,
 				stroke: { color: 0x000000, width: 5 },
 				letterSpacing: 1,
-			}}
+			})}
 		/>
 		<Container y={SYMBOL_SIZE * 0.16}>
 			<Graphics draw={drawPlate} />
 			<Text
 				anchor={0.5}
 				text={`${props.ways}x`}
-				style={{
-					fontFamily: 'Arial',
-					fontWeight: '900',
+				style={trValueStyle({
 					fontSize: WAYS_FONT,
 					fill: 0xffffff,
 					stroke: { color: 0x000000, width: 4 },
-				}}
+				})}
 			/>
 		</Container>
 	</Container>

@@ -10,6 +10,7 @@
 
 	import { getContext } from '../game/context';
 	import { getRailLayout } from '../game/plaqueMount';
+	import { formatWays } from '../game/waysFormat';
 	import config from '../game/config';
 	import RailPlaque from './RailPlaque.svelte';
 
@@ -49,7 +50,7 @@
 	// geometry always comes from plaqueMount (left rail OR crest stack)
 	const position = $derived({ x: rail.ways.cx, y: rail.ways.cy });
 
-	const waysText = $derived(String(ways));
+	const waysText = $derived(formatWays(ways));
 </script>
 
 <RailPlaque

@@ -27,7 +27,7 @@
 	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
 	import { getSymbolX } from '../game/utils';
 	import { stateShake } from '../game/stateShake.svelte';
-	import { TOMBSTONE_FX, drawPowderSeam } from '../game/tombstoneVfx';
+	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import WildColumnLabel from './WildColumnLabel.svelte';
 	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
 
@@ -147,10 +147,6 @@
 				tear: new Tween(0),
 			};
 		});
-	};
-
-	const drawWildDivider = (g: import('pixi.js').Graphics, h: number, slim: number) => {
-		drawPowderSeam(g, h, slim);
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -323,7 +319,6 @@
 					{@const colH = bottomY - topY}
 					{@const sliceW = CELL_PITCH_X / panes}
 					{@const gap = CELL_PITCH_X * Math.min(0.025, 0.09 / panes)}
-					{@const slim = Math.min(1, 3 / panes)}
 					{@const paneW = Math.max((sliceW - gap) * tear + CELL_PITCH_X * (1 - tear), 2)}
 					<Container x={cell.cx} y={cell.cy}>
 						<Rectangle
@@ -378,15 +373,8 @@
 									</Container>
 								</Container>
 							{/each}
-							{#each Array.from({ length: panes - 1 }) as _, i (i)}
-								<Container
-									x={(-CELL_PITCH_X / 2 + (i + 1) * sliceW) * tear}
-									y={(topY + bottomY) / 2}
-									alpha={tear}
-								>
-									<Graphics draw={(g) => drawWildDivider(g, colH, slim)} />
-								</Container>
-							{/each}
+							<!-- no strip down the tear: the panes part over the dark
+								column, matching the paying-symbol split -->
 						{/if}
 						<Graphics draw={(g) => drawGrip(g, CELL_PITCH_X, topY, bottomY, flare)} />
 					</Container>

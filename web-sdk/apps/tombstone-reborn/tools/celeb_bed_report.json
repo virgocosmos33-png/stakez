@@ -1,0 +1,333 @@
+{
+  "1": [
+    {
+      "name": "s1_a",
+      "stage": "1",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s1_a.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.5,
+      "rms_dbfs": -15.6,
+      "md5": "3bdbad873f97",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s1_b",
+      "stage": "1",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s1_b.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -4.0,
+      "rms_dbfs": -19.4,
+      "md5": "48cf1f451e38",
+      "reported": 2.0,
+      "usable": true
+    },
+    {
+      "name": "s1_c",
+      "stage": "1",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s1_c.mp3",
+      "seconds": 5.0,
+      "peak_dbfs": -0.4,
+      "rms_dbfs": -14.8,
+      "md5": "8217c316658d",
+      "reported": 5.0,
+      "usable": true
+    },
+    {
+      "name": "s1_d",
+      "stage": "1",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s1_d.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -1.9,
+      "rms_dbfs": -14.1,
+      "md5": "f3bbe43e2e82",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s1_e",
+      "stage": "1",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s1_e.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -6.0,
+      "rms_dbfs": -20.7,
+      "md5": "b7f5d218fa33",
+      "reported": 2.0,
+      "usable": true
+    }
+  ],
+  "2": [
+    {
+      "name": "s2_a",
+      "stage": "2",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s2_a.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.6,
+      "rms_dbfs": -14.5,
+      "md5": "fe861542ea47",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s2_b",
+      "stage": "2",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s2_b.mp3",
+      "seconds": 3.0,
+      "peak_dbfs": -2.3,
+      "rms_dbfs": -15.3,
+      "md5": "aa48c51cfe6e",
+      "reported": 3.0,
+      "usable": true
+    }
+  ],
+  "3": [
+    {
+      "name": "s3_a",
+      "stage": "3",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s3_a.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.3,
+      "rms_dbfs": -20.0,
+      "md5": "dc0a561772fc",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s3_b",
+      "stage": "3",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s3_b.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -0.1,
+      "rms_dbfs": -15.0,
+      "md5": "7cac0d36c55d",
+      "reported": 2.0,
+      "usable": true
+    },
+    {
+      "name": "s3_c",
+      "stage": "3",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s3_c.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -11.1,
+      "rms_dbfs": -31.6,
+      "md5": "231828d4ef79",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s3_d",
+      "stage": "3",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s3_d.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -0.0,
+      "rms_dbfs": -17.5,
+      "md5": "2ace9d44f9a7",
+      "reported": 2.0,
+      "usable": true
+    },
+    {
+      "name": "s3_e",
+      "stage": "3",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s3_e.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -0.1,
+      "rms_dbfs": -14.2,
+      "md5": "b1920a4a0931",
+      "reported": 2.0,
+      "usable": true
+    }
+  ],
+  "4": [
+    {
+      "name": "s4_a",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_a.mp3",
+      "seconds": 0.48,
+      "peak_dbfs": 0.0,
+      "rms_dbfs": -10.8,
+      "md5": "2af3443841a3",
+      "reported": 0.48,
+      "usable": false
+    },
+    {
+      "name": "s4_b",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_b.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": 0.0,
+      "rms_dbfs": -12.1,
+      "md5": "9861ed2a55c6",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s4_c",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_c.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.2,
+      "rms_dbfs": -17.4,
+      "md5": "75ec40b0a948",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s4_d",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_d.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -2.9,
+      "rms_dbfs": -15.4,
+      "md5": "6d69556a816e",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s4_e",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_e.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.1,
+      "rms_dbfs": -12.4,
+      "md5": "3acc2f63048d",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s4_f",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_f.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.0,
+      "rms_dbfs": -13.9,
+      "md5": "a95fd61a5b90",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s4_g",
+      "stage": "4",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s4_g.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -2.1,
+      "rms_dbfs": -15.9,
+      "md5": "cebde2aadf00",
+      "reported": 2.0,
+      "usable": true
+    }
+  ],
+  "5": [
+    {
+      "name": "s5_a",
+      "stage": "5",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s5_a.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -2.3,
+      "rms_dbfs": -13.4,
+      "md5": "5d5f0427af82",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s5_b",
+      "stage": "5",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s5_b.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.4,
+      "rms_dbfs": -14.3,
+      "md5": "ce6d08c43ef4",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s5_c",
+      "stage": "5",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s5_c.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": 0.0,
+      "rms_dbfs": -12.3,
+      "md5": "2ae98644368d",
+      "reported": 2.0,
+      "usable": true
+    },
+    {
+      "name": "s5_d",
+      "stage": "5",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s5_d.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -0.1,
+      "rms_dbfs": -12.3,
+      "md5": "1c8d7def5cce",
+      "reported": 2.0,
+      "usable": true
+    },
+    {
+      "name": "s5_e",
+      "stage": "5",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s5_e.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": 0.0,
+      "rms_dbfs": -12.4,
+      "md5": "e3a43b9adcf6",
+      "reported": 2.0,
+      "usable": true
+    }
+  ],
+  "6": [
+    {
+      "name": "s6_a",
+      "stage": "6",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s6_a.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.0,
+      "rms_dbfs": -13.9,
+      "md5": "154bdd1f7e28",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s6_b",
+      "stage": "6",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s6_b.mp3",
+      "seconds": 2.0,
+      "peak_dbfs": -1.6,
+      "rms_dbfs": -14.6,
+      "md5": "f695e7c715e7",
+      "reported": 2.0,
+      "usable": true
+    },
+    {
+      "name": "s6_c",
+      "stage": "6",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s6_c.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.0,
+      "rms_dbfs": -13.2,
+      "md5": "d93e1fa1ce84",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s6_d",
+      "stage": "6",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s6_d.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.3,
+      "rms_dbfs": -16.2,
+      "md5": "cf8d10d29dc5",
+      "reported": 1.0,
+      "usable": false
+    },
+    {
+      "name": "s6_e",
+      "stage": "6",
+      "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\celeb_candidates\\s6_e.mp3",
+      "seconds": 1.0,
+      "peak_dbfs": -0.2,
+      "rms_dbfs": -14.0,
+      "md5": "6dadac10ac53",
+      "reported": 1.0,
+      "usable": false
+    }
+  ]
+}

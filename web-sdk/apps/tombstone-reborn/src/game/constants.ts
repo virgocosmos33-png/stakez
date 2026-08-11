@@ -120,23 +120,40 @@ const LOW_SYMBOL_SIZE = 0.9;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 const SPIN_OPTIONS_SHARED = {
-	reelFallInDelay: 80,
-	reelPaddingMultiplierNormal: 1.25,
+	// Per-reel stagger before each reel starts falling IN (× an accumulating
+	// padding multiplier). At 80 with a 1.25 multiplier the rightmost reel waited
+	// ~520ms after the reveal before it dropped, so it stayed blank far longer
+	// than the fall-out stagger did — once fall-out was tightened this became the
+	// dominant part of the empty window. Cut so the reveal refills the board in a
+	// tight left-to-right sweep.
+	reelFallInDelay: 20,
+	reelPaddingMultiplierNormal: 1.05,
 	// was 18 (an ~18x drawn-out scatter tension hang). Kept short so the
 	// scatter "anticipation" is a quick beat, not a slow crawl — and it's now
 	// fully skippable with a tap / space.
 	reelPaddingMultiplierAnticipated: 4,
-	reelFallOutDelay: 145,
+	// Per-reel stagger before each reel starts falling OUT (× reelIndex). This
+	// was 145, which across 6 reels spread the fall-out over ~725ms — and since
+	// the reveal fall-in is gated on the SLOWEST reel reaching 'hanging'
+	// (createEnhanceBoardSpin), the leftmost reel emptied first and then sat as
+	// blank outlined cells for over a second before it could refill. That empty
+	// board on every spin was the "empty cells" defect. Tightened so the whole
+	// board clears in a quick left-to-right sweep instead of a long drawn wipe;
+	// a light stagger is kept so it still reads as a sweep, not a snap.
+	reelFallOutDelay: 25,
 };
 
 export const SPIN_OPTIONS_DEFAULT = {
 	...SPIN_OPTIONS_SHARED,
-	symbolFallInSpeed: 3.5,
-	symbolFallInInterval: 30,
+	// fall-in / fall-out speeds bumped from 3.5: with the tighter stagger the
+	// travel itself is now the dominant part of the empty window, so a faster
+	// clear and refill keeps the blank beat short without feeling like a snap.
+	symbolFallInSpeed: 6.5,
+	symbolFallInInterval: 22,
 	symbolFallInBounceSpeed: 0.15,
 	symbolFallInBounceSizeMulti: 0.5,
-	symbolFallOutSpeed: 3.5,
-	symbolFallOutInterval: 20,
+	symbolFallOutSpeed: 6.5,
+	symbolFallOutInterval: 14,
 };
 
 export const SPIN_OPTIONS_FAST = {

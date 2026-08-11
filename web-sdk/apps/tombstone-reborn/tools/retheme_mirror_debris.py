@@ -220,7 +220,13 @@ def retheme_fs_intro() -> None:
 
 
 def retheme_coin() -> None:
+    # The SD2_Coin template sheet was deleted with the win-celebration rebuild:
+    # WinCoins now emits the `winScatter` coin/cartridge atlas baked by
+    # tools/make_win_celebration_art.py. Nothing to retheme.
     path = ASSETS / "sprites" / "coin" / "SD2_Coin.png"
+    if not path.is_file():
+        print("[coin] SKIP SD2_Coin.png (removed; see make_win_celebration_art.py)")
+        return
     backup(path)
     image = Image.open(path).convert("RGBA")
     transform_region(image, (0, 0, image.width, image.height), gold_coin_to_silver_token)

@@ -56,14 +56,18 @@ Priority player-facing:
 - tumble: `tumble_win_1..5`
 - misc: `sfx_mirror_break`, `sfx_xways_split`
 
-Resume:
+Superseded: audio no longer comes from Scenario. The whole set is generated
+through Layer AI and assembled locally:
+
 ```powershell
-$env:SCENARIO_CRED_TXT = 'C:\Users\Emex33\Documents\Stake Engine Front End Builder\scenario.txt'
-python tools/gen_audio_tombstone.py
+python tools/fetch_layer_stems.py
+python tools/build_tombstone_audio.py
 python tools/rebuild_audio_sprite.py
 ```
 
-Until then, those keys still point at **old Madam / White Room samples** inside `static/assets/audio/sounds.*`.
+The music beds are the exception: `bgm_main`, `bgm_freespin` and
+`bgm_celeb_1..6` are finished tracks living in `assets-raw/audio_gen`, not
+composed from stems. No key points at an old Madam / White Room sample.
 
 ## NOT DONE this pass
 - Transition spine debris art still clinical (asset regen out of scope without Scenario CU; Transition is Game-mounted)

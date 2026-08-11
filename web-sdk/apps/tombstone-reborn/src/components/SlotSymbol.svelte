@@ -26,6 +26,7 @@
 	import Symbol from './Symbol.svelte';
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, SPIN_OPTIONS_DEFAULT, SPIN_OPTIONS_FAST } from '../game/constants';
+	import { TR_INK_GOLD, trValueStyle } from '../game/typography';
 	import type { SymbolName, SymbolState } from '../game/types';
 
 	type Props = {
@@ -272,14 +273,12 @@
 					<Text
 						anchor={0.5}
 						text={`x${shown.multiplier}`}
-						style={{
-							fontFamily: 'Arial',
-							fontWeight: '900',
+						style={trValueStyle({
 							fontSize: SYMBOL_SIZE * 0.26,
-							fill: 0xffe9a8,
+							fill: TR_INK_GOLD,
 							stroke: { color: 0x1a1816, width: 4 },
 							letterSpacing: 1,
-						}}
+						})}
 					/>
 				</Container>
 			{/if}

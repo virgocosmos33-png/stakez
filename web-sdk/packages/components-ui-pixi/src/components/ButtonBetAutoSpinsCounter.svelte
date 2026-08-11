@@ -4,6 +4,7 @@
 	import { WHITE } from 'constants-shared/colors';
 
 	import { UI_BASE_SIZE } from '../constants';
+	import { HUD_THEME as T } from '../hudTheme';
 
 	const fontSizeMultiplier = $derived.by(() => {
 		if (stateBet.autoSpinsCounter === Infinity) return 3;
@@ -24,7 +25,7 @@
 		anchor={0.5}
 		text={stateBet.autoSpinsCounter === Infinity ? '∞' : stateBet.autoSpinsCounter}
 		style={{
-			fontFamily: 'Arial',
+			fontFamily: T.autoSpinsFont,
 			fill: WHITE,
 			fontWeight: 'bold',
 			fontSize: fontSizeMultiplier * UI_BASE_SIZE * 0.2,

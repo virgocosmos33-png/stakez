@@ -18,17 +18,21 @@
 	const props: Props = $props();
 	const pulse = new Tween(1);
 
-	// card symbols animate via scale pulses since all states are static sprites
+	// Card symbols animate via scale reactions since all states are static
+	// sprites. CRITICAL: scale NEVER exceeds 1.0 — a symbol growing past 1.0
+	// bulges out of its cell frame, which looks broken/unprofessional. So the
+	// win/land emphasis is a PRESS-IN (dip below 1 and recover), which reads as
+	// a punchy thump while always staying inside the cell frame.
 	const animate = async (state?: SymbolState) => {
 		if (state === 'win') {
-			await pulse.set(1.16, { duration: 180, easing: quadOut });
-			await pulse.set(0.94, { duration: 150, easing: quadOut });
-			await pulse.set(1.12, { duration: 150, easing: quadOut });
-			await pulse.set(1, { duration: 180, easing: backOut });
+			await pulse.set(0.84, { duration: 150, easing: backOut });
+			await pulse.set(1, { duration: 200, easing: quadOut });
+			await pulse.set(0.9, { duration: 130, easing: backOut });
+			await pulse.set(1, { duration: 200, easing: quadOut });
 			props.oncomplete?.();
 		} else if (state === 'land') {
-			pulse.set(1.1, { duration: 0 });
-			await pulse.set(1, { duration: 180, easing: backOut });
+			pulse.set(0.9, { duration: 0 });
+			await pulse.set(1, { duration: 190, easing: quadOut });
 			props.oncomplete?.();
 		} else {
 			pulse.set(1, { duration: 0 });

@@ -1,0 +1,49 @@
+console | debug | [vite] connecting...
+console | debug | [vite] connected.
+console | log | %c  %c  %c  %c  %c PixiJS %c v8.8.1 (webgl 2) http://www.pixijs.com/
+
+ | background: #E72264; padding:5px 0; | background: #6CA2EA; padding:5px 0; | background: #B5D33D; padding:5px 0; | background: #FED23F; padding:5px 0; | color: #FFFFFF; background: #E72264; padding:5px 0; | color: #E72264; background: #FFFFFF; padding:5px 0;
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H1_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H2_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H4_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H5_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Cache] already has key: | 1.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 2.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 3.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 4.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 5.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 6.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 7.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 8.png
+exception | Uncaught | ReferenceError: frameBottom is not defined
+
+	in Container.svelte
+	in Container.svelte
+	in MainContainer.svelte
+	in FrameMorphHud.svelte
+	in Container.svelte
+	in AssetsLoader.svelte
+	in InitialiseParent.svelte
+	in InitialiseApplication.svelte
+	in App.svelte
+	in Game.svelte
+	in StoryLocale.svelte
+	in StoryGameTemplate.svelte
+	in Story.svelte
+	in ModeBaseBook.stories.svelte
+	in StoryRenderer.svelte
+	in DecoratorHandler.svelte
+	in PreviewRender.svelte
+
+    at http://localhost:6009/src/components/FrameMorphHud.svelte?t=1786329792823:190:4
+    at update_reaction (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:1796:23)
+    at execute_derived (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:1067:15)
+    at update_derived (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:1084:15)
+    at Module.get (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:2133:7)
+    at http://localhost:6009/src/components/FrameMorphHud.svelte?t=1786329792823:262:32
+    at update_reaction (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:1796:23)
+    at execute_derived (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:1067:15)
+    at update_derived (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:1084:15)
+    at Module.get (http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b:2133:7) | http://localhost:6009/node_modules/.cache/storybook/c71d0d507fda2ee42893c08171c63610cb38d8c878b611a98dea30001f5a54ab/sb-vite/deps/chunk-YE3JCHLD.js?v=2287dc8b | 1673 | 2
+READY {"msg":"ⓘ Click action to start","disabled":false,"canvas":[1280,800],"loadedHint":true}
+FINAL_MSG ⓘ Click action to start

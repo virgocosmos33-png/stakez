@@ -1,0 +1,359 @@
+{
+  "_readme": "Tombstone Reborn audio replacement set, generated via the Layer AI MCP server (execute_forge). Every cue here replaced Madam Mirror leftover content that rebuild_audio_sprite.py had been carrying forward by slicing the old sprite. Output lands in assets-raw/audio_gen/{cue}.mp3, then `python tools/rebuild_audio_sprite.py` bakes the sprite.",
+  "model": {
+    "provider": "Layer AI",
+    "model_name": "ElevenLabs Sound Effects",
+    "model_id": "d0e8b406-f4ca-4133-8a07-31ed7f399fcc",
+    "workspace_id": "f0851046-512c-4983-8219-f34e22d47340",
+    "price_creative_units_per_second": 0.3,
+    "batch_size": 1
+  },
+  "family_design": {
+    "palette": "dry weathered pine and oak, cold iron, brass shell casings, revolver mechanism, spur rowels, hemp rope, coffin lid, shovel in dry dirt, grit and dust, distant cracked church bell, lone harmonica, tremolo baritone guitar, deep timpani thump, prairie thunder",
+    "space": "dry and close-miked with a short dusty canyon slap, never a long cathedral tail",
+    "forbidden": "glass, mirror shatter, crystal, wind chimes, shimmer, ethereal choir, clinical or medical tones, sci-fi synth, laser, cartoon boing, anime sparkle, digital beep",
+    "note": "Every prompt below carries the shared suffix so the whole set reads as one library rather than unrelated one-shots."
+  },
+  "shared_suffix": "Dry close-miked recording with a short dusty canyon slap, gritty analogue tape character, dark western graveyard atmosphere. No glass, no mirror shatter, no crystal, no wind chimes, no shimmer, no ethereal choir, no synth, no digital beeps, no cartoon sounds.",
+  "cues": {
+    "sfx_tombstone_toll": {
+      "duration": 2.5,
+      "loop": false,
+      "replaces": "sfx_madams_eye",
+      "role": "cinematic boom when the top special symbol drops onto the board",
+      "prompt": "A single enormous graveyard impact: a cracked cast-iron church bell struck once and hard, layered with a deep timpani thump and a heavy granite tombstone slamming into dry dirt, dust and grit spraying outward, low sub-bass weight that decays fast."
+    },
+    "sfx_thunder": {
+      "duration": 4,
+      "loop": false,
+      "role": "mega-win lightning thunder clap",
+      "prompt": "A close prairie lightning strike over a graveyard: sharp electric crack, then an enormous rolling thunder body that tumbles away across open desert, dry gusting wind underneath, heavy and cinematic."
+    },
+    "sfx_wild_explode": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "wild symbol detonates",
+      "prompt": "A single revolver fired at close range: hard gunpowder crack, brass shell casing ejecting and tinkling onto wood planks, a puff of gunsmoke and dry grit blowing outward, tight and punchy."
+    },
+    "sfx_multiplier_landing": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "multiplier / kill-count token lands on the board (played very often)",
+      "prompt": "A heavy brass kill-count token stamped hard down onto a weathered oak plank: solid low wooden thud with a brief brass ring and a small puff of dust, dry and confident, no ringing tail."
+    },
+    "sfx_multiplier_combine_a": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "two multipliers merge",
+      "prompt": "Two heavy brass shell casings slapping together and locking, a short metallic clack with a dull iron undertone and dry grit, no bright ring."
+    },
+    "sfx_multiplier_combine_b": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "heavier multiplier merge variant",
+      "prompt": "Two large iron cattle brands slammed together and seating hard, deep metallic clank with a wooden knock underneath and a burst of dust, heavier and darker than a light clack."
+    },
+    "sfx_multiplier_explosion_a": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "small multiplier burst",
+      "prompt": "A small black-powder charge popping: dry percussive gunpowder burst with fine gravel spraying and a quick smoke hiss, small and contained."
+    },
+    "sfx_multiplier_explosion_b": {
+      "duration": 2,
+      "loop": false,
+      "role": "medium multiplier burst",
+      "prompt": "A stick of mining dynamite detonating in a dry canyon: deep powder blast, splintering wood and rock debris raining down, dusty rolling tail across the canyon walls."
+    },
+    "sfx_multiplier_explosion_c": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "sharp multiplier burst",
+      "prompt": "A sharp gunpowder crack with hot brass fragments scattering across dry dirt and a fast smoke hiss, aggressive and tight."
+    },
+    "sfx_multiplier_reset": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "multiplier counter resets",
+      "prompt": "An old brass mechanical tally counter reset: crisp ratchet click-clack of gears unwinding and a small iron lever snapping back to rest, dry and mechanical."
+    },
+    "sfx_multiplier_up": {
+      "duration": 2,
+      "loop": false,
+      "role": "multiplier value climbs",
+      "prompt": "A brass ratchet climbing upward in fast confident steps, rising in pitch, with a dry dust whoosh riding underneath and a firm iron latch at the top."
+    },
+    "sfx_multiplier_update": {
+      "duration": 2,
+      "loop": false,
+      "role": "multiplier counter ticks to a new value",
+      "prompt": "An old brass counter wheel spinning rapidly through digits with dry mechanical ticks, slowing and locking with a solid wooden knock."
+    },
+    "sfx_multiplier_win": {
+      "duration": 4,
+      "loop": false,
+      "role": "big multiplier payout sting",
+      "prompt": "A triumphant dark western sting: lone dusty baritone guitar tremolo chord with a low brass swell, a distant revolver shot echoing across the canyon, and a struck iron bell accent, gritty and cinematic, no vocals."
+    },
+    "sfx_anticipation": {
+      "duration": 8,
+      "loop": true,
+      "role": "looping tension bed while the last reel is still spinning",
+      "prompt": "A seamless looping tension bed for a western standoff: low dusty wind moaning across an open graveyard, a distant thunder rumble, slow creaking rope and dry wood under strain, a barely-there tremolo guitar drone rising in unease. No melody resolution, no impacts, seamless loop."
+    },
+    "sfx_anticipation_start": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "one-shot that marks the moment anticipation begins",
+      "prompt": "A sudden inhale of dry desert wind swelling up fast with a low iron drone and a single spur rowel tick, the exact moment a standoff begins, rising and unresolved."
+    },
+    "sfx_cell_seal_expand": {
+      "duration": 2,
+      "loop": false,
+      "role": "jail cell seal expands across the reel",
+      "prompt": "Heavy cold iron jail bars slamming outward into place: deep metallic clang, iron sliding hard in a stone slot, dust and grit falling, a low weighty boom underneath."
+    },
+    "sfx_cell_seal_harden": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "cell seal hardens / multiplier bump",
+      "prompt": "A heavy iron padlock and jail bolt locking shut with a single hard clank and a short chain rattle, cold and final, dry with no ring."
+    },
+    "sfx_cell_seal_h3_expand": {
+      "duration": 6,
+      "loop": false,
+      "role": "long cinematic bed under the full-reel cell seal expansion video",
+      "prompt": "A slow cinematic iron cage sealing a grave: groaning metal under stress rising in tension, deep low drone swelling, chains dragging and tightening, dust and gravel pouring, ending on one enormous iron slam with a dark decaying tail."
+    },
+    "sfx_winlevel_small": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "smallest win acknowledgement",
+      "prompt": "A small warm western win accent: two brass shell casings dropping onto a wooden bar top with a soft harmonica breath behind them, modest and pleasing, very short."
+    },
+    "sfx_winlevel_nice": {
+      "duration": 2,
+      "loop": false,
+      "role": "tier 1 celebration sting",
+      "prompt": "A short bright western win flourish: lone harmonica lick with a dusty guitar strum and brass coins spilling onto wood, warm and satisfying, no vocals."
+    },
+    "sfx_winlevel_standard": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "standard win sting",
+      "prompt": "A confident short western win sting: firm baritone guitar chord accent with brass coins landing on a wooden table, dry and clean, no vocals."
+    },
+    "sfx_winlevel_substantial": {
+      "duration": 3,
+      "loop": false,
+      "role": "substantial win sting",
+      "prompt": "A bigger dark western win sting: swelling low brass with a dusty guitar tremolo, a distant revolver shot echo and brass coins cascading onto wood, gritty and triumphant, no vocals."
+    },
+    "sfx_winlevel_end": {
+      "duration": 2,
+      "loop": false,
+      "role": "celebration resolves back to base game",
+      "prompt": "A western resolve: a final soft harmonica exhale over a low guitar note settling, dust drifting down and a last brass coin ticking to rest, calm closure, no vocals."
+    },
+    "sfx_youwon_panel": {
+      "duration": 3,
+      "loop": false,
+      "role": "the WIN panel slams onto screen",
+      "prompt": "A heavy weathered wooden saloon sign dropping into place with a hard wood slam and iron chain rattle, followed by a short dusty brass accent and grit falling, impactful and dry."
+    },
+    "sfx_bigwin_coinloop": {
+      "duration": 8,
+      "loop": true,
+      "role": "looping coin cascade under big win count-up",
+      "prompt": "A seamless continuous cascade of brass and silver coins pouring onto a weathered wooden table and into a tin pan, dense and steady with dry wooden resonance, no melody, seamless loop with no gaps."
+    },
+    "sfx_fs_respins": {
+      "duration": 4,
+      "loop": false,
+      "role": "revenge / respins feature trigger",
+      "prompt": "A revolver being loaded for revenge: cylinder swinging open, six brass cartridges pressed into chambers, cylinder snapped shut and hammer cocked, over a rising dusty wind whoosh and a low tense drone, ending resolute."
+    },
+    "sfx_superfreespin": {
+      "duration": 6,
+      "loop": false,
+      "role": "big free-spin feature entry",
+      "prompt": "An epic dark western feature entry: a cracked church bell tolling over rolling thunder, a volley of distant revolver shots, low brass swelling and dust storm wind rising to a final heavy iron impact, cinematic and menacing, no vocals."
+    },
+    "jng_intro_fs": {
+      "duration": 2,
+      "loop": false,
+      "role": "short jingle stepping into free spins",
+      "prompt": "A short western transition jingle: spur rowels jingling once, a quick dusty harmonica rise and a firm wooden knock to land it, brief and characterful, no vocals."
+    },
+    "tumble_win_1": {
+      "duration": 1,
+      "loop": false,
+      "role": "cascade win step 1 (lowest)",
+      "prompt": "A very short dry cascade tick: one brass shell casing dropping onto a weathered wood plank with a soft low thud, lowest pitch of a rising set."
+    },
+    "tumble_win_2": {
+      "duration": 1,
+      "loop": false,
+      "role": "cascade win step 2",
+      "prompt": "A very short dry cascade tick: two brass shell casings dropping onto weathered wood, slightly brighter and higher than the previous step."
+    },
+    "tumble_win_3": {
+      "duration": 1,
+      "loop": false,
+      "role": "cascade win step 3",
+      "prompt": "A short dry cascade tick: a small handful of brass casings landing on weathered wood, brighter and higher again, more energy."
+    },
+    "tumble_win_4": {
+      "duration": 1,
+      "loop": false,
+      "role": "cascade win step 4",
+      "prompt": "A short punchy cascade tick: brass casings and coins striking wood together, higher and hotter, clear rising urgency."
+    },
+    "tumble_win_5": {
+      "duration": 1,
+      "loop": false,
+      "role": "cascade win step 5 (highest)",
+      "prompt": "A short bright cascade pop: a bright brass accent hit with coins striking wood, the highest and most energetic step of a rising set."
+    },
+    "sfx_celeb_whoosh": {
+      "duration": 2,
+      "loop": false,
+      "role": "celebration transition whoosh",
+      "prompt": "A dusty cinematic transition whoosh: dry desert dust and grit sweeping fast past the listener with a low airy body, no tonal pitch, no shimmer."
+    },
+    "sfx_celeb_whoosh_hi": {
+      "duration": 2,
+      "loop": false,
+      "role": "high celebration whoosh layer",
+      "prompt": "A high thin airy dust whoosh sweeping quickly past, sandy and gritty with a fast fade, no tonal pitch."
+    },
+    "sfx_celeb_whoosh_lo": {
+      "duration": 3,
+      "loop": false,
+      "role": "low celebration whoosh layer",
+      "prompt": "A deep heavy dust storm whoosh rolling low and slow past the listener, sub-heavy and gritty, no tonal pitch."
+    },
+    "sfx_celeb_swell": {
+      "duration": 4,
+      "loop": false,
+      "role": "celebration energy swell",
+      "prompt": "A dark western orchestral swell building energy: low brass and cellos rising together with a dusty guitar tremolo and a distant timpani roll, no resolution, no vocals."
+    },
+    "sfx_celeb_wobble": {
+      "duration": 4,
+      "loop": false,
+      "role": "tension wobble before a big hit",
+      "prompt": "Tense wavering low brass and a bowed metal drone pulsing unsteadily, dusty and menacing, building unease without resolving, no vocals."
+    },
+    "sfx_celeb_buildup": {
+      "duration": 4,
+      "loop": false,
+      "role": "buildup into the biggest win moment",
+      "prompt": "An escalating dark western buildup: accelerating timpani and tom drums, rising low brass, distant thunder and a dust storm swelling toward an imminent impact, no vocals."
+    },
+    "sfx_celeb_hit": {
+      "duration": 2,
+      "loop": false,
+      "role": "hard celebration impact",
+      "prompt": "A hard cinematic western impact: a close revolver shot fused with a heavy low brass slam and a granite tombstone hit, deep punch with a dusty decay."
+    },
+    "sfx_celeb_maxslam": {
+      "duration": 7,
+      "loop": false,
+      "role": "maximum win finale",
+      "prompt": "An epic dark western finale: rolling thunder and a cracked church bell tolling, a full volley of revolver fire, enormous low brass and timpani slamming together, then a long dusty decaying tail over moaning prairie wind, cinematic and overwhelming, no vocals."
+    },
+    "bgm_winlevel_big": {
+      "duration": 8,
+      "loop": true,
+      "role": "big win bed loop",
+      "prompt": "Instrumental dark western big-win loop bed: steady low tom pulse, muted tremolo baritone guitar riff and sparse brass stabs, dusty and driving, seamless loop, no vocals, no melody resolution."
+    },
+    "bgm_winlevel_superwin": {
+      "duration": 8,
+      "loop": true,
+      "role": "super win bed loop",
+      "prompt": "Instrumental dark western super-win loop bed: bigger tom and timpani groove with brass swells and a dusty electric guitar tremolo riding on top, seamless loop, no vocals."
+    },
+    "bgm_winlevel_mega": {
+      "duration": 8,
+      "loop": true,
+      "role": "mega win bed loop",
+      "prompt": "Instrumental dark western mega-win loop bed: driving drums, heavy low brass ostinato and a wailing dusty guitar lead, urgent and powerful, seamless loop, no vocals."
+    },
+    "bgm_winlevel_epic": {
+      "duration": 8,
+      "loop": true,
+      "role": "epic win bed loop",
+      "prompt": "Instrumental epic western loop bed: cinematic dusty orchestra with full brass, pounding timpani and a tolling iron bell accent over tremolo strings, grand and dark, seamless loop, no vocals."
+    },
+    "bgm_winlevel_max": {
+      "duration": 8,
+      "loop": true,
+      "role": "max win bed loop",
+      "prompt": "Instrumental thunderous western max-win loop bed: climactic brass and timpani at full force with a cracked bell tolling and dusty guitar screaming over the top, overwhelming, seamless loop, no vocals."
+    },
+    "sfx_bonus_entry_small": {
+      "duration": 3,
+      "loop": false,
+      "role": "DEAD MAN'S HAND bonus-entry sting (80x buy)",
+      "prompt": "A three second western sound effect, continuous with no silence at the start. Dead man's hand bonus entry sting: a deck of playing cards riffled fast then slapped down hard on a bare plank table, a tin sheriff star ringing bright over it, and a deep low bass hit underneath. Dry dusty saloon, no music, no vocals."
+    },
+    "sfx_bonus_entry_super": {
+      "duration": 3,
+      "loop": false,
+      "role": "OPEN GRAVE bonus-entry sting (1000x buy)",
+      "prompt": "A three second western sound effect, continuous with no silence at the start. Open grave bonus entry sting: a heavy wooden coffin lid splintering and cracking apart, packed earth tearing and soil pouring, with a rising brass swell building underneath it. Dark, heavy, dusty graveyard, no vocals."
+    },
+    "sfx_bonus_handoff": {
+      "duration": 1.5,
+      "loop": false,
+      "role": "accent as the bonus-entry banner clears into the bought spin",
+      "composed_from_stems": true,
+      "note": "NOT drawn from a prompt. Eight draws of 'hammer cocking then a dust-settle tail' all came back as a bare click over dead air, so this cue is layered from the hammer_cock, grit_fall_light and dust_whoosh_lo stems in build_tombstone_audio.py."
+    },
+    "bgm_celeb_1": {
+      "duration": 8,
+      "loop": true,
+      "role": "staged celebration bed 1 of 6, sparsest",
+      "prompt": "Instrumental dark western celebration bed, stage one of an escalating set, sparsest: lone tremolo baritone guitar riff with a slow low tom heartbeat and dusty wind, tense and restrained, seamless loop, no vocals."
+    },
+    "bgm_celeb_2": {
+      "duration": 8,
+      "loop": true,
+      "role": "staged celebration bed 2 of 6",
+      "prompt": "Instrumental dark western celebration bed, stage two of an escalating set: the same tremolo guitar riff now joined by a light shuffling drum kit and a low brass note, slightly more energy, seamless loop, no vocals."
+    },
+    "bgm_celeb_3": {
+      "duration": 8,
+      "loop": true,
+      "role": "staged celebration bed 3 of 6",
+      "prompt": "Instrumental dark western celebration bed, stage three of an escalating set: full drum groove with rising low brass and the guitar riff harmonised, clearly building, seamless loop, no vocals."
+    },
+    "bgm_celeb_4": {
+      "duration": 8,
+      "loop": true,
+      "role": "staged celebration bed 4 of 6",
+      "prompt": "Instrumental dark western celebration bed, stage four of an escalating set: bigger drums and timpani, thick brass section and a wailing guitar lead, powerful, seamless loop, no vocals."
+    },
+    "bgm_celeb_5": {
+      "duration": 8,
+      "loop": true,
+      "role": "staged celebration bed 5 of 6",
+      "prompt": "Instrumental dark western celebration bed, stage five of an escalating set: intense full ensemble, pounding timpani, screaming guitar and heavy brass with a tolling iron bell, near climax, seamless loop, no vocals."
+    },
+    "bgm_celeb_6": {
+      "duration": 8,
+      "loop": true,
+      "role": "staged celebration bed 6 of 6, climax",
+      "prompt": "Instrumental dark western celebration bed, final stage of an escalating set, full climax: maximum brass and timpani, thunder, cracked church bell tolling and a triumphant dusty guitar lead, epic finale energy, seamless loop, no vocals."
+    }
+  },
+  "retired_keys": {
+    "sfx_claw_split": "Madam Mirror era claw naming with no call site; its content was a duplicate of sfx_bullet_wood. Superseded by the sfx_bullet_wood / sfx_bullet_ricochet volley pair.",
+    "sfx_mirror_break": "Literal Madam Mirror naming, no call site. Superseded by the bullet-into-wood family.",
+    "sfx_xways_split": "No call site; the split feature plays sfx_bullet_wood plus an optional sfx_bullet_ricochet per volley.",
+    "sfx_cell_seal_h3_loop": "Documented in asset.manifest.json as unused in the front end (the last-3s visual loop is silent).",
+    "sfx_madams_eye": "Renamed to sfx_tombstone_toll; the Madam naming had to go and the content was regenerated."
+  }
+}

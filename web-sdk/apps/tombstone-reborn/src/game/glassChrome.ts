@@ -12,9 +12,10 @@ type PillOptions = {
 
 /**
  * THE WHITE ROOM observation-glass chrome for secondary UI still on glass
- * (WinCelebration MAX WIN gate). IntroCarousel + bonus-entry overlays
- * (BonusLevelBanner / FreeSpinIntro / FreeSpinOutro) use magenta
- * `uiCtaActivate` plates instead — same family as HTML paytable / buy-confirm.
+ * (WinCelebration MAX WIN gate). IntroCarousel uses magenta `uiCtaActivate`
+ * plates instead — same family as HTML paytable / buy-confirm. (The bonus-entry
+ * overlays that also used those plates are deleted; this game has no bonus
+ * levels.)
  * Frosted clinical plate in a steel/silver bezel — NOT Madam Mirror violet
  * scrying glass. HUD control-bar tokens are untouched (hud.colors).
  */

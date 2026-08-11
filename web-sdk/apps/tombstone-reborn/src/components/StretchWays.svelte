@@ -10,14 +10,16 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Text } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { fxDur } from '../game/fxTiming';
 	import { getContext } from '../game/context';
+	import { SYMBOL_CARD_W } from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+	import MultBadge from './MultBadge.svelte';
 
 	const context = getContext();
 
@@ -99,13 +101,9 @@
 		}),
 	);
 
-	const drawPlate = (g: import('pixi.js').Graphics) => {
-		g.clear();
-		g.roundRect(-34, -16, 68, 32, 9);
-		g.fill({ color: 0x1a1208, alpha: 0.92 });
-		g.roundRect(-34, -16, 68, 32, 9);
-		g.stroke({ color: 0xe0b45a, width: 2, alpha: 0.95 });
-	};
+	/** Matches the plaque the nudge rider carries, so the ladder and the payoff
+	 * badge are visibly the same object. */
+	const BADGE_W = SYMBOL_CARD_W * 0.8;
 </script>
 
 <MainContainer>
@@ -113,20 +111,13 @@
 		{#if show}
 			{#each drawn as cell (cell.key)}
 				{#if cell.shown > 0}
-					<Container x={cell.cx} y={cell.cy} scale={cell.scale * cell.tick}>
-						<Graphics draw={drawPlate} />
-						<Text
-							anchor={0.5}
-							text={`${cell.shown}x`}
-							style={{
-								fontFamily: 'Arial',
-								fontWeight: '900',
-								fontSize: 26,
-								fill: 0xf0d090,
-								stroke: { color: 0x000000, width: 4 },
-							}}
-						/>
-					</Container>
+					<MultBadge
+						label={`x${cell.shown}`}
+						x={cell.cx}
+						y={cell.cy}
+						width={BADGE_W}
+						scale={cell.scale * cell.tick}
+					/>
 				{/if}
 			{/each}
 		{/if}

@@ -50,8 +50,8 @@
 	} from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { fxNum, fxColors, fxStr } from '../game/fx.generated';
-	import { winFontFamily, winFontTint } from '../game/winFont';
-	import { drawObservationConduitHandshake } from '../game/clinicalFx';
+	import { trAmountFamily, trAmountTint } from '../game/typography';
+	import { drawGraveChainLink } from '../game/graveyardFx';
 
 	const context = getContext();
 
@@ -82,10 +82,10 @@
 	const COL_FLUOR = SEAL_COLORS[2] ?? 0xf4f1ec;
 	const COL_PLAQUE = SEAL_COLORS[3] ?? 0x2a2826;
 	const COL_BLOOD = SEAL_COLORS[4] ?? 0x6b2a28;
-	const COL_MULT = SEAL_COLORS[5] ?? winFontTint();
+	const COL_MULT = SEAL_COLORS[5] ?? trAmountTint();
 	const MODE = fxStr('cellSeal', 'mode', 'observationPane');
 	const FEATURE_LABEL = fxStr('cellSeal', 'label', 'Cell Seal');
-	const AMOUNT_FAMILY = winFontFamily();
+	const AMOUNT_FAMILY = trAmountFamily();
 	/** Observation Conduit Handshake — link VFX between 2+ seals. */
 	const CONNECTION_MODE = fxStr('cellSeal', 'connectionMode', 'observationConduitHandshake');
 	const CONDUIT_HOUSING_H = fxNum('cellSeal', 'conduitHousingH', 12);
@@ -130,8 +130,6 @@
 
 	const stopH3ExpandAudio = () => {
 		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_cell_seal_h3_expand' });
-		// Legacy loop cue — stop if anything still has it running; loop phase is silent.
-		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_cell_seal_h3_loop' });
 	};
 
 	const playExpandAudio = (activeSeals: SealView[]) => {
@@ -515,9 +513,9 @@
 	};
 
 	/**
-	 * Observation Conduit Handshake — cinematic link between sealed reels (2+).
-	 * Fluorescent housing + steel couplers + restraint buckles + CCTV scan packet.
-	 * Replaces arcade flower/gear + trailing dots.
+	 * Grave chain — the link between sealed reels (2+): a charred rail carrying
+	 * iron links, a lantern filament and brand plates at each end.
+	 * `connectionMode` is a game-builder config key and keeps its legacy value.
 	 */
 	const drawSealLinks = (g: import('pixi.js').Graphics) => {
 		g.clear();
@@ -532,7 +530,7 @@
 			const x1 = right.cx - right.fullW * 0.48;
 			const y0 = left.cy;
 			const y1 = right.cy;
-			drawObservationConduitHandshake(g, {
+			drawGraveChainLink(g, {
 				x0,
 				y0,
 				x1,

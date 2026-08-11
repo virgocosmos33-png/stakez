@@ -1,0 +1,2388 @@
+﻿<!DOCTYPE html>
+<html lang="en"><head>
+    <script type="module" src="/@vite/client"></script>
+
+    <meta charset="utf-8">
+    <title>mode-base-book--dead-spin</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <style>
+      @font-face {
+        font-family: 'Nunito Sans';
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url('./sb-common-assets/nunito-sans-regular.woff2') format('woff2');
+      }
+
+      @font-face {
+        font-family: 'Nunito Sans';
+        font-style: italic;
+        font-weight: 400;
+        font-display: swap;
+        src: url('./sb-common-assets/nunito-sans-italic.woff2') format('woff2');
+      }
+
+      @font-face {
+        font-family: 'Nunito Sans';
+        font-style: normal;
+        font-weight: 700;
+        font-display: swap;
+        src: url('./sb-common-assets/nunito-sans-bold.woff2') format('woff2');
+      }
+
+      @font-face {
+        font-family: 'Nunito Sans';
+        font-style: italic;
+        font-weight: 700;
+        font-display: swap;
+        src: url('./sb-common-assets/nunito-sans-bold-italic.woff2') format('woff2');
+      }
+    </style>
+
+    <script>
+      window.CONFIG_TYPE = 'DEVELOPMENT';
+      window.LOGLEVEL = 'info';
+      window.FRAMEWORK_OPTIONS = {};
+      window.CHANNEL_OPTIONS = {};
+      window.FEATURES = {"argTypeTargetsV7":true,"legacyDecoratorFileOrder":false,"disallowImplicitActionsInRenderV8":true,"viewport":true,"highlight":true,"controls":true,"interactions":true,"actions":true,"backgrounds":true,"outline":true,"measure":true};
+      window.STORIES = [{"titlePrefix":"","directory":"./src","files":"**/*.mdx","importPathMatcher":"^\\.[\\\\/](?:src(?:[\\\\/](?!\\.)(?:(?:(?!(?:^|[\\\\/])\\.).)*?)[\\\\/]|[\\\\/]|$)(?!\\.)(?=.)[^\\\\/]*?\\.mdx)$"},{"titlePrefix":"","directory":"./src","files":"**/*.stories.@(js|ts|svelte)","importPathMatcher":"^\\.[\\\\/](?:src(?:[\\\\/](?!\\.)(?:(?:(?!(?:^|[\\\\/])\\.).)*?)[\\\\/]|[\\\\/]|$)(?!\\.)(?=.)[^\\\\/]*?\\.stories\\.(js|ts|svelte))$"}];
+      window.DOCS_OPTIONS = {"defaultName":"Docs"};
+      window.TAGS_OPTIONS = {"dev-only":{"excludeFromDocsStories":true},"docs-only":{"excludeFromSidebar":true},"test-only":{"excludeFromSidebar":true,"excludeFromDocsStories":true}};
+
+      
+
+      // We do this so that "module && module.hot" etc. in Storybook source code
+      // doesn't fail (it will simply be disabled)
+      window.module = undefined;
+      window.global = window;
+    </script>
+    <base target="_parent">
+
+<style>
+  /* While we aren't showing the main block yet, but still preparing, we want everything the user has rendered, which may or may not be in #storybook-root, to be display none */
+  .sb-show-preparing-story:not(.sb-show-main) > :not(.sb-preparing-story) {
+    display: none;
+  }
+
+  .sb-show-preparing-docs:not(.sb-show-main) > :not(.sb-preparing-docs) {
+    display: none;
+  }
+
+  /* Hide our own blocks when we aren't supposed to be showing them */
+  :not(.sb-show-preparing-story) > .sb-preparing-story,
+  :not(.sb-show-preparing-docs) > .sb-preparing-docs,
+  :not(.sb-show-nopreview) > .sb-nopreview,
+  :not(.sb-show-errordisplay) > .sb-errordisplay {
+    display: none;
+  }
+
+  .sb-show-main.sb-main-centered {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    min-height: 100vh;
+  }
+
+  .sb-show-main.sb-main-centered #storybook-root {
+    box-sizing: border-box;
+    margin: auto;
+    padding: 1rem;
+    max-height: 100%;
+    /* Hack for centering correctly in IE11 */
+  }
+
+  /* Vertical centering fix for IE11 */
+  @media screen and (-ms-high-contrast: none), (-ms-high-contrast: active) {
+    .sb-show-main.sb-main-centered:after {
+      content: '';
+      min-height: inherit;
+      font-size: 0;
+    }
+  }
+
+  .sb-show-main.sb-main-fullscreen {
+    margin: 0;
+    padding: 0;
+    display: block;
+  }
+
+  .sb-show-main.sb-main-padded {
+    margin: 0;
+    padding: 1rem;
+    display: block;
+    box-sizing: border-box;
+  }
+
+  .sb-wrapper {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    box-sizing: border-box;
+
+    padding: 40px;
+    font-family:
+      'Nunito Sans',
+      -apple-system,
+      '.SFNSText-Regular',
+      'San Francisco',
+      BlinkMacSystemFont,
+      'Segoe UI',
+      'Helvetica Neue',
+      Helvetica,
+      Arial,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow: auto;
+  }
+
+  @media (max-width: 700px) {
+    .sb-wrapper {
+      padding: 20px;
+    }
+  }
+
+  @media (max-width: 500px) {
+    .sb-wrapper {
+      padding: 10px;
+    }
+  }
+
+  .sb-heading {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    margin: 10px 0;
+    padding-right: 25px;
+  }
+
+  .sb-nopreview {
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    box-sizing: border-box;
+  }
+
+  .sb-nopreview_main {
+    margin: auto;
+    padding: 30px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.03);
+  }
+
+  .sb-nopreview_heading {
+    text-align: center;
+  }
+
+  .sb-errordisplay {
+    background: #f6f9fc;
+    color: black;
+    z-index: 999999;
+    width: 100vw;
+    min-height: 100vh;
+    box-sizing: border-box;
+
+    & ol {
+      padding-left: 18px;
+      margin: 0;
+    }
+
+    & h1 {
+      font-family: Nunito Sans;
+      font-size: 22px;
+      font-weight: 400;
+      line-height: 30px;
+      font-weight: normal;
+      margin: 0;
+
+      &::before {
+        content: '';
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        background: #ff4400;
+        border-radius: 50%;
+        margin-right: 8px;
+      }
+    }
+
+    & p,
+    & ol {
+      font-family: Nunito Sans;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 19px;
+      margin: 0;
+    }
+
+    & li + li {
+      margin: 0;
+      padding: 0;
+      padding-top: 12px;
+    }
+
+    & a {
+      color: currentColor;
+    }
+  }
+
+  .sb-errordisplay_main {
+    margin: auto;
+    padding: 24px;
+    display: flex;
+    box-sizing: border-box;
+
+    flex-direction: column;
+    min-height: 100%;
+    width: 100%;
+    border-radius: 6px;
+    background: white;
+    border: 1px solid #ff0000;
+    box-shadow: 0 0 64px rgba(0, 0, 0, 0.1);
+    gap: 24px;
+  }
+
+  .sb-errordisplay_code {
+    padding: 10px;
+    flex: 1;
+    background: #242424;
+    color: #c6c6c6;
+    box-sizing: border-box;
+
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 19px;
+    border-radius: 4px;
+
+    font-family:
+      'Operator Mono', 'Fira Code Retina', 'Fira Code', 'FiraCode-Retina', 'Andale Mono',
+      'Lucida Console', Consolas, Monaco, monospace;
+    margin: 0;
+    overflow: auto;
+  }
+
+  .sb-errordisplay pre {
+    white-space: pre-wrap;
+    white-space: revert;
+  }
+
+  @-webkit-keyframes sb-rotate360 {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes sb-rotate360 {
+    from {
+      transform: rotate(0deg);
+    }
+
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @-webkit-keyframes sb-glow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  @keyframes sb-glow {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.4;
+    }
+  }
+
+  /* We display the preparing loaders *over* the rendering story */
+  .sb-preparing-story,
+  .sb-preparing-docs {
+    background-color: white;
+    /* Maximum possible z-index. It would be better to use stacking contexts to ensure it's always
+    on top, but this isn't possible as it would require making CSS changes that could affect user code */
+    z-index: 2147483647;
+  }
+
+  .sb-loader {
+    -webkit-animation: sb-rotate360 0.7s linear infinite;
+    animation: sb-rotate360 0.7s linear infinite;
+    border-color: rgba(97, 97, 97, 0.29);
+    border-radius: 50%;
+    border-style: solid;
+    border-top-color: #646464;
+    border-width: 2px;
+    display: inline-block;
+    height: 32px;
+    left: 50%;
+    margin-left: -16px;
+    margin-top: -16px;
+    mix-blend-mode: difference;
+    overflow: hidden;
+    position: absolute;
+    top: 50%;
+    transition: all 200ms ease-out;
+    vertical-align: top;
+    width: 32px;
+    z-index: 4;
+  }
+
+  .sb-previewBlock {
+    background: #fff;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 1px 3px 0;
+    margin: 25px auto 40px;
+    max-width: 600px;
+  }
+
+  .sb-previewBlock_header {
+    align-items: center;
+    box-shadow: rgba(0, 0, 0, 0.1) 0 -1px 0 0 inset;
+    display: flex;
+    gap: 14px;
+    height: 40px;
+    padding: 0 12px;
+  }
+
+  .sb-previewBlock_icon {
+    -webkit-animation: sb-glow 1.5s ease-in-out infinite;
+    animation: sb-glow 1.5s ease-in-out infinite;
+    background: #e6e6e6;
+    height: 14px;
+    width: 14px;
+  }
+
+  .sb-previewBlock_icon:last-child {
+    margin-left: auto;
+  }
+
+  .sb-previewBlock_body {
+    -webkit-animation: sb-glow 1.5s ease-in-out infinite;
+    animation: sb-glow 1.5s ease-in-out infinite;
+    height: 182px;
+    position: relative;
+  }
+
+  .sb-argstableBlock {
+    border-collapse: collapse;
+    border-spacing: 0;
+    font-size: 13px;
+    line-height: 20px;
+    margin: 25px auto 40px;
+    max-width: 600px;
+    text-align: left;
+    width: 100%;
+  }
+
+  .sb-argstableBlock th:first-of-type,
+  .sb-argstableBlock td:first-of-type {
+    padding-left: 20px;
+  }
+
+  .sb-argstableBlock th:nth-of-type(2),
+  .sb-argstableBlock td:nth-of-type(2) {
+    width: 35%;
+  }
+
+  .sb-argstableBlock th:nth-of-type(3),
+  .sb-argstableBlock td:nth-of-type(3) {
+    width: 15%;
+  }
+
+  .sb-argstableBlock th:last-of-type,
+  .sb-argstableBlock td:last-of-type {
+    width: 25%;
+    padding-right: 20px;
+  }
+
+  .sb-argstableBlock th span,
+  .sb-argstableBlock td span {
+    -webkit-animation: sb-glow 1.5s ease-in-out infinite;
+    animation: sb-glow 1.5s ease-in-out infinite;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 0;
+    box-shadow: none;
+    color: transparent;
+  }
+
+  .sb-argstableBlock th {
+    padding: 10px 15px;
+  }
+
+  .sb-argstableBlock-body {
+    border-radius: 4px;
+    box-shadow:
+      rgba(0, 0, 0, 0.1) 0 1px 3px 1px,
+      rgba(0, 0, 0, 0.065) 0 0 0 1px;
+  }
+
+  .sb-argstableBlock-body tr {
+    background: transparent;
+    overflow: hidden;
+  }
+
+  .sb-argstableBlock-body tr:not(:first-child) {
+    border-top: 1px solid #e6e6e6;
+  }
+
+  .sb-argstableBlock-body tr:first-child td:first-child {
+    border-top-left-radius: 4px;
+  }
+
+  .sb-argstableBlock-body tr:first-child td:last-child {
+    border-top-right-radius: 4px;
+  }
+
+  .sb-argstableBlock-body tr:last-child td:first-child {
+    border-bottom-left-radius: 4px;
+  }
+
+  .sb-argstableBlock-body tr:last-child td:last-child {
+    border-bottom-right-radius: 4px;
+  }
+
+  .sb-argstableBlock-body td {
+    background: #fff;
+    padding-bottom: 10px;
+    padding-top: 10px;
+    vertical-align: top;
+  }
+
+  .sb-argstableBlock-body td:not(:first-of-type) {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+
+  .sb-argstableBlock-body button {
+    -webkit-animation: sb-glow 1.5s ease-in-out infinite;
+    animation: sb-glow 1.5s ease-in-out infinite;
+    background-color: rgba(0, 0, 0, 0.1);
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    color: transparent;
+    display: inline;
+    font-size: 12px;
+    line-height: 1;
+    padding: 10px 16px;
+  }
+
+  .sb-argstableBlock-summary {
+    margin-top: 4px;
+  }
+
+  .sb-argstableBlock-code {
+    margin-right: 4px;
+    margin-bottom: 4px;
+    padding: 2px 5px;
+  }
+
+  .sb-sr-only,
+  .sb-hidden-until-focus:not(:focus) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: none;
+  }
+
+  .sb-hidden-until-focus {
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+
+  .sb-hidden-until-focus:focus {
+    opacity: 1;
+  }
+</style>
+
+<script>
+  /* globals window */
+  try {
+    if (window.top !== window) {
+      window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = window.top.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      window.__VUE_DEVTOOLS_GLOBAL_HOOK__ = window.top.__VUE_DEVTOOLS_GLOBAL_HOOK__;
+      window.top.__VUE_DEVTOOLS_CONTEXT__ = window.document;
+    }
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('unable to connect to top frame for connecting dev tools');
+  }
+</script>
+<!-- ambient flies (static/bugs.js) ΓÇö the app loads this from app.html, but
+     Storybook renders stories in its own iframe that never sees app.html, so
+     it gets the same script here. Served from staticDirs ('../static'). -->
+<script defer="" src="/bugs.js"></script>
+
+  <style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-storybook/src/components/StoryGameTemplate.svelte?svelte&amp;type=style&amp;lang.css">.wrap.s-P2t8FAR5U7ue {
+  position: absolute;
+  top: 0;
+  z-index: 999;
+  display: flex;
+  flex-direction: row;
+}
+
+.action.s-P2t8FAR5U7ue {
+  z-index: 2;
+  border: none;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  cursor: pointer;
+  background-color: green;
+  border-radius: 5px;
+  padding: 5px;
+  color: white;
+  font-size: 16px;
+}
+
+.action.s-P2t8FAR5U7ue:disabled {
+  background-color: lightgreen;
+  cursor: not-allowed;
+}
+
+.message.s-P2t8FAR5U7ue {
+  margin-left: -10px;
+  background-color: yellow;
+  padding: 5px;
+  padding-left: 15px;
+  color: black;
+  font-size: 16px;
+} .s-P2t8FAR5U7ue{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/LoaderImage.svelte?svelte&amp;type=style&amp;lang.css">.loader.s-vhhCr8BaK4_5 {
+  width: 100%;
+  max-width: var(--max-width-value);
+} .s-vhhCr8BaK4_5{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/LoaderBase.svelte?svelte&amp;type=style&amp;lang.css">.wrap.s-o7esMD8d4Xiv {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  z-index: 999;
+  background-color: black;
+  overflow: hidden;
+  background-color: var(--wrap-background);
+}
+
+.gif-loader-wrap.s-o7esMD8d4Xiv {
+  background-color: var(--loader-wrap-background);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} .s-o7esMD8d4Xiv{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/LoaderExample.svelte?svelte&amp;type=style&amp;lang.css">.add-your-loader.s-F5-KiN6LlRcY {
+  z-index: 999;
+  color: white;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, 10px);
+} .s-F5-KiN6LlRcY{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/Popup.svelte?svelte&amp;type=style&amp;lang.css">.pop-up-wrap.s-RUX45jkUgAeD {
+  font-family: "proxima-nova", sans-serif;
+  touch-action: manipulation;
+  color: white;
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+}
+.pop-up-wrap.disabled.s-RUX45jkUgAeD {
+  pointer-events: none;
+}
+
+.blur-layer.s-RUX45jkUgAeD {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+}
+
+.top-layer.s-RUX45jkUgAeD {
+  width: 100%;
+  height: 100%;
+  z-index: var(--zIndex);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: stretch;
+  position: relative;
+  overflow: hidden;
+}
+
+.click-to-close-layer.s-RUX45jkUgAeD {
+  z-index: var(--zIndex);
+  position: absolute;
+  inset: 0;
+}
+
+/* sits above the click-to-close layer; children re-enable pointer events */
+.content-layer.s-RUX45jkUgAeD {
+  position: relative;
+  z-index: var(--zIndex);
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+.content-layer.s-RUX45jkUgAeD > * {
+  pointer-events: auto;
+}
+
+.close-button-wrap.s-RUX45jkUgAeD {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: var(--zIndex);
+}
+
+.close-button.s-RUX45jkUgAeD {
+  cursor: pointer;
+  color: white;
+  font-size: 3rem;
+  font-weight: 900;
+  background-color: transparent;
+  border-color: transparent;
+  line-height: 0px; /* to remove the button style influence */
+  width: 3rem;
+  height: 3rem;
+} .s-RUX45jkUgAeD{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/Button.svelte?svelte&amp;type=style&amp;lang.css">.button.s-nvvb9vp3xUgx {
+  width: 100%;
+  position: relative;
+  font-family: "proxima-nova", sans-serif;
+  cursor: pointer;
+  display: inline-flex;
+  justify-content: center;
+  background-color: transparent;
+  border-color: transparent;
+  padding: 0;
+}
+
+.button.debug.s-nvvb9vp3xUgx {
+  border-color: white;
+  border-width: 2px;
+}
+
+.button.s-nvvb9vp3xUgx:not(.disabled) {
+  transition: filter 0.12s ease, transform 0.08s ease;
+}
+
+.button.s-nvvb9vp3xUgx:not(.disabled):hover {
+  filter: brightness(1.12);
+}
+
+.button.s-nvvb9vp3xUgx:not(.disabled):active {
+  transform: translateY(1px);
+}
+
+.button.disabled.s-nvvb9vp3xUgx {
+  cursor: not-allowed;
+  opacity: 0.5;
+} .s-nvvb9vp3xUgx{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/OptionsGrid.svelte?svelte&amp;type=style&amp;lang.css">.wrap.s-xTUKnaDo1RlS {
+  min-width: 20rem;
+}
+
+@media (orientation: portrait) and (min-width: 320px) and (max-width: 370px) {
+  .wrap.s-xTUKnaDo1RlS {
+    min-width: 17rem;
+  }
+}
+@media (orientation: landscape) and (min-height: 255px) and (max-height: 480px) {
+  .wrap.s-xTUKnaDo1RlS {
+    min-width: 23rem;
+  }
+}
+.content-wrap.s-xTUKnaDo1RlS {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.grid.s-xTUKnaDo1RlS {
+  display: grid;
+  gap: 0.75rem;
+  place-content: center;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-height: 480px) {
+  .grid.s-xTUKnaDo1RlS {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 500px) {
+  .miniSize.s-xTUKnaDo1RlS {
+    grid-template-columns: repeat(auto-fit, minmax(20px, 1fr));
+  }
+}
+@media (max-height: 500px) {
+  .miniSize.s-xTUKnaDo1RlS {
+    grid-template-columns: repeat(auto-fit, minmax(20px, 1fr));
+  }
+} .s-xTUKnaDo1RlS{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-shared/src/components/DropdownToggle.svelte?svelte&amp;type=style&amp;lang.css">@charset "UTF-8";
+.toggle.s-93AwPi8w7VrQ {
+  position: relative;
+  display: inline-block;
+  color: white;
+  font-weight: normal;
+  cursor: pointer;
+}
+.toggle.disabled.s-93AwPi8w7VrQ {
+  opacity: 0.5;
+}
+
+.toggle.s-93AwPi8w7VrQ input:where(.s-93AwPi8w7VrQ) {
+  width: 0;
+  height: 0;
+  opacity: 0;
+  position: absolute;
+}
+
+.content.s-93AwPi8w7VrQ {
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.content.s-93AwPi8w7VrQ:after {
+  content: "Γû╝";
+  vertical-align: middle;
+  color: white;
+  margin-left: 0.5rem;
+}
+
+.content.toggled.s-93AwPi8w7VrQ:after {
+  content: "Γû▓";
+  vertical-align: top;
+} .s-93AwPi8w7VrQ{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BaseContent.svelte?svelte&amp;type=style&amp;lang.css">.ui-popup-standard-content-wrap.s-I5AWJIPSgWZq {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--zIndex);
+  max-width: var(--maxWidth);
+  gap: 1rem;
+  padding: 1.5rem 1.6rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #131a22, #0b0f14);
+  border: 1px solid var(--mono-hairline, #2a3542);
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.ui-popup-standard-content-wrap.s-I5AWJIPSgWZq::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  pointer-events: none;
+} .s-I5AWJIPSgWZq{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalError.svelte?svelte&amp;type=style&amp;lang.css">.error-text.s-JPcwIsWgDx2K {
+  max-height: 100px;
+  max-width: 480px;
+  border-radius: 8px;
+  border: 1px solid red;
+  white-space: normal;
+  padding: 1rem;
+} .s-JPcwIsWgDx2K{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BaseIcon.svelte?svelte&amp;type=style&amp;lang.css">.skin.s-khqhBPDRu0yT {
+  position: relative;
+  width: var(--w);
+  height: var(--h);
+  border-radius: var(--mono-radius, 10px);
+  background: var(--bg, var(--mono-surface-2, #1c2732));
+  border: var(--border, 1px solid var(--mono-edge, #33414f));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.skin.selected.s-khqhBPDRu0yT {
+  background: var(--mono-fill, #ffffff);
+  border-color: var(--mono-fill, #ffffff);
+  box-shadow: none;
+} .s-khqhBPDRu0yT{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BaseTitle.svelte?svelte&amp;type=style&amp;lang.css">.ui-modal-title-wrap.s-YMeFC7KuPrlj {
+  text-align: center;
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 1.4rem;
+  color: var(--mono-fg, #ffffff);
+} .s-YMeFC7KuPrlj{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BaseButtonWrap.svelte?svelte&amp;type=style&amp;lang.css">.ui-modal-button-wrap.s-EA7M7v8pvn9R {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.full-width.s-EA7M7v8pvn9R {
+  width: 100%;
+}
+
+.max-width.s-EA7M7v8pvn9R {
+  width: 100%;
+  max-width: 250px;
+} .s-EA7M7v8pvn9R{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BaseButtonContent.svelte?svelte&amp;type=style&amp;lang.css">.base-button-content.s-1aN8c4SV32eo {
+  position: absolute;
+  color: white;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+} .s-1aN8c4SV32eo{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BetMenuAmountToggle.svelte?svelte&amp;type=style&amp;lang.css">.toggle-wrap.s-yhfiJVgC8wVt {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.amount.s-yhfiJVgC8wVt {
+  min-width: 6rem;
+  text-align: center;
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.3px;
+  color: var(--mono-fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+
+.glyph.s-yhfiJVgC8wVt {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-size: 1.6rem;
+  font-weight: 400;
+  line-height: 1;
+  color: var(--mono-fg, #ffffff);
+} .s-yhfiJVgC8wVt{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BetMenuAmountGrid.svelte?svelte&amp;type=style&amp;lang.css">.grid-scroll.s-ldDJvFukKEGQ {
+  width: 100%;
+  max-height: 42vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0.35rem 0.6rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mono-edge, #33414f) rgba(255, 255, 255, 0.06);
+}
+.grid-scroll.s-ldDJvFukKEGQ::-webkit-scrollbar {
+  width: 8px;
+}
+.grid-scroll.s-ldDJvFukKEGQ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+}
+.grid-scroll.s-ldDJvFukKEGQ::-webkit-scrollbar-thumb {
+  background: var(--mono-edge, #33414f);
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.4);
+}
+.grid-scroll.s-ldDJvFukKEGQ::-webkit-scrollbar-thumb:hover {
+  background: var(--mono-edge-hover, #3d4f63);
+}
+
+.opt-label.s-ldDJvFukKEGQ {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--mono-fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+.opt-label.selected.s-ldDJvFukKEGQ {
+  color: var(--mono-on-fill, #0a0e14);
+} .s-ldDJvFukKEGQ{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalBetMenu.svelte?svelte&amp;type=style&amp;lang.css">.bet-menu.s-IbIyBWs26aIb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  width: 100%;
+}
+
+.stepper-plate.s-IbIyBWs26aIb {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border-radius: 12px;
+  background: var(--mono-bg, #10161d);
+  border: 1px solid var(--mono-hairline, #2a3542);
+}
+
+.section-label.s-IbIyBWs26aIb {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--mono-fg-dim, #8b96a3);
+}
+
+.confirm-label.s-IbIyBWs26aIb {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+  color: var(--mono-fg, #ffffff);
+} .s-IbIyBWs26aIb{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BonusCard.svelte?svelte&amp;type=style&amp;lang.css">.bonus-card-wrap.s-r9aY08gMwNg8 {
+  box-sizing: border-box;
+  padding: 0.5rem;
+  flex-direction: column;
+  display: flex;
+  justify-content: space-between;
+  border-radius: var(--mono-radius-sm, 8px);
+  background: var(--mono-bg, #10161d);
+  border: 1px solid var(--mono-hairline, #2a3542);
+  text-align: left;
+  flex: 0 0 auto;
+  width: 168px;
+  min-width: 140px;
+  max-width: 200px;
+  gap: 0.5rem;
+  transition: opacity 0.18s ease, filter 0.18s ease;
+}
+
+.bonus-card-wrap.greyed.s-r9aY08gMwNg8 {
+  filter: grayscale(1);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.info.s-r9aY08gMwNg8 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
+} .s-r9aY08gMwNg8{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BonusCards.svelte?svelte&amp;type=style&amp;lang.css">.card-art.s-TUa1pSKh3Psj {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 6px;
+}
+
+.title.s-TUa1pSKh3Psj {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1rem;
+  text-align: center;
+  color: var(--mono-fg, #ffffff);
+}
+
+.description.s-TUa1pSKh3Psj {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-size: 0.75rem;
+  text-align: center;
+  min-height: 0;
+  white-space: pre-line;
+  display: inline-flex;
+  align-items: center;
+  color: var(--mono-fg-dim, #8b96a3);
+}
+
+.description.s-TUa1pSKh3Psj:empty {
+  display: none;
+}
+
+.price.s-TUa1pSKh3Psj {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1rem;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--mono-fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+}
+
+.btn-label.s-TUa1pSKh3Psj {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mono-fg, #ffffff);
+} .s-TUa1pSKh3Psj{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BaseScrollable.svelte?svelte&amp;type=style&amp;lang.css">.content.s-brYgwO1_5snJ {
+  position: relative;
+  text-align: center;
+  display: flex;
+  gap: 1rem;
+}
+.content.column.s-brYgwO1_5snJ {
+  flex-direction: column;
+  align-items: center;
+  max-height: 100%;
+}
+.content.row.s-brYgwO1_5snJ {
+  flex-direction: row;
+  justify-content: center;
+  max-width: 100%;
+} .s-brYgwO1_5snJ{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BonusContentWrapLarge.svelte?svelte&amp;type=style&amp;lang.css">.bonuses-strip.s-focE3S01kVxk {
+  max-width: min(94vw, 1500px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.75rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.bonuses-row.s-focE3S01kVxk {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  gap: 1rem;
+  width: max-content;
+  margin: 0 auto;
+} .s-focE3S01kVxk{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BonusContentWrapPortrait.svelte?svelte&amp;type=style&amp;lang.css">.sheet.s-F13UtBhwCun8 {
+  box-sizing: border-box;
+  width: min(100vw - 1rem, 440px);
+  max-height: min(92dvh, 920px);
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.1rem 0.8rem 1rem;
+  margin: 0.5rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #131a22, #0b0f14);
+  border: 1px solid var(--mono-hairline, #2a3542);
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.bet-row.s-F13UtBhwCun8 {
+  flex: 0 0 auto;
+  display: flex;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  border-radius: 12px;
+  background: var(--mono-bg, #10161d);
+  border: 1px solid var(--mono-hairline, #2a3542);
+}
+
+.cards-scroll.s-F13UtBhwCun8 {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: 0.15rem 0.1rem 0.35rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mono-edge, #33414f) rgba(255, 255, 255, 0.06);
+}
+.cards-scroll.s-F13UtBhwCun8::-webkit-scrollbar {
+  width: 6px;
+}
+.cards-scroll.s-F13UtBhwCun8::-webkit-scrollbar-thumb {
+  background: var(--mono-edge, #33414f);
+  border-radius: 999px;
+}
+
+.cards-grid.s-F13UtBhwCun8 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  align-content: start;
+}
+.cards-grid.s-F13UtBhwCun8 .bonus-card-wrap {
+  min-width: 0;
+  max-width: none;
+  width: 100%;
+  height: 100%;
+  padding: 0.4rem;
+  gap: 0.4rem;
+}
+.cards-grid.s-F13UtBhwCun8 .card-art {
+  max-height: 7.5rem;
+  object-fit: contain;
+}
+.cards-grid.s-F13UtBhwCun8 .description {
+  min-height: 0;
+  font-size: 0.68rem;
+  line-height: 1.25;
+}
+.cards-grid.s-F13UtBhwCun8 .price {
+  font-size: 0.9rem;
+}
+.cards-grid.s-F13UtBhwCun8 .title {
+  font-size: 0.85rem;
+  line-height: 1.1;
+}
+
+@media (max-width: 340px) {
+  .cards-grid.s-F13UtBhwCun8 {
+    grid-template-columns: 1fr;
+  }
+} .s-F13UtBhwCun8{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/BonusContentWrapLandscape.svelte?svelte&amp;type=style&amp;lang.css">.sheet.s-tANKfM-OT9Fz {
+  box-sizing: border-box;
+  width: min(96vw, 1100px);
+  max-height: min(88dvh, 520px);
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem;
+  margin: 0.4rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #131a22, #0b0f14);
+  border: 1px solid var(--mono-hairline, #2a3542);
+  box-shadow: 0 12px 44px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.bet-col.s-tANKfM-OT9Fz {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.55rem;
+  border-radius: 12px;
+  background: var(--mono-bg, #10161d);
+  border: 1px solid var(--mono-hairline, #2a3542);
+}
+
+.cards-scroll.s-tANKfM-OT9Fz {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  padding-bottom: 0.25rem;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mono-edge, #33414f) rgba(255, 255, 255, 0.06);
+}
+.cards-scroll.s-tANKfM-OT9Fz::-webkit-scrollbar {
+  height: 6px;
+}
+.cards-scroll.s-tANKfM-OT9Fz::-webkit-scrollbar-thumb {
+  background: var(--mono-edge, #33414f);
+  border-radius: 999px;
+}
+
+.cards-row.s-tANKfM-OT9Fz {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 0.65rem;
+  width: max-content;
+  height: 100%;
+  padding: 0.1rem 0.15rem;
+}
+.cards-row.s-tANKfM-OT9Fz .bonus-card-wrap {
+  flex: 0 0 auto;
+  width: min(42vw, 200px);
+  max-width: 200px;
+  min-width: 150px;
+  height: 100%;
+  max-height: calc(88dvh - 2.5rem);
+  scroll-snap-align: start;
+}
+.cards-row.s-tANKfM-OT9Fz .description {
+  min-height: 0;
+  font-size: 0.7rem;
+  line-height: 1.25;
+}
+.cards-row.s-tANKfM-OT9Fz .card-art {
+  max-height: 6.5rem;
+  object-fit: contain;
+} .s-tANKfM-OT9Fz{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalBuyBonusConfirm.svelte?svelte&amp;type=style&amp;lang.css">.dialog-image.s-sHSDNBpRzsng {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+.confirm-label.s-sHSDNBpRzsng {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mono-fg, #ffffff);
+} .s-sHSDNBpRzsng{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/AutoSpinsOptions.svelte?svelte&amp;type=style&amp;lang.css">.infinity.s-pamEt99qbVPQ {
+  font-size: 1.5rem;
+  line-height: 1rem;
+  margin-top: 0.3rem;
+} .s-pamEt99qbVPQ{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/AutoSpinsLossLimit.svelte?svelte&amp;type=style&amp;lang.css">.title.s-kixGDoeogHDP {
+  line-height: 1.4rem;
+}
+
+.option-wrap.s-kixGDoeogHDP {
+  white-space: nowrap;
+}
+
+.infinity.s-kixGDoeogHDP {
+  font-size: 1.5rem;
+  line-height: 1rem;
+  margin-top: 0.3rem;
+  vertical-align: middle;
+} .s-kixGDoeogHDP{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/AutoSpinsSingleWinLimit.svelte?svelte&amp;type=style&amp;lang.css">.title.s-aIpT76M78w0E {
+  line-height: 2rem;
+}
+
+.option-wrap.s-aIpT76M78w0E {
+  white-space: nowrap;
+}
+
+.infinity.s-aIpT76M78w0E {
+  font-size: 1.5rem;
+  line-height: 1rem;
+  margin-top: 0.3rem;
+  vertical-align: middle;
+} .s-aIpT76M78w0E{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalAutoSpinMessage.svelte?svelte&amp;type=style&amp;lang.css">.text.s-kIcRnK0tXfrL {
+  text-align: center;
+}
+
+.info-text.s-kIcRnK0tXfrL {
+  text-align: center;
+  max-height: 100px;
+  max-width: 480px;
+  border-radius: 8px;
+  border: 1px solid white;
+  white-space: normal;
+  padding: 1rem;
+} .s-kIcRnK0tXfrL{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalSettingsSound.svelte?svelte&amp;type=style&amp;lang.css">.setting.s-BWozCbku0VeO {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.label.s-BWozCbku0VeO {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  color: var(--mono-fg-dim, #8b96a3);
+}
+
+.controls.s-BWozCbku0VeO {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+/* ---------- on/off switch ---------- */
+.switch.s-BWozCbku0VeO {
+  position: relative;
+  flex: 0 0 auto;
+  width: 3.6rem;
+  height: 1.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  padding: 0;
+  border: 1px solid var(--mono-edge, #33414f);
+  background: var(--mono-surface, #141b23);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.switch.on.s-BWozCbku0VeO {
+  border-color: var(--mono-fill, #ffffff);
+  background: var(--mono-fill, #ffffff);
+  box-shadow: none;
+}
+
+.knob.s-BWozCbku0VeO {
+  position: absolute;
+  top: 50%;
+  left: 0.15rem;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 50%;
+  transform: translateY(-50%);
+  background: #c3ccd6;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+  transition: left 0.18s ease, background 0.18s ease;
+}
+
+.switch.on.s-BWozCbku0VeO .knob:where(.s-BWozCbku0VeO) {
+  left: calc(100% - 1.5rem);
+  background: var(--mono-on-fill, #0a0e14);
+}
+
+.state.s-BWozCbku0VeO {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.52rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.85);
+  pointer-events: none;
+}
+
+.switch.s-BWozCbku0VeO:not(.on) .state:where(.s-BWozCbku0VeO) {
+  right: 0.42rem;
+}
+
+.switch.on.s-BWozCbku0VeO .state:where(.s-BWozCbku0VeO) {
+  left: 0.5rem;
+  color: var(--mono-on-fill, #0a0e14);
+}
+
+/* ---------- slider ---------- */
+.range.s-BWozCbku0VeO {
+  flex: 1 1 auto;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 0.5rem;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+  border: 1px solid var(--mono-hairline, #2a3542);
+  background: linear-gradient(90deg, var(--mono-fill, #ffffff) 0%, var(--mono-fill, #ffffff) var(--pct), rgba(255, 255, 255, 0.08) var(--pct), rgba(255, 255, 255, 0.08) 100%);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.range.muted.s-BWozCbku0VeO {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.range.s-BWozCbku0VeO::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--mono-fill, #ffffff);
+  border: 1px solid var(--mono-edge, #33414f);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.range.s-BWozCbku0VeO::-moz-range-thumb {
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--mono-fill, #ffffff);
+  border: 1px solid var(--mono-edge, #33414f);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+}
+
+.range.s-BWozCbku0VeO::-moz-range-track {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.range.s-BWozCbku0VeO::-moz-range-progress {
+  height: 0.5rem;
+  border-radius: 999px;
+  background: var(--mono-fill, #ffffff);
+}
+
+/* ---------- value ---------- */
+.value.s-BWozCbku0VeO {
+  flex: 0 0 auto;
+  min-width: 2.2rem;
+  text-align: right;
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--mono-fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+} .s-BWozCbku0VeO{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalPayTable.svelte?svelte&amp;type=style&amp;lang.css">@charset "UTF-8";
+/* contained, themed gothic card ΓÇö not full-bleed. Centres in the popup with a
+   dark-steel body, faint violet s├⌐ance glow and a steel rim so it matches the
+   in-game HUD instead of dumping plain text over the reels. */
+.shell.s-23w9eER6AAhx {
+  position: relative;
+  z-index: 100;
+  width: min(74rem, 94vw);
+  max-width: 94vw;
+  height: min(90vh, 54rem);
+  max-height: 92vh;
+  margin: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.75rem;
+  color: #ece7db;
+  pointer-events: auto;
+  overflow: hidden;
+  box-sizing: border-box;
+  border-radius: 16px;
+  background: radial-gradient(130% 90% at 50% -15%, rgba(96, 62, 140, 0.4), transparent 58%), linear-gradient(180deg, #191d25 0%, #0f1319 100%);
+  border: 1px solid #3a4552;
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.62), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+.rail.s-23w9eER6AAhx {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  padding: 1.25rem 0.75rem;
+  order: 2;
+  z-index: 5;
+  pointer-events: auto;
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), rgba(0, 0, 0, 0.32));
+}
+
+.rail-btn.s-23w9eER6AAhx {
+  width: 3.3rem;
+  height: 3.3rem;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  /* dark-steel medallion to match the in-game HUD buttons (no white) */
+  border: 2px solid #3a4552;
+  background: rgba(16, 22, 29, 0.92);
+  color: #ece7db;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease;
+  /* active/selected tab lights up gold like the spin coin */
+}
+.rail-btn.s-23w9eER6AAhx svg:where(.s-23w9eER6AAhx) {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+}
+.rail-btn.s-23w9eER6AAhx:hover {
+  transform: scale(1.05);
+  border-color: #5a6672;
+  background: rgba(22, 29, 38, 0.95);
+}
+.rail-btn.active.s-23w9eER6AAhx {
+  border-color: #ffde6a;
+  background: #ffde6a;
+  color: #0a0e14;
+}
+.rail-btn.close.s-23w9eER6AAhx {
+  margin-top: 0.4rem;
+  border-color: #5a3a44;
+}
+.rail-btn.close.s-23w9eER6AAhx:hover {
+  border-color: #b4545f;
+  color: #ffd7dc;
+}
+
+.panel.s-23w9eER6AAhx {
+  order: 1;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem 1.5rem 2.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.head.s-23w9eER6AAhx {
+  flex: 0 0 auto;
+  padding-bottom: 0.85rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(233, 196, 106, 0.28);
+}
+.head.s-23w9eER6AAhx h1:where(.s-23w9eER6AAhx) {
+  margin: 0;
+  font-size: clamp(1.6rem, 3vw, 2.2rem);
+  font-weight: 700;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  color: #f0dca0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.55);
+}
+
+.scroll.s-23w9eER6AAhx {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: scroll;
+  overflow-x: hidden;
+  padding-right: 1rem;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.45) transparent;
+  touch-action: pan-y;
+}
+.scroll.s-23w9eER6AAhx::-webkit-scrollbar {
+  width: 6px;
+}
+.scroll.s-23w9eER6AAhx::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.45);
+  border-radius: 999px;
+}
+
+.block.s-23w9eER6AAhx {
+  margin-bottom: 2rem;
+}
+.block.s-23w9eER6AAhx h2:where(.s-23w9eER6AAhx) {
+  margin: 0 0 1rem;
+  font-size: clamp(1.1rem, 2vw, 1.45rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #e9c46a;
+}
+.block.rule.s-23w9eER6AAhx p:where(.s-23w9eER6AAhx) {
+  margin: 0 0 0.75rem;
+  max-width: 52rem;
+  line-height: 1.55;
+  color: rgba(244, 244, 246, 0.9);
+  font-size: 1.02rem;
+}
+.block.rule.s-23w9eER6AAhx ul:where(.s-23w9eER6AAhx) {
+  margin: 0;
+  padding: 0 0 0 1.2rem;
+  max-width: 52rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.block.rule.s-23w9eER6AAhx li:where(.s-23w9eER6AAhx) {
+  line-height: 1.5;
+  color: rgba(244, 244, 246, 0.9);
+  font-size: 1.02rem;
+}
+
+.info-rows.s-23w9eER6AAhx {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-width: 40rem;
+  margin-top: 0.35rem;
+}
+
+.info-row.s-23w9eER6AAhx {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.45rem 0.7rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.4rem;
+  font-size: 0.98rem;
+}
+.info-row.s-23w9eER6AAhx span:where(.s-23w9eER6AAhx) {
+  color: rgba(244, 244, 246, 0.85);
+}
+.info-row.s-23w9eER6AAhx strong:where(.s-23w9eER6AAhx) {
+  color: var(--mono-fg, #ffffff);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.group.s-23w9eER6AAhx {
+  margin: 0 0 0.85rem;
+  text-align: center;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: #f0dca0;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.pay-row.s-23w9eER6AAhx {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+.pay-row.lows.s-23w9eER6AAhx {
+  margin-bottom: 0.5rem;
+}
+@media (max-width: 900px) {
+  .pay-row.s-23w9eER6AAhx {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .pay-row.s-23w9eER6AAhx {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pay-cell.s-23w9eER6AAhx {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  text-align: center;
+}
+.pay-cell.s-23w9eER6AAhx img:where(.s-23w9eER6AAhx) {
+  width: clamp(3.6rem, 8vw, 5.2rem);
+  height: clamp(3.6rem, 8vw, 5.2rem);
+  object-fit: contain;
+  padding: 0.3rem;
+  border-radius: 0.6rem;
+  background: radial-gradient(circle at 50% 35%, rgba(58, 46, 78, 0.5), rgba(0, 0, 0, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.pay-list.s-23w9eER6AAhx {
+  display: flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.92rem;
+  color: #fff;
+}
+.pay-list.s-23w9eER6AAhx em:where(.s-23w9eER6AAhx) {
+  display: inline-block;
+  min-width: 0.9rem;
+  margin-right: 0.35rem;
+  font-style: normal;
+  color: rgba(255, 255, 255, 0.55);
+  font-weight: 600;
+}
+
+.foot.s-23w9eER6AAhx {
+  margin: 0.75rem 0 0;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 0.85rem;
+}
+
+.specials.s-23w9eER6AAhx {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem 1.5rem;
+}
+@media (max-width: 720px) {
+  .specials.s-23w9eER6AAhx {
+    grid-template-columns: 1fr;
+  }
+}
+
+.special.s-23w9eER6AAhx {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+  padding: 0.6rem 0.7rem;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0.6rem;
+}
+.special.s-23w9eER6AAhx img:where(.s-23w9eER6AAhx) {
+  width: 3.8rem;
+  height: 3.8rem;
+  object-fit: contain;
+  flex-shrink: 0;
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  background: radial-gradient(circle at 50% 35%, rgba(58, 46, 78, 0.5), rgba(0, 0, 0, 0.35));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.special.s-23w9eER6AAhx strong:where(.s-23w9eER6AAhx) {
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 1.05rem;
+  color: #f0dca0;
+}
+.special.s-23w9eER6AAhx p:where(.s-23w9eER6AAhx) {
+  margin: 0;
+  color: rgba(244, 244, 246, 0.78);
+  line-height: 1.4;
+  font-size: 0.95rem;
+}
+
+.settings.s-23w9eER6AAhx {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+  max-width: 36rem;
+  padding-top: 1rem;
+}
+
+.version.s-23w9eER6AAhx {
+  margin: 2rem 0 1rem;
+  opacity: 0.45;
+  font-size: 0.85rem;
+}
+
+/* ---- mobile: full-screen sheet with a bottom toolbar (matches reference) ---- */
+@media (max-width: 640px) {
+  .shell.s-23w9eER6AAhx {
+    /* fill the whole viewport (dvh accounts for mobile browser chrome) */
+    width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    /* content on top, icon toolbar pinned along the bottom */
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
+  .panel.s-23w9eER6AAhx {
+    order: 1;
+    padding: calc(0.6rem + env(safe-area-inset-top)) 1.1rem 0.6rem;
+  }
+  /* icon rail becomes a full-width bottom toolbar, evenly spaced */
+  .rail.s-23w9eER6AAhx {
+    order: 2;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    gap: 0.5rem;
+    padding: 0.65rem 1rem calc(0.65rem + env(safe-area-inset-bottom));
+    border-left: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.12));
+  }
+  /* borderless glyphs like the reference; only the active tab is a gold disc */
+  .rail-btn.s-23w9eER6AAhx {
+    width: 3.2rem;
+    height: 3.2rem;
+    border-color: transparent;
+    background: transparent;
+  }
+  .rail-btn.s-23w9eER6AAhx svg:where(.s-23w9eER6AAhx) {
+    width: 1.7rem;
+    height: 1.7rem;
+  }
+  .rail-btn.s-23w9eER6AAhx:hover {
+    background: transparent;
+    border-color: transparent;
+  }
+  .rail-btn.active.s-23w9eER6AAhx {
+    border-color: #ffde6a;
+    background: #ffde6a;
+  }
+  .rail-btn.close.s-23w9eER6AAhx {
+    margin-top: 0;
+    border-color: transparent;
+  }
+  .head.s-23w9eER6AAhx {
+    padding-bottom: 0.7rem;
+  }
+  .head.s-23w9eER6AAhx h1:where(.s-23w9eER6AAhx) {
+    font-size: clamp(1.7rem, 7vw, 2.3rem);
+  }
+  .scroll.s-23w9eER6AAhx {
+    padding-right: 0.4rem;
+  }
+  .block.s-23w9eER6AAhx {
+    margin-bottom: 1.7rem;
+  }
+  .block.s-23w9eER6AAhx h2:where(.s-23w9eER6AAhx) {
+    font-size: clamp(1.25rem, 5.4vw, 1.6rem);
+  }
+  .block.rule.s-23w9eER6AAhx p:where(.s-23w9eER6AAhx),
+  .block.rule.s-23w9eER6AAhx li:where(.s-23w9eER6AAhx) {
+    font-size: clamp(1.02rem, 4.3vw, 1.2rem);
+  }
+  /* PAYOUT block centres its headings like the reference */
+  .payout.s-23w9eER6AAhx {
+    text-align: center;
+  }
+  .payout.s-23w9eER6AAhx h2:where(.s-23w9eER6AAhx) {
+    text-align: center;
+  }
+  .payout.s-23w9eER6AAhx .foot:where(.s-23w9eER6AAhx) {
+    text-align: center;
+  }
+  .group.s-23w9eER6AAhx {
+    font-size: clamp(1.2rem, 5.2vw, 1.55rem);
+  }
+  /* all five symbols stay on one row, sized as large as the width allows */
+  .pay-row.s-23w9eER6AAhx {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem 0.2rem;
+    margin-bottom: 1.2rem;
+  }
+  .pay-cell.s-23w9eER6AAhx {
+    gap: 0.35rem;
+  }
+  .pay-cell.s-23w9eER6AAhx img:where(.s-23w9eER6AAhx) {
+    width: clamp(3.6rem, 18.5vw, 5.6rem);
+    height: clamp(3.6rem, 18.5vw, 5.6rem);
+    padding: 0.12rem;
+  }
+  .pay-list.s-23w9eER6AAhx {
+    font-size: clamp(0.82rem, 3.5vw, 1.05rem);
+  }
+  .pay-list.s-23w9eER6AAhx em:where(.s-23w9eER6AAhx) {
+    min-width: 0.75rem;
+    margin-right: 0.2rem;
+  }
+  .specials.s-23w9eER6AAhx {
+    gap: 0.75rem;
+  }
+  .special.s-23w9eER6AAhx {
+    padding: 0.8rem 0.85rem;
+  }
+  .special.s-23w9eER6AAhx img:where(.s-23w9eER6AAhx) {
+    width: clamp(3.8rem, 16.5vw, 5rem);
+    height: clamp(3.8rem, 16.5vw, 5rem);
+  }
+  .special.s-23w9eER6AAhx strong:where(.s-23w9eER6AAhx) {
+    font-size: clamp(1.08rem, 4.7vw, 1.25rem);
+  }
+  .special.s-23w9eER6AAhx p:where(.s-23w9eER6AAhx) {
+    font-size: clamp(0.98rem, 4.1vw, 1.12rem);
+  }
+  .info-row.s-23w9eER6AAhx {
+    font-size: clamp(0.98rem, 4.1vw, 1.12rem);
+  }
+} .s-23w9eER6AAhx{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ModalSettings.svelte?svelte&amp;type=style&amp;lang.css">.wrap.s-fpDza83es1rX {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+@media (min-width: 480px) {
+  .wrap.s-fpDza83es1rX {
+    min-width: 360px;
+  }
+}
+@media (min-width: 800px) {
+  .wrap.s-fpDza83es1rX {
+    min-width: 480px;
+  }
+} .s-fpDza83es1rX{}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/Modals.svelte?svelte&amp;type=style&amp;lang.css">html {
+  font-size: 16px; /* you can chose any size here 16 is default */
+}
+@media screen and (max-width: 500px) {
+  html {
+    font-size: 50%;
+  }
+} /* (unused) *{}*/</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/global.scss">@charset "UTF-8";
+/* ---------------------------------------------------------------------------
+   Drama Studios house UI theme ΓÇö shared by every game we ship.
+   Mono command-center system: system-sans face (Segoe UI) matching the pixi
+   HUD; dark gunmetal surfaces, hairline borders, white text/values. The legacy
+   Cinzel/Cormorant faces below are kept bundled (OFL, no external requests per
+   Stake XSS policy) but are no longer used by the mono UI.
+--------------------------------------------------------------------------- */
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cinzel-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cinzel-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel";
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cinzel-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-style: normal;
+  font-weight: 700;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cinzel-decorative-700.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cinzel Decorative";
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cinzel-decorative-900.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 400;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cormorant-garamond-400.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: italic;
+  font-weight: 400;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cormorant-garamond-400-italic.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Cormorant Garamond";
+  font-style: normal;
+  font-weight: 600;
+  font-display: block;
+  src: url("/@fs/C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/fonts/cormorant-garamond-600.woff2") format("woff2");
+}
+body {
+  font-family: var(--mono-font, "Segoe UI", Arial, sans-serif);
+  font-size: 1.02rem;
+  cursor: default;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+
+:root {
+  --scrollbar-size: 6px;
+  --grey: #cccccc;
+  /* ---------------------------------------------------------------- */
+  /* Mono HUD system ΓÇö single source of truth for the HTML modals.    */
+  /* Mirrors the pixi HUD (ControlInfoBar.svelte / hudTheme mono):     */
+  /* dark gunmetal surfaces, hairline borders, white text/values and   */
+  /* white inverted primaries. No gold, no glow ΓÇö depth comes from      */
+  /* tonal value shifts + hairline borders, never drop-shadow chrome.  */
+  /* ---------------------------------------------------------------- */
+  --mono-floor: #0b0f14; /* deepest stage behind panels */
+  --mono-bg: #10161d; /* panel / card background (HUD panel) */
+  --mono-surface: #141b23; /* raised / disabled control face */
+  --mono-surface-2: #1c2732; /* default control face (stepper) */
+  --mono-surface-hover: #28374a; /* control hover */
+  --mono-surface-pressed: #0d131a; /* control pressed */
+  --mono-hairline: #2a3542; /* hairline dividers / borders */
+  --mono-edge: #33414f; /* control border default */
+  --mono-edge-hover: #3d4f63; /* control border hover */
+  --mono-line: #ffffff; /* strong white line / outline */
+  --mono-fill: #ffffff; /* inverted primary fill */
+  --mono-fg: #ffffff; /* primary text / value */
+  --mono-fg-dim: #8b96a3; /* muted label text (HUD label) */
+  --mono-fg-mute: #6a7480; /* faint / disabled text */
+  --mono-on-fill: #0a0e14; /* text / glyph on white fills */
+  --mono-radius: 10px; /* HUD control radius */
+  --mono-radius-sm: 6px; /* cards */
+  --mono-radius-pill: 9999px; /* pills */
+  --mono-font: "Segoe UI", Arial, sans-serif;
+  /* Legacy gothic tokens ΓÇö repointed to the mono system so any lingering
+     reference renders neutral. Kept as aliases; the brand is now mono. */
+  --ds-ink: var(--mono-floor);
+  --ds-panel: var(--mono-bg);
+  --ds-panel-2: var(--mono-surface-2);
+  --ds-gold: var(--mono-line);
+  --ds-gold-bright: var(--mono-line);
+  --ds-gold-dim: var(--mono-fg-dim);
+  --ds-bone: var(--mono-fg);
+  --ds-bone-dim: var(--mono-fg-dim);
+  --ds-font-display: var(--mono-font);
+  --ds-font-body: var(--mono-font);
+}
+
+.scrollY {
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  /* https://stackoverflow.com/questions/28636832/firefox-overflow-y-not-working-with-nested-flexbox */
+  -webkit-overflow-scrolling: touch;
+  -webkit-overflow-scroll: touch;
+  scrollbar-width: thin;
+}
+
+.scrollX {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  transform: translate3d(0, 0, 0);
+  /* https://discussions.apple.com/thread/7677586 ≡ƒñ╖ΓÇìΓÖé∩╕Å */
+  -moz-transform: none !important;
+  scrollbar-width: thin;
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollX,
+.scrollY {
+  scrollbar-color: var(--grey) transparent;
+}
+
+.scrollX::-webkit-scrollbar {
+  height: var(--scrollbar-size);
+}
+
+.scrollY::-webkit-scrollbar {
+  width: var(--scrollbar-size);
+}
+
+.scrollY::-webkit-scrollbar-thumb,
+.scrollX::-webkit-scrollbar-thumb {
+  background: var(--grey);
+  border-radius: 10px;
+}
+
+.scroll-light {
+  scrollbar-color: var(--grey) transparent;
+}
+
+.scroll-light::-webkit-scrollbar-thumb {
+  background: var(--grey);
+}</style><style type="text/css" data-vite-dev-id="C:/Users/Emex33/Documents/tombstone reborn/web-sdk/packages/components-ui-html/src/components/ReplayPanel.svelte?svelte&amp;type=style&amp;lang.css">.backdrop.s-VuosAaxnuvMy {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.62);
+  pointer-events: auto;
+}
+
+.card.s-VuosAaxnuvMy {
+  width: min(26rem, 100%);
+  box-sizing: border-box;
+  padding: 1.75rem;
+  border-radius: 14px;
+  border: 1px solid #3a4552;
+  background: linear-gradient(180deg, #191d25 0%, #0f1319 100%);
+  box-shadow: 0 26px 64px rgba(0, 0, 0, 0.62);
+  color: #ece7db;
+  text-align: center;
+  font-family: "Segoe UI", Arial, Helvetica, sans-serif;
+}
+
+h1.s-VuosAaxnuvMy {
+  margin: 0 0 1.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #e9c46a;
+}
+
+dl.s-VuosAaxnuvMy {
+  margin: 0 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.row.s-VuosAaxnuvMy {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.28);
+}
+
+dt.s-VuosAaxnuvMy {
+  color: rgba(244, 244, 246, 0.85);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+}
+
+dd.s-VuosAaxnuvMy {
+  margin: 0;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: #ffffff;
+}
+dd.won.s-VuosAaxnuvMy {
+  color: #7ee081;
+}
+
+.mult.s-VuosAaxnuvMy {
+  margin-left: 0.5rem;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: rgba(244, 244, 246, 0.6);
+}
+
+button.s-VuosAaxnuvMy {
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: none;
+  border-radius: 999px;
+  background: #ffde6a;
+  color: #0a0e14;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.15s ease;
+}
+button.s-VuosAaxnuvMy:hover {
+  transform: scale(1.02);
+  background: #ffe88c;
+}
+button.s-VuosAaxnuvMy:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+} .s-VuosAaxnuvMy{}</style></head>
+
+  <body class="sb-main-fullscreen sb-show-main">
+    <div class="sb-preparing-story sb-wrapper">
+  <div class="sb-loader"></div>
+</div>
+
+<div class="sb-preparing-docs sb-wrapper">
+  <div class="sb-previewBlock">
+    <div class="sb-previewBlock_header">
+      <div class="sb-previewBlock_icon"></div>
+      <div class="sb-previewBlock_icon"></div>
+      <div class="sb-previewBlock_icon"></div>
+      <div class="sb-previewBlock_icon"></div>
+    </div>
+    <div class="sb-previewBlock_body">
+      <div class="sb-loader"></div>
+    </div>
+  </div>
+  <table aria-hidden="true" class="sb-argstableBlock">
+    <thead class="sb-argstableBlock-head">
+      <tr>
+        <th><span>Name</span></th>
+        <th><span>Description</span></th>
+        <th><span>Default</span></th>
+        <th><span>Control </span></th>
+      </tr>
+    </thead>
+    <tbody class="sb-argstableBlock-body">
+      <tr>
+        <td><span>propertyName</span><span title="Required">*</span></td>
+        <td>
+          <div><span>This is a short description</span></div>
+          <div class="sb-argstableBlock-summary">
+            <div><span class="sb-argstableBlock-code">summary</span></div>
+          </div>
+        </td>
+        <td>
+          <div><span class="sb-argstableBlock-code">defaultValue</span></div>
+        </td>
+        <td><button>Set string</button></td>
+      </tr>
+      <tr>
+        <td><span>propertyName</span><span>*</span></td>
+        <td>
+          <div><span>This is a short description</span></div>
+          <div class="sb-argstableBlock-summary">
+            <div><span class="sb-argstableBlock-code">summary</span></div>
+          </div>
+        </td>
+        <td>
+          <div><span class="sb-argstableBlock-code">defaultValue</span></div>
+        </td>
+        <td><button>Set string</button></td>
+      </tr>
+      <tr>
+        <td><span>propertyName</span><span>*</span></td>
+        <td>
+          <div><span>This is a short description</span></div>
+          <div class="sb-argstableBlock-summary">
+            <div><span class="sb-argstableBlock-code">summary</span></div>
+          </div>
+        </td>
+        <td>
+          <div><span class="sb-argstableBlock-code">defaultValue</span></div>
+        </td>
+        <td><button>Set string</button></td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sb-nopreview sb-wrapper">
+  <div class="sb-nopreview_main">
+    <h1 class="sb-nopreview_heading sb-heading">No Preview</h1>
+    <p>Sorry, but you either have no stories or none are selected somehow.</p>
+    <ul>
+      <li>Please check the Storybook config.</li>
+      <li>Try reloading the page.</li>
+    </ul>
+    <p>
+      If the problem persists, check the browser console, or the terminal you've run Storybook from.
+    </p>
+  </div>
+</div>
+
+<div class="sb-errordisplay sb-wrapper">
+  <div class="sb-errordisplay_main">
+    <h1 id="error-message"></h1>
+    <p>
+      The component failed to render properly, likely due to a configuration issue in Storybook.
+      Here are some common causes and how you can address them:
+    </p>
+    <ol>
+      <li>
+        <strong>Missing Context/Providers</strong>: You can use decorators to supply specific
+        contexts or providers, which are sometimes necessary for components to render correctly. For
+        detailed instructions on using decorators, please visit the
+        <a href="https://storybook.js.org/docs/writing-stories/decorators">Decorators documentation</a>.
+      </li>
+      <li>
+        <strong>Misconfigured Webpack or Vite</strong>: Verify that Storybook picks up all necessary
+        settings for loaders, plugins, and other relevant parameters. You can find step-by-step
+        guides for configuring
+        <a href="https://storybook.js.org/docs/builders/webpack">Webpack</a> or
+        <a href="https://storybook.js.org/docs/builders/vite">Vite</a>
+        with Storybook.
+      </li>
+      <li>
+        <strong>Missing Environment Variables</strong>: Your Storybook may require specific
+        environment variables to function as intended. You can set up custom environment variables
+        as outlined in the
+        <a href="https://storybook.js.org/docs/configure/environment-variables">Environment Variables documentation</a>.
+      </li>
+    </ol>
+    <pre class="sb-errordisplay_code"><code id="error-stack"></code></pre>
+  </div>
+</div>
+
+    <div id="storybook-root"><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><!----><div><!----><!----><!----><!----><!----><!----><!----><canvas width="764" height="429" style="width: 764px; height: 429px; touch-action: auto;"></canvas></div><!----> <!----><!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----><!----> <!----><!----> <div class="wrap s-P2t8FAR5U7ue"><button class="action s-P2t8FAR5U7ue" disabled="">Action</button> <span class="message s-P2t8FAR5U7ue">Γôÿ Initialising...</span></div><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----> <!----><!----></div>
+    <div id="storybook-docs" hidden="true"></div>
+    <script>
+      function __onViteAppLoadingError(event) {
+        const hostname = globalThis.location.hostname;
+        if (hostname !== 'localhost' && globalThis.CONFIG_TYPE === 'DEVELOPMENT') {
+          const message = `Failed to load the Storybook preview file 'vite-app.js':
+
+It looks like you're visiting the Storybook development server on another hostname than localhost: '${hostname}', but you haven't configured the necessary security features to support this.
+Please re-run your Storybook development server with the '--host ${hostname}' flag, or manually configure your Vite allowedHosts configuration with viteFinal.
+
+See:`;
+          const docs = [
+            'https://storybook.js.org/docs/api/cli-options#dev',
+            'https://storybook.js.org/docs/api/main-config/main-config-vite-final',
+            'https://vite.dev/config/server-options.html#server-allowedhosts',
+          ];
+          console.error(`${message}\n${docs.map((doc) => `- ${doc}`).join('\n')}`);
+
+          document.getElementById('storybook-root').innerHTML =
+            `<p style="color: red; max-width: 70ch">${message.replaceAll(
+              '\n',
+              '<br/>'
+            )}<ul>${docs.map((doc) => `<li><a href='${doc}' target='_blank'>${doc}</a></li>`).join('')}<ul></p>`;
+          return;
+        }
+      }
+    </script>
+    <script type="module" src="/@id/__x00__virtual:/@storybook/builder-vite/vite-app.js" onerror="__onViteAppLoadingError(event)"></script>
+  
+
+<div id="storybook-highlights-root"><div id="storybook-highlights-menu" popover="manual" style="display: none;"></div><style>
+            #storybook-highlights-menu {
+              position: absolute;
+              z-index: 2147483647;
+              width: 300px;
+              padding: 0px;
+              margin: 15px 0 0 0;
+              transform: translateX(-50%);
+              font-family: "Nunito Sans", -apple-system, ".SFNSText-Regular", "San Francisco", BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+              font-size: 12px;
+              background: white;
+              border: none;
+              border-radius: 6px;
+              box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.05), 0 5px 15px 0 rgba(0, 0, 0, 0.1);
+              color: #2E3438;
+            }
+            #storybook-highlights-menu ul {
+              list-style: none;
+              margin: 0;
+              padding: 0;
+            }
+            #storybook-highlights-menu > ul {
+              max-height: 300px;
+              overflow-y: auto;
+              padding: 4px 0;
+            }
+            #storybook-highlights-menu li {
+              padding: 0 4px;
+              margin: 0;
+            }
+            #storybook-highlights-menu li > :not(ul) {
+              display: flex;
+              padding: 8px;
+              margin: 0;
+              align-items: center;
+              gap: 8px;
+              border-radius: 4px;
+            }
+            #storybook-highlights-menu button {
+              width: 100%;
+              border: 0;
+              background: transparent;
+              color: inherit;
+              text-align: left;
+              font-family: inherit;
+              font-size: inherit;
+            }
+            #storybook-highlights-menu button:focus-visible {
+              outline-color: #029CFD;
+            }
+            #storybook-highlights-menu button:hover {
+              background: rgba(2, 156, 253, 0.07);
+              color: #029CFD;
+              cursor: pointer;
+            }
+            #storybook-highlights-menu li code {
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              line-height: 16px;
+              font-size: 11px;
+            }
+            #storybook-highlights-menu li svg {
+              flex-shrink: 0;
+              margin: 1px;
+              color: #73828C;
+            }
+            #storybook-highlights-menu li > button:hover svg, #storybook-highlights-menu li > button:focus-visible svg {
+              color: #029CFD;
+            }
+            #storybook-highlights-menu .element-list li svg {
+              display: none;
+            }
+            #storybook-highlights-menu li.selectable svg, #storybook-highlights-menu li.selected svg {
+              display: block;
+            }
+            #storybook-highlights-menu .menu-list {
+              border-top: 1px solid rgba(38, 85, 115, 0.15);
+            }
+            #storybook-highlights-menu .menu-list > li:not(:last-child) {
+              padding-bottom: 4px;
+              margin-bottom: 4px;
+              border-bottom: 1px solid rgba(38, 85, 115, 0.15);
+            }
+            #storybook-highlights-menu .menu-items, #storybook-highlights-menu .menu-items li {
+              padding: 0;
+            }
+            #storybook-highlights-menu .menu-item {
+              display: flex;
+            }
+            #storybook-highlights-menu .menu-item-content {
+              display: flex;
+              flex-direction: column;
+              flex-grow: 1;
+            }
+          </style></div><div class="bug" style="background: url(&quot;/assets/sprites/bugs/fly_sprite.png&quot;) 0px 0px no-repeat transparent; width: 13px; height: 14px; position: fixed; top: 0px; left: 0px; z-index: 2; pointer-events: none; transform: translate(119px, 87px) rotate(-193.493deg) scale(1);"></div><div class="bug" style="background: url(&quot;/assets/sprites/bugs/fly_sprite.png&quot;) 0px 0px no-repeat transparent; width: 13px; height: 14px; position: fixed; top: 0px; left: 0px; z-index: 2; pointer-events: none; transform: translate(438px, 186px) rotate(-17.3837deg) scale(1);"></div><div class="bug" style="background: url(&quot;/assets/sprites/bugs/fly_sprite.png&quot;) 0px 0px no-repeat transparent; width: 13px; height: 14px; position: fixed; top: 0px; left: 0px; z-index: 2; pointer-events: none; transform: translate(294px, 305px) rotate(-172.33deg) scale(1);"></div><div class="bug" style="background: url(&quot;/assets/sprites/bugs/fly_sprite.png&quot;) 0px 0px no-repeat transparent; width: 13px; height: 14px; position: fixed; top: 0px; left: 0px; z-index: 2; pointer-events: none; transform: translate(108px, 177px) rotate(-9.83428deg) scale(1);"></div></body></html>

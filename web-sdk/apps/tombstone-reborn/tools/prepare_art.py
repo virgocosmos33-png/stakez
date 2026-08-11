@@ -21,13 +21,13 @@ FULL_BLEED = {
     "mirror_bg_base_landscape.png": "bg_base.webp",
     "mirror_bg_base_portrait.png": "bg_base_portrait.webp",
     "mirror_bg_freespin_landscape.png": "bg_freespin.webp",
-    "mirror_intro_panel_seance.png": "intro_seance.webp",
-    "mirror_intro_panel_otherside.png": "intro_otherside.webp",
-    "mirror_intro_panel_bloodmoon.png": "intro_bloodmoon.webp",
     "mirror_loading_screen.png": "loading.webp",
-    "mirror_buybutton_seance.png": "buy_seance.webp",
-    "mirror_buybutton_otherside.png": "buy_otherside.webp",
-    "mirror_buybutton_bloodmoon.png": "buy_bloodmoon.webp",
+    # The six bonus-level entries (mirror_intro_panel_* -> intro_seance /
+    # intro_otherside / intro_bloodmoon.webp and mirror_buybutton_* ->
+    # buy_seance / buy_otherside / buy_bloodmoon.webp) are gone. They were the
+    # THE INTAKE / HER SIDE / WHITEOUT bonus-level paintings and buy cards;
+    # Tombstone Reborn has no bonus levels and those .webp files are deleted, so
+    # re-running this must not put them back.
 }
 
 KEYED = {

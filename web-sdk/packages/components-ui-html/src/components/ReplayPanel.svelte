@@ -74,7 +74,7 @@
 		box-shadow: 0 26px 64px rgba(0, 0, 0, 0.62);
 		color: #ece7db;
 		text-align: center;
-		font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
+		font-family: var(--mono-font, 'Segoe UI', Arial, Helvetica, sans-serif);
 	}
 
 	h1 {

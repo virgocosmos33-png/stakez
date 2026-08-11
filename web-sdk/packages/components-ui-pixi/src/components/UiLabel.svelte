@@ -30,8 +30,8 @@
 	const gap = fs * 0.55;
 	const pillH = fs * 2.0;
 
-	const labelW = $derived(props.label.length * labelFs * 0.64);
-	const valueW = $derived(props.value.length * valueFs * 0.6);
+	const labelW = $derived(props.label.length * labelFs * T.fontLabelAdvance);
+	const valueW = $derived(props.value.length * valueFs * T.fontValueAdvance);
 	const dividerX = $derived(padX + labelW + gap);
 	const totalW = $derived(dividerX + gap + valueW + padX);
 	// shift the whole centred pill so its left/right edge lands on the x anchor
@@ -40,7 +40,7 @@
 	);
 
 	const labelStyle = {
-		fontFamily: T.fontDisplay,
+		fontFamily: T.fontLabel,
 		fontWeight: '700',
 		fontSize: labelFs,
 		fill: 0xf0e6d0,
@@ -48,7 +48,7 @@
 	} as const;
 
 	const valueStyle = {
-		fontFamily: T.fontDisplay,
+		fontFamily: T.fontValue,
 		fontWeight: '700',
 		fontSize: valueFs,
 		fill: T.textValue,

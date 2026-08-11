@@ -41,7 +41,6 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
 	import { getSymbolX, getReelWindow } from '../game/utils';
-	import { drawPowderSeam } from '../game/tombstoneVfx';
 	import WildColumnLabel from './WildColumnLabel.svelte';
 	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
 
@@ -173,10 +172,6 @@
 	const GLASS = 0x8a6e4a;
 	const BLOOD = 0xb54a2a;
 
-	/** powder-burn seam between wild panes — same language as SplitPanes */
-	const drawWildDivider = (g: import('pixi.js').Graphics, h: number, slim: number) => {
-		drawPowderSeam(g, h, slim, { time: time / 1000 });
-	};
 	const BORDER_INSET = 2;
 	const PULSE_SPAN = 0.16; // how much of the perimeter the running charge covers
 
@@ -418,7 +413,6 @@
 			{@const tear = c.tear.current}
 			{@const sliceW = c.w / panes}
 			{@const gap = c.w * Math.min(0.025, 0.09 / panes)}
-			{@const slim = Math.min(1, 3 / panes)}
 			{@const paneW = Math.max((sliceW - gap) * tear + c.w * (1 - tear), 2)}
 			{@const slideY = -c.h * (1 - c.slide.current)}
 			{@const drawKey = drawKeyFor(c.art)}
@@ -452,15 +446,8 @@
 							/>
 						</Container>
 					{/each}
-					{#each Array.from({ length: panes - 1 }) as _, i (i)}
-						<Container
-							x={(-c.w / 2 + (i + 1) * sliceW) * tear}
-							y={slideY}
-							alpha={tear}
-						>
-							<Graphics draw={(g) => drawWildDivider(g, c.h, slim)} />
-						</Container>
-					{/each}
+					<!-- no strip down the tear: the panes part over the dark reel,
+						matching the paying-symbol split -->
 				{/if}
 			</Container>
 		{/each}

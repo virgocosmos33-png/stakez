@@ -1,6 +1,7 @@
 import { setHudThemeOverrides } from 'components-ui-pixi';
 
 import { hudColor, hudNum } from './hud.generated';
+import { TR_FAMILY, TR_MEAN_ADVANCE } from './typography';
 
 let applied = false;
 
@@ -35,5 +36,21 @@ export function applyHudTheme(): void {
 		innerHighlight: hudColor('innerHighlight', 0xf6e4a6),
 		accentGlow: hudColor('accentGlow', 0xffcf4d),
 		bodyAlpha: hudNum('shape', 'bodyAlpha', 0.94),
+		// Typography: repoint the shared HUD's text off the SDK's default serif and
+		// system sans onto this game's roles (src/game/typography.ts). The brand
+		// mark takes the western display face; captions take the condensed signage
+		// face; every amount takes the tabular face so the bet/balance readouts do
+		// not shift width as digits change.
+		fontDisplay: TR_FAMILY.display,
+		fontLabel: TR_FAMILY.label,
+		fontValue: TR_FAMILY.value,
+		barFontLabel: TR_FAMILY.label,
+		barFontValue: TR_FAMILY.value,
+		autoSpinsFont: TR_FAMILY.value,
+		// UiLabel estimates its pill width from these; the shipped 0.64 / 0.6 are
+		// measured off the default serif and would size the pill ~25% too wide for
+		// a condensed face, pushing the tablet BET / BALANCE pills out of the bar.
+		fontLabelAdvance: TR_MEAN_ADVANCE.label,
+		fontValueAdvance: TR_MEAN_ADVANCE.value,
 	});
 }

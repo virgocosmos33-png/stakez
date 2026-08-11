@@ -1,0 +1,286 @@
+{
+  "_readme": "Layer AI stem library for Tombstone Reborn. Every entry was generated with the ElevenLabs Sound Effects model (model_id d0e8b406-f4ca-4133-8a07-31ed7f399fcc) in workspace back-s-workspace via the Layer MCP execute_forge tool. The forge surface has no duration control for audio: ElevenLabs auto-sizes the clip from the prompt wording, which is why lengths vary from 0.48s to 10s. build_tombstone_audio.py composes the final game cues from these stems so the whole set shares one palette.",
+  "workspace_id": "f0851046-512c-4983-8219-f34e22d47340",
+  "session_id": "41785c5d-e2c7-4525-b020-98537e09e9ac",
+  "model_id": "d0e8b406-f4ca-4133-8a07-31ed7f399fcc",
+  "model_name": "ElevenLabs Sound Effects",
+  "url_template": "https://media.app.layer.ai/workspaces/{workspace_id}/files/{file_id}/{filename}",
+  "stems": {
+    "tombstone_slam": {
+      "file_id": "8cfc7127-ce0d-4581-a21d-6629c183782d",
+      "filename": "a_single_heavy_granite_tombstone_slamming_into_dry_dirt_dust_and_grit-2026-08-10-210210.mp3"
+    },
+    "bell_toll_iron": {
+      "file_id": "6a8f05d6-8f47-47ff-b343-da4a02b57838",
+      "filename": "a_single_cracked_castiron_church_bell_struck_hard_once_dark_and_dusty-2026-08-10-210643.mp3"
+    },
+    "timpani_thump": {
+      "file_id": "e5da7aa5-47cc-40e8-b0d2-508da4033577",
+      "filename": "one_deep_timpani_drum_thump_struck_hard_low_and_weighty_dry_close-2026-08-10-210646.mp3"
+    },
+    "thunder_crack": {
+      "file_id": "4fc7a0e6-39d2-4990-8654-baf511d9a9f3",
+      "filename": "a_close_lightning_strike_sharp_electric_crack_with_hard_attack_dry-2026-08-10-210648.mp3"
+    },
+    "thunder_rumble_deep": {
+      "file_id": "d595d89b-c76c-4c02-8dd0-8541eb84b0e7",
+      "filename": "deep_low_thunder_rumble_body_rolling_heavy_sub_bass_dark_and-2026-08-10-210650.mp3"
+    },
+    "wind_gust_dry": {
+      "file_id": "49e073b2-a2a2-47d9-904d-3c6e463df1a5",
+      "filename": "a_dry_dusty_desert_wind_gust_sweeping_past_with_fine_grit_and_sand_no-2026-08-10-210652.mp3"
+    },
+    "wind_moan_low": {
+      "file_id": "8599c10e-aa68-4a09-abcc-7ba0fcf243be",
+      "filename": "continuous_low_moaning_desert_wind_across_an_open_graveyard_steady-2026-08-10-210654.mp3"
+    },
+    "rope_creak": {
+      "file_id": "6a472245-153b-4299-a967-04992a3c86bf",
+      "filename": "an_old_hemp_rope_and_dry_wooden_gallows_beam_creaking_under_strain_slow-2026-08-10-210657.mp3"
+    },
+    "low_drone_iron": {
+      "file_id": "152776ff-36e6-45e5-8b2e-2ac1938e722a",
+      "filename": "a_low_sustained_bowed_iron_drone_dark_and_menacing_tension_steady_with-2026-08-10-210659.mp3"
+    },
+    "revolver_shot_close": {
+      "file_id": "224c257e-aad6-4241-a16b-38dd71732d74",
+      "filename": "a_single_revolver_fired_at_close_range_hard_dry_gunpowder_crack_with_a-2026-08-10-210707.mp3"
+    },
+    "revolver_volley": {
+      "file_id": "cea98b65-594a-426b-baa9-e363c1e99c19",
+      "filename": "a_rapid_volley_of_several_revolver_shots_fired_in_quick_succession-2026-08-10-210709.mp3"
+    },
+    "revolver_load": {
+      "file_id": "84e5febb-7f79-4e43-a37c-c1e919242f27",
+      "filename": "a_revolver_cylinder_swinging_open_and_brass_cartridges_being_pressed-2026-08-10-210712.mp3"
+    },
+    "hammer_cock": {
+      "file_id": "8f0fe86f-80f6-49bc-9aa1-6a6dec877d74",
+      "filename": "a_revolver_cylinder_snapped_shut_and_the_hammer_cocked_back_crisp-2026-08-10-210714.mp3"
+    },
+    "brass_shell_drop": {
+      "file_id": "1a05c801-7f6e-4654-a9ab-2a87e70df801",
+      "filename": "two_brass_shell_casings_dropping_and_tinkling_onto_a_weathered_wooden-2026-08-10-210716.mp3"
+    },
+    "brass_swell_low": {
+      "file_id": "26fe9695-54ab-400e-aa25-23522ce13afb",
+      "filename": "a_dark_cinematic_low_brass_section_swelling_upward_in_volume_ominous-2026-08-10-210718.mp3"
+    },
+    "brass_stab": {
+      "file_id": "f84181d2-95d9-493c-8087-7afb481cd62b",
+      "filename": "a_short_punchy_low_brass_stab_accent_dark_western_orchestral_hit_tight-2026-08-10-210721.mp3"
+    },
+    "timpani_roll": {
+      "file_id": "b4061d06-ec3e-4c8b-8176-ef5e300a1745",
+      "filename": "a_fast_timpani_drum_roll_building_in_intensity_deep_orchestral-2026-08-10-210723.mp3"
+    },
+    "coin_cascade_a": {
+      "file_id": "b9a8d493-a961-4e87-8bac-e99bb17c639a",
+      "filename": "a_dense_continuous_stream_of_brass_and_silver_coins_pouring_onto_a-2026-08-10-210730.mp3"
+    },
+    "coin_cascade_b": {
+      "file_id": "60495fd4-3ff8-4a47-90ca-b5264976ac70",
+      "filename": "silver_coins_spilling_and_rattling_into_a_tin_pan_and_across_dry_wood-2026-08-10-210733.mp3"
+    },
+    "iron_groan": {
+      "file_id": "2ee7bf14-9e37-4559-aad1-665d44a86765",
+      "filename": "heavy_cold_iron_bars_groaning_and_bending_under_enormous_stress_deep-2026-08-10-210736.mp3"
+    },
+    "chain_drag": {
+      "file_id": "4b48da5d-3f99-456b-9044-9af583e5a930",
+      "filename": "a_heavy_iron_chain_dragging_across_stone_and_tightening_rattling-2026-08-10-210737.mp3"
+    },
+    "iron_bars_slam": {
+      "file_id": "e75df960-fe27-4fe7-a118-ee86e4537b0f",
+      "filename": "heavy_jail_cell_iron_bars_slamming_shut_hard_into_a_stone_slot_deep-2026-08-10-210739.mp3"
+    },
+    "gravel_pour": {
+      "file_id": "a3a99f8c-20e1-4632-9778-b8511bad8f80",
+      "filename": "dry_gravel_dirt_and_grit_pouring_and_falling_onto_hard_ground_dusty-2026-08-10-210742.mp3"
+    },
+    "gunpowder_pop": {
+      "file_id": "b99ca9a0-6c16-434d-8a71-3e689303d8e3",
+      "filename": "a_small_black_powder_charge_popping_dry_percussive_gunpowder_burst-2026-08-10-210744.mp3"
+    },
+    "dynamite_blast": {
+      "file_id": "86c77c05-1481-4303-82af-ffae143e88c6",
+      "filename": "a_stick_of_mining_dynamite_detonating_in_a_dry_canyon_deep_powder_blast-2026-08-10-210746.mp3"
+    },
+    "brass_ratchet_up": {
+      "file_id": "0a8b0f3d-b59f-405a-bbd6-a7fd293aeabf",
+      "filename": "a_brass_mechanical_ratchet_clicking_upward_in_fast_rising_steps_then-2026-08-10-210754.mp3"
+    },
+    "brass_counter_ticks": {
+      "file_id": "34d8a7e3-716e-4442-985e-5800ad4595d3",
+      "filename": "an_old_brass_mechanical_tally_counter_spinning_rapidly_through-2026-08-10-210756.mp3"
+    },
+    "spur_jingle": {
+      "file_id": "8678ba59-770e-40f9-a110-1d78c2f62d4c",
+      "filename": "cowboy_boot_spur_rowels_jingling_once_as_a_step_lands_on_a_wooden_porch-2026-08-10-210758.mp3"
+    },
+    "wood_knock_firm": {
+      "file_id": "b34b5cf2-c867-40ce-813a-9bdbe1a540ad",
+      "filename": "a_firm_solid_knock_on_a_thick_weathered_oak_plank_single_dry_wooden_hit-2026-08-10-210801.mp3"
+    },
+    "wood_plank_thud": {
+      "file_id": "a8c8e463-fd43-4d61-8956-3bc8ba53bca8",
+      "filename": "a_heavy_weathered_wooden_sign_or_coffin_lid_dropping_flat_onto_wood-2026-08-10-210803.mp3"
+    },
+    "harmonica_breath": {
+      "file_id": "c62c33b5-8c6e-423b-9c2a-657a48008e04",
+      "filename": "a_single_soft_lonesome_harmonica_chord_exhaled_and_fading_sparse-2026-08-10-210805.mp3"
+    },
+    "harmonica_lick": {
+      "file_id": "259c2d4f-51a3-4647-9709-0c04950c6945",
+      "filename": "a_short_bright_rising_harmonica_lick_upbeat_western_saloon_phrase_no-2026-08-10-210808.mp3"
+    },
+    "dust_whoosh_mid": {
+      "file_id": "3fefcb08-9bb9-46e1-ab0c-66d894723d64",
+      "filename": "a_fast_dusty_transition_whoosh_of_dry_sand_and_grit_sweeping_past_the-2026-08-10-210809.mp3"
+    },
+    "dust_whoosh_hi": {
+      "file_id": "c6460478-902b-4c59-ac9d-ef0c4f21e35f",
+      "filename": "a_high_thin_airy_sandy_whoosh_sweeping_quickly_past_with_a_fast_fade-2026-08-10-210820.mp3"
+    },
+    "dust_whoosh_lo": {
+      "file_id": "874f404d-2ff4-4897-b499-19d86cc7ddba",
+      "filename": "a_deep_heavy_dust_storm_whoosh_rolling_low_and_slow_past_the_listener-2026-08-10-210822.mp3"
+    },
+    "guitar_tremolo_dark": {
+      "file_id": "cef0d2a5-be96-430e-8496-59fc5bf63a66",
+      "filename": "a_dark_tremolo_baritone_electric_guitar_chord_in_spaghetti_western-2026-08-10-210825.mp3"
+    },
+    "guitar_chord_accent": {
+      "file_id": "64f28168-76b4-4730-864f-48142984d7c2",
+      "filename": "a_confident_single_strummed_acoustic_western_guitar_chord_accent-2026-08-10-210827.mp3"
+    },
+    "drum_tom_groove": {
+      "file_id": "cdac0f82-5b33-4976-8c09-c7e1f90e8596",
+      "filename": "a_driving_low_tom_drum_pattern_tribal_western_pulse_dry_and_punchy_no-2026-08-10-210829.mp3"
+    },
+    "padlock_clank": {
+      "file_id": "f13a8ddb-2358-4a3d-b780-35deef4529b3",
+      "filename": "a_heavy_iron_padlock_and_jail_bolt_locking_shut_with_one_hard_clank_and_a-2026-08-10-210832.mp3"
+    },
+    "shovel_dirt": {
+      "file_id": "074ac1bb-252f-4903-88fa-4a769a6e9817",
+      "filename": "an_iron_shovel_biting_into_dry_graveyard_dirt_and_lifting_a_load_of_soil-2026-08-10-210834.mp3"
+    },
+    "grit_fall_light": {
+      "file_id": "ae4cce0b-63c1-44e3-8570-1813402a34e1",
+      "filename": "light_dry_dust_and_small_grit_trickling_down_onto_wood_after_an_impact-2026-08-10-210836.mp3"
+    },
+    "brass_fanfare_short": {
+      "file_id": "47ca6040-e8f8-4176-bfb9-88e64d71a933",
+      "filename": "a_short_triumphant_dusty_western_brass_fanfare_flourish_warm_horns-2026-08-10-210843.mp3"
+    },
+    "revolver_echo_distant": {
+      "file_id": "0857d3ce-bca3-4947-87f0-e24bc46b75bc",
+      "filename": "a_distant_single_gunshot_echoing_away_across_an_empty_desert_canyon-2026-08-10-210845.mp3"
+    },
+    "coffin_lid_creak": {
+      "file_id": "f394754c-fe7a-431d-b10c-2ba9542e384a",
+      "filename": "a_dry_wooden_coffin_lid_creaking_open_slowly_on_rusted_nails_ominous-2026-08-10-210848.mp3"
+    },
+    "smoke_hiss": {
+      "file_id": "d0443206-51d5-4e71-862f-9a043317d16c",
+      "filename": "a_short_hiss_of_hot_gunsmoke_and_burnt_powder_venting_after_a_gunshot-2026-08-10-210850.mp3"
+    },
+    "bell_accent_small": {
+      "file_id": "14485d83-d55c-43cc-8104-937600e952ae",
+      "filename": "a_small_dull_iron_hand_bell_tapped_once_muted_metallic_accent_dry_with_a-2026-08-10-210853.mp3"
+    },
+    "wood_splinter_crack": {
+      "file_id": "a8ebe57b-e900-427d-bc83-fa525b332bad",
+      "filename": "a_thick_dry_wooden_plank_cracking_and_splitting_apart_with_splinters-2026-08-10-210854.mp3"
+    },
+    "fire_loop_bed": {
+      "file_id": "18d163da-3d7d-43fe-bda5-c0d5c2a568fa",
+      "filename": "a_long_continuous_seamless_loop_of_steadily_burning_wooden_fire_at-2026-08-10-215639.mp3"
+    },
+    "fire_ignite": {
+      "file_id": "6bf1ae9a-46dc-48d4-9f0b-a7cd2499a82c",
+      "filename": "a_sudden_burst_of_flame_igniting_kerosenesoaked_wood_catching_fire-2026-08-10-215645.mp3"
+    },
+    "fire_burnout": {
+      "file_id": "8ea9c044-4751-4b98-9886-9e7ccef53ad5",
+      "filename": "a_fire_dying_out_strong_flames_rapidly_shrinking_down_to_hissing-2026-08-10-215704.mp3"
+    },
+    "fire_flare": {
+      "file_id": "29cf3d3f-10c5-4df3-b737-0608d8905bb1",
+      "filename": "a_quick_fire_flareup_flames_surging_suddenly_higher_with_a_sharp_airy-2026-08-10-215728.mp3"
+    },
+    "plank_tear": {
+      "file_id": "5eb96b22-0f72-4bc1-aaee-a12d4082121f",
+      "filename": "a_thick_weathered_wooden_plank_tearing_and_splitting_apart-2026-08-10-215752.mp3"
+    },
+    "gunsight_snap": {
+      "file_id": "1582f05a-5409-47a1-8e93-2bedfcb12035",
+      "filename": "a_heavy_iron_gunsight_snapping_into_position_precise_machined_steel-2026-08-10-215758.mp3"
+    },
+    "gunsight_release": {
+      "file_id": "4a4f1a87-ba1c-48cc-91bf-a136d26f2c3e",
+      "filename": "a_metal_latch_releasing_and_springing_back_to_rest_soft_mechanical-2026-08-10-215949.mp3"
+    },
+    "shovel_strike_a": {
+      "file_id": "15afcb60-2be7-45cc-a7e2-d588a6ea4406",
+      "filename": "an_iron_shovel_blade_driven_hard_down_into_packed_graveyard_earth_and-2026-08-10-215822.mp3"
+    },
+    "shovel_strike_b": {
+      "file_id": "2b730f12-cc94-4efb-94ea-466ad0ce6e17",
+      "filename": "a_spade_chopping_down_hard_into_dry_stony_graveyard_soil_and_jamming-2026-08-10-220319.mp3"
+    },
+    "shovel_strike_c": {
+      "file_id": "8ce559e2-afba-46f5-b864-7c29d9b5c147",
+      "filename": "loud_closeup_impact_of_an_iron_spade_driven_violently_into_hard_packed-2026-08-10-220607.mp3"
+    },
+    "shovel_handle_shiver": {
+      "file_id": "1679ed90-c938-43e4-b7dd-80ee0d44587c",
+      "filename": "the_faint_metallic_shiver_of_an_iron_shovel_handle_vibrating_after-2026-08-10-215837.mp3"
+    },
+    "fuse_crackle": {
+      "file_id": "7d1e21df-1c0f-4ca3-9798-49797a7c4a49",
+      "filename": "a_burning_black_powder_fuse_racing_along_a_trail_continuous_fizzing-2026-08-10-215844.mp3"
+    },
+    "ember_whoosh": {
+      "file_id": "8e1064a0-891b-4e1f-85f9-3feff5af4e3c",
+      "filename": "a_front_of_hot_embers_and_sparks_sweeping_quickly_past_the_listener-2026-08-10-215853.mp3"
+    },
+    "brass_sparks": {
+      "file_id": "71b9d64c-a4e6-469a-bb15-d3bbc179c908",
+      "filename": "hot_brass_sparks_scattering_and_skittering_across_stone_and_wood_fine-2026-08-10-215909.mp3"
+    },
+    "reel_nudge_ratchet": {
+      "file_id": "a432fe36-d223-4b31-a3e2-f22c06aa47be",
+      "filename": "a_heavy_wooden_reel_mechanism_nudging_one_notch_forward_firm_iron-2026-08-10-215919.mp3"
+    },
+    "stone_slab_grind": {
+      "file_id": "dc4b6c38-1706-46d3-953a-fc175ab9be8e",
+      "filename": "a_heavy_granite_tombstone_slab_grinding_and_scraping_open_across-2026-08-10-215925.mp3"
+    },
+    "iron_plaque_clang": {
+      "file_id": "ef24871e-87cf-41ae-849d-7f2ec2176ea2",
+      "filename": "a_bullet_striking_a_hanging_iron_plaque_hard_percussive_impact_with_a-2026-08-10-215933.mp3"
+    },
+    "brass_sting_celeb": {
+      "file_id": "d8f1cdea-aae6-4a9b-99ee-f81a92063a52",
+      "filename": "a_short_triumphant_spaghetti_western_brass_sting_accent_bold_warm-2026-08-10-215939.mp3"
+    },
+    "bass_note_d": {
+      "file_id": "f5dab15a-73d5-4b30-a5be-b1b80c60694e",
+      "filename": "a_single_deep_plucked_upright_acoustic_bass_note_in_d_warm_woody_low-2026-08-10-220333.mp3"
+    },
+    "music_frag_main": {
+      "file_id": "5e373b2f-455b-4904-ade3-882ef3bd7d3e",
+      "filename": "a_long_seamless_looping_dark_western_instrumental_music_bed_at_least-2026-08-10-215616.mp3"
+    },
+    "music_frag_freespin": {
+      "file_id": "6e810574-4b93-4cf7-afef-0f4f0a1c0305",
+      "filename": "a_long_seamless_looping_driving_western_instrumental_music_bed_at-2026-08-10-215623.mp3"
+    },
+    "music_frag_celeb": {
+      "file_id": "b33d4db2-6267-433b-ae55-d2124e16a20a",
+      "filename": "a_long_seamless_looping_triumphant_spaghetti_western_instrumental-2026-08-10-215631.mp3"
+    }
+  }
+}

@@ -162,20 +162,24 @@ export default {
 		type: 'font',
 		src: new URL('../../assets/fonts/amethystFont/mm_amethyst.xml', import.meta.url).href,
 	},
-	// THE WHITE ROOM per-game face (tools/make_clinical_font.py). face="clinical".
-	// Do NOT reuse silverFont (Mining-Mayhem western slab) or goldFont (Madam drip)
-	// for player-facing win/outro amounts — every game must ship a unique font.
-	whiteRoomFont: {
+	// TOMBSTONE REBORN per-game face (tools/make_tombstone_font.py). face="tombstone".
+	// Wanted-poster serif, branded gold body on a dark iron rim.
+	//
+	// This replaces face "clinical" (whiteRoomFont / wr_clinical) — the condensed
+	// light-grey Madam Mirror plaque face that was still rendering every win title
+	// and amount. Do NOT reuse silverFont (Mining-Mayhem western slab) or
+	// goldFont / amethystFont / ghostFont (Madam drip) either; every game must
+	// ship a unique player-facing face.
+	tombstoneFont: {
 		type: 'font',
-		src: new URL('../../assets/fonts/whiteRoomFont/wr_clinical.xml', import.meta.url).href,
+		src: new URL('../../assets/fonts/tombstoneFont/tr_tombstone.xml', import.meta.url).href,
 	},
 	// template 'bigwin' + 'globalMultiplier' spines removed: gold-western
-	// Mining-Mayhem art, superseded by the WinCelebration film reels and the
+	// Mining-Mayhem art, superseded by the WinCelebration hero plates and the
 	// WaysCounter plaque; neither was rendered anywhere in this app
 	// template 'fsIntro' / 'fsIntroNumber' / 'fsOutroNumber' spines removed:
 	// the Mining-Mayhem plank panel + bracket frame behind the old free-spin
-	// intro/outro; superseded by the bespoke haunted-mirror panels
-	// (mirrorFsIntro* / mirrorFsOutro) rendered by FreeSpinIntro/FreeSpinOutro
+	// intro/outro. This game has no free spins at all, so nothing replaces them.
 	// template 'foregroundAnimation' / 'foregroundFeatureAnimation' spines
 	// removed: the Mining-Mayhem crystal-mine backgrounds were preloaded on
 	// every session but Background.svelte renders the mirror parlor paintings
@@ -204,9 +208,9 @@ export default {
 		preload: true,
 	},
 	// template 'freeSpins' + 'winSmall' localized-plate atlases removed:
-	// western FREE SPINS / YOU WON / TOTAL WIN lettering, superseded by the
-	// baked mirrorFsOutro painting + bitmap-font text in the new overlays
-	// (FreeSpinCounter's Frame_FSCounter.png lives in reelsFrame)
+	// western FREE SPINS / YOU WON / TOTAL WIN lettering. Win amounts render as
+	// bitmap-font text on the WinCelebration plates; there is no free-spin
+	// counter panel because there are no free spins.
 	// template 'clusterWin' spine removed: cluster-pays effect, unused in a ways game
 	transition: {
 		type: 'spine',
@@ -216,9 +220,24 @@ export default {
 			scale: 2,
 		},
 	},
+	// EVERY paying symbol face lives in here: h1..h5 / l1..l5 cards, their spin
+	// smears, and the hm/me cards. It is flattened into loadedAssets under its
+	// FRAME names, so a symbol asks for `h2.webp`, not for `symbolsStatic`.
+	//
+	// preload is NOT optional. AssetsLoader renders the whole game as soon as the
+	// PRELOAD batch resolves, and Board mounts as soon as stateLayout
+	// .showLoadingScreen is false — which it already is on any in-place remount
+	// of <App> (Svelte HMR, a Storybook re-render; stateApp.reset() exists for
+	// exactly that). Left non-preload, the board draws during the window where
+	// loadedAssets holds preloaded assets ONLY, so every reel cell resolves to
+	// Texture.EMPTY: dark empty boxes plus a `Sprite: key "h2.webp" is not found
+	// in the loadedAssets` per cell. Every other symbol card (wrWild, wrScatter*,
+	// wrStretch/Split/Clone) is already preloaded; this one was the odd one out.
+	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
 		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.json', import.meta.url).href,
+		preload: true,
 	},
 	// Madam Mirror generated art
 	mirrorBgBase: {
@@ -268,52 +287,68 @@ export default {
 		src: new URL('../../assets/sprites/scene/scene_bg_v5.webp', import.meta.url).href,
 		preload: true,
 	},
-	// THE WHITE ROOM win celebration loops (folder masters; wire_celeb copies roots)
-	celebT2: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t2.webp', import.meta.url).href },
-	celebT3: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t3.webp', import.meta.url).href },
-	celebT4: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t4.webp', import.meta.url).href },
-	celebT5: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t5.webp', import.meta.url).href },
-	celebT6: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t6.webp', import.meta.url).href },
-	celebT7: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t7.webp', import.meta.url).href },
-	celebT2Anim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t2/celeb_t2.mp4', import.meta.url).href },
-	celebT3Anim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t3/celeb_t3.mp4', import.meta.url).href },
-	celebT4Anim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t4/celeb_t4.mp4', import.meta.url).href },
-	celebT5Anim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t5/celeb_t5.mp4', import.meta.url).href },
-	celebT6Anim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t6/celeb_t6.mp4', import.meta.url).href },
-	celebT7Anim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/celeb_t7/celeb_t7.mp4', import.meta.url).href },
-	mirrorIntroSeance: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/intro_seance.webp', import.meta.url).href,
+	// WIN CELEBRATION hero plates, one per big tier — dark western / graveyard
+	// scenes generated on Layer AI (FLUX.1 [dev]) and graded by
+	// tools/make_win_celebration_art.py.
+	//
+	// These REPLACE celebT2..celebT7 (+ celebT*Anim), which were photographic
+	// Madam Mirror "White Room" footage of a straitjacketed woman in a padded
+	// asylum cell — tier 7 was a literal white-out. Those files no longer ship;
+	// do not re-register them, there is deliberately no fallback to them.
+	winTierBounty: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bounty.webp', import.meta.url).href },
+	winTierShowdown: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_showdown.webp', import.meta.url).href },
+	winTierHighnoon: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_highnoon.webp', import.meta.url).href },
+	winTierLaststand: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_laststand.webp', import.meta.url).href },
+	winTierBloodmoney: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bloodmoney.webp', import.meta.url).href },
+	winTierBoothill: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_boothill.webp', import.meta.url).href },
+	// Weathered timber + branded-iron frame with a punched-through window, in
+	// place of the old thin amber CCTV-monitor bezel. Carries NO thin outline: the
+	// gold inlay hairline it used to bake around the window read as a stray vector
+	// outline once minified onto the panel, so the takeover's edge is now the warm
+	// window spill plus the runtime god-rays. Do not re-add a stroke here.
+	winFrame: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_frame.png', import.meta.url).href },
+	// Celebration light shapes (god-rays, lantern glow, bell rings) and particles
+	// (starburst pops, spark streaks, dust plumes, gunsmoke, embers).
+	// Frame order contract: src/game/winCelebrationArt.ts.
+	winCelebLight: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/win_celeb_light.json', import.meta.url).href,
 	},
-	mirrorIntroOtherside: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/intro_otherside.webp', import.meta.url).href,
+	winCelebVfx: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/win_celeb_vfx.json', import.meta.url).href,
 	},
-	mirrorIntroBloodmoon: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/intro_bloodmoon.webp', import.meta.url).href,
-	},
-	// observation-pane centrepieces for free-spins THE INTAKE / HER SIDE / WHITEOUT intro;
-	// one per bonus level, the dark glass oval holds the awarded free-spin
-	// count as a glowing apparition
-	mirrorFsIntro: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/fs_intro_mirror.webp', import.meta.url).href,
-	},
-	mirrorFsIntroOtherside: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/fs_intro_mirror_otherside.webp', import.meta.url).href,
-	},
-	mirrorFsIntroBloodmoon: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/fs_intro_mirror_bloodmoon.webp', import.meta.url).href,
-	},
-	// ornate amethyst filigree "YOU WON / TOTAL WIN" panel (titles baked into
-	// the painting; the centre band stays empty for the runtime amount)
-	mirrorFsOutro: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/fs_outro_panel.webp', import.meta.url).href,
-	},
+	// BONUS-ENTRY BANNER hero plates, one per real buy mode — DEAD MAN'S HAND for
+	// bonus_small (80x, the six-card special bar awake) and OPEN GRAVE for
+	// bonus_super (1000x, the sealed last-reel lane cracked open). Dark western
+	// scenes generated on Layer AI (FLUX.1 [dev], the same model and grade as the
+	// win tiers above) and baked by tools/make_bonus_entry_art.py.
+	//
+	// TWO keys, because the math has exactly two buy modes and each is a SINGLE
+	// enhanced spin. Contract: src/game/bonusEntryArt.ts.
+	bonusEntrySmall: { type: 'sprite', src: new URL('../../assets/sprites/celeb/bonus_entry_small.webp', import.meta.url).href },
+	bonusEntrySuper: { type: 'sprite', src: new URL('../../assets/sprites/celeb/bonus_entry_super.webp', import.meta.url).href },
+	// Two frames, both from the same timber/iron family. DEAD MAN'S HAND wears the
+	// 74px band with a single gold inlay; OPEN GRAVE wears a heavier build — deeper
+	// band, oversized corner straps, a strap on every mid-edge, double gold inlay.
+	//
+	// bonusFrameSmall is NOT `winFrame` above, although it started as a copy of it:
+	// the win takeover was asked to lose the thin outline tracing its panel, the
+	// banner was asked to keep its framing, so the banner owns the outlined build.
+	bonusFrameSmall: { type: 'sprite', src: new URL('../../assets/sprites/celeb/bonus_frame_small.png', import.meta.url).href },
+	bonusFrameSuper: { type: 'sprite', src: new URL('../../assets/sprites/celeb/bonus_frame_super.png', import.meta.url).href },
+	// The banner's light shapes and particles are `winCelebLight` / `winCelebVfx`
+	// above, reused as-is. Do NOT add a parallel bonus VFX atlas.
+	//
+	// FREE-SPIN / BONUS-LEVEL ART REMOVED. mirrorIntroSeance / mirrorIntroOtherside /
+	// mirrorIntroBloodmoon (bonus-level paintings), mirrorFsIntro /
+	// mirrorFsIntroOtherside / mirrorFsIntroBloodmoon (free-spin intro
+	// observation panes) and mirrorFsOutro ("YOU WON / TOTAL WIN" filigree
+	// panel) were Madam Mirror White Room art titled "THE INTAKE" / "HER SIDE" /
+	// "WHITEOUT". Tombstone Reborn has NO free spins and NO bonus levels — its
+	// bonuses are single enhanced spins — so the five overlays that rendered
+	// these were dead code and are deleted along with the .webp files. There is
+	// deliberately no replacement key: do not re-register these.
 	// Full-bleed padded-cell still (from bg_base). Never ship the old title-card
 	// composite that baked a PNG transparency checkerboard into the centre plate.
 	mirrorLoading: {
@@ -530,25 +565,120 @@ export default {
 		src: new URL('../../assets/sprites/fx/split_claw.json', import.meta.url).href,
 		preload: true,
 	},
-	// SPLIT: bullet-hole impact decals stamped onto scored cells. Three variants
-	// packed by tools/make_bullet_hole_atlas.py; shot count scales with the
-	// cell's multiplier (up to 4).
+	// SPLIT: bullet-hole impact decals stamped onto scored cells. Six splintered
+	// wood holes packed by tools/make_bullet_hole_atlas.py; shot count scales
+	// with the cell's multiplier (up to 4).
 	splitHoles: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/fx/split_holes.json', import.meta.url).href,
 		preload: true,
 	},
-	// SPLIT / lock western VFX (Kenney particle + smoke packs, recolored).
-	// tools/make_tombstone_split_vfx_atlas.py — brass sparks, gunsmoke, scorch,
-	// scope ring. Replaces clinical white brackets / clinic sparkles.
+	// BULLET EXPLOSION for high-multiplier split cells (count > 10): a one-shot
+	// gunpowder blast flipbook baked from Kenney explosions/Explosion_1 by
+	// tools/make_split_explosion_atlas.py. Frame order is src/game/splitExplosion.ts.
+	splitExplosion: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/split_explosion.json', import.meta.url).href,
+		preload: true,
+	},
+	// SPLIT / lock western VFX: Scenario muzzle flashes, dust plume, gold
+	// starburst and sparkler, over Kenney particle + smoke supporting layers
+	// (tools/make_tombstone_split_vfx_atlas.py).
 	tombstoneSplitVfx: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/fx/tombstone_split_vfx.json', import.meta.url).href,
 		preload: true,
 	},
+	// LINKED CELL FIRE: real flame tongues sliced out of the reference fire band,
+	// plus Kenney's Black smoke sequence, a light mask, and warm spark embers
+	// (tools/make_cell_fire_atlas.py). Frame order is the contract in
+	// src/game/cellFire.ts.
+	cellFire: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/cell_fire.json', import.meta.url).href,
+		preload: true,
+	},
+	// NON-SPLIT feature VFX (nudge / gunsmoke / coffin open / dig up /
+	// special-bar hit / bounty): Kenney gunsmoke, dust, muzzle flash, grave
+	// burst, dirt, scorch, sparks, splats, rings and light shafts, recoloured
+	// to the graveyard palette (tools/make_tombstone_feature_vfx_atlas.py).
+	// Frame order is the contract in src/game/featureVfx.ts.
+	tombstoneFeatureVfx: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/tombstone_feature_vfx.json', import.meta.url).href,
+		preload: true,
+	},
+	// Hero plates for the same events, from the Scenario team library and baked
+	// by the script above (alpha-bled, RGB zeroed under transparency).
+	fxMuzzleFlash: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_muzzle_flash.png', import.meta.url).href,
+		preload: true,
+	},
+	fxDustPlume: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_dust_plume.png', import.meta.url).href,
+		preload: true,
+	},
+	// DIG UP hero art, generated in Layer AI and cut by tools/make_digup_shovel.py:
+	// the spade that plants itself in a dug cell, and the turned earth under it.
+	fxShovel: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_shovel.png', import.meta.url).href,
+		preload: true,
+	},
+	fxDigScar: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_dig_scar.png', import.meta.url).href,
+		preload: true,
+	},
+	// Cracked-strike decal stamped on the symbol where the spade bites, so the
+	// dig reads as a real IMPACT on the card, not a spade quietly placed on it.
+	// Layer GPT Image 2 gen on a black void, keyed by tools/make_digup_shovel.py.
+	fxDigImpact: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_dig_impact.png', import.meta.url).href,
+		preload: true,
+	},
+	// NUDGE furniture, generated in Layer AI and cut by tools/make_nudge_ui.py.
+	// The frame's centre is open, so the riding symbol reads through it; the
+	// plaque is shared by the nudge and bounty multiplier badges.
+	fxRiderFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_rider_frame.png', import.meta.url).href,
+		preload: true,
+	},
+	fxMultPlaque: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_mult_plaque.png', import.meta.url).href,
+		preload: true,
+	},
 	// CELL-BLOCK CHASSIS art is GONE: the iron cage columns and beam were
 	// removed — the side special cells are sockets of the board plate itself
 	// (BoardPlate.svelte), with only the prison bars (LockedSlots) over them.
+	// BOARD REEL-FRAME art (tools/make_board_frame_art.py): the weathered
+	// timber-and-iron chassis BoardPlate.svelte is skinned with. The plate is a
+	// dark-graded Layer AI FLUX.1 [dev] plank render clipped to the diamond
+	// staircase; the socket is one crafted recessed window drawn per visible
+	// cell; the bracket is a bolted iron corner boss on the plate's PAD overhang.
+	// This REPLACES the old procedural Pixi Graphics frame (flat plank fill +
+	// hand-drawn sockets + nail dots). Preloaded: the board mounts the instant
+	// the loading screen clears, so these must be in loadedAssets by then.
+	boardPlate: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_plate.webp', import.meta.url).href,
+		preload: true,
+	},
+	boardCellSocket: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_cell_socket.png', import.meta.url).href,
+		preload: true,
+	},
+	boardCornerBracket: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_corner_bracket.png', import.meta.url).href,
+		preload: true,
+	},
 	// STRETCH feature rig (tools/make_stretch_chain.py): a vertically-tileable
 	// heavy chain strip and the two-jaw clamp that grips the reel edge to pull it.
 	stretchChain: {
@@ -584,6 +714,14 @@ export default {
 	barPlaque: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/bar_plaque.png', import.meta.url).href,
+		preload: true,
+	},
+	// Ornate cast-iron/bronze nameplate for the WAYS (top) + WIN (bottom) readouts
+	// on the vertical rail. Layer GPT Image 2 gen, keyed transparent + trimmed
+	// (tools/make_readout_plaque.py). 1.5:1, dark inset panel hosts gold text.
+	barReadoutPlaque: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_readout_plaque.png', import.meta.url).href,
 		preload: true,
 	},
 	barPlaqueGang: {
@@ -635,9 +773,16 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/root_frame_b.png', import.meta.url).href,
 	},
-	coins: {
+	// Win-scatter particles: aged gold coins at many rotations plus brass rifle
+	// cartridges and spent casings, cut out of a Layer AI sheet by
+	// tools/make_win_celebration_art.py.
+	//
+	// This REPLACES `coins` (assets/sprites/coin/SD2_Coin.json), which was the
+	// Samurai Dogs 2 template coin sheet — the generic gold-coin confetti. That
+	// sheet is no longer registered.
+	winScatter: {
 		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/coin/SD2_Coin.json', import.meta.url).href,
+		src: new URL('../../assets/sprites/fx/win_scatter.json', import.meta.url).href,
 	},
 	// Cell Seal full-reel characters (H1–H5): still + expand (gif/mp4) + looping idle webm
 	// + GodMode Spine (idle). Overlay prefers expand *video* (play-once→loop-last-3s) →

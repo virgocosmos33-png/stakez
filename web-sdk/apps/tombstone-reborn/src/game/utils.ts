@@ -15,6 +15,7 @@ import {
 	MAX_ROWS,
 } from './constants';
 import { eventEmitter } from './eventEmitter';
+import { presentBonusEntry } from './bonusEntry';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap } from './bookEventHandlerMap';
 import { stateGame } from './stateGame.svelte';
@@ -28,6 +29,9 @@ export const { getEmptyBoard } = createGetEmptyPaddedBoard({
 export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEventHandlerMap });
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
+	// A bought bonus announces itself before its single enhanced spin. No-op on a
+	// base spin and on a resumed round — see game/bonusEntry.ts.
+	await presentBonusEntry(bet);
 	await playBookEvents(bet.state);
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
 };

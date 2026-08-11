@@ -47,6 +47,26 @@ const HUD_THEME_DEFAULTS = {
 
 	// type
 	fontDisplay: 'Cinzel, Georgia, serif',
+	// UiLabel (tablet BALANCE / BET / WIN pills) split its caption and its value
+	// apart so a game can give them different roles — a condensed stencil face for
+	// the caption, a tabular one for the amount. Both default to the value
+	// `fontDisplay` already carried, so untouched games render identically.
+	fontLabel: 'Cinzel, Georgia, serif',
+	fontValue: 'Cinzel, Georgia, serif',
+	// UiLabel sizes its pill from an estimate of the rendered text width. The
+	// coefficient is the average glyph advance as a fraction of the font size, so
+	// it only holds for the family above — a game that repoints fontLabel /
+	// fontValue at a condensed face MUST pass its measured advance here or the
+	// pill will be sized for the wrong metrics.
+	fontLabelAdvance: 0.64,
+	fontValueAdvance: 0.6,
+	// ControlInfoBar (desktop / portrait / landscape bet bar) has always used the
+	// system sans rather than fontDisplay, so it gets its own tokens instead of
+	// silently inheriting a serif.
+	barFontLabel: 'Segoe UI, Arial, sans-serif',
+	barFontValue: 'Segoe UI, Arial, sans-serif',
+	// ButtonBetAutoSpinsCounter remaining-spins number
+	autoSpinsFont: 'Arial',
 	textPrimary: 0xf4ecd8,
 	textSecondary: 0xb9b1c4,
 	// shared HUD gold (matches WAYS/WIN/FREE-SPINS labels, marquee, action-pod rim)

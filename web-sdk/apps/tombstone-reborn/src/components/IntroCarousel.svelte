@@ -6,6 +6,14 @@
 	import { stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
+	import {
+		TR_INK_BLOOD,
+		estimateTextWidth,
+		trCssFont,
+		trHeroTitleStyle,
+		trLabelStyle,
+		type TypographyRole,
+	} from '../game/typography';
 
 	type Props = {
 		oncontinue: () => void;
@@ -22,10 +30,20 @@
 	const context = getContext();
 
 	// Same chrome language as paytable / buy-confirm / bonus level banner.
-	const BRAND_FAMILY = 'Impact, "Arial Black", "Arial Narrow", Arial, sans-serif';
+	//
+	// TYPE ROLES: the four instructional cards are multi-line rules copy that has
+	// to stay readable and keep its red highlight tokens, so they use the
+	// condensed label face. The max-win card is the one true hero title here —
+	// text-only, single idea, rendered at 1.8x — so it takes the western display
+	// face with the metallic fill and iron outline.
+	const HEADLINE_WEIGHT = '700';
 	const BRAND_INK = 0x0a0a0a;
 	const BRAND_COPY = 0xece8df;
-	const BRAND_RED = 0xe91e63;
+	// Highlight ink, shared by the emphasised copy tokens and the chrome that
+	// frames them (chevron stroke, page dots) so the card reads as one palette.
+	// Was a magenta carried over from the cloned game, which has no business in a
+	// graveyard western.
+	const BRAND_RED = TR_INK_BLOOD;
 	const LETTER_SPACING = 2;
 	const CTA_RATIO = 282 / 780;
 	const CLOSE_RATIO = 1;
@@ -159,13 +177,16 @@
 		});
 	};
 
+	/** which type role the current card's headline renders in */
+	const headlineRole = $derived<TypographyRole>(isMaxwin ? 'display' : 'label');
+
 	const measureCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-	const measure = (text: string, size: number) => {
+	const measure = (text: string, size: number, role: TypographyRole) => {
 		if (!text) return 0;
 		const ctx = measureCanvas?.getContext('2d');
 		const tracking = Math.max(0, text.length - 1) * LETTER_SPACING;
-		if (!ctx) return text.length * size * 0.52 + tracking;
-		ctx.font = `800 ${size}px ${BRAND_FAMILY}`;
+		if (!ctx) return estimateTextWidth(text, { role, fontSize: size }) + tracking;
+		ctx.font = trCssFont(role, size, role === 'label' ? HEADLINE_WEIGHT : undefined);
 		return ctx.measureText(text).width + tracking;
 	};
 
@@ -200,7 +221,7 @@
 		const totalH = (lines.length - 1) * lh;
 		return lines.map((line, li) => {
 			const segs = segmentLine(line);
-			const widths = segs.map((s) => measure(s.text, size));
+			const widths = segs.map((s) => measure(s.text, size, headlineRole));
 			const totalW = widths.reduce((a, b) => a + b, 0);
 			let x = -totalW * 0.5;
 			const placed = segs.map((s, si) => {
@@ -211,6 +232,24 @@
 			return { y: li * lh - totalH * 0.5, segs: placed };
 		});
 	});
+
+	// On the max-win hero card the metallic fill IS the emphasis, so highlight
+	// tokens stop needing their own colour; the rules cards keep the red.
+	const headlineStyle = (highlighted: boolean) =>
+		isMaxwin
+			? trHeroTitleStyle({
+					fontSize,
+					metal: 'gold',
+					align: 'left',
+					letterSpacing: LETTER_SPACING,
+				})
+			: trLabelStyle({
+					fontWeight: HEADLINE_WEIGHT,
+					fontSize,
+					fill: highlighted ? BRAND_RED : BRAND_COPY,
+					align: 'left',
+					letterSpacing: LETTER_SPACING,
+				});
 </script>
 
 <!-- dark scrim over the loading painting (full-bleed padded cell) -->
@@ -266,14 +305,7 @@
 					y={line.y}
 					text={seg.text}
 					eventMode="none"
-					style={{
-						fontFamily: BRAND_FAMILY,
-						fontWeight: '800',
-						fontSize,
-						fill: seg.hl ? BRAND_RED : BRAND_COPY,
-						align: 'left',
-						letterSpacing: LETTER_SPACING,
-					}}
+					style={headlineStyle(seg.hl)}
 				/>
 			{/each}
 		{/each}
@@ -332,13 +364,11 @@
 		anchor={0.5}
 		text="×"
 		eventMode="none"
-		style={{
-			fontFamily: BRAND_FAMILY,
-			fontWeight: '800',
+		style={trLabelStyle({
+			fontWeight: HEADLINE_WEIGHT,
 			fontSize: closeSize * 0.72,
 			fill: BRAND_INK,
-			align: 'center',
-		}}
+		})}
 	/>
 </Container>
 
@@ -359,13 +389,11 @@
 		anchor={0.5}
 		text="<"
 		eventMode="none"
-		style={{
-			fontFamily: BRAND_FAMILY,
-			fontWeight: '800',
+		style={trLabelStyle({
+			fontWeight: HEADLINE_WEIGHT,
 			fontSize: chevronSize * 0.55,
 			fill: BRAND_INK,
-			align: 'center',
-		}}
+		})}
 	/>
 </Container>
 <Container
@@ -381,13 +409,11 @@
 		anchor={0.5}
 		text=">"
 		eventMode="none"
-		style={{
-			fontFamily: BRAND_FAMILY,
-			fontWeight: '800',
+		style={trLabelStyle({
+			fontWeight: HEADLINE_WEIGHT,
 			fontSize: chevronSize * 0.55,
 			fill: BRAND_INK,
-			align: 'center',
-		}}
+		})}
 	/>
 </Container>
 
@@ -405,14 +431,12 @@
 		anchor={0.5}
 		text="CONTINUE"
 		eventMode="none"
-		style={{
-			fontFamily: BRAND_FAMILY,
-			fontWeight: '800',
+		style={trLabelStyle({
+			fontWeight: HEADLINE_WEIGHT,
 			fontSize: ctaH * 0.42,
 			fill: BRAND_INK,
-			align: 'center',
 			letterSpacing: 3,
-		}}
+		})}
 	/>
 </Container>
 

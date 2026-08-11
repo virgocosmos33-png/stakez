@@ -51,23 +51,22 @@
 	const STEEL_HOVER = T.edgeGoldHover;
 	const STEEL_DIM = T.panelStroke;
 
-	const FONT = 'Segoe UI, Arial, sans-serif';
 	const labelStyle = {
-		fontFamily: FONT,
+		fontFamily: T.barFontLabel,
 		fontWeight: '700',
 		fontSize: 16,
 		fill: HUD_GOLD,
 		letterSpacing: 1.1,
 	} as const;
 	const balanceValueStyle = {
-		fontFamily: FONT,
+		fontFamily: T.barFontValue,
 		fontWeight: '700',
 		fontSize: 26,
 		fill: T.balanceText,
 		letterSpacing: 0.3,
 	} as const;
 	const betValueStyle = {
-		fontFamily: FONT,
+		fontFamily: T.barFontValue,
 		fontWeight: '700',
 		fontSize: 26,
 		fill: T.betText,

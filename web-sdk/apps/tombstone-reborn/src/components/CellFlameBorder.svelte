@@ -273,6 +273,12 @@ void main() {
 	// The ~1s ramp starts right as the cells open — after the scatters land,
 	// the bars retract and the player clicks into the bonus, the fire is what
 	// greets them on the first bonus board.
+	// Audio here is a one-shot accent only, at group level rather than per group:
+	// three groups lighting on the same board must not fire three ignites, and
+	// the sustained burn bed belongs to LinkedCellFire so the two components can
+	// never both own a loop.
+	let anyBurning = false;
+
 	$effect(() => {
 		for (const { entry, box } of boxes) {
 			const burning = box != null;
@@ -281,6 +287,15 @@ void main() {
 			} else if (!burning && entry.ignite.target !== 0) {
 				entry.ignite.set(0, { duration: 450 });
 			}
+		}
+
+		const burningNow = boxes.some(({ box }) => box != null);
+		if (burningNow !== anyBurning) {
+			anyBurning = burningNow;
+			context.eventEmitter.broadcast({
+				type: 'soundOnce',
+				name: burningNow ? 'sfx_fire_ignite' : 'sfx_fire_out',
+			});
 		}
 	});
 

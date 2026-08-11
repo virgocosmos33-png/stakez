@@ -10,7 +10,7 @@
 
 	import { getContext } from '../game/context';
 	import { cellFrames, type Rect } from '../game/chassisArt';
-	import { WHITE_ROOM_PALETTE } from '../game/clinicalFx';
+	import { GRAVEYARD_PALETTE } from '../game/graveyardFx';
 	import {
 		BOTTOM_SLOTS,
 		RIGHT_SLOTS,
@@ -319,13 +319,15 @@
 		const len = h + BAR_TOP_EXT + h * BAR_BOTTOM_EXT;
 		for (let i = 0; i < count; i++) {
 			const x = -w / 2 + pitch * (i + 0.5);
-			// round steel bar: dark core, lit left flank, thin specular, shaded right edge
+			// jail bar in weathered iron: dark core, lit left flank, thin lantern
+			// specular, shaded right edge. Warm throughout — the blue-grey steel it
+			// used to be belonged to the old clinical palette.
 			g.roundRect(x - BAR_W / 2, top, BAR_W, len, BAR_W / 2);
-			g.fill({ color: 0x33363b });
+			g.fill({ color: 0x33291f });
 			g.roundRect(x - BAR_W / 2 + 1, top + 1, BAR_W * 0.42, len - 2, BAR_W * 0.21);
-			g.fill({ color: WHITE_ROOM_PALETTE.steel, alpha: 0.55 });
+			g.fill({ color: GRAVEYARD_PALETTE.iron, alpha: 0.55 });
 			g.roundRect(x - BAR_W / 2 + 1.6, top + 2, 1.4, len - 4, 0.7);
-			g.fill({ color: WHITE_ROOM_PALETTE.bone, alpha: 0.4 });
+			g.fill({ color: GRAVEYARD_PALETTE.dust, alpha: 0.4 });
 			g.roundRect(x + BAR_W / 2 - 1.8, top + 1, 1.8, len - 2, 0.9);
 			g.fill({ color: 0x000000, alpha: 0.45 });
 		}

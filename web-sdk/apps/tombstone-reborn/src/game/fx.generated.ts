@@ -184,14 +184,14 @@ export const GEN_FX: Record<string, any> = {
 	"winAmountFont": {
 		"label": "Win Amount Font",
 		"tag": "win text",
-		"desc": "PER-GAME FONT (must be unique). Player-facing win/outro/celebration amounts + PRESS ANYWHERE chrome. fontFamily = BitmapText face (clinical = White Room whiteRoomFont). BANNED defaults: silver (Mining-Mayhem western slab template), gold/amethyst/ghost (Madam drip). colors[0] = Pixi tint. Regen: regenerate_assets scope=fonts.",
-		"fontFamily": "clinical",
+		"desc": "PER-GAME FONT (must be unique). Player-facing win/outro/celebration amounts + PRESS ANYWHERE chrome. fontFamily = BitmapText face (tombstone = wanted-poster gold serif, tombstoneFont). BANNED defaults: clinical (Madam Mirror White Room plaque face), silver (Mining-Mayhem western slab template), gold/amethyst/ghost (Madam drip). colors[0] = Pixi tint. Regen: regenerate_assets scope=fonts.",
+		"fontFamily": "tombstone",
 		"fontSizeScale": 1,
 		"swatchNames": [
 			"tint"
 		],
 		"colors": [
-			"0xf4f1ec"
+			"0xe8d6a8"
 		]
 	}
 };

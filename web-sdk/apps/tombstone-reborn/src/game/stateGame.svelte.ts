@@ -37,10 +37,10 @@ const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	}
 
 	if (rawSymbol.name === 'ME') {
-		// the eye drops with its own cinematic boom
+		// the top special symbol drops with its own cinematic graveyard toll
 		eventEmitter.broadcast({
 			type: 'soundOnce',
-			name: 'sfx_madams_eye',
+			name: 'sfx_tombstone_toll',
 		});
 	} else if (rawSymbol.name === 'W') {
 		eventEmitter.broadcast({

@@ -14,16 +14,16 @@
 	//   ButtonTurbo      → temporary turbo (fast-forward remaining FX)
 	//   ButtonBetProvider→ disable stop until stopButtonEnable
 	//   WinCelebration   → advance/dismiss big-win stages
-	//   FreeSpinOutro / BonusLevelBanner / Transition → dismiss overlays
+	//   Transition       → dismiss overlay
 	// Overlays that cover the board also broadcast stopButtonClick on press
-	// (full-screen catchers) so one UX covers spin + celebration + FS panels.
+	// (full-screen catchers) so one UX covers spin + celebration.
 	const busy = $derived(!context.stateXstateDerived.isIdle());
 
 	const skip = () => {
-		// Always broadcast — overlay listeners (BonusLevelBanner / Win / Outro /
-		// Transition) no-op when hidden. Do NOT gate on isIdle: Storybook Action
-		// calls playBet while xstate stays idle, so a gate here left CONTINUE
-		// panels undismissable via Space.
+		// Always broadcast — overlay listeners (Win / Transition) no-op when
+		// hidden. Do NOT gate on isIdle: Storybook Action calls playBet while
+		// xstate stays idle, so a gate here left CONTINUE panels undismissable
+		// via Space.
 		context.eventEmitter.broadcast({ type: 'stopButtonClick' });
 	};
 

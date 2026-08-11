@@ -72,7 +72,7 @@ export const WHITE_ROOM_SPECIALS: SpecialSymbol[] = [
 	{
 		key: 'supersplit',
 		name: 'Supersplit',
-		desc: 'SUPER BONUS only: the last reel turns fully WILD and EVERY paying symbol on the board splits at once.',
+		desc: 'The rarest thing the open last-reel lane can drop: the last reel turns fully WILD and EVERY paying symbol on the board splits at once. The SUPER BONUS opens the lane on every spin, but DIG UP opens it in the base game and the small bonus too.',
 	},
 ];
 
@@ -104,15 +104,18 @@ export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 		bullets: [
 			'BOUNTY — a random premium carrying a WIN multiplier (×2 to ×100) on the whole spin.',
 			'NUDGE — the bounty premium slides left, climbing its WIN multiplier for every premium it passes and leaving each as a WILD.',
-			'SUPERSPLIT (Super Bonus only) — the lane turns WILD and every paying symbol on the board splits.',
+			'SUPERSPLIT — the lane turns WILD and every paying symbol on the board splits. The rarest of the three.',
 		],
 	},
 	{
 		title: 'BONUSES',
-		body: 'Both bonuses are a SINGLE enhanced spin, not a set of free spins:',
+		body: "Both bonuses are a SINGLE enhanced spin, not a set of free spins. The banner that opens each one names it: DEAD MAN'S HAND for the small buy, OPEN GRAVE for the super.",
 		rows: [
-			{ label: 'SMALL BONUS — special bar fully awake', value: '80× bet' },
-			{ label: 'SUPER BONUS — bar awake + last lane open + Supersplit', value: '1,000× bet' },
+			{ label: "SMALL BONUS — DEAD MAN'S HAND, special bar fully awake", value: '80× bet' },
+			{
+				label: 'SUPER BONUS — OPEN GRAVE, bar awake + last lane open every spin',
+				value: '1,000× bet',
+			},
 		],
 		bullets: [
 			'The SMALL BONUS returns exactly 0 on about 40% of spins — and can, very rarely, reach the max win.',

@@ -18,12 +18,13 @@
 	import { getContext } from '../game/context';
 	import config from '../game/config';
 	import { getSideRailLayout, type TextSlot } from '../game/plaqueMount';
-	import { winFontFamily, winFontTint } from '../game/winFont';
+	import { formatWays } from '../game/waysFormat';
+	import { trAmountFamily, trAmountTint } from '../game/typography';
 	import FittedText from './FittedText.svelte';
 
 	const context = getContext();
-	const AMOUNT_FAMILY = winFontFamily();
-	const AMOUNT_TINT = winFontTint();
+	const AMOUNT_FAMILY = trAmountFamily();
+	const AMOUNT_TINT = trAmountTint();
 	const CAPTION_TINT = 0xc8c4bc;
 
 	// EXACT reference:
@@ -36,7 +37,7 @@
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 	let ways = $state(BASE_WAYS);
 	const waysPop = new Tween(1);
-	const waysText = $derived(String(ways));
+	const waysText = $derived(formatWays(ways));
 
 	const winText = $derived(bookEventAmountToCurrencyString(stateBet.winBookEventAmount));
 	const winPop = new Tween(1);

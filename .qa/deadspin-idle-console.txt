@@ -1,0 +1,20 @@
+console | debug | [vite] connecting...
+console | debug | [vite] connected.
+console | log | %c  %c  %c  %c  %c PixiJS %c v8.8.1 (webgl 2) http://www.pixijs.com/
+
+ | background: #E72264; padding:5px 0; | background: #6CA2EA; padding:5px 0; | background: #B5D33D; padding:5px 0; | background: #FED23F; padding:5px 0; | color: #FFFFFF; background: #E72264; padding:5px 0; | color: #E72264; background: #FFFFFF; padding:5px 0;
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H1_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H2_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H4_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Assets] http://localhost:6009/assets/sprites/cellSeal/H5_expand.gif could not be loaded as we don't know how to parse it, ensure the correct parser has been added
+console | warning | PixiJS Warning:  | [Cache] already has key: | 1.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 2.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 3.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 4.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 5.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 6.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 7.png
+console | warning | PixiJS Warning:  | [Cache] already has key: | 8.png
+console | warning | PixiJS Warning:  | ImageSource: Image element passed, converting to canvas. Use CanvasSource instead.
+READY {"msg":"ⓘ Click action to start","disabled":false,"canvas":[1280,800],"loadedHint":true}
+FINAL_MSG ⓘ Click action to start

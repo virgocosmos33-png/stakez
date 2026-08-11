@@ -35,11 +35,14 @@
 	import FrameMorphHud from './FrameMorphHud.svelte';
 	import SplitPanes from './SplitPanes.svelte';
 	import CloneMorph from './CloneMorph.svelte';
+	import LinkedCellFire from './LinkedCellFire.svelte';
 	import StretchWays from './StretchWays.svelte';
 	import NudgeSlide from './NudgeSlide.svelte';
+	import FeatureBurst from './FeatureBurst.svelte';
 	import WinSweep from './WinSweep.svelte';
 	import WinDim from './WinDim.svelte';
 	import TapToSkip from './TapToSkip.svelte';
+	import BonusEntry from './BonusEntry.svelte';
 
 	const context = getContext();
 
@@ -189,6 +192,9 @@
 		<!-- NUDGE: premium slides LEFT from the last lane, WIN mult climbs. -->
 		<NudgeSlide />
 
+		<!-- GUNSMOKE / TOMBSTONE OPEN / DIG UP / BOUNTY western bursts. -->
+		<FeatureBurst />
+
 		<!-- SPLIT-GANG / SPLIT-OUTLAWS / SUPERSPLIT pane tear. -->
 		<SplitPanes />
 
@@ -197,6 +203,11 @@
 
 		<!-- Marks the symbols a feature is about to hit. -->
 		<TargetLock />
+
+		<!-- Linked / connected cells burn: cell borders and the reel edges they
+			sit on. This is the connector language now that split cells draw no
+			divider at all. -->
+		<LinkedCellFire />
 
 		<!-- SceneCharacter REMOVED: the patient beside the reels is gone. The
 			right of the board is now empty room by design — do not remount her
@@ -245,6 +256,13 @@
 			</UI>
 			<Win />
 			<Transition />
+
+			<!-- Bought-bonus announcement: DEAD MAN'S HAND (bonus_small) /
+				OPEN GRAVE (bonus_super), awaited by playBet at round start so
+				the enhanced spin waits for it. Mounted LAST in this container so
+				it covers the HUD as well — it is a takeover, and the player has
+				already committed the buy, so nothing under it is actionable. -->
+			<BonusEntry />
 		</Container>
 	{/if}
 </App>

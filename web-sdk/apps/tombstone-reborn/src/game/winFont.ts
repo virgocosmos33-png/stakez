@@ -3,13 +3,17 @@
  * Source of truth: config.fx.winAmountFont → fx.generated.ts (panel FX tab + DramaStudioMCP).
  *
  * Per-game rule: every game ships its OWN bitmap face. Do NOT default to shared
- * template fonts (silver = Mining-Mayhem western slab, gold/amethyst/ghost = Madam drip).
+ * template fonts (silver = Mining-Mayhem western slab, gold/amethyst/ghost = Madam
+ * drip) and do NOT go back to 'clinical' — that was the Madam Mirror White Room
+ * plaque face, the condensed light-grey display type the player kept seeing under
+ * every win title and amount.
  */
 import { SYMBOL_SIZE } from './constants';
 import { fxColors, fxNum, fxStr } from './fx.generated';
 
-const FALLBACK_FAMILY = 'clinical';
-const FALLBACK_TINT = 0xf4f1ec;
+// face baked by tools/make_tombstone_font.py, registered as `tombstoneFont`
+const FALLBACK_FAMILY = 'tombstone';
+const FALLBACK_TINT = 0xe8d6a8;
 
 export function winFontFamily(): string {
 	return fxStr('winAmountFont', 'fontFamily', FALLBACK_FAMILY);

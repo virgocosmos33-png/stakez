@@ -6,6 +6,8 @@
 	import * as PIXI from 'pixi.js';
 	import { BaseSprite, Container, Graphics, getContextApp } from 'pixi-svelte';
 
+	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
+
 	type Props = {
 		tex: number;
 		x: number;
@@ -31,13 +33,17 @@
 
 	const ageMs = $derived(Math.max(0, props.now - props.born));
 	const flash = $derived(ageMs < 90 ? 1 - ageMs / 90 : 0);
+	const HIT_SCALE = $derived(SIZE * (props.scale ?? 1));
 
+	// A hot ember in the fresh hole, sized off the stamped decal. This used to be
+	// a cream disc at a fixed SIZE radius, so a small hole still flashed a pale
+	// circle bigger than itself — one of the "white sparkle" marks on the board.
 	const drawFlash = (g: import('pixi.js').Graphics) => {
 		if (flash <= 0.01) return;
-		g.circle(0, 0, SIZE * 0.22 * (1 + flash));
-		g.fill({ color: 0xf0d78c, alpha: 0.55 * flash });
-		g.circle(0, 0, SIZE * 0.1);
-		g.fill({ color: 0xc9a34a, alpha: 0.8 * flash });
+		g.circle(0, 0, HIT_SCALE * 0.16 * (1 + 0.5 * flash));
+		g.fill({ color: TOMBSTONE_FX.bloodRust, alpha: 0.4 * flash });
+		g.circle(0, 0, HIT_SCALE * 0.07);
+		g.fill({ color: TOMBSTONE_FX.brass, alpha: 0.55 * flash });
 	};
 </script>
 
@@ -50,7 +56,7 @@
 		width={SIZE * (props.scale ?? 1)}
 		height={SIZE * (props.scale ?? 1)}
 		rotation={props.rot ?? 0}
-		alpha={0.95}
+		alpha={0.72}
 	/>
 	{#if flash > 0.01}
 		<Container x={props.x} y={props.y}>
