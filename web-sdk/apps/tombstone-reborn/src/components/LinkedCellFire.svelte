@@ -173,24 +173,26 @@ void main() {
     float t = 0.0003 * uTime;
 
     float atg = atan(uv.y, uv.x);
-    // reference radial noise: strong, with the +2.2*uv.y climbing phase that
-    // makes the flame line spark upward all around the border. (+1e-4 only to
-    // keep pow() finite at the exact centre, which is masked out anyway.)
-    vec2 polar_uv = vec2(atg, t + 2.2 * uv.y + 2.0 / pow(length(uv) + 1e-4, 0.5));
+    // (1)5 flame STYLE verbatim: NO +2.2*uv.y climbing phase — that omission is
+    // exactly what gives (1)5 its softer, even tongue-fringing all around the
+    // border instead of a strongly upward-sparking line. (+1e-4 only to keep
+    // pow() finite at the exact centre, which is masked out anyway.)
+    vec2 polar_uv = vec2(atg, t + 2.0 / pow(length(uv) + 1e-4, 0.5));
     polar_uv *= noise_scale;
     float noise_left = fbm(polar_uv);
     polar_uv.x = mod(polar_uv.x, noise_scale * TWO_PI);
     float noise_right = fbm(polar_uv);
     float noiseV = mix(noise_right, noise_left, smoothstep(-0.2, 0.2, uv.x));
 
-    // reference box VERBATIM: vec2(.42 * u_ratio, .65), corner .12, radius .55,
-    // thickness .2. The quad is sized so the CARD border lands on this box, so
-    // the ring's inner edge hugs the card and flames lick outward.
+    // box VERBATIM from (1)5: vec2(.42 * u_ratio, .65), corner .12, radius .55,
+    // thickness .16, distortion (.92 + .45*noise). The quad is sized so the CARD
+    // border lands on this box, so the ring's inner edge hugs the card and
+    // flames lick outward.
     vec2 boxHalf = vec2(0.42 * uRatio, 0.65);
     float corner = 0.12;
     float radius = 0.55;
-    float thickness = 0.2;
-    vec2 uvN = uv * (0.9 + 0.55 * noiseV);
+    float thickness = 0.16;
+    vec2 uvN = uv * (0.92 + 0.45 * noiseV);
     float ring_shape = get_ring_shape(uvN, boxHalf, corner, radius - 0.8 * thickness, radius + 0.2 * thickness);
 
     // ENTRY then HOLD (this is the ONLY deliberate change from the reference's
@@ -258,7 +260,7 @@ void main() {
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
+	import { cubicOut, cubicInOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, BaseSprite } from 'pixi-svelte';
 
@@ -268,9 +270,11 @@ void main() {
 
 	const context = getContext();
 
-	// Fast entry so the cell catches fire hard for impact (~0.3s), then holds
-	// full. Douse pulls the sweep back down over DOUSE_MS.
-	const IGNITE_MS = 300;
+	// The one-shot ignite: the fire climbs visibly bottom -> top over this long,
+	// then HOLDS fully lit (see the uProgress sweep in the shader). Kept slow
+	// enough (~1s) that the climb actually reads on screen instead of popping.
+	// Douse pulls the sweep back down over DOUSE_MS.
+	const IGNITE_MS = 1000;
 	const DOUSE_MS = 260;
 	// Brief hot pop the instant the sweep completes.
 	const FLASH_MS = 180;
@@ -371,7 +375,9 @@ void main() {
 			// arm the ignition flash for this fresh light-up
 			hasFlashed = false;
 			flashStart = -1;
-			ignite.set(1, { duration: IGNITE_MS, easing: cubicOut });
+			// cubicInOut: an even climb the eye can follow bottom -> top, rather
+			// than cubicOut which front-loads the bottom and crawls at the top.
+			ignite.set(1, { duration: IGNITE_MS, easing: cubicInOut });
 		},
 		cellFireHide: async () => {
 			if (!cells.length) return;
