@@ -161,8 +161,8 @@ float embers(vec2 uv, float time) {
 }
 
 void main() {
-    // vUv (0..1 over the quad), then to [-1, 1] with aspect correction — EXACTLY
-    // the reference's `uv = vUv*2-1; uv.x *= u_ratio`. NOTE: Pixi texture space
+    // vUv (0..1 over the quad), then to [-1, 1] with aspect correction, exactly
+    // the reference's  uv = vUv*2-1; uv.x *= u_ratio . NOTE: Pixi texture space
     // has y DOWN, so +uv.y is the SCREEN BOTTOM here (the reference has y UP).
     vec2 uv01 = vTextureCoord * uInputSize.xy / uOutputFrame.zw;
     vec2 uv = uv01 * 2.0 - 1.0;
