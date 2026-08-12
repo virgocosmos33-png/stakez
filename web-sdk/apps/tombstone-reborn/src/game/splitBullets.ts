@@ -13,23 +13,51 @@ export const shotsForMultiplier = (count: number) => {
 };
 
 /**
- * Gap between volleys. A sheriff's revolver / magnum is a DELIBERATE weapon:
- * each round is a fat, spaced boom, not a machine-gun rattle. At the old 105ms
- * (~570rpm) a multi-shot split read as full-auto. 240ms (~250rpm) paces the
- * volley as distinct hammer-cocked shots — BANG ... BANG ... BANG.
+ * BASE gap between shots. A sheriff's revolver / magnum is a DELIBERATE weapon:
+ * each round is a fat, spaced boom, not a machine-gun rattle. This is only the
+ * anchor — the real gap per shot is jittered by `nextShotGap` so no two rests
+ * are identical and the volley never reads as an evenly-timed "pam-pam-pam".
  */
 export const SHOT_GAP_MS = 240;
 
 /**
- * A ricochet is a bullet GLANCING off iron or stone, not one embedding in wood,
- * so it is an OCCASIONAL flourish for realism — "some rounds sing off, most just
- * thud". Firing the whine on every single shot is what stacked the wood punch +
- * metal zing into a wall of noise. Rolled per shot at this probability.
+ * Uneven, human trigger-pull spacing. Every shot waits a DIFFERENT amount so the
+ * volley sounds like a hand cocking and firing, not a worn machine on a metronome.
+ * ~0.6x..1.7x the base (≈145..410ms at SHOT_GAP_MS 240).
  */
-export const RICOCHET_CHANCE = 0.4;
+export const nextShotGap = () => Math.round(SHOT_GAP_MS * (0.6 + Math.random() * 1.1));
 
-/** Coin-flip whether a given bullet sings off (ricochet) rather than just thuds. */
-export const shotRicochets = () => Math.random() < RICOCHET_CHANCE;
+/**
+ * Build the per-shot multiplier count-up: a strictly increasing run of integers
+ * from just above `start` to EXACTLY `target`, one value per shot, in RANDOM
+ * small increments (never a single big leap). The last entry is always `target`
+ * so the number lands on the final shot (the ricochet). e.g. 10 -> 20 over 4
+ * shots might roll 10 -> 13 -> 16 -> 18 -> 20.
+ */
+export const buildCountUp = (start: number, target: number, steps: number): number[] => {
+	const s = Math.max(0, Math.min(Math.round(start), target - 1));
+	const span = target - s;
+	if (steps <= 1 || span <= 1) return [target];
+	const weights = Array.from({ length: steps }, () => 0.5 + Math.random());
+	const wsum = weights.reduce((a, b) => a + b, 0);
+	const out: number[] = [];
+	let acc = s;
+	let used = 0;
+	for (let i = 0; i < steps; i++) {
+		used += weights[i];
+		let v = i === steps - 1 ? target : Math.round(s + (span * used) / wsum);
+		if (v <= acc) v = acc + 1; // stay strictly increasing
+		if (i < steps - 1 && v >= target) v = target - 1; // don't hit target early
+		acc = v;
+		out.push(v);
+	}
+	// guard monotonicity, then pin the final value exactly on target
+	for (let i = 1; i < out.length; i++) {
+		if (out[i] <= out[i - 1]) out[i] = Math.min(target, out[i - 1] + 1);
+	}
+	out[steps - 1] = target;
+	return out;
+};
 
 /**
  * Beat held AFTER the last bullet volley (multiplier badge fully up) and BEFORE

@@ -29,12 +29,12 @@
 	} from '../game/constants';
 	import {
 		type HoleMark,
-		SHOT_GAP_MS,
 		EXPLOSION_MIN_MULT,
 		EXPLOSION_READ_MS,
 		holePose,
 		shotsForMultiplier,
-		shotRicochets,
+		nextShotGap,
+		buildCountUp,
 	} from '../game/splitBullets';
 	import { EXPLOSION_LIFE_MS } from '../game/splitExplosion';
 	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
@@ -65,6 +65,14 @@
 
 	let cells = $state<SplitCell[]>([]);
 	let show = $state(false);
+	/**
+	 * The multiplier value each cell's badge is CURRENTLY showing. During a
+	 * strike this rolls up in random small steps (one per shot) from the cell's
+	 * previous value to its target, landing on the final shot — instead of the
+	 * badge snapping straight to the target. Settled cells read their final count
+	 * via the `?? cell.count` fallback in the badge.
+	 */
+	let displayCounts = $state<Record<string, number>>({});
 	/** wall clock for muzzle flashes on stamped holes */
 	let nowMs = $state(performance.now());
 	/** stamped bullet holes that stay on their cells until fall-out */
@@ -82,23 +90,19 @@
 		'sfx_multiplier_explosion_c',
 	] as const;
 
-	const playShotSfx = () => {
+	const playShotSfx = (isFinal: boolean) => {
 		// forcePlay: stacked volleys must not get swallowed by the once-player.
-		// Every round lands a wood punch; the metal ricochet whine only sings off
-		// on SOME rounds (shotRicochets) so a magnum volley reads as deliberate
-		// sheriff fire — BANG ... BANG (zing) ... BANG — not a full-auto rattle.
+		// Earlier rounds are the dry pistol-into-wood punch. The LAST round always
+		// RICOCHETS — and it plays ALONE, not stacked on the wood punch, because
+		// the ricochet cue already carries the magnum crack PLUS the whine ringing
+		// off iron. Stacking wood under it (the old behaviour) buried the zing. So
+		// a volley now reads BANG .. BANG .. CRACK-ZING and the ear knows the
+		// count-up has landed on its target on that final shot.
 		context.eventEmitter.broadcast({
 			type: 'soundOnce',
-			name: 'sfx_bullet_wood',
+			name: isFinal ? 'sfx_bullet_ricochet' : 'sfx_bullet_wood',
 			forcePlay: true,
 		});
-		if (shotRicochets()) {
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_bullet_ricochet',
-				forcePlay: true,
-			});
-		}
 	};
 
 	/** Stamp one hole on a cell (SFX is fired once per volley, not per cell). */
@@ -170,6 +174,12 @@
 			const existing = merged.get(key);
 			if (existing && existing.count === c.count && existing.pinned === c.name) continue;
 			anyFresh = true;
+			// SEED the count-up start: a re-struck cell climbs from what it already
+			// showed (e.g. 10x -> 20x); a brand-new cell climbs from a low base
+			// (~a quarter of its target) so the roll-up is felt, not a snap.
+			const prev = displayCounts[key];
+			const startBase = prev != null ? prev : Math.max(1, Math.round(c.count * 0.25));
+			displayCounts = { ...displayCounts, [key]: startBase };
 			merged.set(key, {
 				key,
 				reel: c.reel,
@@ -253,15 +263,35 @@
 
 		const maxShots = Math.max(1, ...fresh.map((c) => shotsForMultiplier(c.count)));
 
+		// Per cell, the random step values its badge visits, one per shot, from
+		// its seeded start (set in layout) up to its target on its LAST shot.
+		const countUp = new Map<string, number[]>(
+			fresh.map((cell) => [
+				cell.key,
+				buildCountUp(
+					displayCounts[cell.key] ?? cell.count,
+					cell.count,
+					shotsForMultiplier(cell.count),
+				),
+			]),
+		);
+
 		for (let shot = 0; shot < maxShots; shot++) {
 			let stamped = 0;
+			const stepped: Record<string, number> = {};
 			for (const cell of fresh) {
-				if (shot >= shotsForMultiplier(cell.count)) continue;
+				const cellShots = shotsForMultiplier(cell.count);
+				if (shot >= cellShots) continue;
 				stampHole(cell, shot);
+				// roll this cell's multiplier to its value for this shot
+				stepped[cell.key] = countUp.get(cell.key)?.[shot] ?? cell.count;
 				stamped += 1;
 			}
 			if (stamped > 0) {
-				playShotSfx();
+				// commit this shot's rolled multiplier values in one reactive write
+				displayCounts = { ...displayCounts, ...stepped };
+				const isFinal = shot === maxShots - 1;
+				playShotSfx(isFinal);
 				// one light impact shake on the first volley — the HEAVY blast shake
 				// belongs to the detonation, which now comes last (below)
 				if (shot === 0) {
@@ -271,8 +301,15 @@
 					});
 				}
 			}
-			if (shot < maxShots - 1) await fxWait(SHOT_GAP_MS);
+			// uneven rest between shots so the volley never sounds metronomic
+			if (shot < maxShots - 1) await fxWait(nextShotGap());
 		}
+
+		// pin every struck cell exactly on its target once the volley is done
+		displayCounts = {
+			...displayCounts,
+			...Object.fromEntries(fresh.map((c) => [c.key, c.count])),
+		};
 
 		// SEQUENCE (the whole point of this feature's read):
 		//   flame → bullets stamp the multiplier (Nx badge up) → HOLD so the
@@ -312,6 +349,7 @@
 			cells = [];
 			holeMarks = [];
 			explosionMarks = [];
+			displayCounts = {};
 			fallOut.set(0, { duration: 0 });
 		},
 		splitPanesHide: () => {
@@ -320,6 +358,7 @@
 			cells = [];
 			holeMarks = [];
 			explosionMarks = [];
+			displayCounts = {};
 			fallOut.set(0, { duration: 0 });
 		},
 	});
@@ -402,7 +441,7 @@
 		<Graphics draw={drawBadgePlate} />
 		<Text
 			anchor={0.5}
-			text={`${cell.count}x`}
+			text={`${Math.round(displayCounts[cell.key] ?? cell.count)}x`}
 			style={trValueStyle({
 				fontSize: 28,
 				fill: TR_INK_GOLD,

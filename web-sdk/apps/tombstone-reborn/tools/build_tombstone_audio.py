@@ -49,7 +49,7 @@ HOT_STEM_TRIM_DB = -2.5
 # run-up instead of the hit) or eats the quiet ones whole.
 ONSET_HEADROOM_DB = 20
 HOT_STEMS = {
-    "thunder_crack", "revolver_shot_close", "revolver_volley", "harmonica_breath",
+    "thunder_crack", "revolver_shot_close", "revolver_magnum", "revolver_volley", "harmonica_breath",
     "harmonica_lick", "dust_whoosh_hi", "brass_fanfare_short", "wood_splinter_crack",
     "fire_flare", "plank_tear", "shovel_strike_a", "shovel_strike_c",
     "reel_nudge_ratchet",
@@ -521,25 +521,32 @@ CUES: dict[str, dict] = {
     # splintered bullet hole, brass sparks and the dust plume. Firing four
     # separate one-shots per volley is what turns a split into a machine-gun, so
     # the layers are baked in and the volley rule stays one hit per volley.
+    # The SHOOTING sound: a CLEAN pistol gunshot, nothing else. Every hit on a
+    # multiplier is a sheriff's .45 revolver/magnum firing — its OWN dedicated
+    # Layer AI take (revolver_magnum), separate from revolver_shot_close so the
+    # bullet hit has a distinct, heavier gun than the wild-explode crack. Just
+    # the gunpowder blast with a faint barrel-smoke tail. NO wood splinter,
+    # knock, gravel or grit: those "debris" layers made it read as something
+    # thudding into wood instead of a gun going off. This is the pistol, period.
     "sfx_bullet_wood": {
-        "duration_ms": 1500,
+        "duration_ms": 1100,
         "layers": [
-            L("revolver_shot_close", 0, -7),
-            L("wood_splinter_crack", 20, -3),
-            L("wood_knock_firm", 0, -8, trim_ms=500),
-            L("brass_sparks", 120, -12),
-            L("gravel_pour", 200, -16, trim_ms=900),
-            L("grit_fall_light", 500, -16),
+            L("revolver_magnum", 0, 0),
+            L("smoke_hiss", 140, -17),
         ],
     },
+    # The FINAL round of a volley: the magnum crack that RICOCHETS off iron. The
+    # iron_plaque_clang stem is literally "a bullet striking a hanging iron
+    # plaque", so it carries the real metal zing; the distant echo is the whine
+    # ringing away across the canyon. This cue plays ALONE on the last shot.
     "sfx_bullet_ricochet": {
         "duration_ms": 1700,
         "layers": [
-            L("revolver_shot_close", 0, -8),
-            L("wood_splinter_crack", 20, -8),
-            L("padlock_clank", 40, -13, pitch=1.6),
-            L("revolver_echo_distant", 60, -2),
-            L("brass_sparks", 100, -11),
+            L("revolver_shot_close", 0, -3),
+            L("iron_plaque_clang", 20, -4),
+            L("revolver_echo_distant", 90, -2),
+            L("brass_sparks", 120, -11),
+            L("smoke_hiss", 170, -14),
             L("grit_fall_light", 600, -17),
         ],
     },

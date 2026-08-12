@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Fire Frame — Portrait</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    background: #000;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    font-family: system-ui, sans-serif;
+  }
+  .wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .frame {
+    position: relative;
+    /* size set by JS from width/height controls */
+  }
+  canvas#ring_shape-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px 24px;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 14px;
+    color: #ddd;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+    user-select: none;
+  }
+  .controls label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .controls input[type="range"] {
+    width: 140px;
+    accent-color: #ff8a2a;
+  }
+  .controls output {
+    min-width: 3.2em;
+    font-variant-numeric: tabular-nums;
+    color: #ffb06a;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="frame" id="frame">
+    <canvas id="ring_shape-canvas"></canvas>
+  </div>
+  <div class="controls">
+    <label>
+      Width
+      <input type="range" id="frameWidth" min="160" max="720" step="2" value="320">
+      <output id="frameWidthOut">320</output>
+    </label>
+    <label>
+      Height
+      <input type="range" id="frameHeight" min="160" max="900" step="2" value="520">
+      <output id="frameHeightOut">520</output>
+    </label>
+  </div>
+</div>
+
+<script type="x-shader/x-vertex" id="vertShader">
+precision mediump float;
+varying vec2 vUv;
+attribute vec2 a_position;
+void main() {
+    vUv = .5 * (a_position + 1.);
+    gl_Position = vec4(a_position, 0.0, 1.0);
+}
+</script>
+
+<script type="x-shader/x-fragment" id="fragShader">
+precision mediump float;
+
+varying vec2 vUv;
+uniform float u_time;
+uniform float u_ratio;
+uniform vec2 u_box; // half-size of frame stroke in y-normalized UV
+
+/*
+  ONE continuous stroke (rounded-rect SDF outline).
+  Fire is generated from distance-to-stroke only — no per-edge boxes.
+  Gravity: reach stretches upward along the outward normal.
+*/
+
+float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    vec2 u = f * f * (3. - 2. * f);
+    return mix(
+        mix(hash(i),               hash(i + vec2(1., 0.)), u.x),
+        mix(hash(i + vec2(0., 1.)), hash(i + vec2(1., 1.)), u.x),
+        u.y
+    );
+}
+
+float fbm(vec2 p) {
+    float v = 0.;
+    float a = .5;
+    for (int i = 0; i < 6; i++) {
+        v += a * noise(p);
+        p *= 2.02;
+        a *= .5;
+    }
+    return v;
+}
+
+float rounded_box_sdf(vec2 p, vec2 b, float r) {
+    vec2 q = abs(p) - b + r;
+    return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r;
+}
+
+vec2 hash2(vec2 p) {
+    return fract(sin(vec2(
+        dot(p, vec2(127.1, 311.7)),
+        dot(p, vec2(269.5, 183.3))
+    )) * 43758.5453);
+}
+
+float embers(vec2 uv, float time, float mask) {
+    float total = 0.;
+    for (int pass = 0; pass < 2; pass++) {
+        float dens = pass == 0 ? 5. : 11.;
+        vec2 g = uv * dens;
+        vec2 cell = floor(g);
+        vec2 f = fract(g);
+        for (int y = -1; y <= 1; y++) {
+            for (int x = -1; x <= 1; x++) {
+                vec2 off = vec2(float(x), float(y));
+                vec2 id = cell + off + float(pass) * 17.;
+                vec2 rnd = hash2(id);
+                float life = fract(time * (.3 + rnd.x * .85) + rnd.y * 6.28);
+                vec2 p = off + vec2(
+                    .5 + (rnd.y - .5) * .28 * life,
+                    life * (1.75 + .45 * float(pass)) - .06
+                );
+                float d = length(f - p);
+                float sz = mix(pass == 0 ? .018 : .007, pass == 0 ? .055 : .028, rnd.x);
+                float glow = smoothstep(sz, 0., d);
+                float fade = smoothstep(0., .1, life) * smoothstep(1., .68, life);
+                total += glow * fade * (pass == 0 ? 1. : .55);
+            }
+        }
+    }
+    return clamp(total * mask, 0., 1.4);
+}
+
+void main() {
+    vec2 uv = vUv * 2. - 1.;
+    uv.x *= u_ratio;
+
+    vec2 box = u_box;
+    float corner = min(.08, min(box.x, box.y) * .22);
+    float sd = rounded_box_sdf(uv, box, corner);
+    float stroke_dist = abs(sd);
+
+    float t = u_time * .001;
+
+    float climb_time = 1.8;
+    float hold_time = 1.0;
+    float cycle = climb_time + hold_time;
+    float local_t = mod(t, cycle);
+    float progress = clamp(local_t / climb_time, 0., 1.);
+    progress = progress * progress * (3. - 2. * progress);
+    float front_y = mix(-box.y - .25, box.y + .4, progress);
+    float lit = 1. - smoothstep(front_y - .28, front_y + .35, uv.y);
+    lit *= smoothstep(cycle, cycle - .08, local_t);
+
+    float e = .0025;
+    vec2 grad = vec2(
+        rounded_box_sdf(uv + vec2(e, 0.), box, corner) - rounded_box_sdf(uv - vec2(e, 0.), box, corner),
+        rounded_box_sdf(uv + vec2(0., e), box, corner) - rounded_box_sdf(uv - vec2(0., e), box, corner)
+    );
+    float gLen = length(grad);
+    grad = gLen > 1e-5 ? grad / gLen : vec2(0., 1.);
+
+    vec2 np = uv * vec2(2.8, 3.6);
+    np.y -= t * 2.6;
+    np.x += (noise(vec2(uv.y * 4., t * 1.5)) - .5) * .08;
+
+    float n_big = fbm(np * 1.05);
+    float n_mid = fbm(np * 2.7 + 17.0);
+    float n_sml = fbm(np * 7.0 + 41.0);
+
+    float tongues = pow(n_big, 2.1);
+    float body    = pow(n_mid, 1.35);
+    float wisps   = n_sml;
+    float n = clamp(tongues * .75 + body * .5 + wisps * .28, 0., 1.6);
+
+    float reach = .015 + n * .14 + tongues * .12;
+    float up_amt = max(grad.y, 0.);
+    float side_amt = abs(grad.x);
+    float down_amt = max(-grad.y, 0.);
+    float grav_scale = 1. + up_amt * 1.4 + side_amt * .25 - down_amt * .4;
+    float thickness = min(reach * grav_scale, .42);
+
+    float d_out = max(sd, 0.);
+    float flame = 1. - smoothstep(0., thickness, d_out);
+    flame = pow(clamp(flame, 0., 1.), 1.55);
+    flame *= mix(.5, 1.25, clamp(n * .9, 0., 1.));
+    flame *= smoothstep(-.006, .012, sd);
+
+    float ribbon = 1. - smoothstep(0., .012 + wisps * .015, stroke_dist);
+    ribbon = pow(ribbon, 1.5);
+
+    float fire = max(flame, ribbon * .85) * lit;
+
+    float heat = 1. - clamp(d_out / max(thickness, .001), 0., 1.);
+    heat *= smoothstep(-.006, .012, sd);
+    heat = max(heat, ribbon) * lit;
+
+    float core = (1. - smoothstep(0., .007, stroke_dist)) * lit;
+    float core_soft = (1. - smoothstep(0., .024, stroke_dist)) * lit;
+
+    float bloom = fire * fire * .4;
+
+    float front = (1. - smoothstep(0., .32, abs(uv.y - front_y))) * lit;
+    front *= smoothstep(.1, 0., stroke_dist);
+
+    vec3 c_tip   = vec3(.5, .03, .0);
+    vec3 c_mid   = vec3(1., .3, .02);
+    vec3 c_body  = vec3(1., .58, .07);
+    vec3 c_hot   = vec3(1., .9, .48);
+    vec3 c_white = vec3(1., .98, .9);
+
+    float h = clamp(heat, 0., 1.);
+    vec3 fire_col = mix(c_tip, c_mid, smoothstep(0., .3, h));
+    fire_col = mix(fire_col, c_body, smoothstep(.25, .55, h));
+    fire_col = mix(fire_col, c_hot, smoothstep(.5, .92, h));
+
+    vec3 col = fire_col * fire * 1.75;
+    col += c_mid * bloom;
+    col += c_white * core * 1.5;
+    col += c_hot * core_soft * .75;
+    col += c_hot * front * fire * .85;
+
+    float flash = smoothstep(climb_time - .08, climb_time, local_t)
+                * (1. - smoothstep(climb_time, climb_time + .22, local_t));
+    col += c_hot * flash * (fire + core) * 1.1;
+
+    float ember_zone = lit * smoothstep(.25, 0., stroke_dist) * smoothstep(0., .12, fire + core);
+    float spark = embers(uv, t * 1.2, ember_zone);
+    col += mix(vec3(1., .4, .04), vec3(1., .85, .4), clamp(spark, 0., 1.)) * spark;
+
+    col = clamp(col, 0., 1.);
+    gl_FragColor = vec4(col, 1.);
+}
+</script>
+
+<script>
+const canvasEl = document.querySelector("#ring_shape-canvas");
+const frameEl = document.querySelector("#frame");
+const widthInput = document.querySelector("#frameWidth");
+const heightInput = document.querySelector("#frameHeight");
+const widthOut = document.querySelector("#frameWidthOut");
+const heightOut = document.querySelector("#frameHeightOut");
+
+/** Extra canvas padding so flames have room outside the stroke */
+const FLAME_PAD = 110;
+
+const uniforms = {
+    timeLocation: null,
+    ratioLocation: null,
+    boxLocation: null,
+};
+
+const gl = initShader();
+
+function frameSize() {
+    return {
+        w: Number(widthInput.value),
+        h: Number(heightInput.value),
+    };
+}
+
+function applyFrameSize() {
+    const { w, h } = frameSize();
+    widthOut.textContent = String(w);
+    heightOut.textContent = String(h);
+    frameEl.style.width = `${w + FLAME_PAD * 2}px`;
+    frameEl.style.height = `${h + FLAME_PAD * 2}px`;
+    resizeCanvas();
+}
+
+widthInput.addEventListener("input", applyFrameSize);
+heightInput.addEventListener("input", applyFrameSize);
+window.addEventListener("resize", applyFrameSize);
+
+applyFrameSize();
+render();
+
+function initShader() {
+    const vsSource = document.getElementById("vertShader").textContent;
+    const fsSource = document.getElementById("fragShader").textContent;
+    const gl = canvasEl.getContext("webgl") || canvasEl.getContext("experimental-webgl");
+    if (!gl) {
+        alert("WebGL is not supported by your browser.");
+        return null;
+    }
+
+    function createShader(gl, sourceCode, type) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, sourceCode);
+        gl.compileShader(shader);
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            const log = gl.getShaderInfoLog(shader);
+            console.error(log);
+            alert("Shader compile error:\n" + log);
+            gl.deleteShader(shader);
+            return null;
+        }
+        return shader;
+    }
+
+    const vs = createShader(gl, vsSource, gl.VERTEX_SHADER);
+    const fs = createShader(gl, fsSource, gl.FRAGMENT_SHADER);
+    const program = gl.createProgram();
+    gl.attachShader(program, vs);
+    gl.attachShader(program, fs);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+        alert("Shader link error:\n" + gl.getProgramInfoLog(program));
+        return null;
+    }
+
+    const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+    const buf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+    gl.useProgram(program);
+
+    const loc = gl.getAttribLocation(program, "a_position");
+    gl.enableVertexAttribArray(loc);
+    gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
+
+    uniforms.timeLocation = gl.getUniformLocation(program, "u_time");
+    uniforms.ratioLocation = gl.getUniformLocation(program, "u_ratio");
+    uniforms.boxLocation = gl.getUniformLocation(program, "u_box");
+    return gl;
+}
+
+function render() {
+    if (!gl) return;
+    gl.uniform1f(uniforms.timeLocation, performance.now());
+    gl.clearColor(0, 0, 0, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+    requestAnimationFrame(render);
+}
+
+function resizeCanvas() {
+    if (!gl) return;
+    const rect = frameEl.getBoundingClientRect();
+    const cssW = Math.max(1, rect.width);
+    const cssH = Math.max(1, rect.height);
+    canvasEl.width = Math.max(1, Math.floor(cssW * devicePixelRatio));
+    canvasEl.height = Math.max(1, Math.floor(cssH * devicePixelRatio));
+    gl.viewport(0, 0, canvasEl.width, canvasEl.height);
+
+    const ratio = cssW / cssH;
+    gl.uniform1f(uniforms.ratioLocation, ratio);
+
+    // y-normalized UV: y in [-1,1] across canvas height.
+    // Frame stroke half-extents from the slider pixel size (centered).
+    const { w, h } = frameSize();
+    const halfX = w / cssH;
+    const halfY = h / cssH;
+    gl.uniform2f(uniforms.boxLocation, halfX, halfY);
+}
+</script>
+
+</body>
+</html>

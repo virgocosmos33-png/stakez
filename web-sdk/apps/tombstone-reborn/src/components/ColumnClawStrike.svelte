@@ -14,20 +14,25 @@
 	 */
 	import { eventEmitter } from '../game/eventEmitter';
 	import { fxDur } from '../game/fxTiming';
-	import { SHOT_GAP_MS, shotsForMultiplier, shotRicochets } from '../game/splitBullets';
+	import { shotsForMultiplier, nextShotGap } from '../game/splitBullets';
 
 	/** Default column multi when the caller does not pass one — mid pack. */
 	const DEFAULT_COLUMN_COUNT = 5;
 	export const COLUMN_VOLLEYS = shotsForMultiplier(DEFAULT_COLUMN_COUNT);
 
-	const STRIKE_MS = SHOT_GAP_MS * COLUMN_VOLLEYS + 220;
+	/** beat held after the last round before the strike resolves */
+	const TAIL_MS = 220;
 	const IMPACT_AT = 0.22;
 
 	/**
 	 * run one strike, calling `onImpact` after the first volley.
 	 *
-	 * Audio matches SplitPanes: wood punch AND ricochet whine on every round.
-	 * forcePlay so stacked hits are not swallowed by the once-player.
+	 * Uneven per-volley spacing (each rest jittered by nextShotGap, same as
+	 * SplitPanes) so the column reads as deliberate magnum fire, not a metronome.
+	 * The progress `t` is WARPED to those uneven beats, so the bullet-hole stamps
+	 * (driven off the same `t`) stay locked to their bangs. The ricochet is the
+	 * STOP beat: it sings off only on the final round. forcePlay so stacked hits
+	 * are not swallowed by the once-player.
 	 */
 	export const playColumnClaw = (set: (t: number) => void, onImpact?: () => void) =>
 		new Promise<void>((resolve) => {
@@ -37,26 +42,41 @@
 			set(0);
 			// the column's planks tearing open, same cue as a split seam
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_split_seam_tear' });
-			const strikeMs = fxDur(STRIKE_MS);
+
+			// cumulative fire time of each volley (volley 0 at t=0), then a tail
+			const fireTimes = [0];
+			for (let v = 1; v < COLUMN_VOLLEYS; v++) {
+				fireTimes[v] = fireTimes[v - 1] + fxDur(nextShotGap());
+			}
+			const total = fireTimes[COLUMN_VOLLEYS - 1] + fxDur(TAIL_MS);
+			// map elapsed ms -> 0..1 so volley v boundary (v/COLUMN_VOLLEYS) is
+			// crossed exactly at fireTimes[v]; piecewise-linear between beats.
+			const warp = (e: number) => {
+				if (e >= total) return 1;
+				let v = 0;
+				while (v < COLUMN_VOLLEYS - 1 && fireTimes[v + 1] <= e) v++;
+				const segStart = fireTimes[v];
+				const segEnd = v < COLUMN_VOLLEYS - 1 ? fireTimes[v + 1] : total;
+				const frac = segEnd > segStart ? (e - segStart) / (segEnd - segStart) : 1;
+				return (v + frac) / COLUMN_VOLLEYS;
+			};
+
 			const step = (now: number) => {
-				const t = (now - start) / strikeMs;
+				const e = now - start;
+				const t = warp(e);
 				const volley = Math.min(COLUMN_VOLLEYS - 1, Math.floor(t * COLUMN_VOLLEYS));
 				if (volley > lastVolley) {
 					lastVolley = volley;
-					// wood punch on every round; ricochet whine only sings off on
-					// SOME rounds so the column reads as deliberate magnum fire.
+					// earlier volleys punch pistol-into-wood; the FINAL volley always
+					// RICOCHETS and plays ALONE (its cue carries the crack + the whine
+					// off iron), so stacking wood under it never buries the zing. The
+					// ricochet is the "it stops here" beat.
+					const isFinalVolley = volley === COLUMN_VOLLEYS - 1;
 					eventEmitter.broadcast({
 						type: 'soundOnce',
-						name: 'sfx_bullet_wood',
+						name: isFinalVolley ? 'sfx_bullet_ricochet' : 'sfx_bullet_wood',
 						forcePlay: true,
 					});
-					if (shotRicochets()) {
-						eventEmitter.broadcast({
-							type: 'soundOnce',
-							name: 'sfx_bullet_ricochet',
-							forcePlay: true,
-						});
-					}
 				}
 				if (!fired && t >= IMPACT_AT) {
 					fired = true;
@@ -64,7 +84,7 @@
 					// already fired one, and doubling up breaks one hit per volley
 					onImpact?.();
 				}
-				if (t >= 1) {
+				if (e >= total) {
 					set(-1);
 					resolve();
 					return;
