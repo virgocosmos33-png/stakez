@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>WebGL Noisy Ring — Portrait Rectangle</title>
+<style>
+  body, html {
+    margin: 0;
+    padding: 0;
+    background: black;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .frame {
+    position: relative;
+    width: 480px;
+    height: 720px; /* portrait rectangle, 2:3 */
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: hidden;
+  }
+
+  canvas#ring_shape-canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .title {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: sans-serif;
+    color: #eeeeee;
+    font-size: 2vh;
+    text-align: center;
+    z-index: 2;
+    pointer-events: none;
+  }
+</style>
+</head>
+<body>
+
+<div class="frame" id="frame">
+  <canvas id="ring_shape-canvas"></canvas>
+</div>
+
+<script type="x-shader/x-fragment" id="vertShader">
+precision mediump float;
+
+varying vec2 vUv;
+attribute vec2 a_position;
+
+void main() {
+    vUv = .5 * (a_position + 1.);
+    gl_Position = vec4(a_position, 0.0, 1.0);
+}
+</script>
+
+<script type="x-shader/x-fragment" id="fragShader">
+precision mediump float;
+
+varying vec2 vUv;
+uniform float u_time;
+uniform float u_ratio;
+
+#define TWO_PI 6.28318530718
+#define PI 3.14159265358979323846
+
+// ------------------------------------------------
+// Generic fractional Brownian motion (fBm) noise
+
+float rand(vec2 n) {
+    return fract(cos(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+}
+float noise(vec2 n) {
+    const vec2 d = vec2(0.0, 1.0);
+    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+    return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+}
+float fbm(vec2 n) {
+    float total = 0.0, amplitude = .4;
+    for (int i = 0; i < 12; i++) {
+        total += noise(n) * amplitude;
+        n += n;
+        amplitude *= 0.6;
+    }
+    return total;
+}
+
+// ------------------------------------------------
+
+// Signed distance to a rounded rectangle (box half-size b, corner radius r).
+// This replaces length(uv) so the ring traces a rectangle instead of a circle.
+float rounded_box_sdf(vec2 uv, vec2 b, float r) {
+    vec2 q = abs(uv) - b + r;
+    return length(max(q, 0.)) + min(max(q.x, q.y), 0.) - r;
+}
+
+float get_ring_shape(vec2 uv, float innerRadius, float outerRadius) {
+    // Portrait box: taller than wide, with soft rounded corners.
+    // Smaller + cleaner than before, leaving open space for the text.
+    vec2 box_half_size = vec2(.42 * u_ratio, .65);
+    float corner_radius = .12;
+    float distance = rounded_box_sdf(uv, box_half_size, corner_radius) + innerRadius;
+    float line_width = outerRadius - innerRadius;
+    float ringValue = smoothstep(innerRadius, innerRadius + line_width, distance);
+    ringValue -= smoothstep(outerRadius, outerRadius + line_width, distance);
+    return clamp(ringValue, 0., 1.);
+}
+
+// ------------------------------------------------
+
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453123);
+}
+
+// Scattered rising sparks near the border, like the reference image.
+float embers(vec2 uv, float time) {
+    float density = 6.;
+    vec2 guv = uv * density;
+    vec2 cell = floor(guv);
+    vec2 f = fract(guv);
+    float total = 0.;
+
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            vec2 offs = vec2(float(x), float(y));
+            vec2 id = cell + offs;
+            vec2 rnd = hash2(id);
+
+            float speed = .3 + rnd.x * .8;
+            float life = fract(time * speed + rnd.y * 6.2831);
+            float sway = sin(life * TWO_PI * (1. + rnd.y) + rnd.x * 10.) * .25;
+            vec2 particlePos = offs + vec2(.5 + sway, 1.4 * life - .2);
+
+            float d = length(f - particlePos);
+            float size = mix(.02, .06, rnd.y);
+            float glow = smoothstep(size, size * .1, d);
+            float fade = smoothstep(0., .12, life) * smoothstep(1., .8, life);
+
+            total += glow * fade;
+        }
+    }
+    return clamp(total, 0., 1.);
+}
+
+void main() {
+    vec2 uv = vUv * 2. - 1.;
+    // u_ratio here is the RECTANGLE's own aspect (width/height),
+    // not the window's — this keeps the ring/noise proportioned
+    // correctly inside a portrait frame instead of stretching.
+    uv.x *= u_ratio;
+
+    float noise_scale = 4.;
+    float t = .0003 * u_time;
+
+    float atg = atan(uv.y, uv.x);
+
+    // radial noise — driven strong to create fluffy, tongue-like
+    // flame fringing all around the border. The +2.2*uv.y phase
+    // offset makes the pattern continuously climb from bottom to
+    // top over time, so the flame line reads as sparking upward.
+    vec2 polar_uv = vec2(atg, t + 2.2 * uv.y + 2. / pow(length(uv), .5));
+    polar_uv *= noise_scale;
+    float noise_left = fbm(polar_uv);
+    polar_uv.x = mod(polar_uv.x, noise_scale * TWO_PI);
+    float noise_right = fbm(polar_uv);
+    float noise = mix(noise_right, noise_left, smoothstep(-.2, .2, uv.x));
+
+    float radius = .55;
+    float thickness = .2;
+    float ring_shape = get_ring_shape(uv * (.9 + .55 * noise), radius - .8 * thickness, radius + .2 * thickness);
+
+    // simple looping reveal: mask climbs from bottom to top, holds
+    // briefly, then drops back off and restarts — repeats forever
+    float sec = u_time * .001;
+    float climb_time = 1.4;   // faster climb than before
+    float hold_time = .5;     // brief pause once fully lit
+    float cycle = climb_time + hold_time;
+    float local_t = mod(sec, cycle);
+    float progress = clamp(local_t / climb_time, 0., 1.);
+    float front_y = mix(-.9, .9, progress);
+    float mask = 1. - smoothstep(front_y - .15, front_y + .15, uv.y);
+    // force it back to unlit right before the cycle restarts, so it
+    // doesn't just sit at "full flame" — it resets and climbs again
+    mask *= step(local_t, cycle - .05);
+
+    ring_shape *= mask;
+
+    // bright hot edge riding along with the climbing flame front —
+    // makes the sweep read as an actual surge of fire, not a flat wipe
+    float front_glow = 1. - smoothstep(0., .22, abs(uv.y - front_y));
+    front_glow *= step(local_t, cycle - .05); // don't glow during the off-frame
+
+    // fire gradient: deep ember red at low intensity, rising through
+    // orange to a bright yellow-white core at the hottest point
+    vec3 ember_col = vec3(.5, .03, 0.);
+    vec3 flame_col = vec3(1., .38, .03);
+    vec3 hot_core = vec3(1., .92, .55);
+    vec3 fire_color = mix(ember_col, flame_col, smoothstep(0., .55, ring_shape));
+    fire_color = mix(fire_color, hot_core, smoothstep(.55, 1., ring_shape));
+
+    vec3 color = fire_color * ring_shape;
+    color += hot_core * front_glow * ring_shape * 1.3;
+
+    // brief hot flash across the whole ring the instant it fully ignites
+    float flash = smoothstep(climb_time - .06, climb_time, local_t) * (1. - smoothstep(climb_time, climb_time + .18, local_t));
+    color += hot_core * flash * ring_shape * 1.6;
+
+    // scattered rising sparks near the border
+    float dist_to_outline = abs(rounded_box_sdf(uv * (.9 + .55 * noise), vec2(.42 * u_ratio, .65), .12));
+    float ember_mask = smoothstep(.5, 0., dist_to_outline) * mask;
+    float spark = embers(uv, 1.6 * t) * ember_mask;
+    vec3 spark_color = mix(vec3(1., .5, .08), vec3(1., .88, .45), spark);
+    color += spark_color * spark;
+
+    gl_FragColor = vec4(color, 1.);
+}
+</script>
+
+<script>
+const canvasEl = document.querySelector("#ring_shape-canvas");
+const frameEl = document.querySelector("#frame");
+
+const uniforms = {
+    timeLocation: null,
+    ratioLocation: null,
+}
+
+const gl = initShader();
+
+render();
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+function initShader() {
+    const vsSource = document.getElementById("vertShader").innerHTML;
+    const fsSource = document.getElementById("fragShader").innerHTML;
+
+    const gl = canvasEl.getContext("webgl") || canvasEl.getContext("experimental-webgl");
+
+    if (!gl) {
+        alert("WebGL is not supported by your browser.");
+    }
+
+    function createShader(gl, sourceCode, type) {
+        const shader = gl.createShader(type);
+        gl.shaderSource(shader, sourceCode);
+        gl.compileShader(shader);
+
+        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+            console.error("An error occurred compiling the shaders: " + gl.getShaderInfoLog(shader));
+            gl.deleteShader(shader);
+            return null;
+        }
+
+        return shader;
+    }
+
+    const vertexShader = createShader(gl, vsSource, gl.VERTEX_SHADER);
+    const fragmentShader = createShader(gl, fsSource, gl.FRAGMENT_SHADER);
+
+    function createShaderProgram(gl, vertexShader, fragmentShader) {
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error("Unable to initialize the shader program: " + gl.getProgramInfoLog(program));
+            return null;
+        }
+
+        return program;
+    }
+
+    const shaderProgram = createShaderProgram(gl, vertexShader, fragmentShader);
+
+    const vertices = new Float32Array([-1., -1., 1., -1., -1., 1., 1., 1.]);
+
+    const vertexBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+    gl.useProgram(shaderProgram);
+
+    const positionLocation = gl.getAttribLocation(shaderProgram, "a_position");
+    gl.enableVertexAttribArray(positionLocation);
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+    uniforms.timeLocation = gl.getUniformLocation(shaderProgram, "u_time");
+    uniforms.ratioLocation = gl.getUniformLocation(shaderProgram, "u_ratio");
+
+    return gl;
+}
+
+function render() {
+    const currentTime = performance.now();
+
+    gl.uniform1f(uniforms.timeLocation, currentTime);
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    requestAnimationFrame(render);
+}
+
+function resizeCanvas() {
+    const rect = frameEl.getBoundingClientRect();
+    canvasEl.width = rect.width * devicePixelRatio;
+    canvasEl.height = rect.height * devicePixelRatio;
+    gl.viewport(0, 0, canvasEl.width, canvasEl.height);
+    // Ratio driven by the FRAME's own aspect, not window.innerWidth/Height
+    gl.uniform1f(uniforms.ratioLocation, rect.width / rect.height);
+}
+</script>
+
+</body>
+</html>
