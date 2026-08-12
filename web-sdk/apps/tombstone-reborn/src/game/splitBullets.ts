@@ -12,8 +12,24 @@ export const shotsForMultiplier = (count: number) => {
 	return 4;
 };
 
-/** Gap between volleys so stacked hits still read as separate rounds. */
-export const SHOT_GAP_MS = 105;
+/**
+ * Gap between volleys. A sheriff's revolver / magnum is a DELIBERATE weapon:
+ * each round is a fat, spaced boom, not a machine-gun rattle. At the old 105ms
+ * (~570rpm) a multi-shot split read as full-auto. 240ms (~250rpm) paces the
+ * volley as distinct hammer-cocked shots — BANG ... BANG ... BANG.
+ */
+export const SHOT_GAP_MS = 240;
+
+/**
+ * A ricochet is a bullet GLANCING off iron or stone, not one embedding in wood,
+ * so it is an OCCASIONAL flourish for realism — "some rounds sing off, most just
+ * thud". Firing the whine on every single shot is what stacked the wood punch +
+ * metal zing into a wall of noise. Rolled per shot at this probability.
+ */
+export const RICOCHET_CHANCE = 0.4;
+
+/** Coin-flip whether a given bullet sings off (ricochet) rather than just thuds. */
+export const shotRicochets = () => Math.random() < RICOCHET_CHANCE;
 
 /**
  * Beat held AFTER the last bullet volley (multiplier badge fully up) and BEFORE

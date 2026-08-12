@@ -14,7 +14,7 @@
 	 */
 	import { eventEmitter } from '../game/eventEmitter';
 	import { fxDur } from '../game/fxTiming';
-	import { SHOT_GAP_MS, shotsForMultiplier } from '../game/splitBullets';
+	import { SHOT_GAP_MS, shotsForMultiplier, shotRicochets } from '../game/splitBullets';
 
 	/** Default column multi when the caller does not pass one — mid pack. */
 	const DEFAULT_COLUMN_COUNT = 5;
@@ -43,17 +43,20 @@
 				const volley = Math.min(COLUMN_VOLLEYS - 1, Math.floor(t * COLUMN_VOLLEYS));
 				if (volley > lastVolley) {
 					lastVolley = volley;
-					// every hit rings: wood punch + metal ricochet whine, layered
+					// wood punch on every round; ricochet whine only sings off on
+					// SOME rounds so the column reads as deliberate magnum fire.
 					eventEmitter.broadcast({
 						type: 'soundOnce',
 						name: 'sfx_bullet_wood',
 						forcePlay: true,
 					});
-					eventEmitter.broadcast({
-						type: 'soundOnce',
-						name: 'sfx_bullet_ricochet',
-						forcePlay: true,
-					});
+					if (shotRicochets()) {
+						eventEmitter.broadcast({
+							type: 'soundOnce',
+							name: 'sfx_bullet_ricochet',
+							forcePlay: true,
+						});
+					}
 				}
 				if (!fired && t >= IMPACT_AT) {
 					fired = true;

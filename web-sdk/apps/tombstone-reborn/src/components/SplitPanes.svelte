@@ -34,6 +34,7 @@
 		EXPLOSION_READ_MS,
 		holePose,
 		shotsForMultiplier,
+		shotRicochets,
 	} from '../game/splitBullets';
 	import { EXPLOSION_LIFE_MS } from '../game/splitExplosion';
 	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
@@ -83,19 +84,21 @@
 
 	const playShotSfx = () => {
 		// forcePlay: stacked volleys must not get swallowed by the once-player.
-		// EVERY bullet hit rings: the wood punch and the metal ricochet whine are
-		// layered on each volley — the ricochet is the signature of a hit and must
-		// never be a coin-flip (a silent-thud-only hit reads as "no ricochet").
+		// Every round lands a wood punch; the metal ricochet whine only sings off
+		// on SOME rounds (shotRicochets) so a magnum volley reads as deliberate
+		// sheriff fire — BANG ... BANG (zing) ... BANG — not a full-auto rattle.
 		context.eventEmitter.broadcast({
 			type: 'soundOnce',
 			name: 'sfx_bullet_wood',
 			forcePlay: true,
 		});
-		context.eventEmitter.broadcast({
-			type: 'soundOnce',
-			name: 'sfx_bullet_ricochet',
-			forcePlay: true,
-		});
+		if (shotRicochets()) {
+			context.eventEmitter.broadcast({
+				type: 'soundOnce',
+				name: 'sfx_bullet_ricochet',
+				forcePlay: true,
+			});
+		}
 	};
 
 	/** Stamp one hole on a cell (SFX is fired once per volley, not per cell). */
