@@ -162,6 +162,45 @@ type BookEventNudge = {
 	hits?: (Position & { name?: SymbolName })[];
 };
 
+// ---------------------------------------------------------------------------
+// BONUS ROUNDS (small bonus: bar awake / big bonus: grave lane open)
+// ---------------------------------------------------------------------------
+
+/** 3 scatters triggered the SMALL BONUS round, 4+ the BIG BONUS. */
+type BookEventFreeSpinTrigger = {
+	index: number;
+	type: 'freeSpinTrigger';
+	totalFs: number;
+	/** where the scatters sit (padded rows); length is the trigger count */
+	positions: Position[];
+};
+
+/** a new bonus-round spin is about to reveal: `amount` of `total` */
+type BookEventUpdateFreeSpin = {
+	index: number;
+	type: 'updateFreeSpin';
+	amount: number;
+	total: number;
+};
+
+/** the round settled: `amount` is the round's total win */
+type BookEventFreeSpinEnd = {
+	index: number;
+	type: 'freeSpinEnd';
+	amount: number;
+	winLevel: number;
+};
+
+/** the 1-in-100 UPGRADE: a 4th scatter dropped mid small-bonus round — the
+ * grave lane is open from this spin on and the spin count is topped back up */
+type BookEventBonusUpgrade = {
+	index: number;
+	type: 'bonusUpgrade';
+	position: Position;
+	spin: number;
+	totalFs: number;
+};
+
 export type BookEvent =
 	| BookEventReveal
 	| BookEventWinInfo
@@ -179,7 +218,12 @@ export type BookEvent =
 	| BookEventSplitOutlaws
 	| BookEventSuperSplit
 	| BookEventBounty
-	| BookEventNudge;
+	| BookEventNudge
+	// bonus rounds
+	| BookEventFreeSpinTrigger
+	| BookEventUpdateFreeSpin
+	| BookEventFreeSpinEnd
+	| BookEventBonusUpgrade;
 
 export type Bet = BetType<BookEvent>;
 export type BookEventOfType<T> = Extract<BookEvent, { type: T }>;

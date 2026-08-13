@@ -17,6 +17,26 @@ def _padrow(pos):
     return {"reel": pos["reel"], "row": pos["row"] + 1}
 
 
+def bonus_upgrade_event(gamestate, position, spin, new_total):
+    """The 1-in-100 UPGRADE: a 4th scatter dropped mid small-bonus round.
+
+    The grave lane is open from this spin on and the round's spin count is
+    topped back up to a full fresh round.
+
+    position: the cell the scatter landed on (padding-adjusted row).
+    spin:     which round spin the drop happened on (1-based).
+    totalFs:  the new (topped-up) total spin count.
+    """
+    event = {
+        "index": len(gamestate.book.events),
+        "type": "bonusUpgrade",
+        "position": _padrow(position),
+        "spin": int(spin),
+        "totalFs": int(new_total),
+    }
+    gamestate.book.add_event(event)
+
+
 def special_bar_event(gamestate):
     """The top bar resolves: lists every cell and the card it revealed.
 

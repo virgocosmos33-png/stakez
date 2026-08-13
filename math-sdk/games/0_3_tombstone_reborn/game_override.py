@@ -42,6 +42,12 @@ class GameStateOverride(GameExecutables):
         self.last_unlocked = False
         self.special_bar = []
         self.last_reel_feature = "none"
+        # bonus-round state: which tier triggered ("small"/"big"), whether the
+        # small round has upgraded, and the pending 4th-scatter drop
+        self.fs_tier = "small"
+        self.fs_upgraded = False
+        self._pending_upgrade = False
+        self._upgrade_scatter = None
 
     def assign_special_sym_function(self):
         # Wild flag is derived from special_symbols by the board reader; no
@@ -79,16 +85,57 @@ class GameStateOverride(GameExecutables):
     # ----------------------------------------------------------- board draw
     def draw_board(self, emit_event=True, trigger_symbol="scatter"):
         conditions = self.get_current_distribution_conditions()
-        self.bar_mode = conditions.get("bar_mode", "off")
         self.boost = conditions.get("boost", "none")
-        self.last_unlocked = bool(conditions.get("last_unlocked", False))
 
-        self.create_board_reelstrips()
+        if self.gametype == self.config.freegame_type:
+            # BONUS-ROUND spin: the bar and lane come from the fs_* condition
+            # keys plus the live upgrade state. The lane is open every spin of
+            # the big bonus (fs_last) or once the small bonus has upgraded.
+            self.bar_mode = conditions.get("fs_bar", "wake")
+            self.last_unlocked = bool(conditions.get("fs_last", False)) or self.fs_upgraded
+            self.create_board_reelstrips()
+            if self._pending_upgrade:
+                self._place_upgrade_scatter()
+            if emit_event:
+                reveal_event(self)
+            self.roll_special_bar(conditions)
+            special_bar_event(self)
+            return
+
+        # BASE spin: honour this book's scatter target. "none" books redraw
+        # any accidental 3+ away (sparse strip, cheap); trigger books draw the
+        # dense BRT strip until the exact tier lands (P ~ 0.26 / 0.11 a draw).
+        self.bar_mode = conditions.get("bar_mode", "off")
+        self.last_unlocked = bool(conditions.get("last_unlocked", False))
+        target = conditions.get("scatters", "none")
+        for _ in range(2000):
+            self.create_board_reelstrips()
+            n = self.count_special_symbols(trigger_symbol)
+            if (
+                (target == "none" and n < 3)
+                or (target == "exactly3" and n == 3)
+                or (target == "atleast4" and n >= 4)
+            ):
+                break
+        else:  # pragma: no cover - odds are astronomical, redraw the spin
+            self.repeat = True
         if emit_event:
             reveal_event(self)
 
         self.roll_special_bar(conditions)
         special_bar_event(self)
+
+    def _place_upgrade_scatter(self):
+        """The 1-in-100 UPGRADE: the 4th scatter drops into the round.
+
+        Placed on one of the two short right-hand columns (3/4) so it reads as
+        the missing 4th scatter marching toward the sealed lane. Overwrites
+        the drawn symbol BEFORE the reveal so the book's board carries it.
+        """
+        reel = random.choice((3, 4))
+        row = random.randrange(len(self.board[reel]))
+        self.board[reel][row] = self.create_symbol("S")
+        self._upgrade_scatter = {"reel": reel, "row": row}
 
     def roll_special_bar(self, conditions):
         """Fill the top bar cells with cards for this spin."""
@@ -207,7 +254,14 @@ class GameStateOverride(GameExecutables):
         if self._boosting():
             feature = "supersplit"
         else:
-            feature = get_random_outcome(cfg["weights"]["unlocked"])
+            # bonus-round spins draw the diluted lane rate; single enhanced
+            # spins (base digup / bought super) keep the full 78% rate
+            key = (
+                "round"
+                if self.gametype == self.config.freegame_type
+                else "unlocked"
+            )
+            feature = get_random_outcome(cfg["weights"][key])
         self.last_reel_feature = feature
         if feature == "none":
             return

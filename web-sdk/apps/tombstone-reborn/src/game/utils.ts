@@ -8,7 +8,6 @@ import {
 	CELL_PITCH_X,
 	REEL_PADDING,
 	SYMBOL_INFO_MAP,
-	SCATTER_WORD_INFO,
 	WILD_EXPAND_INFO,
 	NUDGE_WILD_INFO,
 	BOARD_DIMENSIONS,
@@ -146,24 +145,6 @@ export const getRowPitch = (reelIndex: number) => {
 export const getCellCenterY = (reelIndex: number, rowIndex: number) =>
 	getReelYOffset(reelIndex) + (rowIndex - 0.5) * getRowPitch(reelIndex);
 
-/**
- * Give every scatter on a board its landing position (1..5, left to right,
- * top to bottom) so it can wear its own face — MEMORY, DOUBT, REGRET,
- * REVELATION, OBLIVION — matching the five scatter stop sounds. Reels stop
- * left to right, so board order IS landing order. Tagged before the spin so
- * the right card is already in the reel as it drops.
- */
-export const tagScatterFaces = (board: RawSymbol[][]) => {
-	let landed = 0;
-	for (const reel of board) {
-		for (const rawSymbol of reel) {
-			if (rawSymbol.name !== 'S') continue;
-			landed += 1;
-			rawSymbol.scatterIndex = Math.min(landed, 5);
-		}
-	}
-};
-
 export const getSymbolInfo = ({
 	rawSymbol,
 	state,
@@ -171,14 +152,10 @@ export const getSymbolInfo = ({
 	rawSymbol: RawSymbol;
 	state: SymbolState;
 }) => {
-	// Three symbols wear a different face than their math name alone implies:
-	// the wild that expands a reel, the nudge rider's wild wake, and each
-	// scatter by its position on the board.
+	// Two symbols wear a different face than their math name alone implies:
+	// the wild that expands a reel and the nudge rider's wild wake. The
+	// scatter (S) is the cracked BONUS tombstone straight from SYMBOL_INFO_MAP.
 	if (rawSymbol.name === 'W' && rawSymbol.expanding) return WILD_EXPAND_INFO[state];
 	if (rawSymbol.name === 'W' && rawSymbol.nudged) return NUDGE_WILD_INFO[state];
-	if (rawSymbol.name === 'S') {
-		const face = SCATTER_WORD_INFO[rawSymbol.scatterIndex as keyof typeof SCATTER_WORD_INFO];
-		if (face) return face[state];
-	}
 	return SYMBOL_INFO_MAP[rawSymbol.name][state];
 };

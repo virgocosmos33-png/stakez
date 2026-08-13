@@ -93,17 +93,29 @@ class GameConfig(Config):
         self.wild_symbol = "W"
 
         self.include_padding = True
-        # "wild" flags the revolver; "multiplier" is an (empty) category so the
-        # reveal/board events serialize the per-cell ways multiplier that splits
-        # stamp onto ordinary symbols. No symbol carries the multiplier flag by
-        # default - it is assigned at runtime.
-        self.special_symbols = {"wild": ["W"], "multiplier": []}
+        # "wild" flags the revolver; "scatter" the coffin-plate bonus symbol S;
+        # "multiplier" is an (empty) category so the reveal/board events
+        # serialize the per-cell ways multiplier that splits stamp onto
+        # ordinary symbols. No symbol carries the multiplier flag by default -
+        # it is assigned at runtime.
+        self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": []}
 
-        # No free spins - single enhanced spins only. Kept defined so any engine
-        # lookups that expect the keys don't crash; the custom draw never uses
-        # them.
-        self.freespin_triggers = {self.basegame_type: {}, self.freegame_type: {}}
-        self.anticipation_triggers = {self.basegame_type: 99, self.freegame_type: 99}
+        # BONUS ROUNDS. 3 scatters trigger the SMALL BONUS (fs_spins spins, the
+        # special bar awake on every spin), 4+ the BIG BONUS (same spins, the
+        # grave lane PERMANENTLY open on top). Scatters live only on columns
+        # 0-4 with strip spacing wider than any window, so counts are exact
+        # per-column presence (max 5). No retriggers: the freegame strips (FR0
+        # / WCAP) carry no S at all - the only scatter a round can ever show is
+        # the 1-in-100 UPGRADE drop (see fs_upgrade_per_spin).
+        self.fs_spins = 10
+        # per-spin chance the small bonus drops its 4th scatter and upgrades to
+        # the big bonus (lane open + spins topped back up): ~1 in 100 rounds
+        self.fs_upgrade_per_spin = 0.001
+        self.freespin_triggers = {
+            self.basegame_type: {3: self.fs_spins, 4: self.fs_spins, 5: self.fs_spins},
+            self.freegame_type: {},
+        }
+        self.anticipation_triggers = {self.basegame_type: 2, self.freegame_type: 99}
 
         # ---- SPECIAL BAR (top cards) ----------------------------------------
         # cells: how many bar cells (one above each of the first `cells` reels).
@@ -120,6 +132,13 @@ class GameConfig(Config):
                     "none": 56, "split_gang": 14, "split_outlaws": 14,
                     "gunsmoke": 8, "digup": 2, "coffin": 6,
                 },
+                # the SMALL BONUS round bar: awake (a card most spins) but
+                # diluted vs "small" - ten of these spins sell for 80x where
+                # ONE "small" spin sells for 80x
+                "wake": {
+                    "none": 300, "split_gang": 14, "split_outlaws": 14,
+                    "gunsmoke": 8, "digup": 2, "coffin": 6,
+                },
                 "super": {
                     "none": 26, "split_gang": 22, "split_outlaws": 18,
                     "gunsmoke": 12, "digup": 10, "coffin": 12,
@@ -132,6 +151,12 @@ class GameConfig(Config):
             "weights": {
                 "locked": {"none": 1},
                 "unlocked": {"none": 22, "bounty": 34, "nudge": 28, "supersplit": 16},
+                # bonus-round lane rate: the grave lane is OPEN on every big-
+                # bonus spin, but it drops a feature less often than a bought
+                # single super spin - ten guaranteed 78%-rate lanes would push
+                # the raw round distribution beyond what a 2000x product can
+                # carry (smoke run: 75% of raw rounds hit the 99,999 cap)
+                "round": {"none": 75, "bounty": 12, "nudge": 8, "supersplit": 5},
             },
             # which premium the bounty/nudge lands (weighted toward weaker prems)
             "premium_weights": {"H5": 26, "H4": 20, "H3": 15, "H2": 10, "H1": 6},
@@ -165,26 +190,53 @@ class GameConfig(Config):
         }
 
         # ---- Reels -----------------------------------------------------------
+        # BR0  base strip, sparse teaser scatters on columns 0-4
+        # BRT  trigger strip, dense scatters - forced-freegame books draw here
+        # FR0  freegame strip, NO scatters (rounds cannot retrigger)
+        # WCAP wincap strip (no scatters)
+        # (see reels/_add_scatters.py)
         self.reels = {}
-        for name in ("BR0", "WCAP"):
+        for name in ("BR0", "BRT", "FR0", "WCAP"):
             self.reels[name] = self.read_reels_csv(os.path.join(self.reels_path, f"{name}.csv"))
         self.padding_reels[self.basegame_type] = self.reels["BR0"]
-        self.padding_reels[self.freegame_type] = self.reels["BR0"]
+        self.padding_reels[self.freegame_type] = self.reels["FR0"]
 
         # ---- Distribution condition builders --------------------------------
+        # scatters: the base-spin scatter target for this book's criteria -
+        #   "none" (redraw any accidental 3+), "exactly3" (small bonus trigger)
+        #   or "atleast4" (big bonus trigger).
+        # fs_*: how the bonus round's spins draw - bar mode, whether the grave
+        #   lane is permanently open, which strip, and whether the 4th-scatter
+        #   upgrade is forced onto spin 1 (wincap books: the small bonus can
+        #   only reach the cap THROUGH the upgrade).
         def cond(reel="BR0", bar="off", last=False, count=0, boost="none",
-                 force_wincap=False):
+                 force_wincap=False, force_freegame=False, scatters="none",
+                 fs_reel="FR0", fs_bar="wake", fs_last=False,
+                 fs_force_upgrade=False):
             return {
-                "reel_weights": {self.basegame_type: {reel: 1}},
+                "reel_weights": {
+                    self.basegame_type: {reel: 1},
+                    self.freegame_type: {fs_reel: 1},
+                },
                 "force_wincap": force_wincap,
-                "force_freegame": False,
+                "force_freegame": force_freegame,
                 "bar_mode": bar,
                 "last_unlocked": last,
                 "force_special_count": count,
                 "boost": boost,
+                "scatters": scatters,
+                "fs_bar": fs_bar,
+                "fs_last": fs_last,
+                "fs_force_upgrade": fs_force_upgrade,
             }
 
-        self.mode_rtps = {"base": 0.965, "bonus_small": 0.965, "bonus_super": 0.965}
+        self.mode_rtps = {
+            "base": 0.965,
+            "bonus_small": 0.965,
+            "bonus_super": 0.965,
+            "freespins": 0.965,
+            "superspins": 0.965,
+        }
 
         self.bet_modes = [
             BetMode(
@@ -209,9 +261,25 @@ class GameConfig(Config):
                         win_criteria=0.0,
                         conditions=cond(reel="BR0", bar="base", last=False),
                     ),
+                    # natural bonus triggers: 3 scatters -> SMALL BONUS round
+                    # (bar awake), 4+ -> BIG BONUS round (lane open too)
+                    Distribution(
+                        criteria="freegame_small",
+                        quota=0.02,
+                        conditions=cond(reel="BRT", bar="base", scatters="exactly3",
+                                        force_freegame=True,
+                                        fs_bar="wake", fs_last=False),
+                    ),
+                    Distribution(
+                        criteria="freegame_big",
+                        quota=0.005,
+                        conditions=cond(reel="BRT", bar="base", scatters="atleast4",
+                                        force_freegame=True,
+                                        fs_bar="wake", fs_last=True),
+                    ),
                     Distribution(
                         criteria="basegame",
-                        quota=0.549,
+                        quota=0.524,
                         conditions=cond(reel="BR0", bar="base", last=False),
                     ),
                 ],
@@ -271,6 +339,69 @@ class GameConfig(Config):
                         criteria="basegame",
                         quota=0.798,
                         conditions=cond(reel="BR0", bar="super", last=True, count=6),
+                    ),
+                ],
+            ),
+            # ---- BONUS ROUNDS (multi-spin, scatter-triggered, also buyable) --
+            # SMALL BONUS: 3 scatters trigger fs_spins spins with the special
+            # bar awake ("wake") every spin. 1 in ~100 rounds drops a 4th
+            # scatter mid-round and UPGRADES to the big bonus (lane opens for
+            # the rest, spins topped back up). The cap is only reachable
+            # through that upgrade - wincap books force it on spin 1.
+            BetMode(
+                name="freespins",
+                cost=80.00,
+                rtp=self.mode_rtps["freespins"],
+                max_win=self.wincap,
+                auto_close_disabled=False,
+                is_feature=True,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.002,
+                        win_criteria=self.wincap,
+                        conditions=cond(reel="BRT", bar="base", scatters="exactly3",
+                                        force_freegame=True, force_wincap=True,
+                                        fs_reel="WCAP", fs_bar="super", fs_last=False,
+                                        fs_force_upgrade=True, boost="max"),
+                    ),
+                    Distribution(
+                        criteria="freegame",
+                        quota=0.998,
+                        conditions=cond(reel="BRT", bar="base", scatters="exactly3",
+                                        force_freegame=True,
+                                        fs_bar="wake", fs_last=False),
+                    ),
+                ],
+            ),
+            # BIG BONUS: 4+ scatters trigger fs_spins spins with the bar awake
+            # at the bought-small level AND the grave lane permanently open -
+            # bounty / nudge / supersplit live on every spin.
+            BetMode(
+                name="superspins",
+                cost=2000.00,
+                rtp=self.mode_rtps["superspins"],
+                max_win=self.wincap,
+                auto_close_disabled=False,
+                is_feature=True,
+                is_buybonus=True,
+                distributions=[
+                    Distribution(
+                        criteria="wincap",
+                        quota=0.002,
+                        win_criteria=self.wincap,
+                        conditions=cond(reel="BRT", bar="base", scatters="atleast4",
+                                        force_freegame=True, force_wincap=True,
+                                        fs_reel="WCAP", fs_bar="super", fs_last=True,
+                                        boost="max"),
+                    ),
+                    Distribution(
+                        criteria="freegame",
+                        quota=0.998,
+                        conditions=cond(reel="BRT", bar="base", scatters="atleast4",
+                                        force_freegame=True,
+                                        fs_bar="wake", fs_last=True),
                     ),
                 ],
             ),

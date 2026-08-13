@@ -303,6 +303,15 @@ export const SCATTER_WORD_INFO = {
 	5: scatterWord(5),
 } as const;
 
+// TOMBSTONE REBORN scatter: the cracked BONUS tombstone, one face in every
+// state (the White Room word faces above are the fork's, kept only because
+// SymbolName still carries their plumbing).
+const scatterStatic = {
+	type: 'sprite',
+	assetKey: 'trScatter',
+	sizeRatios: { width: 1, height: 1 },
+};
+
 export const SYMBOL_INFO_MAP = {
 	H1: cardStates(h1Static, 'H1', 'h1'),
 	H2: cardStates(h2Static, 'H2', 'h2'),
@@ -356,9 +365,18 @@ export const SYMBOL_INFO_MAP = {
 		win: cloneStatic,
 		land: cloneStatic,
 	},
-	// A scatter with no landing position yet (initial board, Storybook fixtures,
-	// socket cells) falls back to the 1st face rather than the old head card.
-	S: SCATTER_WORD_INFO[1],
+	// SCATTER: the cracked BONUS tombstone (tools/make_scatter_card.py).
+	// Sprite-only in every state like W — the trigger celebration and the
+	// bonus banner own the FX; the land squash comes from SymbolSprite.
+	S: {
+		explosion,
+		postWin: scatterStatic,
+		postWinStatic: scatterStatic,
+		static: scatterStatic,
+		spin: scatterStatic,
+		win: scatterStatic,
+		land: scatterStatic,
+	},
 	// Haunted Mirror: intact on the reels, cracked once it bursts and resolves.
 	// HM keeps deterministic sprite states because the burst visuals are owned
 	// by MirrorShatter/ApparitionOverlay and the intact->cracked swap must be

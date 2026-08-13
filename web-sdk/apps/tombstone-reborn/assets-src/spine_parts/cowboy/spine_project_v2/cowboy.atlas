@@ -1,0 +1,117 @@
+cowboy.png
+size: 1024,2228
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+arm_l
+  rotate: false
+  xy: 617, 4
+  size: 158, 420
+  orig: 158, 420
+  offset: 0, 0
+  index: -1
+arm_r
+  rotate: false
+  xy: 467, 4
+  size: 146, 420
+  orig: 146, 420
+  offset: 0, 0
+  index: -1
+beard
+  rotate: false
+  xy: 4, 912
+  size: 287, 380
+  orig: 287, 380
+  offset: 0, 0
+  index: -1
+belt
+  rotate: false
+  xy: 4, 1296
+  size: 728, 380
+  orig: 728, 380
+  offset: 0, 0
+  index: -1
+boot_l
+  rotate: false
+  xy: 606, 488
+  size: 194, 420
+  orig: 194, 420
+  offset: 0, 0
+  index: -1
+boot_r
+  rotate: false
+  xy: 257, 488
+  size: 345, 420
+  orig: 345, 420
+  offset: 0, 0
+  index: -1
+brows
+  rotate: false
+  xy: 319, 2004
+  size: 415, 166
+  orig: 415, 166
+  offset: 0, 0
+  index: -1
+eyes
+  rotate: false
+  xy: 738, 2004
+  size: 222, 80
+  orig: 222, 80
+  offset: 0, 0
+  index: -1
+face
+  rotate: false
+  xy: 327, 1680
+  size: 298, 296
+  orig: 298, 296
+  offset: 0, 0
+  index: -1
+hat
+  rotate: false
+  xy: 4, 2004
+  size: 311, 220
+  orig: 311, 220
+  offset: 0, 0
+  index: -1
+scarf
+  rotate: false
+  xy: 629, 1680
+  size: 300, 246
+  orig: 300, 246
+  offset: 0, 0
+  index: -1
+shovel_head
+  rotate: false
+  xy: 4, 1680
+  size: 319, 320
+  orig: 319, 320
+  offset: 0, 0
+  index: -1
+shovel_shaft
+  rotate: false
+  xy: 736, 1296
+  size: 263, 320
+  orig: 263, 320
+  offset: 0, 0
+  index: -1
+thigh_l
+  rotate: false
+  xy: 4, 488
+  size: 249, 420
+  orig: 249, 420
+  offset: 0, 0
+  index: -1
+thigh_r
+  rotate: false
+  xy: 779, 4
+  size: 170, 420
+  orig: 170, 420
+  offset: 0, 0
+  index: -1
+torso
+  rotate: false
+  xy: 4, 4
+  size: 459, 480
+  orig: 459, 480
+  offset: 0, 0
+  index: -1

@@ -84,10 +84,13 @@
 
 	const context = getContext();
 
-	/** Which sting announces each bought mode. */
+	/** Which sting announces each bought mode. The bonus ROUNDS reuse the
+	 * matching single-spin stings until they get their own recordings. */
 	const ENTRY_SFX: Record<BonusEntryTier, SoundEffectName> = {
 		bonus_small: 'sfx_bonus_entry_small',
 		bonus_super: 'sfx_bonus_entry_super',
+		freespins: 'sfx_bonus_entry_small',
+		superspins: 'sfx_bonus_entry_super',
 	};
 
 	let tier = $state<BonusEntryTier | null>(null);

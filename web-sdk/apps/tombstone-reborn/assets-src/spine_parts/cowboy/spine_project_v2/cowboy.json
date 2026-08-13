@@ -1,0 +1,371 @@
+{
+  "skeleton": {
+    "hash": "cowboy-v2",
+    "spine": "4.3.23",
+    "x": -450,
+    "y": 0,
+    "width": 900,
+    "height": 1400,
+    "images": "./images/",
+    "audio": ""
+  },
+  "bones": [
+    {
+      "name": "root"
+    },
+    {
+      "name": "hip",
+      "parent": "root",
+      "x": 0.0,
+      "y": 680
+    },
+    {
+      "name": "torso",
+      "parent": "hip",
+      "x": 0.0,
+      "y": 100
+    },
+    {
+      "name": "chest",
+      "parent": "torso",
+      "x": 0.0,
+      "y": 100
+    },
+    {
+      "name": "neck",
+      "parent": "chest",
+      "x": 0.0,
+      "y": 100
+    },
+    {
+      "name": "head",
+      "parent": "neck",
+      "x": 0.0,
+      "y": 100
+    },
+    {
+      "name": "hat",
+      "parent": "head",
+      "x": 0.0,
+      "y": 100
+    },
+    {
+      "name": "eyes",
+      "parent": "head",
+      "x": 0.0,
+      "y": 25
+    },
+    {
+      "name": "brows",
+      "parent": "head",
+      "x": 0.0,
+      "y": 45
+    },
+    {
+      "name": "face",
+      "parent": "head",
+      "x": 0.0,
+      "y": -10
+    },
+    {
+      "name": "beard",
+      "parent": "head",
+      "x": 0.0,
+      "y": -60
+    },
+    {
+      "name": "scarf",
+      "parent": "chest",
+      "x": 0.0,
+      "y": 20
+    },
+    {
+      "name": "belt",
+      "parent": "hip",
+      "x": 0.0,
+      "y": 0
+    },
+    {
+      "name": "arm_r",
+      "parent": "chest",
+      "x": 170.0,
+      "y": -60
+    },
+    {
+      "name": "arm_l",
+      "parent": "chest",
+      "x": -170.0,
+      "y": -60
+    },
+    {
+      "name": "thigh_r",
+      "parent": "hip",
+      "x": 70.0,
+      "y": -160
+    },
+    {
+      "name": "thigh_l",
+      "parent": "hip",
+      "x": -70.0,
+      "y": -160
+    },
+    {
+      "name": "boot_r",
+      "parent": "thigh_r",
+      "x": 10.0,
+      "y": -320
+    },
+    {
+      "name": "boot_l",
+      "parent": "thigh_l",
+      "x": -10.0,
+      "y": -320
+    },
+    {
+      "name": "shovel_shaft",
+      "parent": "arm_l",
+      "x": -100.0,
+      "y": -40
+    },
+    {
+      "name": "shovel_head",
+      "parent": "shovel_shaft",
+      "x": 0.0,
+      "y": -260
+    }
+  ],
+  "slots": [
+    {
+      "name": "scarf",
+      "bone": "scarf",
+      "attachment": "scarf"
+    },
+    {
+      "name": "thigh_r",
+      "bone": "thigh_r",
+      "attachment": "thigh_r"
+    },
+    {
+      "name": "boot_r",
+      "bone": "boot_r",
+      "attachment": "boot_r"
+    },
+    {
+      "name": "thigh_l",
+      "bone": "thigh_l",
+      "attachment": "thigh_l"
+    },
+    {
+      "name": "boot_l",
+      "bone": "boot_l",
+      "attachment": "boot_l"
+    },
+    {
+      "name": "torso",
+      "bone": "torso",
+      "attachment": "torso"
+    },
+    {
+      "name": "belt",
+      "bone": "belt",
+      "attachment": "belt"
+    },
+    {
+      "name": "arm_r",
+      "bone": "arm_r",
+      "attachment": "arm_r"
+    },
+    {
+      "name": "arm_l",
+      "bone": "arm_l",
+      "attachment": "arm_l"
+    },
+    {
+      "name": "shovel_shaft",
+      "bone": "shovel_shaft",
+      "attachment": "shovel_shaft"
+    },
+    {
+      "name": "shovel_head",
+      "bone": "shovel_head",
+      "attachment": "shovel_head"
+    },
+    {
+      "name": "face",
+      "bone": "face",
+      "attachment": "face"
+    },
+    {
+      "name": "beard",
+      "bone": "beard",
+      "attachment": "beard"
+    },
+    {
+      "name": "eyes",
+      "bone": "eyes",
+      "attachment": "eyes"
+    },
+    {
+      "name": "brows",
+      "bone": "brows",
+      "attachment": "brows"
+    },
+    {
+      "name": "hat",
+      "bone": "hat",
+      "attachment": "hat"
+    }
+  ],
+  "skins": [
+    {
+      "name": "default",
+      "attachments": {
+        "hat": {
+          "hat": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 311,
+            "height": 220
+          }
+        },
+        "eyes": {
+          "eyes": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 222,
+            "height": 80
+          }
+        },
+        "brows": {
+          "brows": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 415,
+            "height": 166
+          }
+        },
+        "face": {
+          "face": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 298,
+            "height": 296
+          }
+        },
+        "beard": {
+          "beard": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 287,
+            "height": 380
+          }
+        },
+        "torso": {
+          "torso": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 459,
+            "height": 480
+          }
+        },
+        "scarf": {
+          "scarf": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 300,
+            "height": 246
+          }
+        },
+        "belt": {
+          "belt": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 728,
+            "height": 380
+          }
+        },
+        "arm_r": {
+          "arm_r": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 146,
+            "height": 420
+          }
+        },
+        "arm_l": {
+          "arm_l": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 158,
+            "height": 420
+          }
+        },
+        "thigh_r": {
+          "thigh_r": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 170,
+            "height": 420
+          }
+        },
+        "thigh_l": {
+          "thigh_l": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 249,
+            "height": 420
+          }
+        },
+        "boot_r": {
+          "boot_r": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 345,
+            "height": 420
+          }
+        },
+        "boot_l": {
+          "boot_l": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 194,
+            "height": 420
+          }
+        },
+        "shovel_shaft": {
+          "shovel_shaft": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 263,
+            "height": 320
+          }
+        },
+        "shovel_head": {
+          "shovel_head": {
+            "x": 0,
+            "y": 0,
+            "rotation": 0,
+            "width": 319,
+            "height": 320
+          }
+        }
+      }
+    }
+  ],
+  "animations": {}
+}

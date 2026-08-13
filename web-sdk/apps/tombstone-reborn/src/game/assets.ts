@@ -461,6 +461,15 @@ export default {
 		src: new URL('../../assets/sprites/mirror/tr_nudge_wild.png', import.meta.url).href,
 		preload: true,
 	},
+	// The SCATTER: the cracked BONUS tombstone. 3 on a base spin trigger the
+	// SMALL BONUS round, 4+ the BIG BONUS (see SYMBOL_INFO_MAP.S). Generated
+	// art baked onto the same 300x300 canvas with wr_wild's own alpha
+	// (tools/make_scatter_card.py).
+	trScatter: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_scatter.png', import.meta.url).href,
+		preload: true,
+	},
 	// The EXPANDING wild: same jacket, plus a rising arrow stencilled below the
 	// wordmark. Shown for the wild that drops into a bottom cell and grows its
 	// reel (see SYMBOL_INFO_MAP.W / RawSymbol.expanding). The arrow deliberately

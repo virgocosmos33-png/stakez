@@ -35,6 +35,11 @@ export const WHITE_ROOM_SPECIALS: SpecialSymbol[] = [
 		desc: 'Substitutes for all paying symbols and takes part in their winning ways. Wilds never complete a way on their own — a way always needs at least one regular paying symbol. The one exception: Wilds connecting on EVERY column of the board count as a Wild connection worth 10× bet per way.',
 	},
 	{
+		key: 's',
+		name: 'Scatter — The Bonus Tombstone',
+		desc: 'Pays nothing on its own and lands only in the base game. 3 scatters trigger the SMALL BONUS: 10 bonus spins with the special bar awake on every one. 4 or more trigger the BIG BONUS: 10 bonus spins with the bar awake AND the grave lane torn open throughout. No retriggers — but around 1 in 100 small bonuses drops a 4th scatter mid-round and UPGRADES to the big bonus, with the spin count topped back up.',
+	},
+	{
 		key: 'split_gang',
 		name: 'Gang Split',
 		desc: 'A bar card that splits EVERY premium character on the board: each one gains +1 to +10 extra ways. The dead multiply.',

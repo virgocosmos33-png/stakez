@@ -38,8 +38,16 @@ export const BONUS_ENTRY_SUPER_ASSET = 'bonusEntrySuper';
 export const BONUS_FRAME_SMALL_ASSET = 'bonusFrameSmall';
 export const BONUS_FRAME_SUPER_ASSET = 'bonusFrameSuper';
 
-/** Bet mode keys that open a banner. Matches betModeMeta.ts exactly. */
-export const BONUS_ENTRY_MODES = ['bonus_small', 'bonus_super'] as const;
+/** Bet mode keys that open a banner. Matches betModeMeta.ts exactly.
+ * The two ROUND modes (freespins / superspins) are also banner tiers: bought
+ * rounds banner at round start via presentBonusEntry, and NATURAL triggers
+ * reuse the same tiers from the freeSpinTrigger book event handler. */
+export const BONUS_ENTRY_MODES = [
+	'bonus_small',
+	'bonus_super',
+	'freespins',
+	'superspins',
+] as const;
 export type BonusEntryTier = (typeof BONUS_ENTRY_MODES)[number];
 
 export type BonusEntryArt = {
@@ -106,6 +114,48 @@ export const BONUS_ENTRY_ART: Record<BonusEntryTier, BonusEntryArt> = {
 		rings: 0,
 		flares: 0,
 		holdMs: 2200,
+	},
+	// SMALL BONUS round: ten spins with the six-card special bar awake. Reuses
+	// the small plate/frame — the banner is the same funeral iron, the word is
+	// the mechanic ("the wake": the vigil where the bar sits up with the dead).
+	freespins: {
+		title: 'THE WAKE',
+		subtitle: '10 SPINS · THE BAR IS AWAKE',
+		plateKey: BONUS_ENTRY_SMALL_ASSET,
+		frameKey: BONUS_FRAME_SMALL_ASSET,
+		framePadFrac: 74 / 1280,
+		rays: 5,
+		rayAlpha: 0.28,
+		embers: 26,
+		dust: 3,
+		popScale: 0.62,
+		streaks: 10,
+		kick: 10,
+		push: 1.07,
+		rings: 0,
+		flares: 0,
+		holdMs: 2400,
+	},
+	// BIG BONUS round: ten spins with the bar awake AND the grave lane open
+	// permanently. Escalated like bonus_super, one notch under it on the
+	// levers so the 1000x single-spin buy keeps the biggest entrance.
+	superspins: {
+		title: 'THE RECKONING',
+		subtitle: '10 SPINS · THE LANE IS OPEN',
+		plateKey: BONUS_ENTRY_SUPER_ASSET,
+		frameKey: BONUS_FRAME_SUPER_ASSET,
+		framePadFrac: 112 / 1280,
+		rays: 8,
+		rayAlpha: 0.46,
+		embers: 50,
+		dust: 5,
+		popScale: 1.0,
+		streaks: 18,
+		kick: 20,
+		push: 1.1,
+		rings: 0.6,
+		flares: 2,
+		holdMs: 2800,
 	},
 	bonus_super: {
 		title: 'OPEN GRAVE',

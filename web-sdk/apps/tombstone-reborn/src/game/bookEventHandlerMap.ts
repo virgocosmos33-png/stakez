@@ -636,6 +636,81 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 		await fxWait(120);
 	},
+	// ------------------------------------------------------------------
+	// BONUS ROUNDS: 3 scatters -> SMALL BONUS (bar awake all round),
+	// 4+ -> BIG BONUS (grave lane open all round on top)
+	// ------------------------------------------------------------------
+	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
+		const tier = bookEvent.positions.length >= 4 ? 'superspins' : 'freespins';
+
+		// celebrate the scatters that did it
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
+		shakeBoard({ intensity: 5, duration: fxDur(220) });
+		await animateSymbols({ positions: filterVisibleCells(bookEvent.positions) });
+
+		// the BIG BONUS keeps the grave lane dug up for the whole round —
+		// the reveal handler drops laneSuper again when base game resumes
+		if (tier === 'superspins') {
+			stateGame.laneSuper = true;
+			stateGame.lidOpen = true;
+		}
+
+		// announce the round. A BOUGHT round already showed this exact banner
+		// at round start (presentBonusEntry awaits it before the first reveal),
+		// so only NATURAL triggers banner here.
+		const buyKey = stateBet.activeBetModeKey?.toLowerCase();
+		if (buyKey !== 'freespins' && buyKey !== 'superspins') {
+			await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
+		}
+
+		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: 0,
+			total: bookEvent.totalFs,
+		});
+	},
+	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
+		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: bookEvent.amount,
+			total: bookEvent.total,
+		});
+	},
+	freeSpinEnd: async (_bookEvent: BookEventOfType<'freeSpinEnd'>) => {
+		// the round total is celebrated by setWin/finalWin like every book —
+		// this only strikes the round chrome
+		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+		stateGame.gameType = 'basegame';
+		stateGame.laneSuper = false;
+	},
+	// the 1-in-100 UPGRADE: a 4th scatter dropped mid small-bonus round — the
+	// lane blasts open for the rest of the round and the spins top back up
+	bonusUpgrade: async (bookEvent: BookEventOfType<'bonusUpgrade'>) => {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
+		await animateSymbols({ positions: filterVisibleCells([bookEvent.position]) });
+
+		// the boarded lane cover breaks away (LaneLidLock) and STAYS off
+		shakeBoard({ intensity: 8, duration: fxDur(300) });
+		stateGame.laneSuper = true;
+		stateGame.lidOpen = true;
+		const lane = filterVisibleCells([{ reel: stateGame.board.length - 1, row: 1 }]);
+		await eventEmitter.broadcastAsync({
+			type: 'featureBurstShow',
+			kind: 'digUp',
+			cells: lane,
+		});
+
+		// the upgrade IS an entry into the big bonus — full takeover banner
+		await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier: 'superspins' });
+
+		eventEmitter.broadcast({
+			type: 'freeSpinCounterUpdate',
+			current: bookEvent.spin,
+			total: bookEvent.totalFs,
+		});
+	},
 	// the 99,999x cap — the celebration itself rides on the win amount below
 	wincap: async (_bookEvent: BookEventOfType<'wincap'>) => {
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' });
