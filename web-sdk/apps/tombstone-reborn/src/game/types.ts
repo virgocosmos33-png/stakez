@@ -12,6 +12,10 @@ export type RawSymbol = {
 	// symbol, its own card (the arrow one) — set by LockedSlots for the bottom
 	// cell that a Wild Reel rises out of.
 	expanding?: boolean;
+	// A W left in the nudge rider's wake (or riding as the nudge card itself).
+	// Same math symbol, its own face (spur wheel + left arrows + NUDGE) — set
+	// by the nudge book event handler for every cell the rider racks through.
+	nudged?: boolean;
 	// 1..5: which scatter this is, left to right across the board. Each position
 	// has its own face (MEMORY / DOUBT / REGRET / REVELATION / OBLIVION), the
 	// same 1..5 the scatter stop sounds already use.

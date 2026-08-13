@@ -4,27 +4,32 @@
 	export type EmitterEventNudgeSlide =
 		| {
 				type: 'nudgeSlideShow';
-				symbol: SymbolName;
 				baseMult: number;
 				winMult: number;
 				/**
-				 * Premiums crossed, ordered right-to-left (encounter order).
+				 * The full walk, one cell per reel, ordered right-to-left and ending
+				 * on the first reel's middle cell (the rider's resting place).
 				 * `from` is the symbol that WAS in the cell: the handler has already
-				 * swapped the board to WILD, so the ghost card covering the cell has
-				 * to carry the original face until the shunt reveals the wild.
+				 * swapped the whole wake to nudge WILDs, so the ghost card covering
+				 * each cell has to carry the original face until the rider's impact
+				 * knocks it out. `premium` marks the steps that bump the multiplier.
 				 */
-				hits: { reel: number; row: number; from: SymbolName }[];
+				steps: { reel: number; row: number; from: SymbolName; premium: boolean }[];
 		  }
 		| { type: 'nudgeSlideHide' };
 </script>
 
 <script lang="ts">
 	/**
-	 * Horizontal NUDGE: the bounty premium is blasted out of the last-reel lane
-	 * and rides LEFT across the board on a trail of grave dust. Every premium it
-	 * reaches is SHUNTED out of its cell by the impact and the wild underneath is
-	 * uncovered, bumping the WIN multiplier. Each scored cell keeps a powder-burn
-	 * scorch and a curl of smoke until the next spin rides feature FX away.
+	 * Horizontal NUDGE — xNudge sideways. The NUDGE WILD (its own card: spur
+	 * wheel, left arrows, NUDGE wordmark) is blasted out of the last-reel lane
+	 * and RACKS LEFT one mechanical notch per reel: cock (a short recoil against
+	 * the travel direction), slam over to the next cell — half-steps and
+	 * diagonals where the diamond rows don't line up — impact. Every cell it
+	 * steps through has its old card SHUNTED out along the direction of travel,
+	 * uncovering the nudge wild the handler already swapped in; premium cells
+	 * hit harder and bump the WIN multiplier. It comes to rest seated on the
+	 * FIRST reel's middle cell and hands over to the board's own wild.
 	 *
 	 * Everything visible here is real art: a Layer AI iron-and-wood card frame
 	 * and multiplier plaque over Kenney smoke, dust, flash and scorch (see
@@ -62,6 +67,10 @@
 		reel: number;
 		row: number;
 		from: SymbolName;
+		premium: boolean;
+		/** unit direction of travel at impact — the shunted card leaves this way */
+		kx: number;
+		ky: number;
 		seed: number;
 		/** 0 → 1 as the impact lands: drives flash, smoke and the scorch settling */
 		hit: Tween<number>;
@@ -72,7 +81,6 @@
 	type TrailPuff = { key: number; x: number; y: number; born: number; seed: number };
 
 	let show = $state(false);
-	let symbol = $state<SymbolName>('H1');
 	let mult = $state(1);
 	let marks = $state<Mark[]>([]);
 	let trail = $state<TrailPuff[]>([]);
@@ -82,7 +90,10 @@
 	const rideX = new Tween(0);
 	const rideY = new Tween(0);
 	const riderScale = new Tween(1);
+	const riderAlpha = new Tween(1);
 	const launch = new Tween(0);
+	/** 0 → 1 once the rider is seated on its resting cell: drives the halo ring */
+	const rest = new Tween(0);
 	const badgePop = new Tween(1);
 	const fallOut = new Tween(0);
 
@@ -104,6 +115,7 @@
 		trail = [];
 		fallOut.set(0, { duration: 0 });
 		launch.set(0, { duration: 0 });
+		rest.set(0, { duration: 0 });
 	};
 
 	const dropTrail = (x: number, y: number) => {
@@ -114,29 +126,34 @@
 		];
 	};
 
-	const scoreCell = (hit: { reel: number; row: number; from: SymbolName }, index: number) => {
+	const scoreCell = (
+		step: { reel: number; row: number; from: SymbolName; premium: boolean },
+		dir: { x: number; y: number },
+		index: number,
+	) => {
 		const mark: Mark = {
-			key: `${hit.reel}-${hit.row}`,
-			reel: hit.reel,
-			row: hit.row,
-			from: hit.from,
-			seed: hit.reel * 31 + hit.row * 17 + index * 97,
+			key: `${step.reel}-${step.row}`,
+			reel: step.reel,
+			row: step.row,
+			from: step.from,
+			premium: step.premium,
+			kx: dir.x,
+			ky: dir.y,
+			seed: step.reel * 31 + step.row * 17 + index * 97,
 			hit: new Tween(0),
 			shunt: new Tween(0),
 		};
 		marks = [...marks, mark];
-		mark.hit.set(1, { duration: fxDur(520), easing: cubicOut });
+		mark.hit.set(1, { duration: fxDur(step.premium ? 620 : 460), easing: cubicOut });
 		// the knocked-out card leaves fast, then the wild underneath is uncovered
-		mark.shunt.set(1, { duration: fxDur(340), easing: backOut });
+		mark.shunt.set(1, { duration: fxDur(step.premium ? 380 : 300), easing: backOut });
 	};
 
 	const run = async (e: {
-		symbol: SymbolName;
 		baseMult: number;
 		winMult: number;
-		hits: { reel: number; row: number; from: SymbolName }[];
+		steps: { reel: number; row: number; from: SymbolName; premium: boolean }[];
 	}) => {
-		symbol = e.symbol;
 		mult = e.baseMult;
 		reset();
 
@@ -144,48 +161,73 @@
 		rideX.set(start.x, { duration: 0 });
 		rideY.set(start.y, { duration: 0 });
 		riderScale.set(1, { duration: 0 });
+		riderAlpha.set(1, { duration: 0 });
 		show = true;
 
 		// blasted out of the lane: the reel mechanism kicking a notch over
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_reel_nudge' });
 		launch.set(1, { duration: fxDur(460), easing: cubicOut });
-		await riderScale.set(1.28, { duration: fxDur(320), easing: backOut });
+		await riderScale.set(1.24, { duration: fxDur(320), easing: backOut });
 
-		let passed = 0;
-		for (const hit of e.hits) {
-			const dest = cellLocal(hit.reel, hit.row);
-			const prevReel = passed === 0 ? lastReel() : e.hits[passed - 1].reel;
-			const gap = Math.max(1, Math.abs(hit.reel - prevReel));
-			const hopMs = fxDur(400 + gap * 150);
+		// RACK LEFT, one mechanical notch per reel. Each notch: cock (a short
+		// recoil against the travel direction), slam over — the y component
+		// makes half-steps and diagonals read as real sideways nudges — impact.
+		let prev = start;
+		let index = 0;
+		for (const step of e.steps) {
+			const dest = cellLocal(step.reel, step.row);
+			const len = Math.hypot(dest.x - prev.x, dest.y - prev.y) || 1;
+			const dir = { x: (dest.x - prev.x) / len, y: (dest.y - prev.y) / len };
+
+			// cock: the mechanism winds up before the notch slams over
 			await Promise.all([
-				rideX.set(dest.x, { duration: hopMs, easing: cubicInOut }),
-				rideY.set(dest.y, { duration: hopMs, easing: cubicInOut }),
+				rideX.set(prev.x - dir.x * SYMBOL_CARD_W * 0.09, {
+					duration: fxDur(140),
+					easing: cubicOut,
+				}),
+				rideY.set(prev.y - dir.y * SYMBOL_CARD_W * 0.09, {
+					duration: fxDur(140),
+					easing: cubicOut,
+				}),
 			]);
-			passed += 1;
-			mult = Math.min(e.winMult, e.baseMult + passed);
-			scoreCell(hit, passed);
-			badgePop.set(1.5, { duration: 0 });
-			badgePop.set(1, { duration: fxDur(360) });
-			shakeBoard({ intensity: 7, duration: fxDur(200) });
-			// each shunt is another notch of the same mechanism
+			// slam: one hard notch with a little overshoot-and-settle
+			await Promise.all([
+				rideX.set(dest.x, { duration: fxDur(250), easing: backOut }),
+				rideY.set(dest.y, { duration: fxDur(250), easing: backOut }),
+			]);
+
+			index += 1;
+			scoreCell(step, dir, index);
+			if (step.premium) {
+				// a premium crushed under the wild: the WIN multiplier clicks up
+				mult = Math.min(e.winMult, mult + 1);
+				badgePop.set(1.55, { duration: 0 });
+				badgePop.set(1, { duration: fxDur(380) });
+			}
+			shakeBoard({
+				intensity: step.premium ? 10 : 6,
+				duration: fxDur(step.premium ? 260 : 180),
+			});
+			// each notch is another kick of the same mechanism
 			context.eventEmitter.broadcast({
 				type: 'soundOnce',
 				name: 'sfx_reel_nudge',
 				forcePlay: true,
 			});
-			// dwell so the shunt and the uncovered wild both read before the next hop
-			await fxWait(320);
+			// dwell so the shunt and the uncovered wild both read before the next notch
+			await fxWait(step.premium ? 360 : 230);
+			prev = dest;
 		}
 
-		// ride out through the far-left column
-		const end = cellLocal(0, 1);
-		await Promise.all([
-			rideX.set(end.x, { duration: fxDur(520), easing: cubicInOut }),
-			rideY.set(end.y, { duration: fxDur(520), easing: cubicInOut }),
-		]);
+		// came to rest seated on the first reel's middle cell: settle, flash the
+		// halo, then hand the cell over to the board's own nudge wild underneath
 		mult = e.winMult;
-		await riderScale.set(0.82, { duration: fxDur(300) });
-		await fxWait(260);
+		badgePop.set(1.55, { duration: 0 });
+		badgePop.set(1, { duration: fxDur(380) });
+		rest.set(1, { duration: fxDur(600), easing: cubicOut });
+		await riderScale.set(1, { duration: fxDur(280), easing: backOut });
+		await fxWait(460);
+		await riderAlpha.set(0, { duration: fxDur(300) });
 		// the rider is spent; the scorch it left behind stays until the next spin
 		show = false;
 		launch.set(0, { duration: 0 });
@@ -263,11 +305,22 @@
 
 					<!-- impact: flash, then a gunsmoke plume rolling off the cell -->
 					{#if lit < 0.55}
+						{@const punch = mark.premium ? 2.1 : 1.4}
 						<FeatureFxSprite
 							tex={seqFrame(FX.flash, lit / 0.55)}
-							width={SYMBOL_CARD_W * (1.1 + lit * 1.5)}
-							height={SYMBOL_CARD_W * (1.1 + lit * 1.5)}
+							width={SYMBOL_CARD_W * (1.1 + lit * punch)}
+							height={SYMBOL_CARD_W * (1.1 + lit * punch)}
 							alpha={0.95 * (1 - lit / 0.55)}
+						/>
+					{/if}
+					<!-- a premium crushed under the wild gets a brass ring on top of
+					the flash — the beat the multiplier clicks up on -->
+					{#if mark.premium && lit > 0.08 && lit < 0.9}
+						<FeatureFxSprite
+							tex={FX.ring}
+							width={SYMBOL_CARD_W * (0.9 + lit * 1.6)}
+							height={SYMBOL_CARD_W * (0.9 + lit * 1.6)}
+							alpha={0.75 * (1 - lit)}
 						/>
 					{/if}
 					{#if lit > 0.02 && lit < 0.98}
@@ -293,13 +346,15 @@
 						/>
 					{/each}
 
-					<!-- The card that was here, knocked clean out of its cell. It hides
-					the wild the handler already swapped in until the shunt clears. -->
+					<!-- The card that was here, knocked clean out of its cell ALONG the
+					rider's direction of travel (diagonal notches knock diagonally).
+					It hides the wild the handler already swapped in until it clears. -->
 					{#if knock < 0.995}
 						<Container
-							x={-SYMBOL_CARD_W * SHUNT_TRAVEL * knock}
-							y={-SYMBOL_CARD_H * 0.14 * Math.sin(knock * Math.PI)}
-							rotation={-0.42 * knock}
+							x={mark.kx * SYMBOL_CARD_W * SHUNT_TRAVEL * knock}
+							y={mark.ky * SYMBOL_CARD_W * SHUNT_TRAVEL * knock -
+								SYMBOL_CARD_H * 0.14 * Math.sin(knock * Math.PI)}
+							rotation={(mark.kx >= 0 ? 0.42 : -0.42) * knock}
 							scale={1 - 0.18 * knock}
 							alpha={1 - knock * knock}
 						>
@@ -323,7 +378,7 @@
 			{/each}
 
 			{#if show}
-				<Container x={rideX.current} y={rideY.current}>
+				<Container x={rideX.current} y={rideY.current} alpha={riderAlpha.current}>
 					<!-- the blast that kicked the rider out of the lane, aimed LEFT
 					down the ride; left behind at the lane as the card pulls away -->
 					{#if launch.current > 0.01 && launch.current < 1}
@@ -358,7 +413,9 @@
 							height={SYMBOL_CARD_W * 2.4}
 							alpha={0.5 + 0.08 * Math.sin(time * 9)}
 						/>
-						<Symbol state="static" rawSymbol={{ name: symbol }} />
+						<!-- the rider IS the nudge wild — spur wheel, left arrows,
+						NUDGE wordmark (its own card, not a premium's face) -->
+						<Symbol state="static" rawSymbol={{ name: 'W', nudged: true }} />
 						<!-- iron-and-wood frame over the card. Its centre is open art,
 						so it rims the symbol instead of covering it — this replaced a
 						flat stroked roundRect that read as an empty outlined cell. -->
@@ -376,6 +433,17 @@
 							height={SYMBOL_CARD_W * 0.7}
 							alpha={0.5 + 0.15 * Math.sin(time * 17)}
 						/>
+
+						<!-- seated: a halo ring blooms once the walk is over, the beat
+						where the rider hands the cell to the board's own wild -->
+						{#if rest.current > 0.02 && rest.current < 0.98}
+							<FeatureFxSprite
+								tex={FX.ring}
+								width={SYMBOL_CARD_W * (1.0 + rest.current * 1.8)}
+								height={SYMBOL_CARD_W * (1.0 + rest.current * 1.8)}
+								alpha={0.85 * (1 - rest.current)}
+							/>
+						{/if}
 
 						<MultBadge
 							label={`x${mult}`}

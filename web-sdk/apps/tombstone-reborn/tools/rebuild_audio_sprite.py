@@ -73,6 +73,7 @@ NEW_CUES["sfx_cell_seal_harden"] = False  # Cell Seal harden / multiplier bump
 NEW_CUES["sfx_cell_seal_h3_expand"] = False  # H3 expand video bed (full once)
 NEW_CUES["sfx_bullet_wood"] = False  # pistol round slamming into weathered wood
 NEW_CUES["sfx_bullet_ricochet"] = False  # occasional western ricochet whine after a hit
+NEW_CUES["sfx_gunshot"] = False  # .44 magnum shot for the click-to-shoot board decal
 NEW_CUES["sfx_ui_click"] = False
 NEW_CUES["sfx_ui_click_heavy"] = False
 NEW_CUES["sfx_ui_click_soft"] = False
@@ -160,6 +161,8 @@ CUE_FILTERS = {
     # bullet hits stack under the board shake — sit above the -16 bed
     "sfx_bullet_wood": "loudnorm=I=-11:TP=-0.5:LRA=7",
     "sfx_bullet_ricochet": "loudnorm=I=-13:TP=-0.8:LRA=8",
+    # click-to-shoot .44 magnum: a raw downloaded one-shot, punchy above the bed
+    "sfx_gunshot": "loudnorm=I=-11:TP=-0.5:LRA=7",
     # the seam tearing is the headline moment of a split
     "sfx_split_seam_tear": "loudnorm=I=-11:TP=-0.5:LRA=7",
     # the shovel has to land like it stuck in something solid

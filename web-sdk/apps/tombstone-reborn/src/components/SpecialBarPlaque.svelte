@@ -57,6 +57,10 @@
 		blankAlpha: number;
 		/** landing pop for a cell that just took a card (1 = at rest) */
 		pop: number;
+		/** true while THIS card's effect is resolving on the board — the plaque
+		 *  pulses gold so the player can read which feature is firing (they
+		 *  resolve top to bottom, in book order) */
+		active?: boolean;
 	};
 
 	const props: Props = $props();
@@ -153,6 +157,31 @@
 				.stroke({ color: 0x000000, width: 1.5, alpha: 1, alignment: 0 });
 		}
 	};
+
+	// ACTIVE pulse: while this card's feature is firing on the board, a warm
+	// gold ring breathes around the plaque and the card sits up a little. The
+	// loop reads props.active each cycle, so it winds down on its own.
+	const glow = new Tween(0, { duration: 0 });
+	let pulsing = false;
+	$effect(() => {
+		if (!props.active || pulsing) return;
+		pulsing = true;
+		(async () => {
+			while (props.active) {
+				await glow.set(1, { duration: 380 });
+				await glow.set(0.35, { duration: 380 });
+			}
+			await glow.set(0, { duration: 180 });
+			pulsing = false;
+		})();
+	});
+
+	const drawGlowRing = (graphics: PIXI.Graphics, w: number, h: number) => {
+		const radius = Math.min(w, h) * 0.1;
+		graphics
+			.roundRect(-w / 2 - 4, -h / 2 - 4, w + 8, h + 8, radius)
+			.stroke({ color: 0xf0c96a, width: 5, alpha: 1, alignment: 0.5 });
+	};
 </script>
 
 <Container x={props.cx} y={props.cy}>
@@ -183,3 +212,16 @@
 		{/each}
 	</Container>
 </Container>
+
+<!-- the ACTIVE gold ring lives OUTSIDE the socket mask (it hugs the plaque's
+	outside edge, which the travel mask would clip away) -->
+{#if glow.current > 0.01}
+	<Container x={props.cx} y={props.cy}>
+		<Graphics
+			eventMode="none"
+			alpha={0.85 * glow.current}
+			scale={1 + 0.05 * glow.current}
+			draw={(graphics) => drawGlowRing(graphics, props.w, props.h)}
+		/>
+	</Container>
+{/if}

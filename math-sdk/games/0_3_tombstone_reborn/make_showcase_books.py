@@ -18,7 +18,7 @@ import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 BOOKS = os.path.join(HERE, "library", "books")
 
-MODES = ["base", "bonus_small", "bonus_super"]
+MODES = ["base", "bonus_small", "bonus_super", "freespins", "superspins"]
 
 # The 99,999x cap. A feature story must stay BELOW this: the selector takes the
 # first library book whose predicate matches, so any unbounded `p > 0` predicate
@@ -66,35 +66,73 @@ WANTS = [
     # web-sdk/apps/tombstone-reborn/src/game/winCelebrationMap.ts.
     ("small_bonus_win", ["bonus_small"], lambda t, p: 25 <= p < 50),
     ("super_bonus_win", ["bonus_super"], lambda t, p: 2000 <= p < FEATURE_MAX_X),
+    # BONUS ROUNDS: a natural base trigger, a bought small round with a decent
+    # win, the 1-in-100 mid-round UPGRADE, and a bought big round
+    ("natural_trigger", ["base"],       feature("freeSpinTrigger", lo=1)),
+    ("small_round",    ["freespins"],   feature("freeSpinTrigger", lo=100, hi=2000)),
+    ("bonus_upgrade",  ["freespins"],   feature("bonusUpgrade")),
+    ("big_round",      ["superspins"],  feature("freeSpinTrigger", lo=2000, hi=FEATURE_MAX_X)),
     ("max_win",        ["bonus_super", "bonus_small", "base"], lambda t, p: p >= WINCAP_X),
 ]
 
 
-def load(mode):
+def iter_books(mode):
+    """STREAM a mode's books one at a time: the uncompressed library file when
+    present, otherwise the compressed publish file (what run.py writes now).
+
+    Streaming matters: base alone is 1M books / multi-GB decompressed, and
+    loading that in one shot ground the machine into swap. A book is yielded,
+    inspected and dropped."""
     path = os.path.join(BOOKS, f"books_{mode}.json")
-    if not os.path.exists(path):
-        return []
-    with open(path, encoding="utf-8") as fh:
-        return json.load(fh)
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            yield from json.load(fh)
+        return
+    zst_path = os.path.join(HERE, "library", "publish_files", f"books_{mode}.jsonl.zst")
+    if not os.path.exists(zst_path):
+        return
+    import io
+
+    import zstandard as zstd
+
+    with open(zst_path, "rb") as fh:
+        reader = zstd.ZstdDecompressor().stream_reader(fh)
+        for line in io.TextIOWrapper(reader, encoding="utf-8"):
+            line = line.strip()
+            if line:
+                yield json.loads(line)
 
 
 def main():
-    libs = {m: load(m) for m in MODES}
-    for m in MODES:
-        print(f"  loaded {len(libs[m]):>6} books for {m}")
+    # One streaming pass per mode: every WANT that prefers this mode keeps the
+    # FIRST matching book (per mode), then the preference order picks between
+    # modes afterwards. Same selections as the old all-in-memory scan.
+    found = {}  # (label, mode) -> (book, payout, types)
+    for mode in MODES:
+        wants_here = [(lbl, pred) for lbl, pref, pred in WANTS if mode in pref]
+        open_wants = {lbl: pred for lbl, pred in wants_here}
+        count = 0
+        for b in iter_books(mode):
+            count += 1
+            types = {e["type"] for e in b["events"]}
+            payout = b["payoutMultiplier"] / 100.0
+            for lbl in list(open_wants):
+                if open_wants[lbl](types, payout):
+                    found[(lbl, mode)] = (b, payout, types)
+                    del open_wants[lbl]
+            if not open_wants:
+                break
+        print(f"  scanned {count:>7} books for {mode} "
+              f"({len(wants_here) - len(open_wants)}/{len(wants_here)} wants)")
 
     showcase = []
     index = {}
-    for label, mode_pref, pred in WANTS:
+    for label, mode_pref, _pred in WANTS:
         chosen = None
         for mode in mode_pref:
-            for b in libs.get(mode, []):
-                types = {e["type"] for e in b["events"]}
-                payout = b["payoutMultiplier"] / 100.0
-                if pred(types, payout):
-                    chosen = (mode, b, payout, types)
-                    break
-            if chosen:
+            if (label, mode) in found:
+                b, payout, types = found[(label, mode)]
+                chosen = (mode, b, payout, types)
                 break
         if not chosen:
             print(f"  [skip] no book found for {label}")

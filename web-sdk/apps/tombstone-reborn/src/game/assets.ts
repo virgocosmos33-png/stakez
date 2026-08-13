@@ -236,7 +236,9 @@ export default {
 	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.json', import.meta.url).href,
+		// v13 = full-bleed premiums (figure to all edges, no paper gap), used raw
+		// (no code grade/tint) with faint baked rank bg tint + monochrome lows
+		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v13.json', import.meta.url).href,
 		preload: true,
 	},
 	// Madam Mirror generated art
@@ -284,7 +286,7 @@ export default {
 	// nothing loads it — do not re-register these without asking.
 	sceneBg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/scene_bg_v5.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/scene_bg_v2.webp', import.meta.url).href,
 		preload: true,
 	},
 	// WIN CELEBRATION hero plates, one per big tier — dark western / graveyard
@@ -447,6 +449,25 @@ export default {
 	wrWild: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/wr_wild.png', import.meta.url).href,
+		preload: true,
+	},
+	// The NUDGE WILD: the card the last-lane nudge rider wears and leaves behind
+	// in every cell it racks through (see SYMBOL_INFO_MAP.W / RawSymbol.nudged).
+	// Skeletal hand on a spur wheel with left-pointing arrows — generated over
+	// wr_wild.png as the style reference and baked onto the same 300x300 canvas
+	// with wr_wild's own alpha (tools/make_nudge_wild_card.py).
+	trNudgeWild: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_nudge_wild.png', import.meta.url).href,
+		preload: true,
+	},
+	// The SCATTER: the cracked BONUS tombstone. 3 on a base spin trigger the
+	// SMALL BONUS round, 4+ the BIG BONUS (see SYMBOL_INFO_MAP.S). Generated
+	// art baked onto the same 300x300 canvas with wr_wild's own alpha
+	// (tools/make_scatter_card.py).
+	trScatter: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_scatter.png', import.meta.url).href,
 		preload: true,
 	},
 	// The EXPANDING wild: same jacket, plus a rising arrow stencilled below the
@@ -666,12 +687,82 @@ export default {
 	// the loading screen clears, so these must be in loadedAssets by then.
 	boardPlate: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/board/board_plate.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/board/board_plate_light.webp', import.meta.url).href,
 		preload: true,
 	},
 	boardCellSocket: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/board/board_cell_socket.png', import.meta.url).href,
+		preload: true,
+	},
+	// TOMBSTONE REBORN board frame: a crafted, TRANSPARENT weathered-grey barn-wood
+	// window (iron corner straps + bolts + faint blood) drawn once per VISIBLE cell
+	// so the diamond staircase reads as one bolted timber rig, the scene showing
+	// outside. Replaces the stretched plank field + flat sockets in BoardPlate.
+	boardCellFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_cell_frame.png', import.meta.url).href,
+		preload: true,
+	},
+	// TOMBSTONE REBORN board = two masked fields (no per-cell frames, so borders
+	// never double up between neighbours): a grey weathered-timber ring clipped to
+	// the OUTER staircase silhouette, and a pale stone field clipped to the INNER
+	// silhouette on top of it. The wood ring hugs the diamond and fills the empty
+	// step gaps left by reel-height differences; symbols draw over the stone.
+	boardWoodField: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_wood_grey.webp', import.meta.url).href,
+		preload: true,
+	},
+	// The frame itself is ONE baked transparent PNG, pre-shaped to the authored
+	// staircase (tools/make_board_frame_image.py): grey timber ring + bevels +
+	// keylines + iron bolts + the shadow it casts inward. Placed 1:1 at the
+	// authored outer box — re-bake whenever the board shape changes.
+	boardFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_frame.png', import.meta.url).href,
+		preload: true,
+	},
+	boardStoneField: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_stone_grey.webp', import.meta.url).href,
+		preload: true,
+	},
+	// Per-slot frame drawn in EVERY visible cell (behind the card): a thin
+	// weathered iron border with corner rivets, transparent center. Tiles flush
+	// edge-to-edge so the board reads as a grid of framed slots (Tombstone R.I.P.
+	// look) instead of cards floating on the stone.
+	boardSlotFrame: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_slot_frame.png', import.meta.url).href,
+		preload: true,
+	},
+	// White-on-transparent shattered-glass bullet holes, spawned at the click point
+	// on an IDLE board (see BulletHits.svelte). Five variants, picked at random per
+	// shot; all cleared the instant a spin starts.
+	bulletCrack1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/bullet_crack_1.png', import.meta.url).href,
+		preload: true,
+	},
+	bulletCrack2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/bullet_crack_2.png', import.meta.url).href,
+		preload: true,
+	},
+	bulletCrack3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/bullet_crack_3.png', import.meta.url).href,
+		preload: true,
+	},
+	bulletCrack4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/bullet_crack_4.png', import.meta.url).href,
+		preload: true,
+	},
+	bulletCrack5: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/bullet_crack_5.png', import.meta.url).href,
 		preload: true,
 	},
 	boardCornerBracket: {
@@ -747,6 +838,31 @@ export default {
 	barPlaqueDigup: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/bar_plaque_digup.png', import.meta.url).href,
+		preload: true,
+	},
+	// LAST-REEL LANE (tools/_wire_lane_specials.py):
+	// laneLidLock — boarded-up chained cover shown over the lane whenever it is
+	// locked (every base/small spin until DIG UP; open all through the super
+	// bonus). laneGold* — the golden sheriff cards flashed in the lane when its
+	// special fires (BOUNTY star / SUPER SPLIT revolvers / NUDGE spur).
+	laneLidLock: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/lane_lid_lock.webp', import.meta.url).href,
+		preload: true,
+	},
+	laneGoldBounty: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/lane_gold_bounty.webp', import.meta.url).href,
+		preload: true,
+	},
+	laneGoldSupersplit: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/lane_gold_supersplit.webp', import.meta.url).href,
+		preload: true,
+	},
+	laneGoldNudge: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/lane_gold_nudge.webp', import.meta.url).href,
 		preload: true,
 	},
 	// Bottom morph rail: THREE separated compartments (WAYS | FREE SPINS | WIN).

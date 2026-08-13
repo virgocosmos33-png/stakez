@@ -33,6 +33,21 @@ export default {
 			rtp: 0.965,
 			max_win: 99999,
 		},
+		// BONUS ROUNDS (multi-spin, scatter-triggered, also buyable)
+		freespins: {
+			cost: 80.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.965,
+			max_win: 99999,
+		},
+		superspins: {
+			cost: 2000.0,
+			feature: false,
+			buyBonus: true,
+			rtp: 0.965,
+			max_win: 99999,
+		},
 	},
 	symbols: {
 		W: {

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="2048" height="1792" viewBox="0 0 2048 1792" role="img" aria-label="THE WHITE ROOM">
+  <title>THE WHITE ROOM</title>
+  <g fill="#f4f1ec" text-anchor="middle"
+     font-family="Impact, 'Arial Black', 'Arial Narrow', sans-serif"
+     font-weight="700"
+     stroke="#0c0c0e" stroke-width="8" paint-order="stroke fill">
+    <text x="1024" y="28%" font-size="195" letter-spacing="16">THE</text>
+    <text x="1024" y="55%" font-size="515" letter-spacing="2">WHITE</text>
+    <text x="1024" y="82%" font-size="515" letter-spacing="6">ROOM</text>
+  </g>
+</svg>

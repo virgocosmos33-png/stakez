@@ -85,6 +85,62 @@ export const betModeMeta: BetModeMeta = {
 		},
 		maxWin: 99999,
 	},
+	freespins: {
+		mode: 'freespins',
+		costMultiplier: 80,
+		type: 'buy',
+		parent: '',
+		children: '',
+		assets: {
+			icon: new URL('../../assets/sprites/tombstone/buy_freespins.png', import.meta.url).href,
+			volatility: '',
+			button: new URL('../../assets/sprites/tombstone/buy_freespins.png', import.meta.url).href,
+			dialogImage: new URL('../../assets/sprites/tombstone/buy_freespins.png', import.meta.url)
+				.href,
+			dialogVolatility: '',
+		},
+		text: {
+			showTitle: true,
+			detail: 'RTP 96.50%',
+			title: 'SMALL BONUS · 10 SPINS',
+			dialog:
+				'THE WAKE — 10 bonus spins at 80x your bet, triggered by 3 BONUS tombstones. The six-card special bar is awake on every spin. No retriggers, and the rounds are extremely volatile: most pay back less than they cost, the top of the range reaches the 99,999x max win. Around 1 in 100 rounds drops a 4th scatter mid-round and UPGRADES to the big bonus — the grave lane tears open for the rest and the spins top back up.',
+			description: '10 bonus spins. The special bar is awake on every one.',
+			button: 'BUY',
+			betAmountLabel: 'SMALL BONUS',
+			tickerIdle: 'THE WAKE',
+			tickerSpin: 'GOOD LUCK',
+		},
+		maxWin: 99999,
+	},
+	superspins: {
+		mode: 'superspins',
+		costMultiplier: 2000,
+		type: 'buy',
+		parent: '',
+		children: '',
+		assets: {
+			icon: new URL('../../assets/sprites/tombstone/buy_superspins.png', import.meta.url).href,
+			volatility: '',
+			button: new URL('../../assets/sprites/tombstone/buy_superspins.png', import.meta.url).href,
+			dialogImage: new URL('../../assets/sprites/tombstone/buy_superspins.png', import.meta.url)
+				.href,
+			dialogVolatility: '',
+		},
+		text: {
+			showTitle: true,
+			detail: 'RTP 96.50%',
+			title: 'BIG BONUS · 10 SPINS',
+			dialog:
+				'THE RECKONING — 10 bonus spins at 2,000x your bet, triggered by 4+ BONUS tombstones. The special bar is awake AND the grave lane is torn open on every spin: Bounty premiums with WIN multipliers, the horizontal Nudge and SUPERSPLIT all live for the whole round. No retriggers, brutally volatile: most rounds pay back less than they cost, the top of the range reaches the 99,999x max win.',
+			description: '10 bonus spins. Bar awake + grave lane open on every one.',
+			button: 'BUY',
+			betAmountLabel: 'BIG BONUS',
+			tickerIdle: 'THE RECKONING',
+			tickerSpin: 'GOOD LUCK',
+		},
+		maxWin: 99999,
+	},
 };
 
 /** Bet modes with stake.us-compliant wording when the game runs in social mode. */

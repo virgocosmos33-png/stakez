@@ -59,6 +59,7 @@ export type SoundEffectName =
 	| 'sfx_cell_seal_h3_expand'
 	| 'sfx_bullet_wood'
 	| 'sfx_bullet_ricochet'
+	| 'sfx_gunshot'
 	| 'sfx_split_seam_tear'
 	// fire on linked cells / reel edges: ignite one-shot, sustained burn bed,
 	// escalation flare, burn-out tail

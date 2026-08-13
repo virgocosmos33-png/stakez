@@ -21,12 +21,17 @@ if __name__ == "__main__":
         "base": int(1e6),
         "bonus_small": int(5e5),
         "bonus_super": int(5e5),
+        "freespins": int(2e5),
+        "superspins": int(1e5),
     }
 
     run_conditions = {
         "run_sims": True,
         "run_optimization": True,
-        "run_analysis": True,
+        # the stat-sheet builder assumes every fence carries an "hr" key; the
+        # bonus-trigger fences are (rtp, av_win) only, so it crashes. Rating
+        # metrics come from check_rating.py instead.
+        "run_analysis": False,
         "run_format_checks": True,
     }
     target_modes = list(num_sim_args.keys())

@@ -1,26 +1,23 @@
 <script lang="ts" module>
 	/**
-	 * LINKED CELL FIRE — every linked/wild cell gets a CONTINUOUS burning frame
+	 * LINKED CELL FIRE — every linked/wild cell gets a CONTINUOUS burning ring
 	 * that traces its card border and licks outward, card face fully readable
-	 * inside. Ported VERBATIM from the WebGL reference "final fire frame.html":
-	 * ONE rounded-rect SDF stroke, fire generated from distance-to-stroke only,
-	 * with GRAVITY (tongues stretch upward along the outward normal), multi-octave
-	 * fBm tongues/body/wisps, a bright ribbon core, bloom and two-pass rising
-	 * embers, graded tip-red -> orange -> hot-white.
-	 *
-	 * Two deliberate changes from the reference:
-	 *   1. Entry: the reference loops (climb 1.8s, hold 1s, fade, repeat). Here the
-	 *      front climbs bottom->top ONCE on entry (~IGNITE_MS, driven by uProgress)
-	 *      then HOLDS fully lit until douse — "light it, keep it lit".
-	 *   2. Compositing: the reference draws opaque on black; here alpha comes from
-	 *      the fire's own intensity so it composites over the board (transparent
-	 *      where there is no flame), premultiplied, with a discard.
-	 * The frame stroke size is fed as uBox (card half-size), so the outline lands
-	 * exactly on the card border and the flames fill the FLAME_PAD margin.
+	 * inside. Ported VERBATIM from the WebGL reference "noisy-ring-portrait (1).html"
+	 * (fBm-distorted rounded-rect SDF ring graded ember-red -> orange -> hot-white
+	 * core + rising embers). The ONLY change from the reference is the animation:
+	 * the reference loops forever; here the front climbs bottom->top once on entry
+	 * (~IGNITE_MS) then HOLDS fully lit until douse — the "light it, keep it lit"
+	 * behaviour asked for, instead of a repeating wipe.
 	 *
 	 * Rendered as a Pixi v8 fragment Filter over a Texture.WHITE quad per cell —
-	 * the SAME procedural-filter technique proven in CellFlameBorder.svelte (stock
-	 * filter vertex, highp precision, premultiplied finalColor + discard).
+	 * the SAME procedural-filter technique already proven in CellFlameBorder.svelte
+	 * (stock filter vertex, highp precision, premultiplied finalColor + discard).
+	 * This replaced a pre-baked flipbook atlas: the shader is continuous by
+	 * construction, needs no atlas bake, and animates live.
+	 *
+	 * Each cell draws its OWN full ring (no shared-edge suppression): the
+	 * reference board shows adjacent burning cells each ringed in fire, seams and
+	 * all, so a full ring per cell is the correct picture, not a special case.
 	 */
 	import { Filter, Texture } from 'pixi.js';
 
@@ -39,20 +36,18 @@
 	/** cap so a huge link can never spawn an unbounded number of sprites */
 	const MAX_CELLS = 12;
 
-	// "final fire frame.html" takes the frame stroke half-size as a uniform
-	// (u_box) and adds a flat FLAME_PAD margin of empty canvas all around so the
-	// gravity-stretched flame tongues (reach up to ~0.42 in y-normalized UV) have
-	// room to lick outward without clipping. So the quad = card + pad on every
-	// side, and u_box is the CARD half-size normalised by the quad HEIGHT exactly
-	// as the reference does (halfX = w/cssH, halfY = h/cssH). This makes the
-	// burning outline land EXACTLY on the card border at any card aspect.
-	const FLAME_PAD = Math.round(SYMBOL_CARD_H * 0.42);
-	const FIRE_W = SYMBOL_CARD_W + FLAME_PAD * 2;
-	const FIRE_H = SYMBOL_CARD_H + FLAME_PAD * 2;
+	// The reference shader draws its ring at a FIXED fraction of the quad:
+	// box_half_size = vec2(0.42 * ratio, 0.65) — i.e. the ring outline sits at
+	// 42% of the quad half-width and 65% of the quad half-height. So to make the
+	// ring hug the CARD border (flames licking into the surrounding margin), the
+	// quad must be sized so the card occupies exactly that central 42% x 65%:
+	//   quad_W = card_W / 0.42,  quad_H = card_H / 0.65.
+	// Do NOT change the 0.42 / 0.65 in the shader — retune these ratios instead.
+	const RING_FRAC_X = 0.42;
+	const RING_FRAC_Y = 0.65;
+	const FIRE_W = SYMBOL_CARD_W / RING_FRAC_X;
+	const FIRE_H = SYMBOL_CARD_H / RING_FRAC_Y;
 	const FIRE_RATIO = FIRE_W / FIRE_H;
-	// reference: halfX = w / cssH, halfY = h / cssH (BOTH divided by height)
-	const BOX_X = SYMBOL_CARD_W / FIRE_H;
-	const BOX_Y = SYMBOL_CARD_H / FIRE_H;
 
 	// Stock Pixi v8 filter vertex: gives 0..1 across the filtered quad.
 	const VERTEX = `
@@ -89,6 +84,7 @@ void main(void)
 	// uInputSize / uOutputFrame uniforms (see CellFlameBorder for the same note).
 	const FRAGMENT = `
 precision highp float;
+#define TWO_PI 6.28318530718
 
 in vec2 vTextureCoord;
 out vec4 finalColor;
@@ -96,193 +92,151 @@ out vec4 finalColor;
 uniform vec4 uInputSize;
 uniform vec4 uOutputFrame;
 
-uniform float uTime;       // MILLISECONDS (+ per-cell phase) — reference u_time
-uniform float uRatio;      // quad width / height (reference u_ratio)
-uniform vec2  uBox;        // card half-size in y-normalised UV (reference u_box)
+uniform float uTime;       // MILLISECONDS (+ per-cell phase) — matches reference u_time
+uniform float uRatio;      // quad width / height (== card_w/card_h scaled by frac)
 uniform float uIntensity;  // 0..1 overall dim (burstDim when overlays are up)
-uniform float uProgress;   // 0..1 ONE-SHOT ignite climb bottom -> top, then HOLD
+uniform float uProgress;   // 0..1 ONE-SHOT ignite sweep, bottom -> top, then HOLD
 uniform float uFlash;      // 0..1 brief hot pop the instant it fully ignites
 
-float hash(vec2 p) {
-    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+float rand(vec2 n) {
+    return fract(cos(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
 }
-float noise(vec2 p) {
-    vec2 i = floor(p);
-    vec2 f = fract(p);
-    vec2 u = f * f * (3.0 - 2.0 * f);
-    return mix(
-        mix(hash(i),                 hash(i + vec2(1.0, 0.0)), u.x),
-        mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
-        u.y
-    );
+float noise(vec2 n) {
+    const vec2 d = vec2(0.0, 1.0);
+    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+    return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
 }
-float fbm(vec2 p) {
-    float v = 0.0;
-    float a = 0.5;
-    for (int i = 0; i < 6; i++) {
-        v += a * noise(p);
-        p *= 2.02;
-        a *= 0.5;
+float fbm(vec2 n) {
+    float total = 0.0, amplitude = 0.4;
+    for (int i = 0; i < 12; i++) {
+        total += noise(n) * amplitude;
+        n += n;
+        amplitude *= 0.6;
     }
-    return v;
+    return total;
 }
-float rounded_box_sdf(vec2 p, vec2 b, float r) {
-    vec2 q = abs(p) - b + r;
+
+// Signed distance to a rounded rectangle (box half-size b, corner radius r).
+float rounded_box_sdf(vec2 uv, vec2 b, float r) {
+    vec2 q = abs(uv) - b + r;
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
 }
-vec2 hash2(vec2 p) {
-    return fract(sin(vec2(
-        dot(p, vec2(127.1, 311.7)),
-        dot(p, vec2(269.5, 183.3))
-    )) * 43758.5453);
+float get_ring_shape(vec2 uv, vec2 boxHalf, float corner, float innerRadius, float outerRadius) {
+    float distance = rounded_box_sdf(uv, boxHalf, corner) + innerRadius;
+    float line_width = outerRadius - innerRadius;
+    float ringValue = smoothstep(innerRadius, innerRadius + line_width, distance);
+    ringValue -= smoothstep(outerRadius, outerRadius + line_width, distance);
+    return clamp(ringValue, 0.0, 1.0);
 }
-// Two-pass rising embers (reference): a coarse field of larger sparks plus a
-// fine field of small ones, drifting upward and fading as they age.
-float embers(vec2 uv, float time, float mask) {
+
+// Rising embers / fire flakes: a tiled field of glowing dots drifting upward,
+// swaying and flickering as they age, then looping back to the bottom.
+vec2 hash2(vec2 p) {
+    p = vec2(dot(p, vec2(127.1, 311.7)), dot(p, vec2(269.5, 183.3)));
+    return fract(sin(p) * 43758.5453123);
+}
+float embers(vec2 uv, float time) {
+    float density = 6.0;
+    vec2 guv = uv * density;
+    vec2 cell = floor(guv);
+    vec2 f = fract(guv);
     float total = 0.0;
-    for (int pass = 0; pass < 2; pass++) {
-        float dens = pass == 0 ? 5.0 : 11.0;
-        vec2 g = uv * dens;
-        vec2 cell = floor(g);
-        vec2 f = fract(g);
-        for (int y = -1; y <= 1; y++) {
-            for (int x = -1; x <= 1; x++) {
-                vec2 off = vec2(float(x), float(y));
-                vec2 id = cell + off + float(pass) * 17.0;
-                vec2 rnd = hash2(id);
-                float life = fract(time * (0.3 + rnd.x * 0.85) + rnd.y * 6.28);
-                vec2 p = off + vec2(
-                    0.5 + (rnd.y - 0.5) * 0.28 * life,
-                    life * (1.75 + 0.45 * float(pass)) - 0.06
-                );
-                float d = length(f - p);
-                float sz = mix(pass == 0 ? 0.018 : 0.007, pass == 0 ? 0.055 : 0.028, rnd.x);
-                float glow = smoothstep(sz, 0.0, d);
-                float fade = smoothstep(0.0, 0.1, life) * smoothstep(1.0, 0.68, life);
-                total += glow * fade * (pass == 0 ? 1.0 : 0.55);
-            }
+    for (int y = -1; y <= 1; y++) {
+        for (int x = -1; x <= 1; x++) {
+            vec2 offs = vec2(float(x), float(y));
+            vec2 id = cell + offs;
+            vec2 rnd = hash2(id);
+            float speed = 0.3 + rnd.x * 0.8;
+            float life = fract(time * speed + rnd.y * 6.2831);
+            float sway = sin(life * TWO_PI * (1.0 + rnd.y) + rnd.x * 10.0) * 0.25;
+            vec2 particlePos = offs + vec2(0.5 + sway, 1.4 * life - 0.2);
+            float d = length(f - particlePos);
+            float size = mix(0.02, 0.06, rnd.y);
+            float glow = smoothstep(size, size * 0.1, d);
+            float fade = smoothstep(0.0, 0.12, life) * smoothstep(1.0, 0.8, life);
+            total += glow * fade;
         }
     }
-    return clamp(total * mask, 0.0, 1.4);
+    return clamp(total, 0.0, 1.0);
 }
 
 void main() {
-    // Filter uv 0..1 over the quad, then FLIP Y so +uv.y is the SCREEN TOP. The
-    // reference is y-UP (gravity reaches toward +y, ignite climbs -y -> +y); Pixi
-    // texture space is y-DOWN. Flipping here lets the reference run verbatim and
-    // read correctly on screen — flames reach UP, ignite climbs from the bottom.
+    // vUv (0..1 over the quad), then to [-1, 1] with aspect correction, exactly
+    // the reference's  uv = vUv*2-1; uv.x *= u_ratio . NOTE: Pixi texture space
+    // has y DOWN, so +uv.y is the SCREEN BOTTOM here (the reference has y UP).
     vec2 uv01 = vTextureCoord * uInputSize.xy / uOutputFrame.zw;
-    vec2 uv = vec2(uv01.x, 1.0 - uv01.y) * 2.0 - 1.0;
+    vec2 uv = uv01 * 2.0 - 1.0;
     uv.x *= uRatio;
 
-    vec2 box = uBox;
-    float corner = min(0.08, min(box.x, box.y) * 0.22);
-    float sd = rounded_box_sdf(uv, box, corner);
-    float stroke_dist = abs(sd);
+    float noise_scale = 4.0;
+    // reference verbatim: t = .0003 * u_time (u_time in MILLISECONDS)
+    float t = 0.0003 * uTime;
 
-    float t = uTime * 0.001;
+    float atg = atan(uv.y, uv.x);
+    // (1)5 flame STYLE verbatim: NO +2.2*uv.y climbing phase — that omission is
+    // exactly what gives (1)5 its softer, even tongue-fringing all around the
+    // border instead of a strongly upward-sparking line. (+1e-4 only to keep
+    // pow() finite at the exact centre, which is masked out anyway.)
+    vec2 polar_uv = vec2(atg, t + 2.0 / pow(length(uv) + 1e-4, 0.5));
+    polar_uv *= noise_scale;
+    float noise_left = fbm(polar_uv);
+    polar_uv.x = mod(polar_uv.x, noise_scale * TWO_PI);
+    float noise_right = fbm(polar_uv);
+    float noiseV = mix(noise_right, noise_left, smoothstep(-0.2, 0.2, uv.x));
 
-    // ENTRY (climb bottom -> top) then HOLD — replaces the reference's forever
-    // loop. uProgress 0->1 (driven over IGNITE_MS) sweeps the front up and
-    // OVERSHOOTS the top (+0.85) so at progress 1 the whole frame is lit; there
-    // is no loop fade-out, it simply holds fully lit until douse.
-    float progress = clamp(uProgress, 0.0, 1.0);
-    progress = progress * progress * (3.0 - 2.0 * progress);
-    float front_y = mix(-box.y - 0.25, box.y + 0.85, progress);
-    float lit = 1.0 - smoothstep(front_y - 0.28, front_y + 0.35, uv.y);
+    // box VERBATIM from (1)5: vec2(.42 * u_ratio, .65), corner .12, radius .55,
+    // thickness .16, distortion (.92 + .45*noise). The quad is sized so the CARD
+    // border lands on this box, so the ring's inner edge hugs the card and
+    // flames lick outward.
+    vec2 boxHalf = vec2(0.42 * uRatio, 0.65);
+    float corner = 0.12;
+    float radius = 0.55;
+    float thickness = 0.16;
+    vec2 uvN = uv * (0.92 + 0.45 * noiseV);
+    float ring_shape = get_ring_shape(uvN, boxHalf, corner, radius - 0.8 * thickness, radius + 0.2 * thickness);
 
-    // outward normal of the stroke (for gravity: tongues stretch up the normal)
-    float e = 0.0025;
-    vec2 grad = vec2(
-        rounded_box_sdf(uv + vec2(e, 0.0), box, corner) - rounded_box_sdf(uv - vec2(e, 0.0), box, corner),
-        rounded_box_sdf(uv + vec2(0.0, e), box, corner) - rounded_box_sdf(uv - vec2(0.0, e), box, corner)
-    );
-    float gLen = length(grad);
-    grad = gLen > 1e-5 ? grad / gLen : vec2(0.0, 1.0);
+    // ENTRY then HOLD (this is the ONLY deliberate change from the reference's
+    // forever-loop): the front climbs screen-bottom -> top as uProgress 0->1 and
+    // OVERSHOOTS both edges (1.15 -> -1.15) so at progress 0 nothing is lit and
+    // at progress 1 the WHOLE ring is lit with no dim leading edge — it then just
+    // stays fully lit (steady fire) until douse pulls uProgress back to 0.
+    float front_y = mix(1.15, -1.15, uProgress);
+    float mask = smoothstep(front_y - 0.15, front_y + 0.15, uv.y);
+    ring_shape *= mask;
 
-    vec2 np = uv * vec2(2.8, 3.6);
-    np.y -= t * 2.6;
-    np.x += (noise(vec2(uv.y * 4.0, t * 1.5)) - 0.5) * 0.08;
+    // bright hot edge riding the climbing front (the ignite "surge"); folds away
+    // once fully lit so the held state is clean steady fire, not a stuck glow.
+    float climbing = smoothstep(0.02, 0.12, uProgress) * (1.0 - smoothstep(0.88, 1.0, uProgress));
+    float front_glow = (1.0 - smoothstep(0.0, 0.22, abs(uv.y - front_y))) * climbing;
 
-    float n_big = fbm(np * 1.05);
-    float n_mid = fbm(np * 2.7 + 17.0);
-    float n_sml = fbm(np * 7.0 + 41.0);
+    // fire gradient VERBATIM: deep ember red -> orange -> bright yellow-white core
+    vec3 ember_col = vec3(0.5, 0.03, 0.0);
+    vec3 flame_col = vec3(1.0, 0.38, 0.03);
+    vec3 hot_core = vec3(1.0, 0.92, 0.55);
+    vec3 fire_color = mix(ember_col, flame_col, smoothstep(0.0, 0.55, ring_shape));
+    fire_color = mix(fire_color, hot_core, smoothstep(0.55, 1.0, ring_shape));
 
-    float tongues = pow(n_big, 2.1);
-    float body    = pow(n_mid, 1.35);
-    float wisps   = n_sml;
-    float n = clamp(tongues * 0.75 + body * 0.5 + wisps * 0.28, 0.0, 1.6);
+    vec3 color = fire_color * ring_shape;
+    color += hot_core * front_glow * ring_shape * 1.3;
+    // brief hot flash across the whole ring the instant it fully ignites
+    color += hot_core * uFlash * ring_shape * 1.6;
 
-    float reach = 0.015 + n * 0.14 + tongues * 0.12;
-    float up_amt = max(grad.y, 0.0);
-    float side_amt = abs(grad.x);
-    float down_amt = max(-grad.y, 0.0);
-    float grav_scale = 1.0 + up_amt * 1.4 + side_amt * 0.25 - down_amt * 0.4;
-    float thickness = min(reach * grav_scale, 0.42);
+    // scattered rising sparks near the border (reference embers), gated by mask
+    float dist_to_outline = abs(rounded_box_sdf(uvN, boxHalf, corner));
+    float ember_mask = smoothstep(0.5, 0.0, dist_to_outline) * mask;
+    float spark = embers(uv, 1.6 * t) * ember_mask;
+    vec3 spark_color = mix(vec3(1.0, 0.5, 0.08), vec3(1.0, 0.88, 0.45), spark);
+    color += spark_color * spark;
 
-    float d_out = max(sd, 0.0);
-    float flame = 1.0 - smoothstep(0.0, thickness, d_out);
-    flame = pow(clamp(flame, 0.0, 1.0), 1.55);
-    flame *= mix(0.5, 1.25, clamp(n * 0.9, 0.0, 1.0));
-    flame *= smoothstep(-0.006, 0.012, sd);
-
-    float ribbon = 1.0 - smoothstep(0.0, 0.012 + wisps * 0.015, stroke_dist);
-    ribbon = pow(ribbon, 1.5);
-
-    float fire = max(flame, ribbon * 0.85) * lit;
-
-    float heat = 1.0 - clamp(d_out / max(thickness, 0.001), 0.0, 1.0);
-    heat *= smoothstep(-0.006, 0.012, sd);
-    heat = max(heat, ribbon) * lit;
-
-    float core = (1.0 - smoothstep(0.0, 0.007, stroke_dist)) * lit;
-    float core_soft = (1.0 - smoothstep(0.0, 0.024, stroke_dist)) * lit;
-
-    float bloom = fire * fire * 0.4;
-
-    float front = (1.0 - smoothstep(0.0, 0.32, abs(uv.y - front_y))) * lit;
-    front *= smoothstep(0.1, 0.0, stroke_dist);
-
-    vec3 c_tip   = vec3(0.5, 0.03, 0.0);
-    vec3 c_mid   = vec3(1.0, 0.3, 0.02);
-    vec3 c_body  = vec3(1.0, 0.58, 0.07);
-    vec3 c_hot   = vec3(1.0, 0.9, 0.48);
-    vec3 c_white = vec3(1.0, 0.98, 0.9);
-
-    float h = clamp(heat, 0.0, 1.0);
-    vec3 fire_col = mix(c_tip, c_mid, smoothstep(0.0, 0.3, h));
-    fire_col = mix(fire_col, c_body, smoothstep(0.25, 0.55, h));
-    fire_col = mix(fire_col, c_hot, smoothstep(0.5, 0.92, h));
-
-    vec3 col = fire_col * fire * 1.75;
-    col += c_mid * bloom;
-    col += c_white * core * 1.5;
-    col += c_hot * core_soft * 0.75;
-    col += c_hot * front * fire * 0.85;
-
-    // brief hot pop the instant it fully ignites (reference's climb-end flash,
-    // here driven by the component's one-shot uFlash pulse)
-    col += c_hot * uFlash * (fire + core) * 1.1;
-
-    float ember_zone = lit * smoothstep(0.25, 0.0, stroke_dist) * smoothstep(0.0, 0.12, fire + core);
-    float spark = embers(uv, t * 1.2, ember_zone);
-    col += mix(vec3(1.0, 0.4, 0.04), vec3(1.0, 0.85, 0.4), clamp(spark, 0.0, 1.0)) * spark;
-
-    col = clamp(col, 0.0, 1.0);
-
-    // Composite over the board: alpha from the fire's OWN intensity so it fades
-    // to TRANSPARENT where there is no flame (the reference draws opaque on
-    // black). Premultiplied, with a discard on empty pixels.
-    float a = clamp(max(col.r, max(col.g, col.b)), 0.0, 1.0) * uIntensity;
-    if (a <= 0.004) discard;
-    finalColor = vec4(col * a, a);
+    float a = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0) * uIntensity;
+    if (a <= 0.01) discard;
+    finalColor = vec4(color * a, a); // premultiplied
 }
 `;
 
 	type RingUniforms = {
 		uTime: number;
 		uRatio: number;
-		uBox: Float32Array;
 		uIntensity: number;
 		uProgress: number;
 		uFlash: number;
@@ -290,13 +244,11 @@ void main() {
 
 	const createFireRingFilter = () =>
 		Filter.from({
-			gl: { vertex: VERTEX, fragment: FRAGMENT, name: 'linked-cell-fire-frame' },
+			gl: { vertex: VERTEX, fragment: FRAGMENT, name: 'linked-cell-fire-ring' },
 			resources: {
 				ringUniforms: {
 					uTime: { value: 0, type: 'f32' },
 					uRatio: { value: FIRE_RATIO, type: 'f32' },
-					// constant per card: the stroke half-size the flame frame traces
-					uBox: { value: new Float32Array([BOX_X, BOX_Y]), type: 'vec2<f32>' },
 					uIntensity: { value: 0, type: 'f32' },
 					uProgress: { value: 0, type: 'f32' },
 					uFlash: { value: 0, type: 'f32' },
@@ -308,7 +260,7 @@ void main() {
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut } from 'svelte/easing';
+	import { cubicOut, cubicInOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, BaseSprite } from 'pixi-svelte';
 
@@ -318,9 +270,11 @@ void main() {
 
 	const context = getContext();
 
-	// Fast entry so the cell catches fire hard for impact (~0.3s), then holds
-	// full. Douse pulls the sweep back down over DOUSE_MS.
-	const IGNITE_MS = 300;
+	// The one-shot ignite: the fire climbs visibly bottom -> top over this long,
+	// then HOLDS fully lit (see the uProgress sweep in the shader). Kept slow
+	// enough (~1s) that the climb actually reads on screen instead of popping.
+	// Douse pulls the sweep back down over DOUSE_MS.
+	const IGNITE_MS = 1000;
 	const DOUSE_MS = 260;
 	// Brief hot pop the instant the sweep completes.
 	const FLASH_MS = 180;
@@ -421,7 +375,9 @@ void main() {
 			// arm the ignition flash for this fresh light-up
 			hasFlashed = false;
 			flashStart = -1;
-			ignite.set(1, { duration: IGNITE_MS, easing: cubicOut });
+			// cubicInOut: an even climb the eye can follow bottom -> top, rather
+			// than cubicOut which front-loads the bottom and crawls at the top.
+			ignite.set(1, { duration: IGNITE_MS, easing: cubicInOut });
 		},
 		cellFireHide: async () => {
 			if (!cells.length) return;
