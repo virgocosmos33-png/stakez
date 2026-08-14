@@ -196,8 +196,8 @@
       "anim": "mirror/bg_freespin_anim.mp4"
     },
     "scene": {
-      "still": "scene/scene_bg_v5.webp",
-      "note": "v5 grade-matched to lady idle v5 (Rec.709 desat → hist-match cold clinical ref → tint R*0.969 G*1.002 B*1.069). Script: tools/_build_scene_bg_v5_grade_match.py"
+      "still": "scene/scene_bg_v2.webp",
+      "note": "Base-game saloon still (1679x937) from basemodebgimagetomsbstonereborn.png. Cover-fit in Background.svelte / LoadingScreen.svelte."
     }
   },
   "character": {

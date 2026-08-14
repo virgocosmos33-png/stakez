@@ -14,20 +14,19 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicIn } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Sprite } from 'pixi-svelte';
+	import { Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { CELL_PITCH_X, SYMBOL_SIZE } from '../game/constants';
-	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { stateShake } from '../game/stateShake.svelte';
+	import { SYMBOL_CARD_W, SYMBOL_SIZE } from '../game/constants';
+	import { getSymbolX, getCellCenterY, getCardHeight } from '../game/utils';
 	import { fxDur } from '../game/fxTiming';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
 	const LAST = context.stateGame.board.length - 1;
-	/** slight overhang past the cell so the reel never peeks around the boards */
-	const COVER_W = CELL_PITCH_X * 1.05;
-	const COVER_H = SYMBOL_SIZE * 1.05;
+	const COVER_W = SYMBOL_CARD_W;
+	const COVER_H = $derived(getCardHeight(LAST));
 
 	/** 1 = boarded shut (rest), 0 = blasted clear. Over 1 = the pre-blast strain. */
 	const shut = new Tween(1, { duration: 0 });
@@ -54,12 +53,8 @@
 		}
 	});
 
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const originX = $derived(boardLayout.x - boardLayout.width * 0.5);
-	const originY = $derived(boardLayout.y - boardLayout.height * 0.5);
-	// the lane is 1 visible row: padded row 1
-	const cx = $derived(originX + getSymbolX(LAST));
-	const cy = $derived(originY + getCellCenterY(LAST, 1));
+	const cx = $derived(getSymbolX(LAST));
+	const cy = $derived(getCellCenterY(LAST, 1));
 
 	/** blast-off read of the tween: lift, tip and thin out as it goes */
 	const t = $derived(Math.min(1, Math.max(0, shut.current)));
@@ -71,7 +66,7 @@
 
 {#if visible}
 	<MainContainer>
-		<Container x={stateShake.x} y={stateShake.y}>
+		<BoardSpace>
 			<Sprite
 				key="laneLidLock"
 				x={cx}
@@ -83,6 +78,6 @@
 				alpha={fade}
 				eventMode="none"
 			/>
-		</Container>
+		</BoardSpace>
 	</MainContainer>
 {/if}

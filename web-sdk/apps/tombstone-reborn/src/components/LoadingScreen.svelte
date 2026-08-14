@@ -3,6 +3,7 @@
 	import { FadeContainer, LoadingProgress } from 'components-pixi';
 
 	import { getContext } from '../game/context';
+	import SaloonScene from './SaloonScene.svelte';
 
 	type Props = {
 		onloaded: () => void;
@@ -10,9 +11,6 @@
 
 	const props: Props = $props();
 	const context = getContext();
-
-	// Full-bleed graveyard still. Keep cover-fit in sync with scene art.
-	const LOADING_ART = { width: 1920, height: 1088 };
 
 	// Dust / embers over the loading painting — no White Room clinical debris.
 	const LOADING_FALL = {
@@ -36,18 +34,6 @@
 		spawnRect: { x: -420, y: -40, w: 840, h: 20 },
 	} as const;
 
-	const coverProps = () => {
-		const canvas = context.stateLayoutDerived.canvasSizes();
-		const scale = Math.max(canvas.width / LOADING_ART.width, canvas.height / LOADING_ART.height);
-		return {
-			anchor: 0.5,
-			x: canvas.width / 2,
-			y: canvas.height / 2,
-			width: LOADING_ART.width * scale,
-			height: LOADING_ART.height * scale,
-		};
-	};
-
 	// Skip the White Room intro carousel — once assets are loaded, enter the game.
 	let entered = $state(false);
 	$effect(() => {
@@ -59,7 +45,7 @@
 </script>
 
 <FadeContainer show={!context.stateApp.loaded}>
-	<Sprite key="sceneBg" {...coverProps()} />
+	<SaloonScene />
 	{#if !context.stateApp.loaded}
 		<Container
 			x={context.stateLayoutDerived.canvasSizes().width * 0.5}

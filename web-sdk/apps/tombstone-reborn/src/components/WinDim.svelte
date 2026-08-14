@@ -10,23 +10,25 @@
 </script>
 
 <script lang="ts">
+	/**
+	 * Cell isolation dim. Lives INSIDE BoardContainer (see Board.svelte) so the
+	 * plates share the symbols' x/y/pivot/scale. Drawing these from a sibling
+	 * MainContainer via BoardSpace put the rects in the wrong space — they
+	 * floated off the cells and painted over the timber.
+	 */
 	import { Tween } from 'svelte/motion';
-	import { MainContainer } from 'components-layout';
-	import { Container, Graphics } from 'pixi-svelte';
+	import { Container, Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
-	import { getReelYOffset, getCellLeft, getReelRows } from '../game/utils';
+	import { SYMBOL_CARD_W } from '../game/constants';
+	import { getSymbolX, getCellCenterY, getCardHeight } from '../game/utils';
 	import { fxNum } from '../game/fx.generated';
 
 	const context = getContext();
 
-	// Cell isolation dim. After the count-up the wins replay ONE SYMBOL TYPE
-	// AT A TIME: that type's cells step out of the dim, the glint sweeps them
-	// (WinSweep), they drop back under the overlay, the next type shines —
-	// looping until the next spin stops the cycle.
-	// Tombstone has no LockedSlots / side sockets — dim the reel board only.
 	const DIM_ALPHA = fxNum('winDim', 'dimAlpha', 0.86);
+	const DIM_COLOR = 0x0a0a0c;
+	const DIM_INSET = 1;
 
 	const dimAlpha = new Tween(0);
 	let winKeys = $state<Set<string>>(new Set());
@@ -58,11 +60,9 @@
 				if (id !== cycleId) return;
 				winKeys = keysOf(positions);
 				context.stateGame.slotWinPositions = positions;
-				// the gunsmoke glint runs across every one of its cards
 				await context.eventEmitter.broadcastAsync({ type: 'winSweep', positions });
 				if (id !== cycleId) return;
 				await wait(220);
-				// back under the overlay before the next type shines
 				winKeys = new Set();
 				context.stateGame.slotWinPositions = [];
 				await wait(200);
@@ -93,45 +93,41 @@
 		},
 	});
 
-	const drawDim = (graphics: import('pixi.js').Graphics, keys: Set<string>) => {
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
-
+	const dimCells = $derived.by(() => {
+		if (!active) return [] as { key: string; x: number; y: number; w: number; h: number }[];
+		const keys = winKeys;
+		const wild = new Set(context.stateGame.wildReelReels ?? []);
+		const out: { key: string; x: number; y: number; w: number; h: number }[] = [];
 		context.stateGame.board.forEach((reel, reelIndex) => {
-			// a risen wild column is ONE piece of art covering the whole reel;
-			// dimming its "non-winning" cells blacks out half the artwork. The
-			// column is always part of every win anyway, so never dim it.
-			if (context.stateGame.wildReelReels.includes(reelIndex)) return;
-			// a racked (STRETCH) reel spreads its rows over a taller window, so the
-			// dim cells must use the spread pitch or they drift off the symbols
-			const rowCount = reel.reelState.symbols.length - 2;
-			const pitch =
-				context.stateGame.reelStretch[reelIndex] != null && rowCount > 0
-					? (getReelRows(reelIndex) * SYMBOL_SIZE) / rowCount
-					: SYMBOL_SIZE;
-			reel.reelState.symbols.forEach((_, rowIndex) => {
-				if (rowIndex === 0 || rowIndex === reel.reelState.symbols.length - 1) return;
-				if (keys.has(`${reelIndex}-${rowIndex}`)) return;
-				// sharp grave-plot mask (hard corners, not soft gothic rounds)
-				graphics.rect(
-					originX + getCellLeft(reelIndex) + 1,
-					originY + pitch * (rowIndex - 1) + 1 + getReelYOffset(reelIndex),
-					CELL_PITCH_X - 2,
-					pitch - 2,
-				);
-			});
+			if (wild.has(reelIndex)) return;
+			const cardH = getCardHeight(reelIndex);
+			const last = reel.reelState.symbols.length - 1;
+			for (let rowIndex = 1; rowIndex < last; rowIndex += 1) {
+				if (keys.has(`${reelIndex}-${rowIndex}`)) continue;
+				out.push({
+					key: `${reelIndex}-${rowIndex}`,
+					x: getSymbolX(reelIndex) - SYMBOL_CARD_W * 0.5 + DIM_INSET,
+					y: getCellCenterY(reelIndex, rowIndex) - cardH * 0.5 + DIM_INSET,
+					w: SYMBOL_CARD_W - DIM_INSET * 2,
+					h: cardH - DIM_INSET * 2,
+				});
+			}
 		});
-
-		graphics.fill({ color: 0x0a0a0c, alpha: 1 });
-	};
-
+		return out;
+	});
 </script>
 
-<MainContainer>
-	{#if active}
-		<Container alpha={dimAlpha.current}>
-			<Graphics draw={(graphics) => drawDim(graphics, winKeys)} />
-		</Container>
-	{/if}
-</MainContainer>
+{#if active}
+	<Container alpha={dimAlpha.current}>
+		{#each dimCells as cell (cell.key)}
+			<Rectangle
+				x={cell.x}
+				y={cell.y}
+				width={cell.w}
+				height={cell.h}
+				backgroundColor={DIM_COLOR}
+				backgroundAlpha={1}
+			/>
+		{/each}
+	</Container>
+{/if}

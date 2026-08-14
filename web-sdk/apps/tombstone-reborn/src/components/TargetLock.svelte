@@ -15,7 +15,7 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicOut, quadIn } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics } from 'pixi-svelte';
+	import { Container, Graphics, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
@@ -25,16 +25,20 @@
 		SYMBOL_CARD_H as CARD_H,
 	} from '../game/constants';
 	import { TARGET_ACCENT, TOMBSTONE_FX } from '../game/tombstoneVfx';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
-	// Iron sights + wanted-poster corner ticks + thin brass scope ring.
-	// No white L-brackets, pale HUD discs, clinical scanlines, or soft white wash.
+	// WANTED-POSTER LOCK: four bold iron corner brackets snap inward onto the
+	// card, with an additive Kenney spark "muzzle snap" flashing at the moment of
+	// lock. No thin scope ring, iron-sight notch/post, HUD discs, or white wash.
 	const STAGGER = 0.16;
 	const LOCK_MS = 340;
 	const HOLD_MS = 130;
 	const FADE_MS = 170;
-	const APPROACH = 28;
+	const APPROACH = 30;
+	/** Kenney celebration spark used as the muzzle-snap flash on lock */
+	const SPARK_KEY = 'win_celeb_light_07.png';
 
 	type Mark = { key: string; cx: number; cy: number };
 
@@ -46,13 +50,10 @@
 	const fade = new Tween(0);
 
 	const layout = (cells: { reel: number; row: number }[]) => {
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
 		marks = filterVisibleCells(cells).map((c) => ({
 			key: `${c.reel}-${c.row}`,
-			cx: originX + getSymbolX(c.reel),
-			cy: originY + getCellCenterY(c.reel, c.row),
+			cx: getSymbolX(c.reel),
+			cy: getCellCenterY(c.reel, c.row),
 		}));
 	};
 
@@ -98,13 +99,11 @@
 	});
 
 	/**
-	 * Iron gun sights closing on a cell.
-	 *
-	 * The previous pass drew a full circle with a coloured stroke laid over it,
-	 * which is the thin ring reticle this reskin exists to remove — recolouring
-	 * it was never going to help, because the *shape* was the problem. Sights
-	 * are drawn instead: a broken iron ring (never a closed circle), a rear
-	 * notch, a front post, and wanted-poster corner ticks.
+	 * Bold wanted-poster iron corner brackets snapping onto a cell. The brackets
+	 * ride in from `APPROACH` px out and bite the card corners; an accent-tinted
+	 * inner keyline (per feature tone) sharpens as they lock, and a faint accent
+	 * border breathes once settled. No scope ring / sight notch / white wash —
+	 * the muzzle spark (Sprite, below) carries the "snap".
 	 */
 	const drawMark = (g: import('pixi.js').Graphics, p: number) => {
 		if (p <= 0) return;
@@ -112,91 +111,64 @@
 		const halfW = CARD_W / 2;
 		const halfH = CARD_H / 2;
 		const out = APPROACH * (1 - p);
-		const arm = 14;
+		const arm = 22 + 6 * p;
 		const settled = p >= 1;
+		const breathe = settled ? 0.55 + 0.45 * Math.sin(time * 7) : 0;
 
-		// Wanted-poster iron corner ticks, single weight, no coloured overstroke.
 		for (const sx of [-1, 1]) {
 			for (const sy of [-1, 1]) {
-				const x = sx * (halfW + out - 2);
-				const y = sy * (halfH + out - 2);
+				const x = sx * (halfW + out);
+				const y = sy * (halfH + out);
+				// heavy iron bracket
 				g.moveTo(x, y - sy * arm);
 				g.lineTo(x, y);
 				g.lineTo(x - sx * arm, y);
-				g.stroke({ color: TOMBSTONE_FX.iron, width: 4.2, alpha: 0.85 + 0.15 * p });
-				g.moveTo(x - sx * 1.2, y - sy * (arm - 3) - sy * 1.2);
-				g.lineTo(x - sx * 1.2, y - sy * 1.2);
-				g.lineTo(x - sx * (arm - 3), y - sy * 1.2);
-				g.stroke({ color: TOMBSTONE_FX.ironEdge, width: 1.3, alpha: 0.5 * p });
+				g.stroke({ color: TOMBSTONE_FX.iron, width: 5, alpha: 0.9 });
+				// accent-tinted inner keyline, brightening as it locks
+				g.moveTo(x - sx * 2.2, y - sy * (arm - 4) - sy * 2.2);
+				g.lineTo(x - sx * 2.2, y - sy * 2.2);
+				g.lineTo(x - sx * (arm - 4), y - sy * 2.2);
+				g.stroke({ color: accent, width: 1.9, alpha: 0.35 + 0.45 * p + 0.2 * breathe });
 			}
-		}
-
-		// Converging iron edge ticks. A "broken sight ring" used to sit here:
-		// four arcs on one radius, which still draws a circle on the card, and
-		// the circle is the single shape being purged from every cell
-		// decoration. Short dark ticks ride in against the card edges instead,
-		// so the approach reads square, like the corner marks.
-		if (!settled) {
-			const stand = halfH * (0.3 - 0.28 * p);
-			const alpha = 0.6 * (1 - p * 0.3);
-			for (const sy of [-1, 1]) {
-				g.moveTo(-halfW * 0.34, sy * (halfH + stand));
-				g.lineTo(halfW * 0.34, sy * (halfH + stand));
-				g.stroke({ color: TOMBSTONE_FX.iron, width: 3.4, alpha });
-			}
-			for (const sx of [-1, 1]) {
-				g.moveTo(sx * (halfW + stand), -halfH * 0.3);
-				g.lineTo(sx * (halfW + stand), halfH * 0.3);
-				g.stroke({ color: TOMBSTONE_FX.iron, width: 3.4, alpha });
-			}
-
-			// rear notch at the bottom, front post rising to meet it
-			const notchY = halfH * 0.72;
-			g.moveTo(-16, notchY);
-			g.lineTo(-5, notchY);
-			g.lineTo(-5, notchY - 7);
-			g.stroke({ color: TOMBSTONE_FX.iron, width: 3.2, alpha: 0.8 });
-			g.moveTo(16, notchY);
-			g.lineTo(5, notchY);
-			g.lineTo(5, notchY - 7);
-			g.stroke({ color: TOMBSTONE_FX.iron, width: 3.2, alpha: 0.8 });
-			const postY = -halfH * 0.2 + p * halfH * 0.85;
-			g.moveTo(0, postY - 11);
-			g.lineTo(0, postY + 3);
-			g.stroke({ color: TOMBSTONE_FX.iron, width: 3.4, alpha: 0.85 });
-			g.moveTo(0, postY - 11);
-			g.lineTo(0, postY - 4);
-			g.stroke({ color: accent, width: 1.4, alpha: 0.5 });
 		}
 
 		if (settled) {
-			const breathe = 0.55 + 0.45 * Math.sin(time * 7);
-			// sights lined up: two iron blades biting the card edges
-			for (const sx of [-1, 1]) {
-				g.moveTo(sx * (halfW - 4), -7);
-				g.lineTo(sx * (halfW - 4), 7);
-				g.stroke({ color: TOMBSTONE_FX.iron, width: 3.4, alpha: 0.6 + 0.25 * breathe });
-				g.moveTo(sx * (halfW - 15), 0);
-				g.lineTo(sx * (halfW - 4), 0);
-				g.stroke({ color: TOMBSTONE_FX.ironEdge, width: 1.6, alpha: 0.45 + 0.2 * breathe });
-			}
-			// powder wash + iron edge, no coloured border
-			g.roundRect(-halfW, -halfH, CARD_W, CARD_H, 6);
-			g.fill({ color: TOMBSTONE_FX.powder, alpha: 0.12 + 0.05 * breathe });
-			g.roundRect(-halfW + 1, -halfH + 1, CARD_W - 2, CARD_H - 2, 5);
-			g.stroke({ color: TOMBSTONE_FX.iron, width: 1.8, alpha: 0.4 + 0.2 * breathe });
+			// faint accent frame, breathing, to hold the lock read
+			g.roundRect(-halfW, -halfH, CARD_W, CARD_H, 8);
+			g.stroke({ color: accent, width: 2, alpha: 0.26 + 0.22 * breathe });
 		}
+	};
+
+	/** additive muzzle-snap spark: spikes as the brackets lock (p -> 1), then
+	 * holds a soft breathing glow while the lock is settled. */
+	const sparkAlpha = (p: number) => {
+		if (p <= 0) return 0;
+		const flash = p > 0.72 ? (p - 0.72) / 0.28 : 0;
+		const glow = p >= 1 ? 0.28 + 0.14 * Math.sin(time * 7) : 0;
+		return Math.min(1, Math.max(flash, glow));
 	};
 </script>
 
 {#if marks.length}
 	<MainContainer>
+		<BoardSpace>
 		<Container alpha={fade.current}>
 			{#each marks as mark, index (mark.key)}
+				{@const p = progressOf(index)}
 				<Container x={mark.cx} y={mark.cy}>
-					<Graphics draw={(g) => drawMark(g, progressOf(index))} />
+					<Sprite
+						key={SPARK_KEY}
+						anchor={0.5}
+						width={CARD_W * 1.05}
+						height={CARD_W * 1.05}
+						tint={TARGET_ACCENT[tone]}
+						alpha={sparkAlpha(p)}
+						blendMode="add"
+					/>
+					<Graphics draw={(g) => drawMark(g, p)} />
 				</Container>
 			{/each}
 		</Container>
+		</BoardSpace>
 	</MainContainer>
 {/if}

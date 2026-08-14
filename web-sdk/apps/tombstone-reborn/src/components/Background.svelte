@@ -5,22 +5,15 @@
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
+	import SaloonScene, { SCENE_ART } from './SaloonScene.svelte';
 
 	const context = getContext();
 
-	// ONE ambient SCENE (candle flames, crystal-ball glow, veiled mirror, green
-	// lamp + drifting fog are all baked INTO the artwork) cover-scaled to the
-	// viewport as a single unit. Because the whole scene rides one cover-fit
-	// transform, the ambience can never drift / misalign on resize the way the
-	// old coordinate-pinned FX layers did. The reel grid + frame sit over the
-	// dark centre and stay unobstructed at every aspect ratio.
-	//
-	// SOURCE-AGNOSTIC SWAP POINT: this layer renders a still today. Drop a
-	// seamless loop at static/assets/sprites/scene/scene_bg.mp4 and register it
-	// as `sceneBgAnim` in assets.ts — the layer switches to the video texture
-	// automatically (the still stays as the poster / fallback), no structural
-	// change. Same pattern as the free-spin room below.
-	const SCENE_ART = { width: 1536, height: 1024 };
+	// ONE ambient SCENE cover-scaled to the viewport as a single unit. The
+	// base-game room is SaloonScene (plate + hanging lamps). Drop a seamless
+	// loop at static/assets/sprites/scene/scene_bg.mp4 and register it as
+	// `sceneBgAnim` in assets.ts — that path still replaces the room with
+	// video if present. Same pattern as the free-spin room below.
 	const FREESPIN_ART = { width: 1176, height: 780 };
 	const FREESPIN_STATIC_ART = { width: 1536, height: 1024 };
 
@@ -64,12 +57,12 @@
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 
-<!-- idle / base game: the single Lady-Mirror séance scene -->
+<!-- idle / base game: live saloon Spine (lamps idle, cheers on detonation) -->
 <FadeContainer show={showBaseBackground} duration={SECOND} zIndex={-2}>
 	{#if sceneVideoReady}
 		<Sprite key="sceneBgAnim" {...coverProps(SCENE_ART)} />
 	{:else}
-		<Sprite key="sceneBg" {...coverProps(SCENE_ART)} />
+		<SaloonScene />
 	{/if}
 </FadeContainer>
 

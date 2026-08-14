@@ -40,9 +40,9 @@
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { fxDur } from '../game/fxTiming';
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
-	import { stateShake } from '../game/stateShake.svelte';
 	import { FX, FEATURE_FX, FEATURE_ART, seqFrame, fxRandom, puffFade } from '../game/featureVfx';
 	import FeatureFxSprite from './FeatureFxSprite.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -112,9 +112,6 @@
 	const burst = new Tween(0);
 	const fallOut = new Tween(0);
 
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const originX = $derived(boardLayout.x - boardLayout.width * 0.5);
-	const originY = $derived(boardLayout.y - boardLayout.height * 0.5);
 
 	const placed = $derived(
 		cells.map((cell, order) => ({
@@ -215,8 +212,7 @@
 
 <MainContainer>
 	{#if cells.length > 0 && t < 1}
-		<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
-			<Container x={originX} y={originY}>
+		<BoardSpace yOffset={fallOut.current}>
 				{#each placed as cell (cell.key)}
 					<Container x={cell.x} y={cell.y}>
 						{#if kind === 'gunsmoke'}
@@ -491,7 +487,6 @@
 						{/each}
 					</Container>
 				{/each}
-			</Container>
-		</Container>
+		</BoardSpace>
 	{/if}
 </MainContainer>

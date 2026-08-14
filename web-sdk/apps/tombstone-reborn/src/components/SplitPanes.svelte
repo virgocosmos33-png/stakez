@@ -37,12 +37,13 @@
 		buildCountUp,
 	} from '../game/splitBullets';
 	import { EXPLOSION_LIFE_MS } from '../game/splitExplosion';
-	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import { trValueStyle, TR_INK_GOLD, TR_INK_IRON } from '../game/typography';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import BulletHoleMark from './BulletHoleMark.svelte';
 	import SplitExplosion from './SplitExplosion.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -139,11 +140,6 @@
 	 * something for the bullet strike to play on.
 	 */
 	const layout = (incoming: { reel: number; row: number; count: number; name?: SymbolName }[]) => {
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
-		// reels shown as a full wild column (Wild Reel or Stretch) swallow the split:
-		// the extra ways still count, but we never paint panes over the wild column.
 		const wildReels = new Set([
 			...context.stateGame.wildReelReels,
 			...context.stateGame.stretchedReels,
@@ -158,8 +154,8 @@
 					{
 						...cell,
 						fresh: false,
-						cx: originX + getSymbolX(cell.reel),
-						cy: originY + getCellCenterY(cell.reel, cell.row),
+						cx: getSymbolX(cell.reel),
+						cy: getCellCenterY(cell.reel, cell.row),
 					},
 				]),
 		);
@@ -186,8 +182,8 @@
 				row: c.row,
 				count: c.count,
 				pinned: c.name,
-				cx: originX + getSymbolX(c.reel),
-				cy: originY + getCellCenterY(c.reel, c.row),
+				cx: getSymbolX(c.reel),
+				cy: getCellCenterY(c.reel, c.row),
 				seed: c.reel * 31 + c.row * 7 + c.count * 113,
 				fresh: true,
 			});
@@ -211,10 +207,7 @@
 				...cell,
 				// position re-solved LIVE too: a STRETCH racking this reel after the
 				// split moves every row, and the panes must ride along
-				cy:
-					context.stateGameDerived.boardLayout().y -
-					context.stateGameDerived.boardLayout().height * 0.5 +
-					getCellCenterY(cell.reel, cell.row),
+				cy: getCellCenterY(cell.reel, cell.row),
 				name:
 					cell.pinned ??
 					(context.stateGame.board[cell.reel]?.reelState.symbols[cell.row]?.rawSymbol
@@ -247,6 +240,7 @@
 			});
 		});
 		shakeBoard({ intensity: 20, duration: fxDur(340) });
+		context.eventEmitter.broadcast({ type: 'saloonCheers' });
 	};
 
 	// BULLET STRIKE: each fresh cell takes 1–4 rounds (scaled by its multiplier).
@@ -456,13 +450,13 @@
 	(see .cursor/skills/pixi-svelte-layering). -->
 <MainContainer>
 	{#if show}
-		<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
+		<BoardSpace yOffset={fallOut.current}>
 			{#each drawn as cell (cell.key)}
 				{@render splitCell(cell)}
 			{/each}
 			{#each drawn as cell (cell.key)}
 				{@render badgeMarker(cell)}
 			{/each}
-		</Container>
+		</BoardSpace>
 	{/if}
 </MainContainer>

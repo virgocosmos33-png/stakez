@@ -69,10 +69,8 @@
 </script>
 
 <Container
-	x={context.stateGameDerived.boardLayout().x -
-		context.stateGameDerived.boardLayout().width * 0.5 +
-		getSymbolX(props.reelIndex)}
-	y={context.stateGameDerived.boardLayout().y}
+	x={getSymbolX(props.reelIndex)}
+	y={context.stateGameDerived.boardLayout().pivot.y}
 >
 	<Graphics
 		draw={(graphics) => drawDustAnticipation(graphics, COL_W, COL_H, time, envelope)}

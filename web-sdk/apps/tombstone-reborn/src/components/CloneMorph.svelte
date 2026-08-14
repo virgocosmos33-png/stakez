@@ -26,9 +26,10 @@
 	import { getContext } from '../game/context';
 	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
 	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
-	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import SymbolSprite from './SymbolSprite.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -79,16 +80,13 @@
 	 * were meant to cover — you saw the settled new premium peeking out from behind
 	 * an offset copy of the old one.
 	 */
-	const placed = $derived.by(() => {
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
-		return cells.map((cell) => ({
+	const placed = $derived.by(() =>
+		cells.map((cell) => ({
 			...cell,
-			cx: originX + getSymbolX(cell.reel),
-			cy: originY + getCellCenterY(cell.reel, cell.row),
-		}));
-	});
+			cx: getSymbolX(cell.reel),
+			cy: getCellCenterY(cell.reel, cell.row),
+		})),
+	);
 
 	const run = async () => {
 		phase = 'charge';
@@ -237,7 +235,7 @@
 	(see .cursor/skills/pixi-svelte-layering). -->
 <MainContainer>
 	{#if phase !== 'idle' && cells.length}
-		<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
+		<BoardSpace yOffset={fallOut.current}>
 			<!-- No connector is drawn between clone cells. A dashed powder fuse
 				used to run cell to cell, which crosses a card corner to corner
 				whenever two clones are diagonal neighbours and lands as a pale
@@ -282,6 +280,6 @@
 					{/if}
 				</Container>
 			{/each}
-		</Container>
+		</BoardSpace>
 	{/if}
 </MainContainer>

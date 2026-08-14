@@ -13,18 +13,22 @@
 	import { MainContainer } from 'components-layout';
 	import { Container, Graphics } from 'pixi-svelte';
 
+	import { Sprite } from 'pixi-svelte';
+
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS } from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { cellFrames } from '../game/chassisArt';
 	import { BOTTOM_START } from '../game/cellUnlock';
 	import { fxNum } from '../game/fx.generated';
-	import { drawGunsmokeSweep } from '../game/tombstoneVfx';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
-	// Tombstone: winning cells get a brass/gunsmoke glint — one diagonal band
-	// sliding over each card, staggered column by column, left to right.
+	// Tombstone: winning cells get a warm LANTERN-LIGHT rake — a soft amber
+	// god-ray bar (Kenney celebration light shape) sliding across each card,
+	// additively, staggered column by column, left to right. Replaces the old
+	// grey gunsmoke band carried over from the previous game.
 	// Positions may live on the core board OR inside a reserved socket.
 	type SweepCell = {
 		key: string;
@@ -42,6 +46,10 @@
 	const SWEEP_PER_REEL_MS = fxNum('winSweep', 'perReelMs', 70);
 	/** glancing-light tilt of the band, radians */
 	const SWEEP_TILT = -0.45;
+	/** warm lantern amber the light bar is tinted to (additive) */
+	const LANTERN_AMBER = 0xffb24d;
+	/** Kenney celebration light shape used as the raking bar (a vertical god-ray) */
+	const LANTERN_KEY = 'win_celeb_light_00.png';
 	// The card art does NOT fill its texture: every paying symbol's opaque
 	// footprint inside the 300px frame is x 37..262, y 4..295 with ~16px
 	// rounded corners (measured on symbolsStatic.png; identical for h1-h5,
@@ -77,6 +85,10 @@
 			const originX = boardLayout.x - boardLayout.width * 0.5;
 			const originY = boardLayout.y - boardLayout.height * 0.5;
 			const frames = cellFrames(boardLayout);
+			const toLocal = (wx: number, wy: number) => ({
+				cx: wx - originX,
+				cy: wy - originY,
+			});
 
 			// A wild column is presented as ONE thing (the full-reel overlay), so
 			// its winning cells collapse into ONE full-height glint over the whole
@@ -90,11 +102,12 @@
 				const slotKey = slotKeyOf(position);
 				const frame = slotKey ? frames[slotKey] : undefined;
 				if (frame) {
+					const local = toLocal(frame.cx, frame.cy);
 					cells.push({
 						key: `${position.reel}-${position.row}`,
 						order: 0,
-						cx: frame.cx,
-						cy: frame.cy,
+						cx: local.cx,
+						cy: local.cy,
 						w: frame.w,
 						h: frame.h,
 					});
@@ -106,8 +119,8 @@
 					cells.push({
 						key: `wild-${position.reel}`,
 						order: 0,
-						cx: originX + getSymbolX(position.reel),
-						cy: originY + MAX_ROWS * 0.5 * SYMBOL_SIZE,
+						cx: getSymbolX(position.reel),
+						cy: MAX_ROWS * 0.5 * SYMBOL_SIZE,
 						w: CELL_PITCH_X,
 						h: MAX_ROWS * SYMBOL_SIZE,
 						wild: true,
@@ -117,8 +130,8 @@
 				cells.push({
 					key: `${position.reel}-${position.row}`,
 					order: 0,
-					cx: originX + getSymbolX(position.reel),
-					cy: originY + getCellCenterY(position.reel, position.row),
+					cx: getSymbolX(position.reel),
+					cy: getCellCenterY(position.reel, position.row),
 					w: SYMBOL_SIZE,
 					h: SYMBOL_SIZE,
 				});
@@ -160,17 +173,43 @@
 		g.roundRect(-w / 2, -h / 2, w, h, r);
 		g.fill(0xffffff);
 	};
+
+	/** live raking-bar transform for a cell (null while its column hasn't fired
+	 * yet or has already passed, so the bar only exists mid-rake). */
+	const barFor = (cell: SweepCell) => {
+		const local = localFor(cell.order);
+		if (local <= 0 || local >= 1) return null;
+		const fade = Math.min(1, local / 0.16, (1 - local) / 0.16);
+		return {
+			x: (local * 2 - 1) * cell.w * 0.92,
+			w: cell.w * (cell.wild ? 0.5 : 0.62),
+			h: (cell.wild ? cell.h : Math.max(cell.w, cell.h)) * 2,
+			alpha: 0.85 * fade,
+		};
+	};
 </script>
 
 <MainContainer>
+	<BoardSpace>
 	{#each sweepCells as cell (cell.key)}
-		<Container x={cell.cx} y={cell.cy}>
-			<Graphics isMask draw={(g) => drawCardMask(g, cell)} />
-			<Container rotation={SWEEP_TILT}>
-				<Graphics
-					draw={(g) => drawGunsmokeSweep(g, Math.max(cell.w, cell.h), localFor(cell.order))}
+		{@const bar = barFor(cell)}
+		{#if bar}
+			<Container x={cell.cx} y={cell.cy}>
+				<Graphics isMask draw={(g) => drawCardMask(g, cell)} />
+				<Sprite
+					key={LANTERN_KEY}
+					anchor={0.5}
+					rotation={SWEEP_TILT}
+					x={bar.x}
+					y={0}
+					width={bar.w}
+					height={bar.h}
+					tint={LANTERN_AMBER}
+					alpha={bar.alpha}
+					blendMode="add"
 				/>
 			</Container>
-		</Container>
+		{/if}
 	{/each}
+	</BoardSpace>
 </MainContainer>

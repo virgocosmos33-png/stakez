@@ -10,7 +10,6 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
@@ -18,8 +17,9 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_CARD_W } from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+	import { shakeBoard } from '../game/stateShake.svelte';
 	import MultBadge from './MultBadge.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -81,10 +81,6 @@
 		},
 	});
 
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const originX = $derived(boardLayout.x - boardLayout.width * 0.5);
-	const originY = $derived(boardLayout.y - boardLayout.height * 0.5);
-
 	const drawn = $derived(
 		badges.map((b) => {
 			const t = b.climb.current;
@@ -92,8 +88,8 @@
 			const raw = start + (b.multiplier - start) * t * t;
 			return {
 				key: b.key,
-				cx: originX + getSymbolX(b.reel),
-				cy: originY + getCellCenterY(b.reel, b.row),
+				cx: getSymbolX(b.reel),
+				cy: getCellCenterY(b.reel, b.row),
 				shown: Math.round(raw),
 				scale: 0.85 + 0.15 * b.pop.current,
 				tick: 1 + 0.1 * (1 - (raw - Math.floor(raw))) * Math.sin(Math.PI * t),
@@ -107,7 +103,7 @@
 </script>
 
 <MainContainer>
-	<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
+	<BoardSpace yOffset={fallOut.current}>
 		{#if show}
 			{#each drawn as cell (cell.key)}
 				{#if cell.shown > 0}
@@ -121,5 +117,5 @@
 				{/if}
 			{/each}
 		{/if}
-	</Container>
+	</BoardSpace>
 </MainContainer>

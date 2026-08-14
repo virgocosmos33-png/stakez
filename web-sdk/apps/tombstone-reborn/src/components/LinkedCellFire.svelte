@@ -267,6 +267,7 @@ void main() {
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { filterVisibleCells } from '../game/boardCells';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -317,16 +318,13 @@ void main() {
 		};
 	});
 
-	const placed = $derived.by(() => {
-		const layout = context.stateGameDerived.boardLayout();
-		const originX = layout.x - layout.width * 0.5;
-		const originY = layout.y - layout.height * 0.5;
-		return cells.slice(0, MAX_CELLS).map((cell) => ({
+	const placed = $derived.by(() =>
+		cells.slice(0, MAX_CELLS).map((cell) => ({
 			key: `${cell.reel}-${cell.row}`,
-			cx: originX + getSymbolX(cell.reel),
-			cy: originY + getCellCenterY(cell.reel, cell.row),
-		}));
-	});
+			cx: getSymbolX(cell.reel),
+			cy: getCellCenterY(cell.reel, cell.row),
+		})),
+	);
 
 	/**
 	 * FIRE AUDIO LIFECYCLE. ONE burn bed for the whole feature, never one per
@@ -433,6 +431,7 @@ void main() {
 	burning cell; the ring filter paints the fire and discards the rest. -->
 <Container zIndex={8}>
 	<MainContainer>
+		<BoardSpace>
 		{#if ignite.current > 0.01}
 			{#each placed as cell, i (cell.key)}
 				<Container x={cell.cx} y={cell.cy} filters={[pool[i].filter]}>
@@ -440,5 +439,6 @@ void main() {
 				</Container>
 			{/each}
 		{/if}
+		</BoardSpace>
 	</MainContainer>
 </Container>

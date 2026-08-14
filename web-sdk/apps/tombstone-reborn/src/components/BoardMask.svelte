@@ -2,23 +2,29 @@
 	import { Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, MAX_ROWS } from '../game/constants';
-	import { getReelRows } from '../game/utils';
+	import { SYMBOL_SIZE } from '../game/constants';
+	import { getReelRows, getReelYOffset } from '../game/utils';
 
 	type Props = { debug?: boolean };
 
 	const props: Props = $props();
 	const context = getContext();
 
-	// A STRETCH grows a reel past MAX_ROWS; let the mask breathe symmetrically so
-	// the stretched reel overflows the nominal board a bit (per-reel SymbolWrap
-	// culling keeps the other, un-stretched reels from spilling padding).
-	const extra = $derived.by(() => {
-		let maxRows = MAX_ROWS;
+	/** How far live reels stick out past the authored board box. Stretch grows
+	 * UP (bottom bolted), so extraTop covers that; extraBot only if a reel's
+	 * window actually crosses the floor. NEVER split extra symmetrically — that
+	 * opened the mask under the board and dropped cards into the HUD. */
+	const extras = $derived.by(() => {
+		const boxH = context.stateGameDerived.boardLayout().height;
+		let extraTop = 0;
+		let extraBot = 0;
 		for (let i = 0; i < context.stateGame.board.length; i++) {
-			maxRows = Math.max(maxRows, getReelRows(i));
+			const top = getReelYOffset(i);
+			const bottom = top + getReelRows(i) * SYMBOL_SIZE;
+			extraTop = Math.max(extraTop, -top);
+			extraBot = Math.max(extraBot, bottom - boxH);
 		}
-		return Math.max(0, (maxRows - MAX_ROWS) * SYMBOL_SIZE);
+		return { extraTop, extraBot };
 	});
 </script>
 
@@ -34,7 +40,7 @@
 <Rectangle
 	isMask
 	x={-SYMBOL_SIZE}
-	y={-extra / 2}
+	y={-extras.extraTop}
 	width={context.stateGameDerived.boardLayout().width + SYMBOL_SIZE * 2}
-	height={context.stateGameDerived.boardLayout().height + extra}
+	height={context.stateGameDerived.boardLayout().height + extras.extraTop + extras.extraBot}
 />

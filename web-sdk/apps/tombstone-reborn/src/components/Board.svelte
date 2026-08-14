@@ -19,6 +19,7 @@
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
+	import WinDim from './WinDim.svelte';
 
 	const context = getContext();
 
@@ -50,9 +51,11 @@
 							window.setTimeout(resolve, 2500);
 						}),
 					]);
-					// rest as a crisp static card (no undulating mesh morph) — the
-					// winner stays lit while WinDim overlays every other cell
-					reelSymbol.symbolState = 'postWinStatic';
+					// rest on the looping postWin spine — the winning card keeps
+					// gently undulating (living portrait) while WinDim overlays every
+					// other cell. The mm_symbols atlas now carries the Tombstone faces
+					// so this no longer flashes the old art.
+					reelSymbol.symbolState = 'postWin';
 				});
 
 			await Promise.all(getPromises());
@@ -67,6 +70,7 @@
 		<BoardContainer>
 			<BoardMask />
 			<BoardBase />
+			<WinDim />
 		</BoardContainer>
 	</BoardContext>
 

@@ -47,11 +47,12 @@
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { fxDur, fxWait } from '../game/fxTiming';
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
-	import { shakeBoard, stateShake } from '../game/stateShake.svelte';
+	import { shakeBoard } from '../game/stateShake.svelte';
 	import { FX, FEATURE_ART, seqFrame, fxRandom, puffFade } from '../game/featureVfx';
 	import FeatureFxSprite from './FeatureFxSprite.svelte';
 	import MultBadge from './MultBadge.svelte';
 	import Symbol from './Symbol.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -106,9 +107,6 @@
 		y: getCellCenterY(reel, row),
 	});
 
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const originX = $derived(boardLayout.x - boardLayout.width * 0.5);
-	const originY = $derived(boardLayout.y - boardLayout.height * 0.5);
 
 	const reset = () => {
 		marks = [];
@@ -272,8 +270,7 @@
 </script>
 
 <MainContainer>
-	<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
-		<Container x={originX} y={originY}>
+		<BoardSpace yOffset={fallOut.current}>
 			<!-- Powder burn left on every scored cell. Hollow ring + off-centre
 			scorch: the WILD underneath has to stay readable. -->
 			{#each marks as mark (mark.key)}
@@ -454,6 +451,5 @@
 					</Container>
 				</Container>
 			{/if}
-		</Container>
-	</Container>
+		</BoardSpace>
 </MainContainer>

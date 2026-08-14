@@ -12,7 +12,7 @@ import { eventEmitter } from './eventEmitter';
 import {
 	SYMBOL_SIZE,
 	BOARD_SIZES,
-	BOARD_PLATE_PAD,
+	BOARD_FRAME_OUTER,
 	INITIAL_BOARD,
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
@@ -22,16 +22,18 @@ import {
 } from './constants';
 import { COLUMN_ROW_OFFSET } from './chassisArt';
 import { isSpecialBarVertical } from './specialBarLayout';
+import { getReelRows, getReelYOffset } from './utils';
 
 /** Must match FrameMorphHud rail height + plate clearance. */
 const HUD_RAIL_H = 56;
 const HUD_PLATE_CLEAR = 14;
 const HUD_CLEAR_PX = 12;
-/** Minimum breathing room kept above the board, so it never hugs the top edge. */
-const BOARD_TOP_MARGIN = 24;
-/** Bias the vertically-centred board a bit toward the HUD (positive = lower). */
-const BOARD_Y_BIAS = 48;
-
+/** Extra main-space pad under the published HUD top — spin cluster + Storybook chrome. */
+const HUD_EXTRA_CLEAR = 40;
+/** When the HUD has not published yet, assume this much main-space is the control bar. */
+const HUD_FALLBACK_MAIN = 120;
+/** Breathing room above the timber (Storybook action toast + logo). */
+const BOARD_TOP_MARGIN = 52;
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	if (rawSymbol.name === 'S') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
@@ -186,39 +188,82 @@ const boardLayout = () => {
 	// COLUMN_ROW_OFFSET
 	const x = main.width * 0.5 - COLUMN_ROW_OFFSET;
 
-	// The under-board WAYS/WIN console (FrameMorphHud) only renders when the
+	// The under-board WAYS/WIN cluster (FrameMorphHud) only renders when the
 	// special bar is laid FLAT (narrow/portrait). When the bar stands vertical
 	// (desktop/landscape) nothing sits under the board, so reserving a rail's
 	// worth of space there just pins the board against the top edge — only
-	// reserve it when the console is actually shown.
+	// reserve it when the cluster is actually shown.
 	const barVertical = isSpecialBarVertical({ x, width: BOARD_SIZES.width });
-	// half the board plate block (board + top/bottom wood overhang)
-	const halfBlock = BOARD_SIZES.height / 2 + BOARD_PLATE_PAD;
 
-	// floorY = the lowest line the board plate may reach, in main-space y. Until
-	// the HUD bar reports its position, fall back to the canvas bottom.
+	const pivotX = BOARD_SIZES.width / 2;
+	const pivotY = BOARD_SIZES.height / 2;
+
+	let contentTop = pivotY;
+	let contentBot = pivotY;
+	for (let i = 0; i < board.length; i++) {
+		const top = getReelYOffset(i);
+		const bottom = top + getReelRows(i) * SYMBOL_SIZE;
+		if (top < contentTop) contentTop = top;
+		if (bottom > contentBot) contentBot = bottom;
+	}
+	contentTop -= BOARD_FRAME_OUTER;
+	contentBot += BOARD_FRAME_OUTER;
+
+	// floorY = the lowest line the timber may reach, in main-space y.
 	const hudTopScreen = stateUi.hudBarTopScreenY;
-	let floorY = main.height - HUD_PLATE_CLEAR;
+	let floorY = main.height - HUD_FALLBACK_MAIN;
 	if (hudTopScreen > 0) {
 		const canvasH = stateLayoutDerived.canvasSizes().height;
 		const hudTopMain =
 			main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale;
-		const reserve = barVertical ? HUD_PLATE_CLEAR : HUD_RAIL_H + HUD_PLATE_CLEAR;
+		const reserve = (barVertical ? HUD_PLATE_CLEAR : HUD_RAIL_H + HUD_PLATE_CLEAR) + HUD_EXTRA_CLEAR;
 		floorY = hudTopMain - reserve;
 	}
 
-	// Centre the board in the play area between the top edge and floorY, then
-	// bias it a bit toward the HUD so more air sits above and less below. Keep
-	// a small top margin, and never let the plate cross floorY.
-	let y = Math.max(BOARD_TOP_MARGIN + halfBlock, floorY / 2 + BOARD_Y_BIAS);
-	y = Math.min(y, floorY - halfBlock);
+	// Shrink the whole board (symbols + staircase + overlays) so LIVE timber
+	// always sits between the top margin and the HUD. Landscape/desktop also
+	// cap rest scale so the idle diamond is not filling the viewport.
+	const available = Math.max(1, floorY - BOARD_TOP_MARGIN);
+	const liveH = Math.max(1, contentBot - contentTop);
+	const layoutType = stateLayoutDerived.layoutType();
+	const restCap = layoutType === 'portrait' ? 1 : 0.8;
+	const scale = Math.min(restCap, available / liveH);
+
+	// Centre the LIVE timber in the safe band (not the authored 4-row box).
+	const liveMid = (contentTop + contentBot) / 2;
+	const bandMid = (BOARD_TOP_MARGIN + floorY) / 2;
+	const yMin = BOARD_TOP_MARGIN - (contentTop - pivotY) * scale;
+	const yMax = floorY - (contentBot - pivotY) * scale;
+	let y = bandMid - (liveMid - pivotY) * scale;
+	y = Math.min(Math.max(y, yMin), yMax);
+
+	const visualTop = y + (contentTop - pivotY) * scale;
+	const visualBottom = y + (contentBot - pivotY) * scale;
+	const visualLeft = x - pivotX * scale;
+	const visualRight = x + (BOARD_SIZES.width - pivotX) * scale;
 
 	return {
 		x,
 		y,
+		scale,
 		anchor: { x: 0.5, y: 0.5 },
-		pivot: { x: BOARD_SIZES.width / 2, y: BOARD_SIZES.height / 2 },
+		pivot: { x: pivotX, y: pivotY },
+		visualTop,
+		visualBottom,
+		visualLeft,
+		visualRight,
 		...BOARD_SIZES,
+	};
+};
+
+/** Board-local (lx, ly) → main-space, honouring boardLayout scale around pivot.
+ *  Every overlay that used to do `origin + local` must go through this or it
+ *  desyncs the moment the expanded board shrinks to fit under the HUD. */
+const boardToWorld = (lx: number, ly: number) => {
+	const b = boardLayout();
+	return {
+		x: b.x + (lx - b.pivot.x) * b.scale,
+		y: b.y + (ly - b.pivot.y) * b.scale,
 	};
 };
 
@@ -241,6 +286,7 @@ export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLeve
 export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
+	boardToWorld,
 	boardRaw,
 	scatterLandIndex,
 	enhancedBoard,

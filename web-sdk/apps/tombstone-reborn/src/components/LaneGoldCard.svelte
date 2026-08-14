@@ -11,14 +11,14 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicIn } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Sprite } from 'pixi-svelte';
+	import { Sprite } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_CARD_H } from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { stateShake } from '../game/stateShake.svelte';
 	import { fxDur, fxWait } from '../game/fxTiming';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -51,9 +51,8 @@
 	});
 
 	const LAST = context.stateGame.board.length - 1;
-	const boardLayout = $derived(context.stateGameDerived.boardLayout());
-	const cx = $derived(boardLayout.x - boardLayout.width * 0.5 + getSymbolX(LAST));
-	const cy = $derived(boardLayout.y - boardLayout.height * 0.5 + getCellCenterY(LAST, 1));
+	const cx = $derived(getSymbolX(LAST));
+	const cy = $derived(getCellCenterY(LAST, 1));
 
 	const scale = $derived(0.55 + 0.45 * pop.current);
 	const alpha = $derived(Math.min(1, pop.current * 1.4));
@@ -61,7 +60,7 @@
 
 {#if kind}
 	<MainContainer>
-		<Container x={stateShake.x} y={stateShake.y}>
+		<BoardSpace>
 			<Sprite
 				key={KIND_SPRITE[kind]}
 				x={cx}
@@ -72,6 +71,6 @@
 				{alpha}
 				eventMode="none"
 			/>
-		</Container>
+		</BoardSpace>
 	</MainContainer>
 {/if}

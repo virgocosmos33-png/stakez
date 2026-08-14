@@ -80,7 +80,7 @@ const SIDE_W_SCALE = (SIDE_H_SCALE * ART.side.w) / ART.side.h;
  * bigger everywhere. MUST stay in sync with stateLayout's portrait main width so
  * the row keeps filling the portrait screen edge-to-edge.
  */
-export const PORTRAIT_DESIGN_W = 960;
+export const PORTRAIT_DESIGN_W = 800;
 
 /**
  * SOLVED, not configured: seven columns and the two cage halves at either end

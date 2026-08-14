@@ -52,6 +52,7 @@
 	import { fxNum, fxColors, fxStr } from '../game/fx.generated';
 	import { trAmountFamily, trAmountTint } from '../game/typography';
 	import { drawGraveChainLink } from '../game/graveyardFx';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -183,13 +184,9 @@
 		symbol: string,
 		hardenBumps: number,
 	): SealView => {
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
-		// diamond: seal art spans only THIS reel's rows, centered on the board mid-line
 		const rows = NUM_ROWS[reel] ?? BOARD_DIMENSIONS.y;
-		const cx = originX + getSymbolX(reel);
-		const cy = originY + (MAX_ROWS * 0.5) * SYMBOL_SIZE;
+		const cx = getSymbolX(reel);
+		const cy = MAX_ROWS * 0.5 * SYMBOL_SIZE;
 		const keys = assetKeysFor(symbol);
 		return {
 			reel,
@@ -436,9 +433,7 @@
 	const drawHighlight = (g: import('pixi.js').Graphics, s: SealView) => {
 		g.clear();
 		if (phase === 'idle') return;
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originY = boardLayout.y - boardLayout.height * 0.5;
-		const cellCy = originY + getCellCenterY(s.reel, s.highlightRow);
+		const cellCy = getCellCenterY(s.reel, s.highlightRow);
 		const alpha =
 			phase === 'highlight' ? highlightT.current : Math.max(0.15, 1 - expandT.current * 1.1);
 		if (alpha < 0.02) return;
@@ -549,6 +544,7 @@
 
 {#if seals.length}
 	<MainContainer>
+		<BoardSpace>
 		<!-- Link VFX behind seals so chrome/badge stay on top -->
 		{#if seals.length >= 2 && (phase === 'expand' || phase === 'hold')}
 			<Graphics draw={(g) => drawSealLinks(g)} />
@@ -660,5 +656,6 @@
 				{/if}
 			</Container>
 		{/each}
+		</BoardSpace>
 	</MainContainer>
 {/if}

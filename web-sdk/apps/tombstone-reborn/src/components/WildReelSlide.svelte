@@ -43,6 +43,7 @@
 	import { getSymbolX, getReelWindow } from '../game/utils';
 	import WildColumnLabel from './WildColumnLabel.svelte';
 	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
@@ -122,16 +123,13 @@
 				artW: number;
 				artH: number;
 			}[];
-		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
 		const w = CELL_PITCH_X;
 		return reels.map(({ reel, art, slide, badge, ways, panes, tear }) => {
 			const window = getReelWindow(reel);
 			const top = Math.min(window.top, 0);
 			const bottom = Math.max(window.bottom, MAX_ROWS * SYMBOL_SIZE);
 			const h = bottom - top;
-			const cy = originY + (top + bottom) * 0.5;
+			const cy = (top + bottom) * 0.5;
 			// cover-fit the portrait art into the reel column (crop overflow, never letterbox)
 			const scale = Math.max(w / art.width, h / art.height);
 			return {
@@ -142,7 +140,7 @@
 				ways,
 				panes,
 				tear,
-				cx: originX + getSymbolX(reel),
+				cx: getSymbolX(reel),
 				cy,
 				w,
 				h,
@@ -407,7 +405,7 @@
 	(see .cursor/skills/pixi-svelte-layering). -->
 <MainContainer>
 	{#if reels.length}
-		<Container y={fallOut.current}>
+		<BoardSpace yOffset={fallOut.current}>
 		{#each columns as c (c.reel)}
 			{@const panes = Math.max(c.panes, 1)}
 			{@const tear = c.tear.current}
@@ -475,6 +473,6 @@
 				</Container>
 			{/each}
 		{/if}
-		</Container>
+		</BoardSpace>
 	{/if}
 </MainContainer>

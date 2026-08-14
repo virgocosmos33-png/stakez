@@ -18,21 +18,22 @@
 	const props: Props = $props();
 	const pulse = new Tween(1);
 
-	// Card symbols animate via scale reactions since all states are static
-	// sprites. CRITICAL: scale NEVER exceeds 1.0 — a symbol growing past 1.0
-	// bulges out of its cell frame, which looks broken/unprofessional. So the
-	// win/land emphasis is a PRESS-IN (dip below 1 and recover), which reads as
-	// a punchy thump while always staying inside the cell frame.
+	// Sprite-only symbols (WILD / SCATTER / special-cell cards) animate via scale.
+	// The paying H/L cards run their spine rigs now, so this pulse is the WILD /
+	// scatter beat. The win emphasis is a clean upward POP (overshoot above 1 then
+	// settle) — reads as a celebratory jump, not the old shrink-dip. The overshoot
+	// is kept modest so it stays within the cell gutter + the timber frame gap.
 	const animate = async (state?: SymbolState) => {
 		if (state === 'win') {
-			await pulse.set(0.84, { duration: 150, easing: backOut });
-			await pulse.set(1, { duration: 200, easing: quadOut });
-			await pulse.set(0.9, { duration: 130, easing: backOut });
+			await pulse.set(1.12, { duration: 150, easing: backOut });
+			await pulse.set(1, { duration: 220, easing: quadOut });
+			await pulse.set(1.06, { duration: 120, easing: backOut });
 			await pulse.set(1, { duration: 200, easing: quadOut });
 			props.oncomplete?.();
 		} else if (state === 'land') {
-			pulse.set(0.9, { duration: 0 });
-			await pulse.set(1, { duration: 190, easing: quadOut });
+			pulse.set(0.92, { duration: 0 });
+			await pulse.set(1.06, { duration: 130, easing: backOut });
+			await pulse.set(1, { duration: 170, easing: quadOut });
 			props.oncomplete?.();
 		} else {
 			pulse.set(1, { duration: 0 });

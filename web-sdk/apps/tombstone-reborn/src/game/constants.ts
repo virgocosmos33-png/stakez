@@ -74,9 +74,32 @@ export const pickWildReelArt = (): WildReelArt =>
 // drops the WAYS/WIN rail by exactly this much.
 export const LOCKED_SLOTS_BOTTOM_EXTENT = CHASSIS_BOTTOM_EXTENT;
 
+/** Air between painted cards and the inner timber edge. Zero: the pocket IS
+ *  the card. A positive gap was the beige channel around every reel. */
+export const BOARD_FRAME_GAP = 0;
+/** Outer plank thickness — half the original 52px beams. */
+export const BOARD_FRAME_THICK = 26;
+/** Iron corner plates — same size as the plank they sit on, so they do not
+ *  hang into the cell pocket. */
+export const BOARD_FRAME_CORNER = BOARD_FRAME_THICK;
+/** Staircase step plates, same rule as the corners. */
+export const BOARD_FRAME_STEP = BOARD_FRAME_THICK;
+/** How far timber sits past each card pocket (plank, plates are on the plank). */
+export const BOARD_FRAME_OUTER = BOARD_FRAME_THICK;
 /** BoardPlate wood overhang past each reel window (top and bottom). Shared by
  *  SpecialBar spacing and the WAYS/WIN console clearance math. */
 export const BOARD_PLATE_PAD = 18;
+
+/** Inner dark-plank field of `bar_rail.webp` as fractions of the texture.
+ *  Skips the skull / iron surround so special-bar pockets are the original
+ *  recessed wood, not the same grey timber as the outline. Sampled: inner
+ *  luminance ~1–14 vs iron edge ~67. */
+export const BAR_RAIL_POCKET = {
+	x0: 40 / 320,
+	x1: 280 / 320,
+	y0: 96 / 960,
+	y1: 880 / 960,
+} as const;
 
 // initial board derived from config: numRows[reel] visible + top/bottom padding.
 export const INITIAL_BOARD: RawSymbol[][] = buildInitialBoard();
@@ -247,22 +270,24 @@ const blurState = (cardAssetKey: string) => ({
 	sizeRatios: { width: 1, height: 1.6 },
 });
 
-// TOMBSTONE REBORN: sprite-only in every state. The old spine win/land/postWin
-// skeletons still carry the White Room card art, so routing any state through
-// them would flash the wrong game's faces — the SymbolSprite pulse carries the
-// win beat instead.
+// TOMBSTONE REBORN: the mm_symbols spine atlas is now re-skinned with the live
+// Tombstone faces (tools/reskin_symbol_spines.py), so the animated beats route
+// through the rig again: land / win run once (fire `complete` -> Board oncomplete)
+// and postWin loops the mesh-deform ripple (living portrait). static / spin /
+// postWinStatic stay SPRITE — spin needs the baked smear frame and postWinStatic
+// needs a deterministic plain frame for the apparition/slice paths.
 const cardStates = (
 	card: { type: string; assetKey: string; sizeRatios: { width: number; height: number } },
-	_spineKey: string,
-	_id: string,
+	spineKey: string,
+	id: string,
 ) => ({
 	explosion,
-	win: card,
-	postWin: card,
+	win: spineState(spineKey, id),
+	postWin: spineState(spineKey, `${id}_postwin`),
 	postWinStatic: card,
 	static: card,
 	spin: blurState(card.assetKey),
-	land: card,
+	land: spineState(spineKey, `${id}_land`),
 });
 
 /** One face per scatter landing position, keyed the same 1..5 as the scatter

@@ -26,10 +26,10 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE, CELL_PITCH_X, MAX_ROWS, pickWildReelArt, type WildReelArt } from '../game/constants';
 	import { getSymbolX } from '../game/utils';
-	import { stateShake } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import WildColumnLabel from './WildColumnLabel.svelte';
 	import ColumnClawStrike, { playColumnClaw } from './ColumnClawStrike.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 	const appContext = getContextApp();
@@ -109,9 +109,7 @@
 
 	const layout = (incoming: { reel: number; ways: number; baseRows: number }[]): FxReel[] => {
 		const boardLayout = context.stateGameDerived.boardLayout();
-		const originX = boardLayout.x - boardLayout.width * 0.5;
-		const originY = boardLayout.y - boardLayout.height * 0.5;
-		const cy = originY + MAX_ROWS * 0.5 * SYMBOL_SIZE;
+		const cy = MAX_ROWS * 0.5 * SYMBOL_SIZE;
 		const boardHalf = MAX_ROWS * 0.5 * SYMBOL_SIZE;
 		// The pull overflows the TOP — but only as far as the view allows: on
 		// desktop the board sits near the canvas top, and a fixed 1.6-cell
@@ -119,7 +117,7 @@
 		// A bit of stretch, capped to the headroom that actually exists above
 		// the board in this layout. The BOTTOM stops just past the board edge —
 		// never into the special cells / HUD rail underneath.
-		const headroom = Math.max(0, originY - SYMBOL_SIZE * 0.08);
+		const headroom = Math.max(0, boardLayout.visualTop / boardLayout.scale - SYMBOL_SIZE * 0.08);
 		const topHalf = boardHalf + Math.min(0.9 * SYMBOL_SIZE, headroom);
 		const bottomHalf = boardHalf + 0.15 * SYMBOL_SIZE;
 		return incoming.map(({ reel, ways, baseRows }) => {
@@ -128,7 +126,7 @@
 				reel,
 				ways,
 				baseWays: Math.max(baseRows, 1),
-				cx: originX + getSymbolX(reel),
+				cx: getSymbolX(reel),
 				cy,
 				// rest height = the reel window; targets are fixed overflows
 				// (constant — never scale with `ways`).
@@ -288,7 +286,7 @@
 	(see .cursor/skills/pixi-svelte-layering). -->
 <MainContainer>
 	{#if reels.length}
-		<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
+		<BoardSpace yOffset={fallOut.current}>
 			{#each reels as cell (cell.reel)}
 				{@const p = cell.settled ? 1 : stretchT.current}
 				{@const baseHalf = cell.baseH / 2}
@@ -380,7 +378,6 @@
 					</Container>
 				{/if}
 			{/each}
-		</Container>
 
 		<!-- Same WILD plate the Wild Reel uses, counting up as the column
 			stretches. This IS a wild column, so it has to say so in the same
@@ -391,7 +388,6 @@
 			phase, and a remounted pixi-svelte child is appended to the END of
 			its parent — as a sibling it would land on top of this label and
 			hide the ways (which is exactly what used to happen). -->
-		<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
 			{#each reels as cell (cell.reel)}
 				{@const shown = cell.settled
 					? cell.ways
@@ -405,19 +401,17 @@
 					{pop}
 				/>
 			{/each}
-		</Container>
 
 		<!-- the split's claw raking a torn column, over everything it cuts. The
 			settled column spans -topHalf..+bottomHalf around cy, so the strike
 			box is recentred on that. -->
 		{#if clawT >= 0}
-			<Container x={stateShake.x} y={stateShake.y + fallOut.current}>
 				{#each reels.filter((r) => tearing.includes(r.reel)) as cell (cell.reel)}
 					<Container x={cell.cx} y={cell.cy + (cell.bottomHalf - cell.topHalf) / 2}>
 						<ColumnClawStrike h={cell.topHalf + cell.bottomHalf} t={clawT} />
 					</Container>
 				{/each}
-			</Container>
 		{/if}
+		</BoardSpace>
 	{/if}
 </MainContainer>

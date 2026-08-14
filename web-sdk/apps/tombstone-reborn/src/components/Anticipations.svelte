@@ -4,6 +4,7 @@
 
 	import { getContext } from '../game/context';
 	import Anticipation from './Anticipation.svelte';
+	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 	const hasAnticipation = $derived(
@@ -30,8 +31,10 @@
 	/>
 {/if}
 
+<BoardSpace>
 {#each context.stateGame.board as reel, reelIndex}
 	{#if reel.reelState.anticipating}
 		<Anticipation {reel} {reelIndex} oncomplete={() => (reel.reelState.anticipating = false)} />
 	{/if}
 {/each}
+</BoardSpace>

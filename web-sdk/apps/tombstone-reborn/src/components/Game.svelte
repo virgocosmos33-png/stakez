@@ -40,7 +40,6 @@
 	import NudgeSlide from './NudgeSlide.svelte';
 	import FeatureBurst from './FeatureBurst.svelte';
 	import WinSweep from './WinSweep.svelte';
-	import WinDim from './WinDim.svelte';
 	import TapToSkip from './TapToSkip.svelte';
 	import BonusEntry from './BonusEntry.svelte';
 	import BulletHits from './BulletHits.svelte';
@@ -49,10 +48,6 @@
 
 	const context = getContext();
 
-	// Lockstep with BoardFrame.svelte outer size (slim trim — NOT bak-locked rails).
-	const LOGO_FRAME_SCALE = 0.34;
-	const LOGO_GOLD_INNER_Y = 101;
-	const LOGO_FRAME_GAP = 6;
 	// logo_v3 master ~2048×2082 (Scenario transparent stack)
 	const LOGO_ASPECT = 2082 / 2048;
 
@@ -65,15 +60,13 @@
 	/** Mobile/portrait: centered just above the reel frame. */
 	const aboveReelsLogo = $derived.by(() => {
 		const board = context.stateGameDerived.boardLayout();
-		const outerH =
-			board.height + 2 * LOGO_FRAME_GAP + 2 * LOGO_GOLD_INNER_Y * LOGO_FRAME_SCALE;
-		const frameTop = board.y + stateShake.y - outerH / 2;
+		const frameTop = board.visualTop + stateShake.y;
 		const gap = 10;
 		const topPad = 28;
 		// Fit into the clear band above the frame (logo_v3 is nearly square).
 		const maxH = Math.max(56, frameTop - gap - topPad);
 		const widthBySpace = maxH / LOGO_ASPECT;
-		const widthByBoard = board.width * 0.72;
+		const widthByBoard = (board.visualRight - board.visualLeft) * 0.72;
 		const width = Math.min(widthBySpace, widthByBoard);
 		const height = width * LOGO_ASPECT;
 		return {
@@ -195,8 +188,8 @@
 		<LaneLidLock />
 		<LaneGoldCard />
 
-		<!-- CLICK-TO-SHOOT: left-click the idle reel area to punch a shattered-glass
-			bullet hole at the cursor. Cleared the moment a spin starts. -->
+		<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle
+			fire, and smoke. Cleared the moment a spin starts. -->
 		<BulletHits />
 
 		<!-- BOUNTY: the landed premium's WIN multiplier badge. -->
@@ -230,7 +223,6 @@
 			for dashed cutlines; real dashes were baked into mirror_frame_wide.png
 			lips (see tools/strip_frame_quilt_dashes.py). Do not remount. -->
 
-		<WinDim />
 		<WinSweep />
 
 		<!-- SCREEN-LEVEL PRESENTATION — one zIndex layer ABOVE the cell effects.
@@ -244,8 +236,8 @@
 				temp turbo). Win / FS panels / transition also listen on that bus. -->
 			<TapToSkip />
 
-			<!-- WAYS / WIN / FREE SPINS morphed into the ONE reel-frame top rail
-				(never a second overlapping side panel) -->
+			<!-- WAYS / WIN live as stacked nameplates on the right (SpecialBar);
+				this is the narrow-layout fallback only. -->
 			<FrameMorphHud />
 
 			<UI>

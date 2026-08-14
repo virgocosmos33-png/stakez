@@ -275,18 +275,29 @@ export default {
 	},
 	// --- ambient SCENE --------------------------------------------------------
 	// ONE full-scene backdrop that cover-scales to the viewport as a single
-	// unit. Built by tools/prepare_scene_assets.py.
-	// v5 = cold clinical grade (desat→hist-match→cool tint). The cell-block
-	// plate was too dark behind the iron chassis, so this is the clinical white
-	// room, which reads as the ward with the chassis bolted into it.
-	//
-	// The right-side character ("the patient" / Lady Mirror) that used to stand
-	// here is REMOVED, along with her stills, idle webms and Spine rigs. The art
-	// is still on disk under assets/sprites/scene/ and assets/spines/lady/ but
-	// nothing loads it — do not re-register these without asking.
+	// unit. Base game: the saloon still (basemodebgimagetomsbstonereborn.png
+	// baked to scene_bg_v2.webp, 1679x937).
 	sceneBg: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/scene_bg_v2.webp', import.meta.url).href,
+		preload: true,
+	},
+	// Live saloon room (fire-frame lady-spine), baked by tools/bake_saloon_room.py.
+	// Plate has no lanterns; saloonLampL/R are the hanging fixtures. Must
+	// preload: SaloonScene mounts as soon as preloaded assets land.
+	saloonPlate: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_plate.webp', import.meta.url).href,
+		preload: true,
+	},
+	saloonLampL: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_lamp_l.png', import.meta.url).href,
+		preload: true,
+	},
+	saloonLampR: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_lamp_r.png', import.meta.url).href,
 		preload: true,
 	},
 	// WIN CELEBRATION hero plates, one per big tier — dark western / graveyard
@@ -763,6 +774,26 @@ export default {
 	bulletCrack5: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/board/bullet_crack_5.png', import.meta.url).href,
+		preload: true,
+	},
+	// FPS revolver that follows the pointer over an idle board (BulletHits.svelte).
+	// Recoil + muzzle flash live on this sprite; the OS cursor is hidden over the
+	// catcher. Source art: pistol.png / fireburst.png (black already keyed out).
+	pistolAim: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/pistol.png', import.meta.url).href,
+		preload: true,
+	},
+	muzzleBurst: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/fireburst.png', import.meta.url).href,
+		preload: true,
+	},
+	// Kenney whitePuff00-24 (kenney_smoke-particles), packed + dusty-tinted by
+	// tools/make_muzzle_smoke_atlas.py. Plays once at the barrel after each shot.
+	muzzleSmoke: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/muzzle_smoke.json', import.meta.url).href,
 		preload: true,
 	},
 	boardCornerBracket: {

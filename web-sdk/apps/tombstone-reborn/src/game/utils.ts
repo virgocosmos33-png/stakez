@@ -5,6 +5,8 @@ import { createGetEmptyPaddedBoard } from 'utils-slots';
 
 import {
 	SYMBOL_SIZE,
+	SYMBOL_CARD_W,
+	SYMBOL_CARD_H,
 	CELL_PITCH_X,
 	REEL_PADDING,
 	SYMBOL_INFO_MAP,
@@ -144,6 +146,29 @@ export const getRowPitch = (reelIndex: number) => {
 // reel is racked (STRETCH) and the rows spread apart.
 export const getCellCenterY = (reelIndex: number, rowIndex: number) =>
 	getReelYOffset(reelIndex) + (rowIndex - 0.5) * getRowPitch(reelIndex);
+
+/** Painted card height inside this reel's current row pitch. The 300×300
+ *  atlas frame only uses 292px of height (SYMBOL_CARD_H); stretch scales it
+ *  with the pitch so the pocket still hugs the art. */
+export const getCardHeight = (reelIndex: number) =>
+	getRowPitch(reelIndex) * (SYMBOL_CARD_H / SYMBOL_SIZE);
+
+/** Inner timber pocket of a reel: the bounding box of the PAINTED cards, not
+ *  the square grid pitch. Framing the pitch plus BOARD_FRAME_GAP left a beige
+ *  channel around every cell because the atlas cards are portrait (226×292 in
+ *  a 300×300 frame). */
+export const getReelPocket = (reelIndex: number) => {
+	const rows = Math.max(1, getReelRows(reelIndex));
+	const cardH = getCardHeight(reelIndex);
+	const cx = getSymbolX(reelIndex);
+	return {
+		left: cx - SYMBOL_CARD_W / 2,
+		right: cx + SYMBOL_CARD_W / 2,
+		top: getCellCenterY(reelIndex, 1) - cardH / 2,
+		bottom: getCellCenterY(reelIndex, rows) + cardH / 2,
+		cardH,
+	};
+};
 
 export const getSymbolInfo = ({
 	rawSymbol,

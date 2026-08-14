@@ -87,26 +87,6 @@ const seeded = (n: number) => {
 };
 
 /**
- * Soft dusty powder glint over a winning card.
- * NEVER three bright white/grey glass bands or neon brass hairlines — that was
- * the clinical horseshoe shine the player still saw. One wide gunsmoke wash +
- * a faint dust edge only.
- */
-export const drawGunsmokeSweep = (g: import('pixi.js').Graphics, size: number, t: number) => {
-	if (t <= 0 || t >= 1) return;
-	const x = (t * 2 - 1) * size * 0.9;
-	const h = size * 2.2;
-	const fade = Math.min(1, t / 0.14, (1 - t) / 0.14);
-	// single soft powder cloud — not a stacked clinical tri-band
-	g.rect(x - size * 0.38, -h / 2, size * 0.76, h);
-	g.fill({ color: TOMBSTONE_FX.powder, alpha: 0.16 * fade });
-	g.rect(x - size * 0.18, -h / 2, size * 0.36, h);
-	g.fill({ color: TOMBSTONE_FX.gunsmoke, alpha: 0.2 * fade });
-	g.rect(x - size * 0.06, -h / 2, size * 0.08, h);
-	g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.18 * fade });
-};
-
-/**
  * Anticipation column: dusty gunsmoke shaft + falling grit (not fluorescent tube).
  */
 export const drawDustAnticipation = (

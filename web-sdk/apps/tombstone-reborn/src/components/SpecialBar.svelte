@@ -1,41 +1,34 @@
 <script lang="ts">
 	/**
-	 * Side rails around the board:
-	 *   LEFT  — six special-bar cells (one per reel) as an iron-framed charred
-	 *           plank of ornate nameplates. Special symbols only.
-	 *   RIGHT — WAYS (top) + WIN (bottom) as SEPARATE ornate plaques (no shared
-	 *           container plank), only when the left rail stands upright
-	 *           (desktop/wide).
+	 * Side chrome around the board:
+	 *   LEFT  — six special-bar cells (one per reel) inside a timber frame
+	 *           built from the SAME planks + iron plates as the reel board.
+	 *   RIGHT — stacked WAYS + WIN nameplates (FREE SPINS inserted in bonus),
+	 *           no timber slab, only when the left rail stands upright.
 	 *
 	 * On narrow layouts the left rail lies flat above the board and cannot carry
-	 * the readouts, so FrameMorphHud shows WAYS/WIN under the board instead; the
+	 * the readouts, so FrameMorphHud shows the same stack under the board; the
 	 * vertical decision is shared (game/specialBarLayout.ts) so the two never
 	 * both draw them.
 	 *
-	 * Baked sprites (Scenario transparent PNGs → tools/make_special_bar_art.py):
-	 *   bar_rail         — iron frame + skull + solid opaque near-black wood
-	 *   bar_plaque       — hollow pewter nameplate, tinted for EMPTY slots
-	 *   bar_plaque_*     — per-kind plaques with baked embossed labels
-	 *
-	 * The LEFT rail is a nine-slice so the iron corners and rivets stay crisp while
-	 * the wood run stretches. Empty sockets use the hollow frame + charcoal fill.
-	 * Revealed cards use the colored labeled plaque sprites (no runtime Text).
+	 * Special-bar plaques stay the baked Scenario nameplates. WAYS/WIN keep
+	 * their ornate plates; they just do not sit inside a woody frame.
 	 */
-	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
-	import * as PIXI from 'pixi.js';
-	import { Container, Sprite, Text, getContextParent } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import SpecialBarPlaque from './SpecialBarPlaque.svelte';
 	import FeatureFxSprite from './FeatureFxSprite.svelte';
+	import TimberRect from './TimberRect.svelte';
+	import HudReadout from './HudReadout.svelte';
 
 	import { FX, seqFrame, fxRandom } from '../game/featureVfx';
 	import { getContext } from '../game/context';
 	import config from '../game/config';
-	import { NUM_ROWS } from '../game/constants';
+	import { NUM_ROWS, BOARD_FRAME_THICK, BOARD_FRAME_CORNER } from '../game/constants';
 	import {
 		PLAQUE_WIDTH_FRACTION,
 		MAX_RAIL_W,
@@ -48,51 +41,48 @@
 	import { stateShake } from '../game/stateShake.svelte';
 	import { fxDur } from '../game/fxTiming';
 	import { formatWays } from '../game/waysFormat';
-	import { hudColor } from '../game/hud.generated';
-	import { TR_INK_BRASS, fitFontSize, trLabelStyle, trValueStyle } from '../game/typography';
 
 	const context = getContext();
-	const parentContext = getContextParent();
 
 	const REELS = NUM_ROWS.length;
 
 	// --- baked art (tools/make_special_bar_art.py prints these) ----------------
 	/** bar_plaque.png is 384x192 */
 	const PLAQUE_ASPECT = 384 / 192;
-	/** bar_readout_plaque.png is 1200x800 (tools/make_readout_plaque.py) — the
-	 *  ornate WAYS/WIN nameplate. Its dark inset panel, as fractions, is where the
-	 *  gold text seats (inside the beaded border). */
-	const READOUT_ASPECT = 1.5;
-	const READOUT_OPENING = { y0: 0.19, y1: 0.81 };
 	/** the frame's hollow, as fractions of the texture (from punch_hollow) */
 	const PLAQUE_OPENING = { x0: 0.0729, x1: 0.9271, y0: 0.2604, y1: 0.7344 };
-	const OPENING_CY = (PLAQUE_OPENING.y0 + PLAQUE_OPENING.y1) * 0.5;
-	/** bar_rail.webp is 320x960; rivet band reaches ~45px in */
-	const RAIL_TEXTURE_W = 320;
-	const RAIL_INSET = 45;
 
 	// --- proportions ------------------------------------------------------------
-	/** vertical step between plaques — leave a strip of plank + skull between */
+	/** vertical step between plaques — leave a strip of wood between */
 	const PITCH_FACTOR = 1.38;
-	/** wood left above the first well and below the last, in rail widths */
-	const RAIL_PAD_FRACTION = 0.16;
+	/** wood left above the first well and below the last, as a fraction of inner width */
+	const RAIL_PAD_FRACTION = 0.12;
 
-	// --- WAYS / WIN readouts (separate plaques, vertical layout only) -----------
-	/** scale the free-floating WAYS/WIN plaques past the special-bar cell size */
-	const READOUT_SCALE = 1.28;
-	const VALUE_COLOR = hudColor('text', 0xf0e6d0);
-	const LABEL_COLOR = TR_INK_BRASS;
-	const LABEL_TRACKING = 2;
-	const VALUE_TRACKING = 0.3;
+	// --- WAYS / WIN / FREE SPINS (stacked nameplates, vertical layout only) ---
+	/** scale the readout plaques past the special-bar cell size */
+	const READOUT_WIDTH_SCALE = 1.28;
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 
 	let ways = $state(BASE_WAYS);
+	let spinsShow = $state(false);
+	let spinsCurrent = $state(0);
+	let spinsTotal = $state(0);
 	context.eventEmitter.subscribeOnMount({
 		waysCounterUpdate: (e) => {
 			ways = e.ways;
 		},
 		waysCounterHide: () => {
 			ways = BASE_WAYS;
+		},
+		freeSpinCounterShow: () => {
+			spinsShow = true;
+		},
+		freeSpinCounterHide: () => {
+			spinsShow = false;
+		},
+		freeSpinCounterUpdate: (e) => {
+			if (e.current !== undefined) spinsCurrent = e.current;
+			if (e.total !== undefined) spinsTotal = e.total;
 		},
 	});
 	const winValue = $derived(bookEventAmountToCurrencyString(stateBet.winBookEventAmount));
@@ -140,45 +130,50 @@
 
 	const layout = $derived.by(() => {
 		const board = context.stateGameDerived.boardLayout();
-		const originX = board.x - board.width * 0.5 + stateShake.x;
-		const originRight = board.x + board.width * 0.5 + stateShake.x;
-		const boardTop = board.y - board.height * 0.5 + stateShake.y;
+		const s = board.scale;
+		const originX = board.visualLeft + stateShake.x;
+		const originRight = board.visualRight + stateShake.x;
+		const boardTop = board.visualTop + stateShake.y;
 		const boardCy = board.y + stateShake.y;
 
 		// clear room the layout leaves left of the wooden plate
-		const railRight = originX - PLATE_OVERHANG - BOARD_GAP;
+		const railRight = originX - PLATE_OVERHANG * s - BOARD_GAP * s;
 		const sideWidth = railRight - EDGE_MARGIN;
 
 		if (sideWidth >= MIN_SIDE_WIDTH) {
-			const railW = Math.min(MAX_RAIL_W, sideWidth);
-			const cellW = railW * PLAQUE_WIDTH_FRACTION;
+			const thick = BOARD_FRAME_THICK * s;
+			const corner = BOARD_FRAME_CORNER * s;
+			const outerW = Math.min(MAX_RAIL_W, sideWidth);
+			const innerW = Math.max(8, outerW - 2 * thick);
+			const cellW = innerW * PLAQUE_WIDTH_FRACTION;
 			const cellH = cellW / PLAQUE_ASPECT;
 			const pitch = cellH * PITCH_FACTOR;
 			const stackH = pitch * (REELS - 1) + cellH;
 
-			// LEFT rail: special-symbol plaques only (no WAYS/WIN ends).
-			const pad = railW * RAIL_PAD_FRACTION;
-			const railH = stackH + pad * 2;
-			const cx = railRight - railW * 0.5;
-			const railTop = boardCy - railH * 0.5;
-			// centre the FRAMES on the stack, not their textures: the skull hangs
-			// below each frame, so a box-centred stack reads as sitting high
-			const skullBias = (0.5 - OPENING_CY) * cellH;
-			const firstCy = railTop + pad + cellH * 0.5 + skullBias;
+			const pad = innerW * RAIL_PAD_FRACTION;
+			const innerH = stackH + pad * 2;
+			const innerX = railRight - thick - innerW;
+			const cx = innerX + innerW * 0.5;
+			const innerTop = boardCy - innerH * 0.5;
+			const firstCy = innerTop + pad + cellH * 0.5;
 
-			// RIGHT: two free-floating ornate plaques (WAYS top, WIN bottom) —
-			// no shared container plank. Slightly larger than a special-bar cell,
-			// centered in the side strip and pinned near the top/bottom of the
-			// left rail so they still bookend the board.
-			const railLeftR = originRight + PLATE_OVERHANG + BOARD_GAP;
-			const wellW = cellW * READOUT_SCALE;
-			const wellH = wellW / READOUT_ASPECT;
-			const cxR = railLeftR + railW * 0.5;
-			const waysCy = railTop + pad + wellH * 0.5;
-			const winCy = railTop + railH - pad - wellH * 0.5;
+			const railLeftR = originRight + PLATE_OVERHANG * s + BOARD_GAP * s;
+			const wellW = cellW * READOUT_WIDTH_SCALE;
+			const slots: { label: string; value: string }[] = [
+				{ label: 'WAYS', value: formatWays(ways) },
+			];
+			if (spinsShow) {
+				slots.push({
+					label: 'FREE SPINS',
+					value: `${spinsTotal - spinsCurrent}/${spinsTotal}`,
+				});
+			}
+			slots.push({ label: 'WIN', value: winValue });
 
 			return {
 				vertical: true,
+				thick,
+				corner,
 				cellW,
 				cellH,
 				cells: Array.from({ length: REELS }, (_, reel) => ({
@@ -186,9 +181,13 @@
 					cx,
 					cy: firstCy + pitch * reel,
 				})),
-				rail: { x: railRight - railW, y: railTop, w: railW, h: railH },
-				waysWell: { cx: cxR, cy: waysCy, w: wellW, h: wellH },
-				winWell: { cx: cxR, cy: winCy, w: wellW, h: wellH },
+				rail: { x: innerX, y: innerTop, w: innerW, h: innerH },
+				readout: {
+					x: railLeftR + wellW * 0.5,
+					y: boardCy,
+					wellW,
+					slots,
+				},
 			};
 		}
 
@@ -197,25 +196,30 @@
 		// MAX_RAIL_W * PLAQUE_WIDTH_FRACTION === one card wide (SYMBOL_CARD_W).
 		const cellW = MAX_RAIL_W * PLAQUE_WIDTH_FRACTION;
 		const cellH = cellW / PLAQUE_ASPECT;
-		const thickness = cellH + (cellW / PLAQUE_WIDTH_FRACTION) * RAIL_PAD_FRACTION * 2;
-		const railBottom = boardTop - BOARD_GAP;
-		const cy = railBottom - thickness * 0.5;
+		const thick = BOARD_FRAME_THICK * s;
+		const corner = BOARD_FRAME_CORNER * s;
+		const innerPad = thick * 0.5;
+		const innerH = cellH + innerPad * 2;
+		const railBottom = boardTop - BOARD_GAP * s;
+		const innerTop = railBottom - thick - innerH;
+		const cy = innerTop + innerH * 0.5;
 		const cells = Array.from({ length: REELS }, (_, reel) => ({
 			reel,
-			cx: originX + getSymbolX(reel),
+			cx: originX + getSymbolX(reel) * s,
 			cy,
 		}));
-		const left = cells[0].cx - cellW * 0.5 - thickness * RAIL_PAD_FRACTION;
-		const right = cells[REELS - 1].cx + cellW * 0.5 + thickness * RAIL_PAD_FRACTION;
+		const left = cells[0].cx - cellW * 0.5 - innerPad;
+		const right = cells[REELS - 1].cx + cellW * 0.5 + innerPad;
 
 		return {
 			vertical: false,
+			thick,
+			corner,
 			cellW,
 			cellH,
 			cells,
-			rail: { x: left, y: railBottom - thickness, w: right - left, h: thickness },
-			waysWell: null,
-			winWell: null,
+			rail: { x: left, y: innerTop, w: right - left, h: innerH },
+			readout: null,
 		};
 	});
 
@@ -223,54 +227,21 @@
 	/** 0 → 1 across the strike, so the hit FX can run forwards while `enter`
 	 * eases the plaque back down. */
 	const strike = $derived(1 - enter.current);
-
-	// pixi-svelte has no NineSlice component — same escape hatch as BoardFrame.
-	// LEFT specials rail only; WAYS/WIN are free plaques (no right container).
-	const railSprite = (() => {
-		const s = new PIXI.NineSliceSprite({
-			texture: PIXI.Texture.EMPTY,
-			leftWidth: RAIL_INSET,
-			topHeight: RAIL_INSET,
-			rightWidth: RAIL_INSET,
-			bottomHeight: RAIL_INSET,
-		});
-		s.eventMode = 'none';
-		s.zIndex = -1;
-		parentContext.addToParent(s);
-		return s;
-	})();
-
-	onDestroy(() => {
-		railSprite.removeFromParent();
-		railSprite.destroy();
-	});
-
-	const placeRail = (
-		sprite: PIXI.NineSliceSprite,
-		rail: { x: number; y: number; w: number; h: number },
-		vertical: boolean,
-	) => {
-		// panel is drawn upright: upright = rail size, laid down = thickness×span
-		// then a quarter turn. Uniform scale keeps iron rivets round.
-		const thickness = vertical ? rail.w : rail.h;
-		const span = vertical ? rail.h : rail.w;
-		const scale = thickness / RAIL_TEXTURE_W;
-		sprite.scale.set(scale);
-		sprite.width = RAIL_TEXTURE_W;
-		sprite.height = span / scale;
-		sprite.rotation = vertical ? 0 : -Math.PI / 2;
-		sprite.x = rail.x;
-		sprite.y = vertical ? rail.y : rail.y + thickness;
-	};
-
-	$effect(() => {
-		const texture = context.stateApp.loadedAssets?.['barRail'] as PIXI.Texture | undefined;
-		if (texture && railSprite.texture !== texture) railSprite.texture = texture;
-		placeRail(railSprite, layout.rail, layout.vertical);
-	});
-
 </script>
 
+<Container>
+	<TimberRect
+		x={layout.rail.x}
+		y={layout.rail.y}
+		w={layout.rail.w}
+		h={layout.rail.h}
+		thick={layout.thick}
+		corner={layout.corner}
+		fill
+	/>
+</Container>
+
+<Container>
 {#each layout.cells as cell (cell.reel)}
 	{@const card = cardsByReel.get(cell.reel)}
 	{@const kindSprite = card ? (KIND_SPRITE[card.kind] ?? '') : ''}
@@ -325,56 +296,14 @@
 		{/each}
 	{/if}
 {/each}
+</Container>
 
-{#snippet valueWell(well: { cx: number; cy: number; w: number; h: number }, label: string, value: string)}
-	<!-- text seats inside the plaque's dark inset panel (the beaded border), so
-		sizes/positions are struck off the OPENING, not the whole sprite -->
-	{@const panelH = (READOUT_OPENING.y1 - READOUT_OPENING.y0) * well.h}
-	{@const panelW = well.w * 0.68}
-	{@const labelSize = Math.max(8, Math.floor(panelH * 0.26))}
-	{@const valueSize = Math.max(12, Math.floor(panelH * 0.46))}
-	<Container x={well.cx} y={well.cy}>
-		<Sprite key="barReadoutPlaque" anchor={0.5} width={well.w} height={well.h} eventMode="none" />
-		<Text
-			x={0}
-			y={-panelH * 0.24}
-			anchor={0.5}
-			text={label}
-			eventMode="none"
-			style={trLabelStyle({
-				fill: LABEL_COLOR,
-				fontSize: fitFontSize(label, {
-					role: 'label',
-					base: labelSize,
-					maxWidth: panelW,
-					letterSpacing: LABEL_TRACKING,
-				}),
-				letterSpacing: LABEL_TRACKING,
-			})}
-		/>
-		<Text
-			x={0}
-			y={panelH * 0.18}
-			anchor={0.5}
-			text={value}
-			eventMode="none"
-			style={trValueStyle({
-				fill: VALUE_COLOR,
-				fontSize: fitFontSize(value, {
-					role: 'value',
-					base: valueSize,
-					maxWidth: panelW,
-					letterSpacing: VALUE_TRACKING,
-				}),
-				letterSpacing: VALUE_TRACKING,
-				stroke: { color: 0x05070a, width: 2 },
-				dropShadow: { color: 0x000000, blur: 3, distance: 1, alpha: 0.6, angle: Math.PI / 2 },
-			})}
-		/>
-	</Container>
-{/snippet}
-
-{#if layout.vertical && layout.waysWell && layout.winWell}
-	{@render valueWell(layout.waysWell, 'WAYS', formatWays(ways))}
-	{@render valueWell(layout.winWell, 'WIN', winValue)}
+{#if layout.readout}
+	<HudReadout
+		x={layout.readout.x}
+		y={layout.readout.y}
+		wellW={layout.readout.wellW}
+		slots={layout.readout.slots}
+		axis="y"
+	/>
 {/if}
