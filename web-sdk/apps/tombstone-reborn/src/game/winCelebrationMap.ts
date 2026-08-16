@@ -36,7 +36,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		slug: '',
 		minMultiplier: 0,
 		presentDuration: 1 * SECOND,
-		sound: { sfx: 'sfx_winlevel_nice', bgm: undefined },
+		sound: { sfx: 'sfx_win_ways', bgm: undefined },
 	},
 	// Big tiers: WinCelebration.svelte drives the staged celebration bed.
 	// Seed a matching bed here so setWin has a stage cue to play before the

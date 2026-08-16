@@ -17,6 +17,7 @@ import {
 	MAX_ROWS,
 } from './constants';
 import { eventEmitter } from './eventEmitter';
+import { currentModeMusic, stopBonusBgm } from './bonusBgm';
 import { presentBonusEntry } from './bonusEntry';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap } from './bookEventHandlerMap';
@@ -35,6 +36,10 @@ export const playBet = async (bet: Bet) => {
 	// base spin and on a resumed round — see game/bonusEntry.ts.
 	await presentBonusEntry(bet);
 	await playBookEvents(bet.state);
+	if (stateGame.gameType === 'basegame' && currentModeMusic() !== 'bgm_main') {
+		stopBonusBgm();
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+	}
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
 };
 

@@ -31,7 +31,8 @@
 		BULLET_MS,
 		BULLET_NEAR_SCALE,
 		fpsMuzzlePoint,
-		planWoundRhythm,
+		isHighPaySymbol,
+		planKnifeRhythm,
 		volleySeed,
 	} from '../game/gunsmokeSpin';
 	import { buildCountUp } from '../game/splitBullets';
@@ -154,23 +155,35 @@
 		return Array.from({ length: n }, (_, i) => Math.min(from + i + 1, to));
 	};
 
-	const playHitSplit = async (key: string) => {
+	const playHitSplit = async (key: string, wait: boolean) => {
+		const same = animKey === key;
 		animKey = key;
-		splitProgress.set(0, { duration: 0 });
-		detonation.set(0, { duration: 0 });
+		if (!same) {
+			splitProgress.set(0, { duration: 0 });
+			detonation.set(0, { duration: 0 });
+		}
 		seamFlare.set(1, { duration: 20 });
 		seamFlare.set(0, { duration: 180 });
 		playExternalOnce(SPLIT_SFX);
 		pulse.set(1.06, { duration: 0 });
 		pulse.set(1, { duration: 180, easing: backOut });
-		await Promise.all([
+		const anim = Promise.all([
 			detonation.set(1, { duration: 300, easing: cubicOut }),
 			splitProgress.set(1, { duration: 180, easing: backOut }),
 		]);
+		if (wait) await anim;
 	};
 
 	const flyKnives = async (fresh: SplitCell[]) => {
-		const targets: { key: string; x: number; y: number; seed: number; next: number }[] = [];
+		const targets: {
+			key: string;
+			reel: number;
+			row: number;
+			x: number;
+			y: number;
+			seed: number;
+			next: number;
+		}[] = [];
 		for (const cell of fresh) {
 			const cx = getSymbolX(cell.reel);
 			const cy = getCellCenterY(cell.reel, cell.row);
@@ -181,6 +194,8 @@
 				const seams = seamYs(next);
 				targets.push({
 					key: cell.key,
+					reel: cell.reel,
+					row: cell.row,
 					x: cx,
 					y: cy + (seams[Math.min(i, seams.length - 1)] ?? 0),
 					seed: cell.seed + i * 13,
@@ -188,7 +203,7 @@
 				});
 			}
 		}
-		const rhythm = planWoundRhythm(targets.length, volleySeed(fresh));
+		const rhythm = planKnifeRhythm(targets.length, volleySeed(fresh));
 		for (let i = 0; i < targets.length; i += 1) {
 			const target = targets[i];
 			const shot = rhythm[i];
@@ -197,7 +212,19 @@
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_wood', forcePlay: true });
 			shakeBoard({ intensity: 4 + shot.flightScale * 2, duration: fxDur(90) });
 			cells = cells.map((cell) => (cell.key === target.key ? { ...cell, shown: target.next } : cell));
-			await playHitSplit(target.key);
+			const face =
+				fresh.find((cell) => cell.key === target.key)?.pinned ??
+				(context.stateGameDerived.boardRaw()[target.reel]?.[target.row]?.name as
+					| SymbolName
+					| undefined);
+			if (face && isHighPaySymbol(face)) {
+				context.eventEmitter.broadcast({
+					type: 'cellFrameStain',
+					reel: target.reel,
+					row: target.row,
+				});
+			}
+			await playHitSplit(target.key, shot.burst !== true);
 			if (shot.beatMs > 0) await fxWait(shot.beatMs);
 		}
 		animKey = null;

@@ -14,31 +14,79 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	import { stateSoundDerived } from 'state-shared';
+
+	import { playExternalOnce, preloadExternal } from 'utils-sound';
+
 	import { getContext } from '../game/context';
+	import {
+		isBonusBgm,
+		pauseBonusBgm,
+		playBonusBgm,
+		stopBonusBgm,
+		syncBonusBgmVolume,
+	} from '../game/bonusBgm';
+
+	const WAYS_WIN_SFX = '/assets/audio/sfx_win_ways.mp3';
 
 	const context = getContext();
 
+	const SPRITE_BEDS: MusicName[] = [
+		'bgm_main',
+		'bgm_celeb_1',
+		'bgm_celeb_2',
+		'bgm_celeb_3',
+		'bgm_celeb_4',
+		'bgm_celeb_5',
+		'bgm_celeb_6',
+	];
+
+	const playModeMusic = (name: MusicName) => {
+		if (isBonusBgm(name)) {
+			for (const bed of SPRITE_BEDS) sound.stop({ name: bed });
+			playBonusBgm(name);
+			return;
+		}
+		pauseBonusBgm();
+		sound.players.music.play({ name });
+	};
+
 	context.eventEmitter.subscribeOnMount({
-		// ui
-		// Every bet mode shares the one bed. The template branched to a second
-		// bed for a 'SUPERSPIN' mode that this game does not declare — its modes
-		// are base, bonus_small and bonus_super — so the branch could never be
-		// taken and the bed it reached for is retired.
-		soundBetMode: () => sound.players.music.play({ name: 'bgm_main' }),
+		// Bought / scatter bonus rounds switch beds in freeSpinTrigger and
+		// presentBonusEntry. The lobby / base spin stays on bgm_main.
+		soundBetMode: () => playModeMusic('bgm_main'),
 		soundPressGeneral: () => sound.players.once.play({ name: 'sfx_btn_general' }),
 		soundPressBet: () => sound.players.once.play({ name: 'sfx_btn_spin' }),
 		// scatterCounter
 		soundScatterCounterIncrease: () => (context.stateGame.scatterCounter = context.stateGame.scatterCounter + 1), // prettier-ignore
 		soundScatterCounterClear: () => (context.stateGame.scatterCounter = 0),
 		// game
-		soundMusic: ({ name }) => sound.players.music.play({ name }),
+		soundMusic: ({ name }) => playModeMusic(name),
 		soundLoop: ({ name }) => sound.players.loop.play({ name }),
-		soundOnce: ({ name, forcePlay }) => sound.players.once.play({ name, forcePlay }),
-		soundStop: ({ name }) => sound.stop({ name }),
+		soundOnce: ({ name, forcePlay }) => {
+			if (name === 'sfx_win_ways') {
+				playExternalOnce(WAYS_WIN_SFX);
+				return;
+			}
+			sound.players.once.play({ name, forcePlay });
+		},
+		soundStop: ({ name }) => {
+			if (isBonusBgm(name)) {
+				stopBonusBgm();
+				return;
+			}
+			sound.stop({ name });
+		},
 		soundFade: async ({ name, duration, from, to }) => await sound.fade({ name, duration, from, to }), // prettier-ignore
 	});
 
 	onMount(() => {
+		preloadExternal(WAYS_WIN_SFX);
 		sound.players.music.play({ name: 'bgm_main' });
+	});
+
+	$effect(() => {
+		stateSoundDerived.volumeMusic();
+		syncBonusBgmVolume();
 	});
 </script>

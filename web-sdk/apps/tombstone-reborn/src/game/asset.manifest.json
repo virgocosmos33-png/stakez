@@ -442,6 +442,8 @@
     "cues": {
       "music": [
         "bgm_main",
+        "bgm_bonus_small",
+        "bgm_bonus_super",
         "bgm_celeb_1",
         "bgm_celeb_2",
         "bgm_celeb_3",
@@ -466,6 +468,7 @@
         "sfx_scatter_reveal"
       ],
       "winLevels": [
+        "sfx_win_ways",
         "sfx_winlevel_small",
         "sfx_winlevel_nice",
         "sfx_winlevel_standard",

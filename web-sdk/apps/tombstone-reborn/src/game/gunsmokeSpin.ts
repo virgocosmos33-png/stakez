@@ -3,20 +3,18 @@
  * left, right, bottom-left and bottom-right (muzzle out of frame) into each
  * cell, then the art cracks and a hole stamps.
  * Hits are not a metronome: each volley gets a seeded paw---paw-paw
- * rhythm, never a stacked double. High-pay faces also get a blood splash
- * clipped to the symbol alpha; only the hole stays.
+ * rhythm, never a stacked double. Specials (H1–H5) also get blood stains
+ * clipped to the iron cell-frame sprite; the stains stay.
  */
-import { SYMBOL_CARD_W, SYMBOL_CARD_H, SYMBOL_SIZE, HIGH_SYMBOLS, SYMBOL_INFO_MAP } from './constants';
+import { CELL_PITCH_X, SYMBOL_CARD_W, SYMBOL_CARD_H, SYMBOL_SIZE, HIGH_SYMBOLS } from './constants';
 import { fxRandom } from './featureVfx';
 import { GUNSMOKE_ART } from './gunsmokeArt.generated';
 import type { SymbolName } from './types';
 
-/** Static card texture used as the clipping mask (portrait silhouette, not a box). */
-export const symbolMaskKey = (name: SymbolName) => {
-	const face = SYMBOL_INFO_MAP[name]?.static;
-	if (!face || face.type !== 'sprite') return null;
-	return face.assetKey;
-};
+/** Hollow iron slot — opaque ring, open centre. Blood only paints on the frame. */
+export const CELL_FRAME_MASK_KEY = 'boardSlotFrame';
+export const CELL_FRAME_MASK_W = CELL_PITCH_X;
+export const CELL_FRAME_MASK_H = SYMBOL_SIZE;
 
 /** Fallback hold if a lone wound has no planned rhythm. */
 export const WOUND_BEAT_MS = 280;
@@ -27,7 +25,9 @@ export const WOUND_GAP_SPAN = 120;
 export const WOUND_HOLD_MS = 420;
 export const WOUND_HOLD_SPAN = 220;
 export const BLOOD_SPLASH_IN_MS = 90;
-export const BLOOD_SPLASH_OUT_MS = 280;
+export const BLOOD_SPLASH_OUT_MS = 180;
+/** Dried stain left on the iron after the splash. Do not fade to empty. */
+export const BLOOD_STAIN_RESIDUAL = 0.88;
 export const BULLET_MS = 36;
 export const BULLET_DIST_MS = 0.03;
 export const BULLET_MAX_MS = 68;
@@ -144,6 +144,27 @@ export type WoundLayer = {
 	kind: 'hole' | 'blood';
 };
 
+/** Blood blobs sit on the iron ring so the frame mask keeps a stain, not a face splash. */
+export const frameBloodLayers = (reel: number, row: number, hit = 0): WoundLayer[] => {
+	const seed = reel * 41 + row * 13 + 7 + hit * 19;
+	const count = 2 + (fxRandom(seed) > 0.45 ? 1 : 0);
+	return Array.from({ length: count }, (_, i) => {
+		const key = GUNSMOKE_BLOOD_KEYS[Math.floor(fxRandom(seed + i * 3) * GUNSMOKE_BLOOD_KEYS.length)];
+		const ang = (i / count) * Math.PI * 2 + fxRandom(seed + i * 11) * 0.7;
+		const dist = SYMBOL_SIZE * (0.36 + fxRandom(seed + i * 13) * 0.08);
+		return {
+			key: key ?? GUNSMOKE_BLOOD_KEYS[0],
+			x: Math.cos(ang) * dist,
+			y: Math.sin(ang) * dist,
+			rotation: fxRandom(seed + i * 21) * Math.PI * 2,
+			width: CELL_PITCH_X * (0.62 + fxRandom(seed + i * 23) * 0.18),
+			height: SYMBOL_SIZE * (0.42 + fxRandom(seed + i * 27) * 0.16),
+			alpha: 0.86,
+			kind: 'blood' as const,
+		};
+	});
+};
+
 export const woundLayers = (reel: number, row: number, blood: boolean): WoundLayer[] => {
 	const seed = reel * 41 + row * 13 + 7;
 	const holeKey = GUNSMOKE_HOLE_KEYS[Math.floor(fxRandom(seed + 3) * GUNSMOKE_HOLE_KEYS.length)];
@@ -163,48 +184,30 @@ export const woundLayers = (reel: number, row: number, blood: boolean): WoundLay
 		},
 	];
 	if (!blood) return holes;
-	const bloodKey = GUNSMOKE_BLOOD_KEYS[Math.floor(fxRandom(seed) * GUNSMOKE_BLOOD_KEYS.length)];
-	return [
-		{
-			key: bloodKey,
-			x: jx * 0.35,
-			y: jy * 0.4,
-			rotation: fxRandom(seed + 21) * Math.PI * 2,
-			width: SYMBOL_CARD_W * (0.72 + fxRandom(seed + 23) * 0.22),
-			height: SYMBOL_CARD_H * (0.62 + fxRandom(seed + 27) * 0.2),
-			alpha: 0.72,
-			kind: 'blood',
-		},
-		...holes,
-	];
+	return [...frameBloodLayers(reel, row), ...holes];
 };
 
 export type WoundShot = {
 	beatMs: number;
 	flightScale: number;
 	side: MuzzleSide;
+	/** Tiny rest — next knife starts almost on this one's heels. */
+	burst?: boolean;
 };
+
+/** Knives in a cluster sit this close after the hit stack, not a full beat. */
+export const KNIFE_BURST_MS = 28;
+export const KNIFE_BURST_SPAN = 36;
+/** 4+ throws pack into 2–3 knife bursts so a big split does not crawl. */
+export const KNIFE_CLUSTER_FROM = 4;
 
 export const volleySeed = (cells: { reel: number; row: number }[]) =>
 	cells.reduce((sum, cell, i) => sum + (cell.reel + 1) * 19 + (cell.row + 1) * 7 + i * 3, 101);
 
-/**
- * Per-shot gaps for one volley. Uneven singles only — beat or hold, never a
- * stacked double. Seeded so the same book replays the same rhythm.
- */
-export const planWoundRhythm = (count: number, seed: number): WoundShot[] => {
-	if (count <= 0) return [];
+type GapKind = 'burst' | 'beat' | 'hold';
+
+const shotsFromGaps = (count: number, seed: number, kinds: GapKind[]): WoundShot[] => {
 	const gaps = Math.max(0, count - 1);
-	const kinds: Array<'beat' | 'hold'> = [];
-	if (gaps === 1) {
-		kinds.push(fxRandom(seed) < 0.45 ? 'hold' : 'beat');
-	} else if (gaps >= 2) {
-		const holdAt = Math.floor(fxRandom(seed + 5) * gaps);
-		for (let i = 0; i < gaps; i += 1) {
-			if (i === holdAt) kinds.push('hold');
-			else kinds.push(fxRandom(seed + 11 + i * 17) < 0.32 ? 'hold' : 'beat');
-		}
-	}
 	const muzzles = shuffleMuzzles(seed + 61);
 	return Array.from({ length: count }, (_, i) => {
 		const jitter = fxRandom(seed + 31 + i * 13);
@@ -214,11 +217,82 @@ export const planWoundRhythm = (count: number, seed: number): WoundShot[] => {
 			return { beatMs: 80 + jitter * 40, flightScale, side };
 		}
 		const kind = kinds[i] ?? 'beat';
+		if (kind === 'burst') {
+			return {
+				beatMs: KNIFE_BURST_MS + jitter * KNIFE_BURST_SPAN,
+				flightScale,
+				side,
+				burst: true,
+			};
+		}
 		if (kind === 'hold') {
 			return { beatMs: WOUND_HOLD_MS + jitter * WOUND_HOLD_SPAN, flightScale, side };
 		}
 		return { beatMs: WOUND_GAP_MS + jitter * WOUND_GAP_SPAN, flightScale, side };
 	});
+};
+
+const beatHoldGaps = (gaps: number, seed: number): GapKind[] => {
+	const kinds: GapKind[] = [];
+	if (gaps === 1) {
+		kinds.push(fxRandom(seed) < 0.45 ? 'hold' : 'beat');
+	} else if (gaps >= 2) {
+		const holdAt = Math.floor(fxRandom(seed + 5) * gaps);
+		for (let i = 0; i < gaps; i += 1) {
+			if (i === holdAt) kinds.push('hold');
+			else kinds.push(fxRandom(seed + 11 + i * 17) < 0.32 ? 'hold' : 'beat');
+		}
+	}
+	return kinds;
+};
+
+/**
+ * Per-shot gaps for one volley. Uneven singles only — beat or hold, never a
+ * stacked double. Seeded so the same book replays the same rhythm.
+ */
+export const planWoundRhythm = (count: number, seed: number): WoundShot[] => {
+	if (count <= 0) return [];
+	return shotsFromGaps(count, seed, beatHoldGaps(Math.max(0, count - 1), seed));
+};
+
+/** Pack leftover throws so the last cluster is never a single stray knife. */
+const knifeClusterSizes = (count: number, seed: number): number[] => {
+	const sizes: number[] = [];
+	let left = count;
+	let n = 0;
+	while (left > 0) {
+		let size = left;
+		if (left > 3) {
+			size = left === 4 || fxRandom(seed + 71 + n * 9) < 0.4 ? 2 : 3;
+		}
+		if (left - size === 1) size -= 1;
+		sizes.push(size);
+		left -= size;
+		n += 1;
+	}
+	return sizes;
+};
+
+/**
+ * Knife volleys: 1–3 throws keep the gunsmoke beat. 4+ pack into 2–3 knife
+ * bursts (tiny gap) with a breath between clusters, so a fat split does not
+ * wait out a full beat on every throw.
+ */
+export const planKnifeRhythm = (count: number, seed: number): WoundShot[] => {
+	if (count <= 0) return [];
+	if (count < KNIFE_CLUSTER_FROM) return planWoundRhythm(count, seed);
+	const sizes = knifeClusterSizes(count, seed);
+	const kinds: GapKind[] = [];
+	let holdUsed = false;
+	for (let c = 0; c < sizes.length; c += 1) {
+		const size = sizes[c] ?? 1;
+		for (let k = 0; k < size - 1; k += 1) kinds.push('burst');
+		if (c >= sizes.length - 1) continue;
+		const hold = !holdUsed || fxRandom(seed + 91 + c * 7) < 0.35;
+		if (hold) holdUsed = true;
+		kinds.push(hold ? 'hold' : 'beat');
+	}
+	return shotsFromGaps(count, seed, kinds);
 };
 
 /** Same hole centre the overlay uses, as 0..1 UV on the card. */

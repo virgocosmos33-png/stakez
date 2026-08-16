@@ -33,6 +33,7 @@
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { getTiersPassed } from '../game/winCelebrationMap';
 	import { waysLabel } from '../game/waysFormat';
+	import { currentModeMusic } from '../game/bonusBgm';
 	import type { MusicName, SoundEffectName } from '../game/sound';
 	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
 	import {
@@ -308,8 +309,7 @@
 		raf = requestAnimationFrame(tick);
 		return () => {
 			cancelAnimationFrame(raf);
-			// hand the music back to the base bed — the only bed this game has
-			context.eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+			context.eventEmitter.broadcast({ type: 'soundMusic', name: currentModeMusic() });
 		};
 	});
 

@@ -17,6 +17,7 @@
 import { stateBet } from 'state-shared';
 
 import { eventEmitter } from './eventEmitter';
+import { musicForBonusTier } from './bonusBgm';
 import { bonusEntryTierOf } from './bonusEntryArt';
 import type { Bet } from './typesBookEvent';
 
@@ -38,5 +39,6 @@ export const presentBonusEntry = async (bet: Bet) => {
 	// announcing the buy again here would be a second entry for one purchase.
 	if (bet.state[0]?.type === 'createBonusSnapshot') return;
 
+	eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier(tier) });
 	await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
 };

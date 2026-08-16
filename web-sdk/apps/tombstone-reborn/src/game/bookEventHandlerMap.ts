@@ -11,6 +11,7 @@ import { playBookEvent } from './utils';
 import { filterVisibleCells } from './boardCells';
 import { isHighPaySymbol, planWoundRhythm, volleySeed } from './gunsmokeSpin';
 import { LANE_DOOR_OPEN_MS } from './laneDoor';
+import { currentModeMusic, musicForBonusTier, stopBonusBgm } from './bonusBgm';
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
@@ -49,7 +50,7 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinSoundsData }) =
 
 const winLevelSoundsStop = () => {
 	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
-	eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+	eventEmitter.broadcast({ type: 'soundMusic', name: currentModeMusic() });
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
 
@@ -350,9 +351,9 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// celebration only. The hanging WAYS plaque stays on the full-board count.
 		connectedWays = bookEvent.wins.reduce((total, win) => total + (win.meta?.ways ?? 0), 0);
 
-		if (!megaWin) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
-		}
+		// Shine stays silent. The gold ways / amount overlay plays the dramatic
+		// sting once in presentWinCelebration — a harmonica chirp here used to
+		// fire first and make a small win sound cheerful.
 
 		// Split holes, badges and cell fire stay up through the shine — they
 		// are this spin's state. Fall-out on the next reveal is what clears them.
@@ -737,6 +738,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			stateGame.lidOpen = true;
 		}
 
+		eventEmitter.broadcast({
+			type: 'soundMusic',
+			name: musicForBonusTier(tier === 'superspins' ? 'superspins' : 'freespins'),
+		});
+
 		// announce the round. A BOUGHT round already showed this exact banner
 		// at round start (presentBonusEntry awaits it before the first reveal),
 		// so only NATURAL triggers banner here.
@@ -744,7 +750,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (buyKey !== 'freespins' && buyKey !== 'superspins') {
 			await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
 		}
-
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',
@@ -768,6 +773,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'winMultUpdate', value: 1 });
 		stateGame.gameType = 'basegame';
 		stateGame.laneSuper = false;
+		stopBonusBgm();
+		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
 	},
 	// the 1-in-100 UPGRADE: a 4th scatter dropped mid small-bonus round — the
 	// lane blasts open for the rest of the round and the spins top back up
@@ -788,6 +795,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		// the upgrade IS an entry into the big bonus — full takeover banner
+		eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier('superspins') });
 		await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier: 'superspins' });
 
 		eventEmitter.broadcast({

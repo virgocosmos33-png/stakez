@@ -14,6 +14,11 @@
 				side?: MuzzleSide;
 		  }
 		| {
+				type: 'cellFrameStain';
+				reel: number;
+				row: number;
+		  }
+		| {
 				type: 'gunsmokeCellDent';
 				reel: number;
 				row: number;
@@ -33,25 +38,28 @@
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { SYMBOL_CARD_W, SYMBOL_SIZE } from '../game/constants';
+	import { SYMBOL_CARD_W } from '../game/constants';
 	import { fxDur, fxWait } from '../game/fxTiming';
 	import { fxRandom } from '../game/featureVfx';
 	import {
 		BLOOD_SPLASH_IN_MS,
 		BLOOD_SPLASH_OUT_MS,
+		BLOOD_STAIN_RESIDUAL,
 		BULLET_DIST_MS,
 		BULLET_FAR_SCALE,
 		BULLET_MAX_MS,
 		BULLET_MS,
 		BULLET_NEAR_SCALE,
 		BULLET_W,
+		CELL_FRAME_MASK_H,
+		CELL_FRAME_MASK_KEY,
+		CELL_FRAME_MASK_W,
 		WOUND_BEAT_MS,
 		CRUSH_IN_MS,
 		CRUSH_OUT_MS,
 		fpsMuzzlePoint,
-		type MuzzleSide,
+		frameBloodLayers,
 		pickBullet,
-		symbolMaskKey,
 		woundImpact,
 		type WoundLayer,
 	} from '../game/gunsmokeSpin';
@@ -64,7 +72,6 @@
 		key: string;
 		reel: number;
 		row: number;
-		maskKey: string | null;
 		layers: WoundLayer[];
 		pop: Tween<number>;
 		splash: Tween<number>;
@@ -170,14 +177,17 @@
 		puffs = puffs.filter((item) => item.id !== id);
 	};
 
-	const stampHole = async (reel: number, row: number, blood: boolean, name?: SymbolName) => {
+	const paintStain = (splash: Tween<number>) => {
+		void splash.set(1, { duration: fxDur(BLOOD_SPLASH_IN_MS), easing: backOut }).then(() => {
+			void splash.set(BLOOD_STAIN_RESIDUAL, { duration: fxDur(BLOOD_SPLASH_OUT_MS), easing: cubicOut });
+		});
+	};
+
+	const stampHole = async (reel: number, row: number, blood: boolean) => {
 		const key = `${reel}-${row}-${wounds.length}`;
 		const pop = new Tween(0);
 		const splash = new Tween(0);
 		const crush = new Tween(0);
-		const face =
-			name ??
-			(context.stateGameDerived.boardRaw()[reel]?.[row]?.name as SymbolName | undefined);
 		const impact = woundImpact(reel, row + wounds.length * 3, blood);
 		wounds = [
 			...wounds,
@@ -185,7 +195,6 @@
 				key,
 				reel,
 				row,
-				maskKey: face ? symbolMaskKey(face) : null,
 				layers: impact.layers,
 				pop,
 				splash,
@@ -203,19 +212,34 @@
 		void crush.set(1, { duration: fxDur(CRUSH_IN_MS), easing: backOut }).then(() => {
 			void crush.set(0, { duration: fxDur(CRUSH_OUT_MS), easing: cubicOut });
 		});
-		if (blood) {
-			void splash.set(1, { duration: fxDur(BLOOD_SPLASH_IN_MS), easing: backOut }).then(() => {
-				void splash.set(0, { duration: fxDur(BLOOD_SPLASH_OUT_MS), easing: cubicOut });
-			});
-		}
+		if (blood) paintStain(splash);
 		await pop.set(1, { duration: fxDur(160), easing: backOut });
+	};
+
+	const stampFrameBlood = (reel: number, row: number) => {
+		const key = `${reel}-${row}-stain-${wounds.length}`;
+		const pop = new Tween(1);
+		const splash = new Tween(0);
+		const crush = new Tween(0);
+		wounds = [
+			...wounds,
+			{
+				key,
+				reel,
+				row,
+				layers: frameBloodLayers(reel, row, wounds.length),
+				pop,
+				splash,
+				crush,
+			},
+		];
+		paintStain(splash);
 	};
 
 	const stamp = async (
 		reel: number,
 		row: number,
 		blood: boolean,
-		name?: SymbolName,
 		beatMs = WOUND_BEAT_MS,
 		flightScale = 1,
 		side: MuzzleSide = 'right',
@@ -231,7 +255,7 @@
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
 		await flyRound(from, to, flightScale);
 		hangSmoke(to.x, to.y, -Math.PI / 2, reel * 19 + row * 7);
-		await stampHole(reel, row, blood, name);
+		await stampHole(reel, row, blood);
 		if (beatMs > 0) await fxWait(beatMs);
 	};
 
@@ -243,8 +267,11 @@
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		gunsmokeWound: async ({ reel, row, blood, name, beatMs, flightScale, side }) => {
-			await stamp(reel, row, blood === true, name, beatMs, flightScale, side);
+		gunsmokeWound: async ({ reel, row, blood, beatMs, flightScale, side }) => {
+			await stamp(reel, row, blood === true, beatMs, flightScale, side);
+		},
+		cellFrameStain: ({ reel, row }) => {
+			stampFrameBlood(reel, row);
 		},
 		gunsmokeWoundsClear: () => clear(),
 		featureFxFallOut: async () => {
@@ -292,14 +319,14 @@
 								alpha={layer.alpha * wound.pop.current}
 							/>
 						{/each}
-						{#if wound.bloods.length && wound.maskKey}
+						{#if wound.bloods.length}
 							<Container>
 								<Sprite
 									isMask
-									key={wound.maskKey}
+									key={CELL_FRAME_MASK_KEY}
 									anchor={0.5}
-									width={SYMBOL_SIZE}
-									height={SYMBOL_SIZE}
+									width={CELL_FRAME_MASK_W}
+									height={CELL_FRAME_MASK_H}
 									renderable={false}
 								/>
 								{#each wound.bloods as layer, i (`${wound.key}-blood-${i}`)}

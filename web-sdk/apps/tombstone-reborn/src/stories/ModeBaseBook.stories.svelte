@@ -60,7 +60,7 @@
 	{template}
 />
 
-<!-- GUNSMOKE: lows get holes only; highs get masked blood inside the cell frame -->
+<!-- GUNSMOKE: lows get holes only; specials stain the iron cell-frame mask -->
 <Story
 	name="gunsmoke"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('gunsmoke') })}

@@ -16,6 +16,10 @@ const getHowl = (src: string) => {
 	return howl;
 };
 
+export const preloadExternal = (src: string) => {
+	getHowl(src);
+};
+
 export const playExternalOnce = (src: string, options?: { volume?: number }) => {
 	const howl = getHowl(src);
 	howl.volume((options?.volume ?? 1) * stateSoundDerived.volumeSoundEffect());

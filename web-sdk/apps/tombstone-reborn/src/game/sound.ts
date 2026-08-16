@@ -1,11 +1,11 @@
 import { createSound } from 'utils-sound';
 
-// There is no bgm_freespin bed. This game has no free-spins feature: the math
-// declares no freespin triggers, both buy modes are a single enhanced spin, and
-// the FreeSpin overlays were deleted. A second bed had nothing that could ever
-// start it, so it was retired rather than left pointing at a music file.
+// Base bed is the Howler sprite. Small / big bonus beds are standalone loops
+// (bonusgame 1 / 2) played by bonusBgm.ts — not packed into the SFX atlas.
 export type MusicName =
 	| 'bgm_main'
+	| 'bgm_bonus_small'
+	| 'bgm_bonus_super'
 	// six escalating western celebration beds, one per win-level stage
 	| 'bgm_celeb_1'
 	| 'bgm_celeb_2'
@@ -98,6 +98,7 @@ export type SoundEffectName =
 	| 'sfx_winlevel_end'
 	| 'sfx_winlevel_nice'
 	| 'sfx_winlevel_small'
+	| 'sfx_win_ways'
 	| 'sfx_winlevel_standard'
 	| 'sfx_winlevel_substantial'
 	| 'sfx_youwon_panel'

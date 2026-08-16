@@ -317,16 +317,29 @@ CUES: dict[str, dict] = {
     "sfx_winlevel_small": {
         "duration_ms": 1250,
         "layers": [
-            L("brass_shell_drop", 0, -4, trim_ms=1050),
-            L("harmonica_breath", 0, -12),
+            L("wood_plank_thud", 0, -2, trim_ms=900),
+            L("brass_stab", 40, -8, trim_ms=800),
+            L("thunder_rumble_deep", 0, -14, trim_ms=1250),
         ],
     },
     "sfx_winlevel_nice": {
-        "duration_ms": 1950,
+        "duration_ms": 1700,
         "layers": [
-            L("harmonica_lick", 0, -6),
-            L("guitar_chord_accent", 0, -10),
-            L("coin_cascade_a", 260, -13),
+            L("wood_plank_thud", 0, -1, trim_ms=1100),
+            L("brass_stab", 50, -7),
+            L("revolver_echo_distant", 80, -6, trim_ms=900),
+            L("thunder_rumble_deep", 0, -12, trim_ms=1700),
+            L("chain_drag", 120, -11, trim_ms=700),
+        ],
+    },
+    "sfx_win_ways": {
+        "duration_ms": 1700,
+        "layers": [
+            L("wood_plank_thud", 0, -1, trim_ms=1100),
+            L("brass_stab", 50, -7),
+            L("revolver_echo_distant", 80, -6, trim_ms=900),
+            L("thunder_rumble_deep", 0, -12, trim_ms=1700),
+            L("chain_drag", 120, -11, trim_ms=700),
         ],
     },
     "sfx_winlevel_standard": {

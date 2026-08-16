@@ -219,7 +219,7 @@
 			sit on. Split cells now carry their own thin pane seams. -->
 		<LinkedCellFire />
 
-		<!-- GUNSMOKE: high-pay blood uses the symbol sprite as a clipping mask. -->
+		<!-- GUNSMOKE / special hits: blood stains clip to the iron cell frame. -->
 		<GunsmokeWounds />
 
 		<!-- SceneCharacter REMOVED: the patient beside the reels is gone. The

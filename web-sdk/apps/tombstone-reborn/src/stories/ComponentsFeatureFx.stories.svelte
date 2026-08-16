@@ -4,12 +4,13 @@
 	// COMPONENTS/FeatureFx exercises feature presentations in isolation, driven
 	// straight through the event emitter (no book, no spin) so the beat is reliable
 	// to film and easy to eyeball:
-	//   knife split — 2 / 3 / 4 panes after a horizontal knife slash; 6+ is one
-	//                 symbol plus a corner count.
+	//   knife split — 2 / 3 / 4 panes after a knife hit; 6+ is one symbol plus
+	//                 a corner count. 4+ throws cluster (tiny gap) then a breath.
 	//   shovel dig break — the digUp spade drives in and the cell cracks open in a
 	//                       burst of dirt and smoke at the point of impact.
 	//   gunsmoke wounds — bullet + smoke + glass dent + hole; irregular
-	//                     uneven singles, never a double; blood only on high-pay.
+	//                     uneven singles, never a double; specials stain the
+	//                     iron cell frame (clipping mask), and the stain stays.
 	const { Story } = defineMeta({
 		title: 'COMPONENTS/FeatureFx',
 	});
@@ -145,7 +146,7 @@
 	{template}
 />
 
-<!-- GUNSMOKE: holes on every hit; blood only on high-pay, clipped to the cell -->
+<!-- GUNSMOKE: holes on every hit; specials stain the iron cell-frame mask -->
 <Story
 	name="gunsmoke wounds"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: gunsmokeWounds })}

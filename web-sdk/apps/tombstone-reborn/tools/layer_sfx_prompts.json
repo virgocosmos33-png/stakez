@@ -129,13 +129,19 @@
       "duration": 1.5,
       "loop": false,
       "role": "smallest win acknowledgement",
-      "prompt": "A small warm western win accent: two brass shell casings dropping onto a wooden bar top with a soft harmonica breath behind them, modest and pleasing, very short."
+      "prompt": "A dark western win hit: heavy weathered wood slam, short dusty brass stab, distant thunder rumble, no harmonica, no cheerful chime, no vocals."
     },
     "sfx_winlevel_nice": {
       "duration": 2,
       "loop": false,
       "role": "tier 1 celebration sting",
-      "prompt": "A short bright western win flourish: lone harmonica lick with a dusty guitar strum and brass coins spilling onto wood, warm and satisfying, no vocals."
+      "prompt": "A dramatic western ways-win sting: wood sign slam, dark brass stab, distant revolver echo and low thunder, iron chain rattle, grim and heavy, no harmonica, no bright flourish, no vocals."
+    },
+    "sfx_win_ways": {
+      "duration": 1.7,
+      "loop": false,
+      "role": "gold ways / amount overlay sting",
+      "prompt": "A dramatic western ways-win sting: wood sign slam, dark brass stab, distant revolver echo and low thunder, iron chain rattle, grim and heavy, no harmonica, no bright flourish, no vocals."
     },
     "sfx_winlevel_standard": {
       "duration": 1.5,
