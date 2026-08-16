@@ -1,13 +1,15 @@
 <script lang="ts" module>
 	import { defineMeta } from '@storybook/addon-svelte-csf';
 
-	// COMPONENTS/FeatureFx exercises two feature presentations in isolation, driven
+	// COMPONENTS/FeatureFx exercises feature presentations in isolation, driven
 	// straight through the event emitter (no book, no spin) so the beat is reliable
 	// to film and easy to eyeball:
 	//   knife split — 2 / 3 / 4 panes after a horizontal knife slash; 6+ is one
 	//                 symbol plus a corner count.
 	//   shovel dig break — the digUp spade drives in and the cell cracks open in a
 	//                       burst of dirt and smoke at the point of impact.
+	//   gunsmoke wounds — bullet + smoke + glass dent + hole; irregular
+	//                     uneven singles, never a double; blood only on high-pay.
 	const { Story } = defineMeta({
 		title: 'COMPONENTS/FeatureFx',
 	});
@@ -24,6 +26,7 @@
 
 	import Game from '../components/Game.svelte';
 	import { getContext, setContext } from '../game/context';
+	import { planWoundRhythm, volleySeed } from '../game/gunsmokeSpin';
 
 	setContext();
 	const context = getContext();
@@ -69,6 +72,32 @@
 	// fire back while any feature overlay is up, so the fire (reels 1-2) should
 	// visibly recede once the burst fires — without the burst cells overlapping
 	// it. Used by tools/qa_fire_dim.py, which grabs a frame before and after.
+	const gunsmokeWounds = async () => {
+		await context.stateGameDerived.enhancedBoard.preSpin({});
+		const hits = [
+			{ reel: 1, row: 1, blood: true, name: 'H1' as const },
+			{ reel: 1, row: 2, blood: false, name: 'L5' as const },
+			{ reel: 3, row: 1, blood: true, name: 'H3' as const },
+			{ reel: 4, row: 1, blood: false, name: 'L2' as const },
+		];
+		const rhythm = planWoundRhythm(hits.length, volleySeed(hits));
+		for (let i = 0; i < hits.length; i += 1) {
+			const hit = hits[i];
+			if (!hit) continue;
+			const shot = rhythm[i];
+			await context.eventEmitter.broadcastAsync({
+				type: 'gunsmokeWound',
+				reel: hit.reel,
+				row: hit.row,
+				blood: hit.blood,
+				name: hit.name,
+				beatMs: shot?.beatMs,
+				flightScale: shot?.flightScale,
+				side: shot?.side,
+			});
+		}
+	};
+
 	const fireUnderBurst = async () => {
 		context.eventEmitter.broadcast({
 			type: 'cellFireShow',
@@ -113,6 +142,13 @@
 <Story
 	name="shovel dig break"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: digBreak })}
+	{template}
+/>
+
+<!-- GUNSMOKE: holes on every hit; blood only on high-pay, clipped to the cell -->
+<Story
+	name="gunsmoke wounds"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: gunsmokeWounds })}
 	{template}
 />
 

@@ -135,6 +135,8 @@ export const stateGame = $state({
 	// whole-bonus unlock across reveals (reset on a base-game reveal).
 	lidOpen: false,
 	laneSuper: false,
+	/** 0 = last-reel symbol in the pocket, 1 = gold lane card in the pocket. */
+	laneCardSwap: 0,
 	multiplierBoard: [] as (MultiplierSymbol | undefined)[][],
 	scatterCounter: 0,
 	// bumped on every reveal. Drives LockedSlots to re-roll and re-drop the

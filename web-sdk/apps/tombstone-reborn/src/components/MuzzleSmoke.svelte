@@ -1,8 +1,8 @@
 <script lang="ts">
 	/**
 	 * One Kenney gunsmoke puff at the muzzle. Plays the dusty whitePuff flipbook
-	 * once, drifting up and fading. Lives in WORLD space at the shot point.
-	 * Parent removes it via `oncomplete`.
+	 * once, drifting along `heading` (barrel aim) and fading. Lives in WORLD
+	 * space at the shot point. Parent removes it via `oncomplete`.
 	 */
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
@@ -17,8 +17,9 @@
 		x,
 		y,
 		size,
+		heading = -Math.PI / 2,
 		oncomplete,
-	}: { x: number; y: number; size: number; oncomplete?: () => void } = $props();
+	}: { x: number; y: number; size: number; heading?: number; oncomplete?: () => void } = $props();
 
 	const LIFE_MS = 620;
 	const DRIFT = 36;
@@ -30,13 +31,14 @@
 		void fade.set(0, { duration: LIFE_MS, easing: quadIn }).then(() => oncomplete?.());
 	});
 
-	const cy = $derived(y - DRIFT * rise.current);
+	const cx = $derived(x + Math.cos(heading) * DRIFT * rise.current);
+	const cy = $derived(y + Math.sin(heading) * DRIFT * rise.current);
 	const dim = $derived(size * (0.55 + 0.9 * rise.current));
 	const alpha = $derived(0.82 * fade.current);
 </script>
 
 {#if ready}
-	<Container x={x} y={cy} eventMode="none" zIndex={9} alpha={alpha}>
+	<Container x={cx} y={cy} eventMode="none" zIndex={9} alpha={alpha}>
 		<SpriteSheet
 			key="muzzleSmoke"
 			anchor={0.5}

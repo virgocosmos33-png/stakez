@@ -1,8 +1,8 @@
 <script lang="ts" module>
 	import type { SymbolName } from '../game/types';
 
-	// SPLIT: knife slashes horizontally; the card comes apart into N wide layers
-	// stacked top-to-bottom (capped at 4). Count text only from 6+ (one symbol).
+	// SPLIT: knives fly in like gunsmoke rounds and hit (beat 1), then vanish.
+	// Beat 2 is the existing split VFX only. Count from 6+.
 	export type EmitterEventSplitPanes =
 		| { type: 'splitPanesShow'; cells: { reel: number; row: number; count: number; name?: SymbolName }[] }
 		| { type: 'splitPanesHide' };
@@ -10,13 +10,13 @@
 
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
-	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
+	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
 	import { playExternalOnce } from 'utils-sound';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
-	import { fxDur } from '../game/fxTiming';
+	import { fxDur, fxWait } from '../game/fxTiming';
 	import { getContext } from '../game/context';
 	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
 	import { isVisibleBoardCell } from '../game/boardCells';
@@ -25,6 +25,16 @@
 		SYMBOL_CARD_H as CARD_H,
 		HIGH_SYMBOLS,
 	} from '../game/constants';
+	import {
+		BULLET_DIST_MS,
+		BULLET_MAX_MS,
+		BULLET_MS,
+		BULLET_NEAR_SCALE,
+		fpsMuzzlePoint,
+		planWoundRhythm,
+		volleySeed,
+	} from '../game/gunsmokeSpin';
+	import { buildCountUp } from '../game/splitBullets';
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import { trValueStyle } from '../game/typography';
@@ -37,34 +47,22 @@
 	/** stacked panes carry 2–5; from 6 the cell stays one symbol and shows the count */
 	const COUNT_LABEL_MIN = 6;
 	const COUNT_PAD = 8;
-	const KNIFE_ASPECT = 1024 / 290;
-	const SLASH_ASPECT = 1280 / 172;
-	const KNIFE_W = CARD_W * 1.58;
-	const KNIFE_H = KNIFE_W / KNIFE_ASPECT;
-	const SLASH_W = CARD_W * 1.9;
-	const SLASH_H = SLASH_W / SLASH_ASPECT;
-
-	const KNIFE_MS = 1180;
-	/** knife has arrived at the left of the card, blade on the cut line */
-	const KNIFE_READY = 0.36;
-	/** pull-back finished — the slash starts here */
-	const KNIFE_WIND = 0.5;
-	/** tip is through the card — copies snap apart */
-	const KNIFE_IMPACT = 0.7;
-	const KNIFE_OUT = 0.86;
 	const SPLIT_SFX = '/assets/audio/sfx_split.mp3';
-	const READY_X = -CARD_W * 0.62;
-	const READY_Y = 0;
-	const START_X = -CARD_W * 1.55;
-	const START_Y = -CARD_H * 0.42;
-	const END_X = CARD_W * 1.28;
-	const END_Y = CARD_H * 0.1;
+	const KNIFE_ASPECT = 1024 / 290;
+	const KNIFE_W = CARD_W * 0.79;
+	const KNIFE_H = KNIFE_W / KNIFE_ASPECT;
+	/** measured on tr_split_knife.png — clipped point, not the sprite center */
+	const KNIFE_TIP = { x: 0.987, y: 0.776 };
+	/** art tip points slightly down; subtract so the point leads along the path */
+	const KNIFE_NATIVE = 8.09 * (Math.PI / 180);
 
 	type SplitCell = {
 		key: string;
 		reel: number;
 		row: number;
 		count: number;
+		/** live split shown so far — climbs one step per knife hit */
+		shown: number;
 		pinned?: SymbolName;
 		cx: number;
 		cy: number;
@@ -72,92 +70,138 @@
 		fresh: boolean;
 	};
 	type DrawnCell = SplitCell & { name: SymbolName };
+	type FlyKnife = {
+		id: number;
+		x0: number;
+		y0: number;
+		x1: number;
+		y1: number;
+		travel: number;
+		t: Tween<number>;
+	};
 
 	let cells = $state<SplitCell[]>([]);
 	let show = $state(false);
 	let time = $state(0);
-	/** -1 when idle, else normalised progress through the slash */
-	let knifeT = $state(-1);
+	let flights = $state<FlyKnife[]>([]);
+	let nextFly = 0;
+	/** only this cell plays the split VFX on the current hit */
+	let animKey = $state<string | null>(null);
 	const fallOut = new Tween(0);
 	const splitProgress = new Tween(1);
 	const seamFlare = new Tween(0);
 	const detonation = new Tween(0);
 	const pulse = new Tween(1);
 
-	const mix = (from: number, to: number, t: number) => from + (to - from) * t;
-	const span = (t: number, from: number, to: number) =>
-		Math.min(Math.max((t - from) / (to - from), 0), 1);
-
 	const rand = (seed: number) => {
 		const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
 		return value - Math.floor(value);
 	};
 
-	/** blade tip, card-local. Approach → settle → pull back → slash → exit. */
-	const knifeTipX = (t: number) => {
-		if (t < KNIFE_READY) return mix(START_X, READY_X, cubicOut(span(t, 0, KNIFE_READY)));
-		if (t < KNIFE_WIND) return mix(READY_X, READY_X - CARD_W * 0.1, span(t, KNIFE_READY, KNIFE_WIND));
-		if (t <= KNIFE_IMPACT) {
-			return mix(READY_X - CARD_W * 0.1, CARD_W * 0.2, cubicIn(span(t, KNIFE_WIND, KNIFE_IMPACT)));
-		}
-		return mix(CARD_W * 0.2, END_X, cubicIn(span(t, KNIFE_IMPACT, 1)));
-	};
-	const knifeY = (t: number) => {
-		if (t < KNIFE_READY) return mix(START_Y, READY_Y, cubicOut(span(t, 0, KNIFE_READY)));
-		if (t < KNIFE_WIND) return READY_Y;
-		if (t <= KNIFE_IMPACT) return mix(READY_Y, READY_Y + CARD_H * 0.02, span(t, KNIFE_WIND, KNIFE_IMPACT));
-		return mix(READY_Y + CARD_H * 0.02, END_Y, span(t, KNIFE_IMPACT, 1));
-	};
-	const knifeRoll = (t: number) => {
-		if (t < KNIFE_READY) return mix(-0.72, -0.22, cubicOut(span(t, 0, KNIFE_READY)));
-		if (t < KNIFE_WIND) return mix(-0.22, -0.4, span(t, KNIFE_READY, KNIFE_WIND));
-		if (t <= KNIFE_IMPACT) return mix(-0.4, 0.08, cubicIn(span(t, KNIFE_WIND, KNIFE_IMPACT)));
-		return mix(0.08, 0.18, span(t, KNIFE_IMPACT, 1));
-	};
-	const knifeAlpha = (t: number) =>
-		t < KNIFE_READY * 0.45
-			? 0.88 * cubicOut(span(t, 0, KNIFE_READY * 0.45))
-			: 0.88 * (1 - cubicIn(span(t, KNIFE_OUT, 1)));
-	const knifeScale = (t: number) => {
-		if (t < KNIFE_READY) return mix(0.86, 1, cubicOut(span(t, 0, KNIFE_READY)));
-		if (t < KNIFE_WIND) return mix(1, 0.96, span(t, KNIFE_READY, KNIFE_WIND));
-		if (t <= KNIFE_IMPACT) return mix(0.96, 1.1, span(t, KNIFE_WIND, KNIFE_IMPACT));
-		return mix(1.1, 0.94, span(t, KNIFE_IMPACT, 1));
+	const seamYs = (count: number) => {
+		const panes = count >= COUNT_LABEL_MIN ? 1 : Math.min(count, MAX_PANES);
+		if (panes <= 1) return [0];
+		const slice = CARD_H / panes;
+		return Array.from({ length: panes - 1 }, (_, i) => -CARD_H / 2 + (i + 1) * slice);
 	};
 
-	const slashHeat = (t: number) => {
-		if (t < KNIFE_WIND) return 0;
-		if (t <= KNIFE_IMPACT) return span(t, KNIFE_WIND, KNIFE_IMPACT);
-		return 1 - cubicIn(span(t, KNIFE_IMPACT, 0.96));
-	};
+	/** one throw per split the cell is about to do, same cap as the stacked panes */
+	const throwsFor = (count: number) => Math.min(Math.max(count, 1), MAX_PANES);
 
-	const playKnife = (onSlash: () => void, onImpact: () => void) =>
-		new Promise<void>((resolve) => {
-			const start = performance.now();
-			const dur = fxDur(KNIFE_MS);
-			let slashed = false;
-			let fired = false;
-			knifeT = 0;
-			const step = (now: number) => {
-				const t = (now - start) / dur;
-				if (!slashed && t >= KNIFE_WIND) {
-					slashed = true;
-					onSlash();
-				}
-				if (!fired && t >= KNIFE_IMPACT) {
-					fired = true;
-					onImpact();
-				}
-				if (t >= 1) {
-					knifeT = -1;
-					resolve();
-					return;
-				}
-				knifeT = t;
-				requestAnimationFrame(step);
+	const flying = $derived(
+		flights.map((round) => {
+			const t = round.t.current;
+			return {
+				...round,
+				x: round.x0 + (round.x1 - round.x0) * t,
+				y: round.y0 + (round.y1 - round.y0) * t,
+				rotation: round.travel - KNIFE_NATIVE,
+				scale: BULLET_NEAR_SCALE + (1 - BULLET_NEAR_SCALE) * t,
 			};
-			requestAnimationFrame(step);
+		}),
+	);
+
+	const flyOneKnife = async (
+		to: { x: number; y: number },
+		side: Parameters<typeof fpsMuzzlePoint>[2],
+		seed: number,
+		flightScale: number,
+	) => {
+		const main = context.stateLayoutDerived.mainLayout();
+		const board = context.stateGameDerived.boardLayout();
+		const from = fpsMuzzlePoint(board, { left: 0, right: main.width }, side, seed);
+		const flight = new Tween(0);
+		const round: FlyKnife = {
+			id: nextFly++,
+			x0: from.x,
+			y0: from.y,
+			x1: to.x,
+			y1: to.y,
+			travel: Math.atan2(to.y - from.y, to.x - from.x),
+			t: flight,
+		};
+		flights = [...flights, round];
+		const dist = Math.hypot(to.x - from.x, to.y - from.y);
+		await flight.set(1, {
+			duration: fxDur(Math.min(BULLET_MAX_MS, BULLET_MS + dist * BULLET_DIST_MS) * flightScale),
+			easing: cubicOut,
 		});
+		flights = flights.filter((item) => item.id !== round.id);
+	};
+
+	const stepsFor = (from: number, to: number, n: number) => {
+		if (to >= COUNT_LABEL_MIN) return buildCountUp(from, to, n);
+		return Array.from({ length: n }, (_, i) => Math.min(from + i + 1, to));
+	};
+
+	const playHitSplit = async (key: string) => {
+		animKey = key;
+		splitProgress.set(0, { duration: 0 });
+		detonation.set(0, { duration: 0 });
+		seamFlare.set(1, { duration: 20 });
+		seamFlare.set(0, { duration: 180 });
+		playExternalOnce(SPLIT_SFX);
+		pulse.set(1.06, { duration: 0 });
+		pulse.set(1, { duration: 180, easing: backOut });
+		await Promise.all([
+			detonation.set(1, { duration: 300, easing: cubicOut }),
+			splitProgress.set(1, { duration: 180, easing: backOut }),
+		]);
+	};
+
+	const flyKnives = async (fresh: SplitCell[]) => {
+		const targets: { key: string; x: number; y: number; seed: number; next: number }[] = [];
+		for (const cell of fresh) {
+			const cx = getSymbolX(cell.reel);
+			const cy = getCellCenterY(cell.reel, cell.row);
+			const n = throwsFor(cell.count);
+			const steps = stepsFor(cell.shown, cell.count, n);
+			for (let i = 0; i < n; i += 1) {
+				const next = steps[i] ?? cell.count;
+				const seams = seamYs(next);
+				targets.push({
+					key: cell.key,
+					x: cx,
+					y: cy + (seams[Math.min(i, seams.length - 1)] ?? 0),
+					seed: cell.seed + i * 13,
+					next,
+				});
+			}
+		}
+		const rhythm = planWoundRhythm(targets.length, volleySeed(fresh));
+		for (let i = 0; i < targets.length; i += 1) {
+			const target = targets[i];
+			const shot = rhythm[i];
+			if (!target || !shot) continue;
+			await flyOneKnife(target, shot.side, target.seed, shot.flightScale);
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_wood', forcePlay: true });
+			shakeBoard({ intensity: 4 + shot.flightScale * 2, duration: fxDur(90) });
+			cells = cells.map((cell) => (cell.key === target.key ? { ...cell, shown: target.next } : cell));
+			await playHitSplit(target.key);
+			if (shot.beatMs > 0) await fxWait(shot.beatMs);
+		}
+		animKey = null;
+	};
 
 	/**
 	 * MERGE the incoming split cells into whatever is already up.
@@ -179,6 +223,7 @@
 					{
 						...cell,
 						fresh: false,
+						shown: cell.count,
 						cx: getSymbolX(cell.reel),
 						cy: getCellCenterY(cell.reel, cell.row),
 					},
@@ -199,6 +244,7 @@
 				reel: c.reel,
 				row: c.row,
 				count: c.count,
+				shown: existing?.count ?? 1,
 				pinned: c.name,
 				cx: getSymbolX(c.reel),
 				cy: getCellCenterY(c.reel, c.row),
@@ -228,26 +274,11 @@
 		splitProgress.set(0, { duration: 0 });
 		seamFlare.set(0, { duration: 0 });
 		detonation.set(0, { duration: 0 });
-		pulse.set(1.28, { duration: 0 });
-		knifeT = -1;
+		pulse.set(1, { duration: 0 });
+		flights = [];
 
-		let settle: Promise<unknown> = Promise.resolve();
-		await playKnife(
-			() => playExternalOnce(SPLIT_SFX),
-			() => {
-				seamFlare.set(1, { duration: 20 });
-				seamFlare.set(0, { duration: 180 });
-				shakeBoard({
-					intensity: Math.min(10 + cells.filter((c) => c.fresh).length * 2.5, 18),
-					duration: fxDur(240),
-				});
-				const fx = detonation.set(1, { duration: 300, easing: cubicOut });
-				const punch = pulse.set(1, { duration: 400, easing: backOut });
-				const apart = splitProgress.set(1, { duration: 180, easing: backOut });
-				settle = Promise.all([fx, punch, apart]);
-			},
-		);
-		await settle;
+		const fresh = cells.filter((cell) => cell.fresh);
+		await flyKnives(fresh);
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -261,13 +292,15 @@
 			await fallOutFeatureFx(fallOut, show && cells.length > 0);
 			show = false;
 			cells = [];
-			knifeT = -1;
+			flights = [];
+			animKey = null;
 			fallOut.set(0, { duration: 0 });
 		},
 		splitPanesHide: () => {
 			show = false;
 			cells = [];
-			knifeT = -1;
+			flights = [];
+			animKey = null;
 			fallOut.set(0, { duration: 0 });
 		},
 	});
@@ -304,32 +337,6 @@
 		g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.28 * flicker * slim });
 		g.roundRect(-CARD_W / 2, -0.55 * slim, CARD_W, 1.1 * slim, 0.4);
 		g.fill({ color: TOMBSTONE_FX.boneDust, alpha: 0.7 * flicker });
-	};
-
-	const drawCutLine = (g: import('pixi.js').Graphics, t: number) => {
-		const heat = slashHeat(t);
-		if (heat <= 0.01) return;
-		const tip = knifeTipX(t);
-		const left = -CARD_W / 2 - 6;
-		const right = Math.min(tip, CARD_W / 2 + 10);
-		if (right <= left) return;
-		g.roundRect(left, -6, right - left, 12, 5);
-		g.fill({ color: TOMBSTONE_FX.bloodRust, alpha: 0.2 * heat });
-		g.roundRect(left, -1.4, right - left, 2.8, 1);
-		g.fill({ color: 0xfff1c2, alpha: 0.95 * heat });
-		if (t < KNIFE_OUT) {
-			g.ellipse(tip, 0, 14, 3.2);
-			g.fill({ color: 0xffe08a, alpha: 0.7 * heat });
-			for (let k = 0; k < 5; k++) {
-				const sparkSeed = 19 + k * 11 + Math.floor(t * 40);
-				const life = (time * (4 + rand(sparkSeed) * 2) + rand(sparkSeed + 1)) % 1;
-				const side = rand(sparkSeed + 2) > 0.5 ? 1 : -1;
-				const x = tip - 4 - rand(sparkSeed + 3) * 18;
-				const y = side * (4 + life * 16);
-				g.circle(x, y, 1.1 + (1 - life) * 1.4);
-				g.fill({ color: k % 2 === 0 ? 0xffe8a0 : TOMBSTONE_FX.spentBrass, alpha: 0.8 * (1 - life) * heat });
-			}
-		}
 	};
 
 	const drawSeamFlare = (g: import('pixi.js').Graphics, flare: number) => {
@@ -377,15 +384,16 @@
 </script>
 
 {#snippet splitCell(cell: DrawnCell)}
-	{@const panes = cell.count >= COUNT_LABEL_MIN ? 1 : Math.min(cell.count, MAX_PANES)}
+	{@const display = cell.fresh ? cell.shown : cell.count}
+	{@const panes = display >= COUNT_LABEL_MIN ? 1 : Math.min(Math.max(display, 1), MAX_PANES)}
 	{@const sliceHeight = CARD_H / panes}
 	{@const symbolInfo = getSymbolInfo({ rawSymbol: { name: cell.name }, state: 'postWinStatic' })}
 	{@const isHigh = HIGH_SYMBOLS.includes(cell.name)}
-	{@const split = cell.fresh ? splitProgress.current : 1}
+	{@const split = !cell.fresh ? 1 : cell.key === animKey ? splitProgress.current : display <= 1 ? 0 : 1}
 	{@const slim = Math.min(1, 3 / panes)}
 	{@const gap = CARD_H * Math.min(0.03, 0.1 / panes)}
 	{@const paneHeight = Math.max((sliceHeight - gap) * split + CARD_H * (1 - split), 2)}
-	<Container x={cell.cx} y={cell.cy} scale={cell.fresh ? pulse.current : 1}>
+	<Container x={cell.cx} y={cell.cy} scale={cell.fresh && cell.key === animKey ? pulse.current : 1}>
 		<Graphics draw={drawUnderGlow} />
 		{#each Array.from({ length: panes }) as _, i (i)}
 			{@const paneY = (-CARD_H / 2 + (i + 0.5) * sliceHeight) * split}
@@ -402,18 +410,17 @@
 		<Container alpha={split}>
 			<Graphics draw={(g) => drawFrame(g, isHigh)} />
 		</Container>
-		{#if cell.fresh}
+		{#if cell.fresh && cell.key === animKey}
 			<Graphics draw={(g) => drawDetonation(g, cell, panes, detonation.current, split)} />
 			<Graphics draw={(g) => drawSeamFlare(g, seamFlare.current)} />
-			{@render knifeStrike()}
 		{/if}
-		{#if cell.count >= COUNT_LABEL_MIN}
+		{#if display >= COUNT_LABEL_MIN}
 			<Text
 				x={CARD_W / 2 - COUNT_PAD}
 				y={CARD_H / 2 - COUNT_PAD}
 				anchor={{ x: 1, y: 1 }}
-				text={`${cell.count}x`}
-				alpha={cell.fresh ? splitProgress.current : 1}
+				text={`${display}x`}
+				alpha={1}
 				style={trValueStyle({
 					fontSize: 22,
 					fill: 0xffffff,
@@ -425,47 +432,6 @@
 	</Container>
 {/snippet}
 
-{#snippet knifeStrike()}
-	{#if knifeT >= 0}
-		{@const t = knifeT}
-		{@const tip = knifeTipX(t)}
-		{@const alpha = knifeAlpha(t)}
-		{@const heat = slashHeat(t)}
-		<Graphics draw={(g) => drawCutLine(g, t)} />
-		<Sprite
-			key="splitSlash"
-			x={mix(-CARD_W * 0.15, tip * 0.15, span(t, KNIFE_WIND, KNIFE_IMPACT))}
-			y={0}
-			anchor={0.5}
-			width={SLASH_W * mix(0.35, 1.05, span(t, KNIFE_WIND, KNIFE_IMPACT))}
-			height={SLASH_H}
-			alpha={heat}
-			blendMode="add"
-		/>
-		<Sprite
-			key="splitKnife"
-			x={tip - 10}
-			y={knifeY(t) + CARD_H * 0.03}
-			anchor={{ x: 0.88, y: 0.52 }}
-			width={KNIFE_W * knifeScale(t)}
-			height={KNIFE_H * knifeScale(t)}
-			rotation={knifeRoll(t)}
-			alpha={alpha * 0.28}
-			tint={0x000000}
-		/>
-		<Sprite
-			key="splitKnife"
-			x={tip}
-			y={knifeY(t)}
-			anchor={{ x: 0.88, y: 0.52 }}
-			width={KNIFE_W * knifeScale(t)}
-			height={KNIFE_H * knifeScale(t)}
-			rotation={knifeRoll(t)}
-			alpha={alpha}
-		/>
-	{/if}
-{/snippet}
-
 <!-- MainContainer stays MOUNTED even while hidden: a remounted node appends to
 	the END of the shared pixi parent and would jump above WinDim
 	(see .cursor/skills/pixi-svelte-layering). -->
@@ -474,6 +440,17 @@
 		<BoardSpace yOffset={fallOut.current}>
 			{#each drawn as cell (cell.key)}
 				{@render splitCell(cell)}
+			{/each}
+			{#each flying as round (round.id)}
+				<Sprite
+					key="splitKnife"
+					x={round.x}
+					y={round.y}
+					anchor={KNIFE_TIP}
+					width={KNIFE_W * round.scale}
+					height={KNIFE_H * round.scale}
+					rotation={round.rotation}
+				/>
 			{/each}
 		</BoardSpace>
 	{/if}

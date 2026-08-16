@@ -1,8 +1,116 @@
 <script lang="ts" module>
+	import { ColorMatrixFilter, Filter } from 'pixi.js';
+
 	import { SCENE_ART as SCENE_ART_SRC } from '../game/saloonLamps';
 
 	export const SCENE_ART = SCENE_ART_SRC;
-	export type EmitterEventSaloon = { type: 'saloonCheers' };
+
+	const BG_BW = new ColorMatrixFilter();
+	BG_BW.desaturate();
+
+	const FILTER_VERTEX = `
+in vec2 aPosition;
+out vec2 vTextureCoord;
+uniform vec4 uInputSize;
+uniform vec4 uOutputFrame;
+uniform vec4 uOutputTexture;
+vec4 filterVertexPosition(void) {
+	vec2 position = aPosition * uOutputFrame.zw + uOutputFrame.xy;
+	position.x = position.x * (2.0 / uOutputTexture.x) - 1.0;
+	position.y = position.y * (2.0 * uOutputTexture.z / uOutputTexture.y) - uOutputTexture.z;
+	return vec4(position, 0.0, 1.0);
+}
+vec2 filterTextureCoord(void) {
+	return aPosition * (uOutputFrame.zw * uInputSize.zw);
+}
+void main(void) {
+	gl_Position = filterVertexPosition();
+	vTextureCoord = filterTextureCoord();
+}
+`;
+
+	const FIELD_BLUR_FRAGMENT = `
+precision highp float;
+in vec2 vTextureCoord;
+out vec4 finalColor;
+uniform sampler2D uTexture;
+uniform vec4 uInputSize;
+uniform vec4 uOutputFrame;
+uniform float uRadius;
+void main() {
+	vec2 uv = vTextureCoord;
+	vec2 focus = vec2(0.50, 0.52);
+	float coc = smoothstep(0.28, 0.92, length((uv - focus) * vec2(1.05, 1.2)));
+	coc = max(coc, smoothstep(0.16, 0.0, uv.y) * 0.35);
+	coc = mix(0.0637, 0.7004, coc);
+	vec2 px = uInputSize.zw * uRadius * coc;
+	vec4 acc = texture(uTexture, uv) * 0.18;
+	acc += texture(uTexture, uv + vec2(1.0, 0.0) * px) * 0.12;
+	acc += texture(uTexture, uv + vec2(-1.0, 0.0) * px) * 0.12;
+	acc += texture(uTexture, uv + vec2(0.0, 1.0) * px) * 0.12;
+	acc += texture(uTexture, uv + vec2(0.0, -1.0) * px) * 0.12;
+	acc += texture(uTexture, uv + vec2(0.70, 0.70) * px) * 0.085;
+	acc += texture(uTexture, uv + vec2(-0.70, 0.70) * px) * 0.085;
+	acc += texture(uTexture, uv + vec2(0.70, -0.70) * px) * 0.085;
+	acc += texture(uTexture, uv + vec2(-0.70, -0.70) * px) * 0.085;
+	finalColor = acc;
+}
+`;
+
+	const GRAIN_FRAGMENT = `
+precision highp float;
+in vec2 vTextureCoord;
+out vec4 finalColor;
+uniform sampler2D uTexture;
+uniform vec4 uInputSize;
+uniform vec4 uOutputFrame;
+uniform float uTime;
+uniform float uAmount;
+float hash12(vec2 p) {
+	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+	p3 += dot(p3, p3.yzx + 33.33);
+	return fract((p3.x + p3.y) * p3.z);
+}
+void main() {
+	vec4 color = texture(uTexture, vTextureCoord);
+	float frame = floor(uTime * 24.0);
+	vec2 cell = floor(vTextureCoord * vec2(1679.0, 937.0));
+	float n = hash12(vec2(hash12(cell + 0.13), frame));
+	finalColor = vec4(mix(color.rgb, vec3(n), uAmount), color.a);
+}
+`;
+
+	const fieldBlurFilter = Filter.from({
+		gl: { vertex: FILTER_VERTEX, fragment: FIELD_BLUR_FRAGMENT, name: 'saloon-bg-field-blur' },
+		resources: {
+			fieldUniforms: {
+				uRadius: { value: 4.08, type: 'f32' },
+			},
+		},
+	});
+	fieldBlurFilter.padding = 12;
+
+	const grainFilter = Filter.from({
+		gl: { vertex: FILTER_VERTEX, fragment: GRAIN_FRAGMENT, name: 'saloon-bg-grain' },
+		resources: {
+			grainUniforms: {
+				uTime: { value: 0, type: 'f32' },
+				uAmount: { value: 0.015, type: 'f32' },
+			},
+		},
+	});
+	const grainUniforms = (
+		grainFilter.resources as Record<string, { uniforms: { uTime: number; uAmount: number } }>
+	).grainUniforms.uniforms;
+
+	export const BG_PLATE_FILTERS = [BG_BW, fieldBlurFilter, grainFilter];
+	export const tickBgGrain = (seconds: number) => {
+		grainUniforms.uTime = seconds;
+	};
+
+	/** tungsten / kerosene — a bit warmer than the raw PNG, retro against the BW plate */
+	const LAMP_WARM = 0xffe2b8;
+	const LAMP_GLOW_WARM = 0xffb24d;
 </script>
 
 <script lang="ts">
@@ -22,14 +130,6 @@
 
 	const IDLE_PERIOD_MS = 4000;
 	const IDLE_AMP_L = (4.4 * Math.PI) / 180;
-	const CHEERS_MS = 2400;
-	const DEG = Math.PI / 180;
-	const CHEERS_L = [
-		{ t: 0, deg: 0 },
-		{ t: 0.55, deg: 6.2 },
-		{ t: 1.3, deg: -4.8 },
-		{ t: 2.4, deg: 0 },
-	] as const;
 
 	const L = SALOON_LAMPS.L;
 	const FLAME = { x: LAMP_GLOBE.x, y: LAMP_GLOBE.y };
@@ -50,25 +150,8 @@
 			Boolean(context.stateApp.loadedAssets?.['saloonLampL']),
 	);
 
-	let clip = $state<'idle' | 'cheers'>('idle');
-	let clipOrigin = $state(performance.now());
+	let swayOrigin = $state(performance.now());
 	let rotL = $state(0);
-
-	const sampleDeg = (keys: readonly { t: number; deg: number }[], sec: number) => {
-		if (sec <= keys[0].t) return keys[0].deg;
-		const last = keys[keys.length - 1];
-		if (sec >= last.t) return last.deg;
-		for (let i = 1; i < keys.length; i += 1) {
-			if (sec <= keys[i].t) {
-				const a = keys[i - 1];
-				const b = keys[i];
-				const u = (sec - a.t) / (b.t - a.t);
-				const s = u * u * (3 - 2 * u);
-				return a.deg + (b.deg - a.deg) * s;
-			}
-		}
-		return 0;
-	};
 
 	$effect(() => {
 		if (!context.stateXstateDerived.isIdle() && saloonLamp.smashed) {
@@ -76,30 +159,13 @@
 		}
 	});
 
-	context.eventEmitter.subscribeOnMount({
-		saloonCheers: () => {
-			if (saloonLamp.smashed) return;
-			clip = 'cheers';
-			clipOrigin = performance.now();
-		},
-	});
-
 	onMount(() => {
 		let raf = 0;
 		const tick = (now: number) => {
-			if (clip === 'cheers') {
-				const elapsed = now - clipOrigin;
-				if (elapsed >= CHEERS_MS) {
-					clip = 'idle';
-					clipOrigin = now;
-					rotL = 0;
-				} else {
-					rotL = sampleDeg(CHEERS_L, elapsed / 1000) * DEG;
-				}
-			} else if (saloonLamp.smashed) {
+			if (saloonLamp.smashed) {
 				rotL = 0;
 			} else {
-				const phase = ((now - clipOrigin) / IDLE_PERIOD_MS) * Math.PI * 2;
+				const phase = ((now - swayOrigin) / IDLE_PERIOD_MS) * Math.PI * 2;
 				rotL = Math.sin(phase) * IDLE_AMP_L;
 			}
 			raf = requestAnimationFrame(tick);
@@ -112,14 +178,16 @@
 
 <Container x={fit.x} y={fit.y} scale={fit.scale} pivot={fit.pivot}>
 	{#if hasRoom}
-		<Sprite
-			key="saloonPlate"
-			x={SCENE_ART.width / 2}
-			y={SCENE_ART.height / 2}
-			width={SCENE_ART.width}
-			height={SCENE_ART.height}
-			anchor={0.5}
-		/>
+		<Container filters={BG_PLATE_FILTERS}>
+			<Sprite
+				key="saloonPlate"
+				x={SCENE_ART.width / 2}
+				y={SCENE_ART.height / 2}
+				width={SCENE_ART.width}
+				height={SCENE_ART.height}
+				anchor={0.5}
+			/>
+		</Container>
 		<Container x={L.x} y={L.y} rotation={rotL}>
 			<Sprite
 				key="saloonLampGlow"
@@ -128,7 +196,8 @@
 				anchor={0.5}
 				width={980}
 				height={1100}
-				alpha={saloonLamp.smashed ? 0 : 0.38}
+				alpha={saloonLamp.smashed ? 0 : 0.4}
+				tint={LAMP_GLOW_WARM}
 				blendMode="add"
 				eventMode="none"
 			/>
@@ -140,6 +209,7 @@
 				height={L.height}
 				anchor={0}
 				alpha={saloonLamp.smashed ? 0 : 1}
+				tint={LAMP_WARM}
 			/>
 			<Sprite
 				key="saloonLampLSmashed"
@@ -152,13 +222,15 @@
 			/>
 		</Container>
 	{:else}
-		<Sprite
-			key="sceneBg"
-			x={SCENE_ART.width / 2}
-			y={SCENE_ART.height / 2}
-			width={SCENE_ART.width}
-			height={SCENE_ART.height}
-			anchor={0.5}
-		/>
+		<Container filters={BG_PLATE_FILTERS}>
+			<Sprite
+				key="sceneBg"
+				x={SCENE_ART.width / 2}
+				y={SCENE_ART.height / 2}
+				width={SCENE_ART.width}
+				height={SCENE_ART.height}
+				anchor={0.5}
+			/>
+		</Container>
 	{/if}
 </Container>

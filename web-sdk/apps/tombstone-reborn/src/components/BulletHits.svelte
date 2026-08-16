@@ -2,7 +2,7 @@
 	/**
 	 * CLICK-TO-SHOOT. While the board is IDLE a left click on the reel area punches
 	 * a shattered-glass bullet hole at the cursor, flashes muzzle fire, hangs
-	 * Kenney gunsmoke, and jolts the saloon lamps (saloonCheers). The holes
+	 * Kenney gunsmoke. The holes
 	 * persist until a spin starts, then they clear. No revolver sprite — fire
 	 * and smoke only. The hit region only exists while idle, so it never fights
 	 * TapToSkip.
@@ -15,6 +15,7 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_CARD_W } from '../game/constants';
+	import { GUNSMOKE_HOLE_KEYS } from '../game/gunsmokeSpin';
 	import BulletHit from './BulletHit.svelte';
 	import MuzzleSmoke from './MuzzleSmoke.svelte';
 
@@ -28,7 +29,7 @@
 	/** decal footprint in board px — a bit under a symbol so it reads as a hit,
 	 * not a takeover of the whole cell. */
 	const SIZE = SYMBOL_CARD_W * 0.8;
-	const VARIANTS = ['bulletCrack1', 'bulletCrack2', 'bulletCrack3', 'bulletCrack4', 'bulletCrack5'];
+	const VARIANTS = GUNSMOKE_HOLE_KEYS;
 
 	// fireburst.png: cone originates lower-right, sprays upper-left
 	const BURST_SRC_W = 1084;
@@ -116,8 +117,6 @@
 		// rapid clicks bang each time instead of layering into mush.
 		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_gunshot' });
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot' });
-		// Same lamp jolt as a 10x+ split blast — the room reacts to the shot.
-		context.eventEmitter.broadcast({ type: 'saloonCheers' });
 	};
 </script>
 

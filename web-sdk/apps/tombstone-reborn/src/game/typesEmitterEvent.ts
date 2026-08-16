@@ -12,7 +12,7 @@ import type { EmitterEventWildReel } from '../components/WildReelSlide.svelte';
 import type { EmitterEventSplitPanes } from '../components/SplitPanes.svelte';
 import type { EmitterEventCloneMorph } from '../components/CloneMorph.svelte';
 import type { EmitterEventWildFlip } from '../components/WildFlip.svelte';
-import type { EmitterEventGunsmokeAim } from '../components/GunsmokeAim.svelte';
+import type { EmitterEventGunsmokeWounds } from '../components/GunsmokeWounds.svelte';
 import type { EmitterEventStretchFx } from '../components/StretchFx.svelte';
 import type { EmitterEventStretchWays } from '../components/StretchWays.svelte';
 import type { EmitterEventCellLightning } from '../components/CellLightning.svelte';
@@ -23,7 +23,6 @@ import type { EmitterEventNudgeWays } from '../components/NudgeWays.svelte';
 import type { EmitterEventFeatureBurst } from '../components/FeatureBurst.svelte';
 import type { EmitterEventBonusEntry } from '../components/BonusEntry.svelte';
 import type { EmitterEventLaneCard } from '../components/LaneGoldCard.svelte';
-import type { EmitterEventSaloon } from '../components/SaloonScene.svelte';
 
 /** No free-spin / bonus-level events exist on this bus by design. Tombstone
  * Reborn's bonuses are SINGLE enhanced spins (math game_config.py declares no
@@ -61,7 +60,7 @@ export type EmitterEventGame =
 	| EmitterEventSplitPanes
 	| EmitterEventCloneMorph
 	| EmitterEventWildFlip
-	| EmitterEventGunsmokeAim
+	| EmitterEventGunsmokeWounds
 	| EmitterEventStretchFx
 	| EmitterEventStretchWays
 	| EmitterEventCellLightning
@@ -71,5 +70,4 @@ export type EmitterEventGame =
 	| EmitterEventNudgeWays
 	| EmitterEventFeatureBurst
 	| EmitterEventBonusEntry
-	| EmitterEventLaneCard
-	| EmitterEventSaloon;
+	| EmitterEventLaneCard;

@@ -104,18 +104,12 @@
 		ignite.set(0, { duration: 0 });
 	};
 
-	/** Slow smolder, then a hard climb — not an even 0→1 fade. */
-	const growFire = (t: number) => {
-		if (t <= 0) return 0;
-		if (t >= 1) return 1;
-		return t < 0.42 ? 0.18 * (t / 0.42) ** 1.7 : 0.18 + 0.82 * cubicIn((t - 0.42) / 0.58);
-	};
-
 	const igniteFire = async () => {
 		if (ignite.current > 0.01 || ignite.target === 1) return;
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fire_ignite' });
 		context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_fire_loop' });
-		await ignite.set(1, { duration: fxDur(720), easing: growFire });
+		await ignite.set(1, { duration: fxDur(240), easing: cubicIn });
+		shakeBoard({ intensity: 11, duration: fxDur(140) });
 	};
 
 	const douseFire = () => {
@@ -200,10 +194,10 @@
 			fireLast = now;
 			const p = ignite.current;
 			// lick starts almost still, then runs ~2x once the column is up
-			fireClock += dt * (0.45 + 2.4 * p * p);
+			fireClock += dt * (0.9 + 3.4 * p * p);
 			for (const edge of fireEdges) {
 				edge.uniforms.uTime = fireClock;
-				edge.uniforms.uIntensity = 0.4 + 0.6 * p;
+				edge.uniforms.uIntensity = 0.55 + 0.85 * p;
 				edge.uniforms.uProgress = p;
 			}
 			raf = requestAnimationFrame(tick);

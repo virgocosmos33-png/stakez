@@ -60,10 +60,15 @@
 	{template}
 />
 
-<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD -->
+<!-- GUNSMOKE: lows get holes only; highs get masked blood inside the cell frame -->
 <Story
 	name="gunsmoke"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('gunsmoke') })}
+	{template}
+/>
+<Story
+	name="gunsmoke high"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('gunsmokeHigh') })}
 	{template}
 />
 

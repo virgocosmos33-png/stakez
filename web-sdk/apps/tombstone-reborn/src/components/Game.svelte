@@ -36,7 +36,7 @@
 	import SplitPanes from './SplitPanes.svelte';
 	import CloneMorph from './CloneMorph.svelte';
 	import WildFlip from './WildFlip.svelte';
-	import GunsmokeAim from './GunsmokeAim.svelte';
+	import GunsmokeWounds from './GunsmokeWounds.svelte';
 	import LinkedCellFire from './LinkedCellFire.svelte';
 	import StretchWays from './StretchWays.svelte';
 	import NudgeSlide from './NudgeSlide.svelte';
@@ -178,11 +178,12 @@
 			<Anticipations />
 		</MainContainer>
 
-		<!-- LAST-REEL LANE: boarded-shut cover while the lane is locked (every
-			base/small spin until TOMBSTONE; open all round in the super bonus), and
-			the golden sheriff card that flashes when the lane's special fires. -->
-		<LaneLidLock />
-		<LaneGoldCard />
+		<!-- LAST-REEL LANE: door sits ABOVE the board plate (z 12) so the
+			timber slot never shows as a grey strip beside it. -->
+		<Container zIndex={12}>
+			<LaneLidLock />
+			<LaneGoldCard />
+		</Container>
 
 		<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle
 			fire, and smoke. Cleared the moment a spin starts. -->
@@ -211,15 +212,15 @@
 		<!-- Any symbol becoming a WILD flips to show the bottle on the back. -->
 		<WildFlip />
 
-		<!-- GUNSMOKE: revolver sits on the landed GS card and turns to aim. -->
-		<GunsmokeAim />
-
 		<!-- Marks the symbols a feature is about to hit. -->
 		<TargetLock />
 
 		<!-- Linked / connected cells burn: cell borders and the reel edges they
 			sit on. Split cells now carry their own thin pane seams. -->
 		<LinkedCellFire />
+
+		<!-- GUNSMOKE: high-pay blood uses the symbol sprite as a clipping mask. -->
+		<GunsmokeWounds />
 
 		<!-- SceneCharacter REMOVED: the patient beside the reels is gone. The
 			right of the board is now empty room by design — do not remount her

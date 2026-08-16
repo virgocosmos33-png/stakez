@@ -55,6 +55,9 @@
 
 	const slots = $derived.by(() =>
 		columns.flatMap((col, reel) => {
+			// Last reel is the door lid — the iron slot under it is the grey
+			// strip that shows through every seam in the swing.
+			if (reel === columns.length - 1) return [];
 			const rows = getReelRows(reel);
 			if (rows <= 0) return [];
 			const pitch = (col.bottom - col.top) / rows;

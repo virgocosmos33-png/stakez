@@ -1,11 +1,12 @@
 <script lang="ts">
-	import type { Texture, VideoSource } from 'pixi.js';
-	import { Rectangle, Sprite } from 'pixi-svelte';
+	import { onMount } from 'svelte';
+	import { type Texture, type VideoSource } from 'pixi.js';
+	import { Container, Rectangle, Sprite } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
-	import SaloonScene, { SCENE_ART } from './SaloonScene.svelte';
+	import SaloonScene, { BG_PLATE_FILTERS, SCENE_ART, tickBgGrain } from './SaloonScene.svelte';
 
 	const context = getContext();
 
@@ -39,13 +40,26 @@
 	};
 
 	const sceneVideoReady = $derived(videoTextureOf('sceneBgAnim') !== undefined);
+
+	onMount(() => {
+		let raf = 0;
+		const origin = performance.now();
+		const tick = (now: number) => {
+			tickBgGrain((now - origin) / 1000);
+			raf = requestAnimationFrame(tick);
+		};
+		raf = requestAnimationFrame(tick);
+		return () => cancelAnimationFrame(raf);
+	});
 </script>
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 
 <FadeContainer show={true} duration={SECOND} zIndex={-2}>
 	{#if sceneVideoReady}
-		<Sprite key="sceneBgAnim" {...coverProps(SCENE_ART)} />
+		<Container filters={BG_PLATE_FILTERS}>
+			<Sprite key="sceneBgAnim" {...coverProps(SCENE_ART)} />
+		</Container>
 	{:else}
 		<SaloonScene />
 	{/if}

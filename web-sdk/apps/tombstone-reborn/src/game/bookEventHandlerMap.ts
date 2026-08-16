@@ -8,7 +8,9 @@ import { fxWait, fxDur, fxHold } from './fxTiming';
 import { SYMBOL_SIZE } from './constants';
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
-import { filterVisibleCells, isVisibleBoardCell } from './boardCells';
+import { filterVisibleCells } from './boardCells';
+import { isHighPaySymbol, planWoundRhythm, volleySeed } from './gunsmokeSpin';
+import { LANE_DOOR_OPEN_MS } from './laneDoor';
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
@@ -216,60 +218,33 @@ const playWildFlip = async (
 	});
 };
 
-/** Landed GS cards the revolver sits on. Prefer the live board so row is real. */
-const findGunsmokeOrigins = (): { reel: number; row: number }[] => {
-	const raw = stateGameDerived.boardRaw();
-	const found: { reel: number; row: number }[] = [];
-	for (let reel = 0; reel < raw.length; reel++) {
-		const col = raw[reel] ?? [];
-		for (let row = 0; row < col.length; row++) {
-			if (col[row]?.name === 'GS' && isVisibleBoardCell(reel, row)) {
-				found.push({ reel, row });
-			}
-		}
-	}
-	return found;
-};
-
-const showGunsmokeGun = async (cells?: { reel: number; row: number }[]) => {
-	const origins = filterVisibleCells(cells ?? findGunsmokeOrigins());
-	if (!origins.length) return;
-	await eventEmitter.broadcastAsync({ type: 'gunsmokeGunShow', cells: origins });
-};
-
-const aimGunsmokeGun = async (cell: { reel: number; row: number }) => {
-	await eventEmitter.broadcastAsync({
-		type: 'gunsmokeGunAim',
-		reel: cell.reel,
-		row: cell.row,
-	});
-	await eventEmitter.broadcastAsync({ type: 'gunsmokeGunFire' });
-};
-
-/** GUNSMOKE: shoot each copy into a WILD. One-by-one at normal speed; one volley in turbo. */
+/** GUNSMOKE: each pistol hit stamps that cell and flips it to WILD, then the next. */
 const playGunsmokeShoot = async (
 	cells: { reel: number; row: number }[],
 	from: SymbolName,
 ) => {
 	const visible = filterVisibleCells(cells);
 	if (!visible.length) return;
-	await showGunsmokeGun();
-	const together = stateBet.isTurbo || stateBet.isSuperTurbo;
-	const first = visible[0];
-	if (together && first) {
-		await aimGunsmokeGun(first);
-		await playWildFlip(
-			visible.map((cell) => ({ ...cell, from })),
-			{ shoot: true },
-		);
-		await eventEmitter.broadcastAsync({ type: 'gunsmokeGunHide' });
-		return;
+	const blood = isHighPaySymbol(from);
+	const rhythm = planWoundRhythm(visible.length, volleySeed(visible));
+	for (let i = 0; i < visible.length; i += 1) {
+		const cell = visible[i];
+		if (!cell) continue;
+		const shot = rhythm[i];
+		shakeBoard({ intensity: 4 + (shot?.flightScale ?? 1) * 2, duration: fxDur(90) });
+		await eventEmitter.broadcastAsync({
+			type: 'gunsmokeWound',
+			reel: cell.reel,
+			row: cell.row,
+			blood,
+			name: from,
+			beatMs: 0,
+			flightScale: shot?.flightScale,
+			side: shot?.side,
+		});
+		await playWildFlip([{ ...cell, from }], { shoot: false });
+		if ((shot?.beatMs ?? 0) > 0) await fxWait(shot.beatMs);
 	}
-	for (const cell of visible) {
-		await aimGunsmokeGun(cell);
-		await playWildFlip([{ ...cell, from }], { shoot: true });
-	}
-	await eventEmitter.broadcastAsync({ type: 'gunsmokeGunHide' });
 };
 
 /** BOUNTY: the premium lands in the last-reel lane wearing its WIN multiplier. */
@@ -337,6 +312,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			eventEmitter.broadcast({ type: 'winMultUpdate', value: 1 });
 		}
 		stateGame.lidOpen = stateGame.laneSuper;
+		stateGame.laneCardSwap = 0;
 		stateGame.slotWinPositions = [];
 		stateGame.featureCells = [];
 		stateGame.reelStretch = stateGame.reelStretch.map(() => null);
@@ -458,26 +434,22 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.cells.length > 0) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
 			shakeBoard({ intensity: 4, duration: fxDur(180) });
-			const guns = bookEvent.cells.filter((cell) => cell.kind === 'gunsmoke');
-			if (guns.length) {
-				void showGunsmokeGun(guns);
-			}
 			// Do not lock every planted card here — each following feature
 			// locks its own targets. A board-wide lock then a second lock is
 			// the stacked-reticle glitch.
 			await fxHold();
 		}
 	},
-	// SUPER scatter opened the last-reel lane this spin. A spade is driven
-	// into the boarded cover (FeatureBurst, kind 'digUp').
+	// SUPER scatter opened the last-reel lane this spin. The door swings
+	// open, then a spade plants in the lane (FeatureBurst, kind 'digUp').
 	tombstone: async (bookEvent: BookEventOfType<'tombstone'>) => {
 		stateGame.specialBarActiveKind = 'tombstone';
 		// the shovel strikes themselves are scheduled by FeatureBurst, which
 		// knows the per-cell stagger; nothing else announces the dig
 		shakeBoard({ intensity: 7, duration: fxDur(260) });
-		// the spade blasts the boarded cover off the lane — LaneLidLock plays
-		// its break-away the moment this flips
+		// LaneLidLock plays the door swing the moment this flips
 		stateGame.lidOpen = true;
+		await fxWait(LANE_DOOR_OPEN_MS);
 		const lane = filterVisibleCells([{ reel: bookEvent.reel, row: 1 }]);
 		await eventEmitter.broadcastAsync({ type: 'featureBurstShow', kind: 'digUp', cells: lane });
 		await animateSymbols({ positions: [{ reel: bookEvent.reel, row: 1 }] });
@@ -638,7 +610,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'winMultUpdate', value: start });
 		let running = start;
 		for (const cell of hits) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot' });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
 			shakeBoard({ intensity: 6, duration: fxDur(140) });
 			await eventEmitter.broadcastAsync({
 				type: 'featureBurstShow',
@@ -659,7 +631,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	specialsWild: async (bookEvent: BookEventOfType<'specialsWild'>) => {
 		const cells = filterVisibleCells(bookEvent.cells);
 		if (!cells.length) return;
-		await eventEmitter.broadcastAsync({ type: 'gunsmokeGunHide' });
 		await playWildFlip(cells);
 		await fxHold();
 	},
@@ -808,6 +779,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		shakeBoard({ intensity: 8, duration: fxDur(300) });
 		stateGame.laneSuper = true;
 		stateGame.lidOpen = true;
+		await fxWait(LANE_DOOR_OPEN_MS);
 		const lane = filterVisibleCells([{ reel: stateGame.board.length - 1, row: 1 }]);
 		await eventEmitter.broadcastAsync({
 			type: 'featureBurstShow',

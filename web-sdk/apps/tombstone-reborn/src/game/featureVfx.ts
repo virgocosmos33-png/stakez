@@ -36,8 +36,6 @@ export const FEATURE_ART = {
 	multPlaque: 'fxMultPlaque',
 	/** full-reel NUDGE WAYS totem — clipped from the top as it walks down */
 	nudgeColumn: 'fxNudgeColumn',
-	/** side-profile revolver on the landed GS card (barrel points +X at rest) */
-	revolver: 'gunsmokeRevolver',
 } as const;
 
 /**

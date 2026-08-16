@@ -1,0 +1,10 @@
+saloon_scene.webp
+size:1958,1874
+filter:Linear,Linear
+scale:1
+bg
+bounds:2,2,1679,937
+lamp_L
+bounds:2,941,976,931
+lamp_R
+bounds:980,941,976,931

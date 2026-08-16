@@ -119,6 +119,47 @@ export const FEATURE_DEMO_BOOKS: DemoBook[] = [
 		],
 	},
 	{
+		label: 'gunsmokeHigh',
+		mode: 'bonus_small',
+		payoutX: 10,
+		events: [
+			reveal((() => {
+				const board = baseBoard();
+				board[2][2] = cell('GS', { feature: true });
+				board[1][1] = cell('H1');
+				board[1][3] = cell('H1');
+				board[2][1] = cell('H1');
+				board[4][1] = cell('H1');
+				return board;
+			})()),
+			{
+				index: 1,
+				type: 'boardSpecials',
+				barMode: 'small',
+				lastUnlocked: false,
+				cells: [{ reel: 2, row: 2, kind: 'gunsmoke' }],
+			},
+			{
+				index: 2,
+				type: 'gunsmoke',
+				symbol: 'H1',
+				cells: [
+					{ reel: 1, row: 1 },
+					{ reel: 1, row: 3 },
+					{ reel: 2, row: 1 },
+					{ reel: 4, row: 1 },
+				],
+				totalWays: 24,
+			},
+			{
+				index: 3,
+				type: 'specialsWild',
+				cells: [{ reel: 2, row: 2 }],
+			},
+			...settle(4),
+		],
+	},
+	{
 		label: 'tombstone',
 		mode: 'bonus_small',
 		payoutX: 8,

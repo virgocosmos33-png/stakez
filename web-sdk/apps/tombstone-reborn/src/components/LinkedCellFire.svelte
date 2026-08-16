@@ -336,10 +336,10 @@ void main() {
 
     float yN = vLocalUv.y * 2.0 - 1.0;
     float front = mix(1.15, -1.15, uProgress);
-    float sideMask = smoothstep(front - 0.15, front + 0.15, yN);
+    float sideMask = smoothstep(front - 0.07, front + 0.07, yN);
     float capMask = mix(
-        smoothstep(0.0, 0.22, uProgress),
-        smoothstep(0.72, 1.0, uProgress),
+        smoothstep(0.0, 0.16, uProgress),
+        smoothstep(0.68, 1.0, uProgress),
         uFlipDepth
     );
     float mask = mix(sideMask, capMask, uHorizontal);
@@ -353,6 +353,9 @@ void main() {
     fire_color = mix(fire_color, hot_core, smoothstep(0.55, 1.0, heat));
 
     vec3 color = fire_color * ring;
+    float climbing = smoothstep(0.02, 0.10, uProgress) * (1.0 - smoothstep(0.80, 1.0, uProgress));
+    float front_glow = (1.0 - smoothstep(0.0, 0.16, abs(yN - front))) * climbing;
+    color += hot_core * front_glow * ring * 1.9;
     float a = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0) * uIntensity;
     if (a <= 0.01) discard;
     finalColor = vec4(color * a, a);

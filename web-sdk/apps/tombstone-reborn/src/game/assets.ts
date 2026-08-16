@@ -514,7 +514,7 @@ export default {
 		preload: true,
 	},
 	// SPLIT: transparent Bowie + horizontal ember slash (tools/make_split_knife.py).
-	// The knife flies left→right; the slash is the cut it leaves. Panes snap on impact.
+	// The knife flies right→left; the slash is the cut it leaves. Panes snap on impact.
 	splitKnife: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_split_knife.png', import.meta.url).href,
@@ -525,11 +525,116 @@ export default {
 		src: new URL('../../assets/sprites/fx/tr_split_slash.png', import.meta.url).href,
 		preload: true,
 	},
-	// GUNSMOKE: side-profile revolver that sits on the landed GS card and
-	// rotates so the barrel aims at each target cell's centre.
+	// GUNSMOKE: prop_19 revolver on the landed GS card. It wheel-spins
+	// clockwise and fires prop_22/23/24 rounds (tools/bake_gunsmoke_props.py).
 	gunsmokeRevolver: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_gunsmoke_revolver.png', import.meta.url).href,
+		preload: true,
+	},
+	gunsmokeBulletA: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gunsmoke_bullet_a.png', import.meta.url).href,
+		preload: true,
+	},
+	gunsmokeBulletB: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gunsmoke_bullet_b.png', import.meta.url).href,
+		preload: true,
+	},
+	gunsmokeBulletC: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gunsmoke_bullet_c.png', import.meta.url).href,
+		preload: true,
+	},
+	gsMuzzleGlow: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_muzzle_glow.png', import.meta.url).href,
+		preload: true,
+	},
+	gsMuzzleStreak: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_muzzle_streak.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_1.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_2.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_3.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_4.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole5: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_5.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole6: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_6.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole7: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_7.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundHole8: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_hole_8.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_1.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_2.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_3.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_4.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood5: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_5.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood6: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_6.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood7: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_7.png', import.meta.url).href,
+		preload: true,
+	},
+	gsWoundBlood8: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/gs_wound_blood_8.png', import.meta.url).href,
 		preload: true,
 	},
 	// SPLIT: bullet-hole impact decals stamped onto scored cells. Six splintered
@@ -857,6 +962,13 @@ export default {
 	laneLidLock: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/lane_lid_lock.webp', import.meta.url).href,
+		preload: true,
+	},
+	// LAST-REEL LANE door swing (tools/make_lane_door_atlas.py) — replaces the
+	// static boarded cover when SUPER scatter / DIG UP opens the grave lane.
+	laneDoor: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/lane_door.json', import.meta.url).href,
 		preload: true,
 	},
 	laneGoldBounty: {
