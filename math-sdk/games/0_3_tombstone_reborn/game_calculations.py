@@ -36,9 +36,19 @@ class GameCalculations(Executables):
 
     def add_cell_ways(self, reel: int, row: int, factor: int) -> int:
         """Add `factor` ways to a cell (capped), return the new per-cell mult."""
-        sym = self.board[reel][row]
+        return self.set_cell_ways(reel, row, self.cell_ways(self.board[reel][row]) + factor)
+
+    def set_cell_ways(self, reel: int, row: int, value: int) -> int:
+        """SET a cell's ways multiplier (capped), return the stamped value."""
         cap = self.config.split_config["cell_cap"]
-        current = self.cell_ways(sym)
-        new_val = min(current + factor, cap)
-        sym.assign_attribute({"multiplier": new_val})
+        new_val = min(max(1, int(value)), cap)
+        self.board[reel][row].assign_attribute({"multiplier": new_val})
         return new_val
+
+    def replace_keep_ways(self, reel: int, row: int, name: str):
+        """Swap the face, keep any ways already stamped on the cell."""
+        ways = self.cell_ways(self.board[reel][row])
+        self.board[reel][row] = self.create_symbol(name)
+        if ways > 1:
+            self.board[reel][row].assign_attribute({"multiplier": ways})
+        return self.board[reel][row]

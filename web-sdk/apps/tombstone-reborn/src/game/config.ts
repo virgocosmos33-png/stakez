@@ -78,6 +78,50 @@ export default {
 			paytable: null,
 			special_properties: ['scatter'],
 		},
+		SU: {
+			paytable: null,
+			special_properties: ['scatter'],
+		},
+		SP: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		GS: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		TS: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		NW: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		SG: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		SO: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		DU: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		CF: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		SH: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
+		SS: {
+			paytable: null,
+			special_properties: ['feature'],
+		},
 		H1: {
 			paytable: [{ '6': 5 }, { '5': 1.5 }, { '4': 0.5 }, { '3': 0.2 }],
 		},

@@ -10,25 +10,24 @@ Premiums:         H1 Gunslinger, H2 Duchess, H3 Butcher,
 Lows (L1-L5):     bullet, whiskey, spur, horseshoe, playing card
 Wild  (W):        the revolver (substitutes; pays only on a full 6-wide line)
 
-THE SPECIAL BAR (top row of 6 cells, one above each reel column). Each cell can
-drop a card that fires a BOARD-WIDE effect. It is nearly dead in the base game
-(specials appear "very rarely"), fully active in the Small Bonus and Super
-Bonus. Cards (never paying symbols themselves):
-  SPLIT-GANG    (+ways to EVERY premium on the board)
-  SPLIT-OUTLAWS (+ways to EVERY low on the board)
-  GUNSMOKE      (turn one whole symbol type into WILDs)
-  DIG UP        (unlock the last-reel lane for this spin - even in base)
-  TOMBSTONE OPEN(grow the short reels taller, revealing extra symbols)
+FEATURE SYMBOLS land ON THE BOARD (no left special bar). After they fire they
+transform into the revolver WILD. Nearly dead in the base game; awake in the
+Small Bonus and Super Bonus:
+  SP SPLIT          (pick 1 symbol type, add 2-7 ways to every copy)
+  GS GUNSMOKE       (turn one whole symbol type into WILDs)
+  NW NUDGE WAYS     (reels 2-3 only: land, then nudge down doubling ways)
+  SU SUPER SCATTER  (4th scatter / upgrade; also opens the last reel this spin)
 
 THE LAST-REEL LANE (reel index 5, the 1-high column). Locked normally; opened
-by DIG UP, and permanently open in the Super Bonus. When open it drops:
-  BOUNTY     (a random premium lands there carrying a WIN multiplier)
-  NUDGE      (a bounty premium slides left, +WIN-mult for each premium passed)
-  SUPERSPLIT (reel 5 turns wild AND every paying symbol on the board is split)
+when a SUPER scatter lands, and permanently open in the Super Bonus / big
+bonus round. When open it drops ONLY:
+  a PREMIUM carrying a WIN multiplier (no lows, ever)
+  SH MARK     (shoots every premium; +1 stacked WIN multi per hit)
+  SS SUPERSPLIT (reel 5 turns wild AND every symbol on the board is split)
 
 MULTIPLIERS - two distinct kinds:
-  WAYS mult  = split/gunsmoke fold into the ways COUNT (engine "symbol" strat).
-  WIN  mult  = bounty/nudge multiply the whole spin's win at the very end.
+  WAYS mult  = split / nudge-ways / supersplit fold into the ways COUNT.
+  WIN  mult  = bounty / MARK stack a spin (and bonus-round) WIN multiplier.
 
 MODES (all single enhanced spins, all can reach the 99,999x cap):
   base         1x     bar nearly dead, last lane locked, ~92% dead spins
@@ -70,7 +69,7 @@ class GameConfig(Config):
 
         # WAYS paytable (per-way x bet). Per-way values are intentionally small:
         # the extreme tail comes from split/gunsmoke exploding the ways COUNT and
-        # bounty/nudge stacking a WIN multiplier on top - not from fat base pays.
+        # bounty / MARK stacking a WIN multiplier on top - not from fat base pays.
         self.paytable = {
             (6, "W"): 10.0,
             (6, "H1"): 5.0, (5, "H1"): 1.5, (4, "H1"): 0.5, (3, "H1"): 0.2,
@@ -98,7 +97,15 @@ class GameConfig(Config):
         # serialize the per-cell ways multiplier that splits stamp onto
         # ordinary symbols. No symbol carries the multiplier flag by default -
         # it is assigned at runtime.
-        self.special_symbols = {"wild": ["W"], "scatter": ["S"], "multiplier": []}
+        # feature symbols land on the board, fire, then become wild. "feature"
+        # is serialized onto the reveal so the frontend can tell them apart.
+        self.feature_symbols = ["SP", "GS", "NW", "SH", "SS"]
+        self.special_symbols = {
+            "wild": ["W"],
+            "scatter": ["S", "SU"],
+            "multiplier": [],
+            "feature": list(self.feature_symbols),
+        }
 
         # BONUS ROUNDS. 3 scatters trigger the SMALL BONUS (fs_spins spins, the
         # special bar awake on every spin), 4+ the BIG BONUS (same spins, the
@@ -106,7 +113,8 @@ class GameConfig(Config):
         # 0-4 with strip spacing wider than any window, so counts are exact
         # per-column presence (max 5). No retriggers: the freegame strips (FR0
         # / WCAP) carry no S at all - the only scatter a round can ever show is
-        # the 1-in-100 UPGRADE drop (see fs_upgrade_per_spin).
+        # the 1-in-100 UPGRADE drop (see fs_upgrade_per_spin), which plants
+        # the SUPER tombstone (SU) rather than another BONUS (S).
         self.fs_spins = 10
         # per-spin chance the small bonus drops its 4th scatter and upgrades to
         # the big bonus (lane open + spins topped back up): ~1 in 100 rounds
@@ -125,54 +133,51 @@ class GameConfig(Config):
             "weights": {
                 "off": {"none": 1},
                 "base": {
-                    "none": 985, "split_gang": 4, "split_outlaws": 4,
-                    "gunsmoke": 3, "digup": 1, "coffin": 3,
+                    "none": 985, "split": 7, "gunsmoke": 3, "nudge": 5,
                 },
                 "small": {
-                    "none": 56, "split_gang": 14, "split_outlaws": 14,
-                    "gunsmoke": 8, "digup": 2, "coffin": 6,
+                    "none": 56, "split": 21, "gunsmoke": 8, "nudge": 15,
                 },
                 # the SMALL BONUS round bar: awake (a card most spins) but
                 # diluted vs "small" - ten of these spins sell for 80x where
                 # ONE "small" spin sells for 80x
                 "wake": {
-                    "none": 300, "split_gang": 14, "split_outlaws": 14,
-                    "gunsmoke": 8, "digup": 2, "coffin": 6,
+                    "none": 300, "split": 21, "gunsmoke": 8, "nudge": 15,
                 },
                 "super": {
-                    "none": 26, "split_gang": 22, "split_outlaws": 18,
-                    "gunsmoke": 12, "digup": 10, "coffin": 12,
+                    "none": 26, "split": 33, "gunsmoke": 12, "nudge": 29,
                 },
             },
         }
 
         # ---- LAST-REEL LANE (reel 5) ----------------------------------------
+        # Unlocked lane NEVER drops lows. Only a premium (always with a WIN
+        # multiplier) or one of the two lane specials: MARK / SUPERSPLIT.
         self.last_reel_config = {
-            "weights": {
-                "locked": {"none": 1},
-                "unlocked": {"none": 22, "bounty": 34, "nudge": 28, "supersplit": 16},
-                # bonus-round lane rate: the grave lane is OPEN on every big-
-                # bonus spin, but it drops a feature less often than a bought
-                # single super spin - ten guaranteed 78%-rate lanes would push
-                # the raw round distribution beyond what a 2000x product can
-                # carry (smoke run: 75% of raw rounds hit the 99,999 cap)
-                "round": {"none": 75, "bounty": 12, "nudge": 8, "supersplit": 5},
+            "drop_weights": {
+                # single unlocked spin (bought super / super-scatter open): premiums dominate
+                "unlocked": {"premium": 55, "shooter": 28, "supersplit": 17},
+                # 10-spin big bonus: starve the two specials so most rounds stay
+                # under cost (~25% of rounds profitable)
+                "round": {"premium": 82, "shooter": 12, "supersplit": 6},
             },
-            # which premium the bounty/nudge lands (weighted toward weaker prems)
             "premium_weights": {"H5": 26, "H4": 20, "H3": 15, "H2": 10, "H1": 6},
-            # the WIN multiplier the bounty premium carries
             "bounty_mult_weights": {2: 40, 3: 26, 5: 16, 10: 9, 25: 5, 50: 3, 100: 1},
-            # nudge slides across the 5 columns left of the lane; each premium it
-            # passes adds this much to the WIN multiplier and is left as a WILD
-            "nudge_add_per_premium": 1,
+            # MARK: +1 stacked WIN multi per premium it shoots
+            "shooter_add_per_premium": 1,
         }
 
         # ---- FEATURE TUNING --------------------------------------------------
-        # split factors are ADDED to each affected cell's ways multiplier
+        # SPLIT: pick ONE type on the board, ADD 2-7 ways to every copy.
+        # Ways are extremely weighted toward the low end.
         self.split_config = {
-            "gang_weights": {1: 40, 2: 26, 3: 16, 5: 10, 8: 5, 10: 3},
-            "outlaw_weights": {1: 45, 2: 26, 3: 16, 5: 8, 8: 3, 10: 2},
-            "cell_cap": 30,
+            "count_weights": {1: 1},
+            "ways_weights": {2: 140, 3: 32, 4: 16, 5: 8, 6: 3, 7: 1},
+            "source_weights": {
+                "L5": 16, "L4": 14, "L3": 13, "L2": 12, "L1": 11,
+                "H5": 9, "H4": 7, "H3": 6, "H2": 5, "H1": 4, "W": 3,
+            },
+            "cell_cap": 99,
         }
         self.gunsmoke_config = {
             "source_weights": {
@@ -180,13 +185,25 @@ class GameConfig(Config):
                 "H5": 9, "H4": 7, "H3": 6, "H2": 5, "H1": 4,
             },
         }
-        # Tombstone Open grows ONLY the reel under each coffin card, by exactly
-        # +1 visible row (never the last-reel special lane).
-        self.coffin_config = {
-            "max_added": 1,
+        # NUDGE WAYS: reels 1 and 2 only (the two 4-high columns). Initial ways
+        # 2-9, extremely weighted toward 2. Lands on a row and nudges DOWN,
+        # doubling the stack's ways each step — or drops as a full reel and
+        # keeps the initial ways with no doubling.
+        self.nudge_ways_config = {
+            "reels": (1, 2),
+            "initial_ways_weights": {
+                2: 140, 3: 32, 4: 16, 5: 8, 6: 4, 7: 2, 8: 1, 9: 1,
+            },
+            "place_weights": {
+                "full": 18,
+                0: 15,
+                1: 25,
+                2: 32,
+                3: 10,
+            },
         }
         self.supersplit_config = {
-            "all_ways_weights": {2: 40, 3: 28, 5: 18, 8: 9, 10: 5},
+            "all_ways_weights": {2: 55, 5: 32, 10: 13},
         }
 
         # ---- Reels -----------------------------------------------------------
@@ -330,14 +347,8 @@ class GameConfig(Config):
                                         boost="max", force_wincap=True),
                     ),
                     Distribution(
-                        criteria="0",
-                        quota=0.20,
-                        win_criteria=0.0,
-                        conditions=cond(reel="BR0", bar="super", last=True, count=6),
-                    ),
-                    Distribution(
                         criteria="basegame",
-                        quota=0.798,
+                        quota=0.998,
                         conditions=cond(reel="BR0", bar="super", last=True, count=6),
                     ),
                 ],
@@ -377,7 +388,7 @@ class GameConfig(Config):
             ),
             # BIG BONUS: 4+ scatters trigger fs_spins spins with the bar awake
             # at the bought-small level AND the grave lane permanently open -
-            # bounty / nudge / supersplit live on every spin.
+            # bounty / MARK / supersplit live on every spin.
             BetMode(
                 name="superspins",
                 cost=2000.00,

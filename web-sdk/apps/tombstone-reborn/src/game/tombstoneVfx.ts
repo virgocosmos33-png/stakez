@@ -7,9 +7,8 @@
  * gunsmoke are Kenney particle-pack / smoke-particles (CC0), recoloured to the
  * dusty amber + powder-burn palette below.
  *
- * A split cell carries NO divider of any kind. The strip that used to be drawn
- * down each tear read as a pale bar ruled over the symbol; a split is now told
- * by its bullet holes and its multiplier badge alone.
+ * A split cell is N center-cropped panes (capped at 4) plus an Nx badge.
+ * Thin iron seams sit between panes; the old powder-bar divider is gone.
  */
 
 export const TOMBSTONE_SPLIT_VFX_ASSET = 'tombstoneSplitVfx';
@@ -75,11 +74,8 @@ export const TARGET_ACCENT: Record<'split' | 'clone' | 'stretch', number> = {
 	stretch: TOMBSTONE_FX.iron,
 };
 
-// Two generations of split divider used to live here: a procedural
-// `drawPowderSeam` (stacked full-height strokes) and then a baked torn-plank
-// strip. Both still read as a bar ruled across the symbol at a glance, so
-// SplitPanes, StretchFx and WildReelSlide now draw nothing down a tear — the
-// panes simply part over the dark backing.
+// SplitPanes draws thin iron seams between its panes. StretchFx / WildReelSlide
+// still part over a dark backing with no powder-bar divider.
 
 const seeded = (n: number) => {
 	const value = Math.sin(n * 12.9898 + 78.233) * 43758.5453;
@@ -87,7 +83,9 @@ const seeded = (n: number) => {
 };
 
 /**
- * Anticipation column: dusty gunsmoke shaft + falling grit (not fluorescent tube).
+ * Anticipation column: falling grit + faint gutter ticks.
+ * Never paint a dark / powder / gunsmoke plate over the spinning cards — that
+ * read as leftover White Room tube housing and buried the 3rd-scatter hang.
  */
 export const drawDustAnticipation = (
 	g: import('pixi.js').Graphics,
@@ -102,28 +100,12 @@ export const drawDustAnticipation = (
 	const wind = 0.72 + 0.28 * Math.sin(timeValue * 7.5);
 	const a = master * wind;
 
-	g.rect(-halfW * 0.5, -halfH, colW * 0.5, colH);
-	g.fill({ color: TOMBSTONE_FX.dark, alpha: 0.42 * master });
-
-	g.rect(-halfW * 0.28, -halfH, colW * 0.28, colH);
-	g.fill({ color: TOMBSTONE_FX.powder, alpha: 0.32 * a });
-	g.rect(-halfW * 0.12, -halfH, colW * 0.12, colH);
-	g.fill({ color: TOMBSTONE_FX.gunsmoke, alpha: 0.4 * a });
-
 	for (const side of [-1, 1] as const) {
-		g.rect(side * halfW - 2, -halfH, 3.5, colH);
-		g.fill({ color: TOMBSTONE_FX.ironEdge, alpha: 0.6 * a });
-		g.rect(side * halfW - 0.6, -halfH, 1.2, colH);
-		g.fill({ color: TOMBSTONE_FX.brass, alpha: 0.35 * a });
-	}
-
-	for (let i = 0; i < 5; i++) {
-		const y = -halfH + ((i + 0.5) / 5) * colH;
-		const pulse = 0.45 + 0.55 * Math.sin(timeValue * 8 + i * 1.7);
-		g.rect(-halfW * 0.38, y - 1.5, colW * 0.38, 3);
-		g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.4 * a * pulse });
-		g.circle(0, y, 3.2);
-		g.stroke({ color: TOMBSTONE_FX.brass, width: 1.3, alpha: 0.55 * a * pulse });
+		const pulse = 0.55 + 0.45 * Math.sin(timeValue * 9 + side);
+		g.rect(side * halfW - 1.1, -halfH, 2.2, colH);
+		g.fill({ color: TOMBSTONE_FX.ironEdge, alpha: 0.22 * a * pulse });
+		g.rect(side * halfW - 0.45, -halfH, 0.9, colH);
+		g.fill({ color: TOMBSTONE_FX.brass, alpha: 0.18 * a * pulse });
 	}
 
 	for (let i = 0; i < 14; i++) {
@@ -150,14 +132,8 @@ export const drawDustAnticipation = (
 		]);
 		g.fill({
 			color: i % 3 === 0 ? TOMBSTONE_FX.boneDust : TOMBSTONE_FX.dust,
-			alpha: 0.65 * master * Math.max(edge, 0),
+			alpha: 0.48 * master * Math.max(edge, 0),
 		});
-	}
-
-	for (let i = 0; i < 5; i++) {
-		const y = -halfH + ((timeValue * 55 + i * 36) % colH);
-		g.rect(-halfW * 0.45, y, colW * 0.45, 1.4);
-		g.fill({ color: TOMBSTONE_FX.brass, alpha: 0.08 * a });
 	}
 };
 

@@ -3,7 +3,7 @@
 Two multiplier layers combine here:
   * WAYS multipliers - split / gunsmoke stamp a per-cell `multiplier` that the
     engine's default "symbol" strategy folds straight into the ways COUNT.
-  * WIN multiplier - bounty / nudge set `self.win_multiplier`, which multiplies
+  * WIN multiplier - bounty / MARK set `self.win_multiplier`, which multiplies
     the whole spin's win AFTER the ways total is computed.
 """
 
@@ -19,7 +19,7 @@ class GameExecutables(GameCalculations):
         WIN multiplier, record wins and transmit the win events."""
         data = Ways.get_ways_data(self.config, self.board)
 
-        wm = int(getattr(self, "win_multiplier", 1) or 1)
+        wm = max(1, int(getattr(self, "win_multiplier", 0) or 0))
         if wm > 1 and data["totalWin"] > 0:
             for w in data["wins"]:
                 w["win"] = round(w["win"] * wm, 2)

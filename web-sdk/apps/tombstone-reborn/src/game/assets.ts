@@ -1,12 +1,4 @@
 export default {
-	// template 'loader' spine removed: Mining-Mayhem miner face + logotype,
-	// preloaded on every session but never rendered
-	// in this app (LoadingScreen uses the mirrorLoading painting instead)
-	pressToContinueText: {
-		type: 'sprites',
-		src: new URL('../../assets/sprites/mirror/pressToContinueText/MM_pressanywhere.json', import.meta.url).href,
-		preload: true,
-	},
 	// Madam Mirror symbol spines (new schema). Shared atlas mm_symbols; each
 	// rig is authored 1:1 (scale 1, unlike the legacy scale-2 template rigs)
 	// with win / land / postWin animations and class-tinted FX layers. The
@@ -136,40 +128,12 @@ export default {
 			scale: 2,
 		},
 	},
-	goldFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/goldFont/mm_gold.xml', import.meta.url).href,
-	},
-	// template 'goldBlur' font removed: gold mining blur numerals, no component
-	// ever set fontFamily 'goldblur' (spin blur is baked into symbolsStatic)
-	silverFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/silverFont/mm_silver.xml', import.meta.url).href,
-	},
-	purpleFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/purpleFont/mm_purple.xml', import.meta.url).href,
-	},
-	// absinthe-green Ghastly Panic variant (channel-swapped from goldFont by
-	// tools/make_ghost_font.py) — used for spectral/apparition numerals
-	ghostFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/ghostFont/mm_ghost.xml', import.meta.url).href,
-	},
-	// violet Ghastly Panic variant (hue-rotated from goldFont by
-	// tools/make_amethyst_font.py) — used for the YOU WON amount
-	amethystFont: {
-		type: 'font',
-		src: new URL('../../assets/fonts/amethystFont/mm_amethyst.xml', import.meta.url).href,
-	},
 	// TOMBSTONE REBORN per-game face (tools/make_tombstone_font.py). face="tombstone".
 	// Wanted-poster serif, branded gold body on a dark iron rim.
 	//
-	// This replaces face "clinical" (whiteRoomFont / wr_clinical) — the condensed
-	// light-grey Madam Mirror plaque face that was still rendering every win title
-	// and amount. Do NOT reuse silverFont (Mining-Mayhem western slab) or
-	// goldFont / amethystFont / ghostFont (Madam drip) either; every game must
-	// ship a unique player-facing face.
+	// Do NOT re-register goldFont / silverFont / purpleFont / ghostFont /
+	// amethystFont / goldBlur — those are Madam Mirror and Mining Mayhem faces
+	// and their page PNGs 403 on Stake when this game loads them.
 	tombstoneFont: {
 		type: 'font',
 		src: new URL('../../assets/fonts/tombstoneFont/tr_tombstone.xml', import.meta.url).href,
@@ -241,38 +205,6 @@ export default {
 		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v13.json', import.meta.url).href,
 		preload: true,
 	},
-	// Madam Mirror generated art
-	mirrorBgBase: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/bg_base.webp', import.meta.url).href,
-		preload: true,
-	},
-	mirrorBgBasePortrait: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/bg_base_portrait.webp', import.meta.url).href,
-		preload: true,
-	},
-	mirrorBgFreespin: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/bg_freespin.webp', import.meta.url).href,
-		preload: true,
-	},
-	// Scenario-generated ambient video loop of the free-spin room (candles
-	// flicker, sigil pulses, smoke drifts). Pixi loads mp4s as video textures.
-	mirrorBgFreespinAnim: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/bg_freespin_anim.mp4', import.meta.url).href,
-	},
-	// base-game ambient loops baked from the parlor paintings
-	// (tools/build_bg_video.py) — landscape + portrait variants
-	mirrorBgBaseAnim: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/bg_base_anim.mp4', import.meta.url).href,
-	},
-	mirrorBgBaseAnimPortrait: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/bg_base_anim_portrait.mp4', import.meta.url).href,
-	},
 	// --- ambient SCENE --------------------------------------------------------
 	// ONE full-scene backdrop that cover-scales to the viewport as a single
 	// unit. Base game: the saloon still (basemodebgimagetomsbstonereborn.png
@@ -295,9 +227,22 @@ export default {
 		src: new URL('../../assets/sprites/scene/saloon_lamp_l.png', import.meta.url).href,
 		preload: true,
 	},
+	// Click-smashed left lantern: glass cracked, bulb dead, baked halo gone.
+	// Restored on the next spin (SaloonScene + saloonLamp.svelte.ts).
+	saloonLampLSmashed: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_lamp_l_smashed.png', import.meta.url).href,
+		preload: true,
+	},
 	saloonLampR: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/saloon_lamp_r.png', import.meta.url).href,
+		preload: true,
+	},
+	// Soft cream wash that rides the left lamp so the wall lifts as it swings.
+	saloonLampGlow: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_lamp_glow.png', import.meta.url).href,
 		preload: true,
 	},
 	// WIN CELEBRATION hero plates, one per big tier — dark western / graveyard
@@ -362,30 +307,10 @@ export default {
 	// bonuses are single enhanced spins — so the five overlays that rendered
 	// these were dead code and are deleted along with the .webp files. There is
 	// deliberately no replacement key: do not re-register these.
-	// Full-bleed padded-cell still (from bg_base). Never ship the old title-card
-	// composite that baked a PNG transparency checkerboard into the centre plate.
-	mirrorLoading: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/loading.webp', import.meta.url).href,
-		preload: true,
-	},
-	// "Enter the mirror" intro (Scenario image-to-video from the loading key art).
-	// Non-preload so it never delays first paint; the loader finishes ALL
-	// non-preload assets before stateApp.loaded flips, and the intro only plays
-	// after the carousel (which needs stateApp.loaded), so it is always ready.
-	introMirror: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/intro_mirror.mp4', import.meta.url).href,
-	},
-	introMirrorPortrait: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/intro_mirror_portrait.mp4', import.meta.url).href,
-	},
-	// THE WHITE ROOM stacked brand mark (Scenario GPT Image 2 + Photoroom alpha).
-	// Cache-bust: logo_v3.png — transparent clinical stack, no plate.
+	// Brand mark: bloody sheriff wordmark (TOMBSTONE / REBORN).
 	mirrorLogo: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/logo_v3.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/mirror/tr_logo.png', import.meta.url).href,
 		preload: true,
 	},
 	// emblem used as the in-HUD BONUS button (ButtonBuyBonus reads `buyBonusLogo`)
@@ -431,12 +356,6 @@ export default {
 		src: new URL('../../assets/sprites/mirror/side_rail_panel.png', import.meta.url).href,
 		preload: true,
 	},
-	// legacy knife sprite unused — telegraph is intakeShot Graphics in MirrorShatter
-	mirrorSplitKnife: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/split_knife.png', import.meta.url).href,
-		preload: false,
-	},
 	// WAYS / FREE SPINS counter frames (clinical white/silver plaques).
 	mirrorWaysFrame: {
 		type: 'sprite',
@@ -454,9 +373,8 @@ export default {
 		src: new URL('../../assets/sprites/mirror/counter_glass.png', import.meta.url).href,
 		preload: true,
 	},
-	// THE WHITE ROOM WILD card (generated straitjacket "WILD" art, transparent PNG).
-	// Sprite-only symbol (see SYMBOL_INFO_MAP.W) so it renders identically on the
-	// board, in unlocked slots, and as a risen Wild Reel.
+	// WILD card: whiskey bottle with WILD on the label, same 300x300 canvas
+	// and wr_wild alpha as every other symbol.
 	wrWild: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/wr_wild.png', import.meta.url).href,
@@ -479,6 +397,75 @@ export default {
 	trScatter: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/tr_scatter.png', import.meta.url).href,
+		preload: true,
+	},
+	trScatterSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_scatter_super.png', import.meta.url).href,
+		preload: true,
+	},
+	// Feature symbols that land ON the board (tools/make_feature_cards.py).
+	trSP: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_sp.png', import.meta.url).href,
+		preload: true,
+	},
+	trGS: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_gs.png', import.meta.url).href,
+		preload: true,
+	},
+	trTS: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_ts.png', import.meta.url).href,
+		preload: true,
+	},
+	trNW: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_nw.png', import.meta.url).href,
+		preload: true,
+	},
+	// Legacy keys so older showcase books still resolve a texture.
+	trSG: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_sp.png', import.meta.url).href,
+		preload: true,
+	},
+	trSO: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_sp.png', import.meta.url).href,
+		preload: true,
+	},
+	trDU: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_ts.png', import.meta.url).href,
+		preload: true,
+	},
+	trCF: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_ts.png', import.meta.url).href,
+		preload: true,
+	},
+	fxNudgeFire: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_nudge_fire.png', import.meta.url).href,
+		preload: true,
+	},
+	// Full-reel NUDGE WAYS totem. One tall iron column (header + ratchet +
+	// arrow foot), clipped from the top of the reel in NudgeWays.svelte.
+	fxNudgeColumn: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_nudge_column.png', import.meta.url).href,
+		preload: true,
+	},
+	trSH: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_sh.png', import.meta.url).href,
+		preload: true,
+	},
+	trSS: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/mirror/tr_ss.png', import.meta.url).href,
 		preload: true,
 	},
 	// The EXPANDING wild: same jacket, plus a rising arrow stencilled below the
@@ -526,75 +513,23 @@ export default {
 		src: new URL('../../assets/sprites/mirror/wr_scatter_blur.png', import.meta.url).href,
 		preload: true,
 	},
-	// Full-reel-column WILD art (straitjacket figure in a padded cell). Slides
-	// down over a middle reel when a bottom-slot WILD turns it into a Wild Reel
-	// (WildReelSlide.svelte). True-alpha PNG keyed from a magenta plate.
-	wrReel: {
+	// SPLIT: transparent Bowie + horizontal ember slash (tools/make_split_knife.py).
+	// The knife flies left→right; the slash is the cut it leaves. Panes snap on impact.
+	splitKnife: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/fx/tr_split_knife.png', import.meta.url).href,
 		preload: true,
 	},
-	// Full-reel-column WILD variants: each premium inmate (H1..H5) standing in a
-	// padded cell (512x1680). A Wild Reel / Stretch picks one of these at random
-	// per appearance (see WILD_REEL_ARTS). Full-bg PNGs — cover-fit + masked.
-	wrReelH1: {
+	splitSlash: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel_h1.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/fx/tr_split_slash.png', import.meta.url).href,
 		preload: true,
 	},
-	wrReelH2: {
+	// GUNSMOKE: side-profile revolver that sits on the landed GS card and
+	// rotates so the barrel aims at each target cell's centre.
+	gunsmokeRevolver: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel_h2.png', import.meta.url).href,
-		preload: true,
-	},
-	wrReelH3: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel_h3.png', import.meta.url).href,
-		preload: true,
-	},
-	wrReelH4: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel_h4.png', import.meta.url).href,
-		preload: true,
-	},
-	wrReelH5: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel_h5.png', import.meta.url).href,
-		preload: true,
-	},
-	// ONE wild-reel column is a full VIDEO with audio (1080x1920, 6s). Pixi loads
-	// the mp4 as a video texture; WildReelSlide plays it once WITH sound then
-	// freezes on the last frame (audio never repeats). The other columns stay as
-	// the still PNGs above.
-	wrReelWildH3Video: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_reel_wild_h3.mp4', import.meta.url).href,
-		preload: true,
-	},
-	// New special-cell feature symbols (Stretch / Split / Clone). Keyed
-	// transparent PNG cards shown inside the reserved cells (LockedSlots).
-	wrStretch: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_stretch.png', import.meta.url).href,
-		preload: true,
-	},
-	wrSplit: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_split.png', import.meta.url).href,
-		preload: true,
-	},
-	wrClone: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/wr_clone.png', import.meta.url).href,
-		preload: true,
-	},
-	// (The reserved-slot cage overlay is drawn procedurally by LockedSlots.svelte
-	// now — the old prison_bars_closed/open PNGs are no longer registered.)
-	// SPLIT (legacy claw atlas — kept loaded so ColumnClawStrike / any leftover
-	// refs do not 404; the symbol split now uses splitHoles instead).
-	splitClaw: {
-		type: 'spriteSheet',
-		src: new URL('../../assets/sprites/fx/split_claw.json', import.meta.url).href,
+		src: new URL('../../assets/sprites/fx/tr_gunsmoke_revolver.png', import.meta.url).href,
 		preload: true,
 	},
 	// SPLIT: bullet-hole impact decals stamped onto scored cells. Six splintered
@@ -838,22 +773,65 @@ export default {
 		src: new URL('../../assets/sprites/tombstone/bar_plaque.png', import.meta.url).href,
 		preload: true,
 	},
-	// Ornate cast-iron/bronze nameplate for the WAYS (top) + WIN (bottom) readouts
-	// on the vertical rail. Layer GPT Image 2 gen, keyed transparent + trimmed
-	// (tools/make_readout_plaque.py). 1.5:1, dark inset panel hosts gold text.
+	// Ornate cast-iron/bronze nameplate — unused by the live HUD (kept for the
+	// parked rail). Live WAYS / MULTI / WIN use the woodReadout* carpentry boxes.
 	barReadoutPlaque: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/bar_readout_plaque.png', import.meta.url).href,
 		preload: true,
 	},
+	// HUD timber boxes (tools/make_hud_wood_boxes.py) — same carpentry language
+	// as the staircase, cut from a separate plank/scrap sheet (not the reel frame).
+	woodReadoutWays: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_ways.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutMulti: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_multi.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutWin: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_win.png', import.meta.url).href,
+		preload: true,
+	},
+	// Two rusty hanging chains drawn behind the HUD timber boxes.
+	hudHangChain: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/hud_hang_chain.png', import.meta.url).href,
+		preload: true,
+	},
+	// One unstretched rusty chain column for HUD hangers (never scale Y independently).
+	hudChain: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/hud_chain.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueSplit: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_split.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueTombstone: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_tombstone.png', import.meta.url).href,
+		preload: true,
+	},
+	barPlaqueNudge: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_nudge.png', import.meta.url).href,
+		preload: true,
+	},
 	barPlaqueGang: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/tombstone/bar_plaque_gang.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_split.png', import.meta.url).href,
 		preload: true,
 	},
 	barPlaqueOutlaw: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/tombstone/bar_plaque_outlaw.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_split.png', import.meta.url).href,
 		preload: true,
 	},
 	barPlaqueSmoke: {
@@ -868,7 +846,7 @@ export default {
 	},
 	barPlaqueDigup: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/tombstone/bar_plaque_digup.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/tombstone/bar_plaque_tombstone.png', import.meta.url).href,
 		preload: true,
 	},
 	// LAST-REEL LANE (tools/_wire_lane_specials.py):
@@ -902,24 +880,6 @@ export default {
 		src: new URL('../../assets/sprites/mirror/frame_bottom_compartments.png', import.meta.url).href,
 		preload: true,
 	},
-	// SINGLE-CELL observation panes (make_observation_panes.py). Runtime HM overlay
-	// uses drawObservationPane Graphics; these remain for asset-gap / fallback.
-	glassIntact: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/observation_pane_intact.png', import.meta.url).href,
-	},
-	glassBroken: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/observation_pane_cracked.png', import.meta.url).href,
-	},
-	rootFrameA: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/root_frame_a.png', import.meta.url).href,
-	},
-	rootFrameB: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/mirror/root_frame_b.png', import.meta.url).href,
-	},
 	// Win-scatter particles: aged gold coins at many rotations plus brass rifle
 	// cartridges and spent casings, cut out of a Layer AI sheet by
 	// tools/make_win_celebration_art.py.
@@ -930,131 +890,6 @@ export default {
 	winScatter: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/fx/win_scatter.json', import.meta.url).href,
-	},
-	// Cell Seal full-reel characters (H1–H5): still + expand (gif/mp4) + looping idle webm
-	// + GodMode Spine (idle). Overlay prefers expand *video* (play-once→loop-last-3s) →
-	// idle webm → expand gif → Spine → full.webp.
-	cellSealH1Full: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H1_full.webp', import.meta.url).href,
-	},
-	cellSealH2Full: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H2_full.webp', import.meta.url).href,
-	},
-	cellSealH3Full: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H3_full.webp', import.meta.url).href,
-	},
-	cellSealH4Full: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H4_full.webp', import.meta.url).href,
-	},
-	cellSealH5Full: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H5_full.webp', import.meta.url).href,
-	},
-	// Aliases used by older overlay key lookups
-	cellSealH1: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H1_full.webp', import.meta.url).href,
-	},
-	cellSealH2: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H2_full.webp', import.meta.url).href,
-	},
-	cellSealH3: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H3_full.webp', import.meta.url).href,
-	},
-	cellSealH4: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H4_full.webp', import.meta.url).href,
-	},
-	cellSealH5: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H5_full.webp', import.meta.url).href,
-	},
-	cellSealH1Expand: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H1_expand.gif', import.meta.url).href,
-	},
-	cellSealH2Expand: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H2_expand.gif', import.meta.url).href,
-	},
-	// H3 The Grin — Scenario expand video (play once, then loop last 3s in CellSealOverlay).
-	cellSealH3Expand: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H3_expand.mp4', import.meta.url).href,
-	},
-	cellSealH4Expand: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H4_expand.gif', import.meta.url).href,
-	},
-	cellSealH5Expand: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H5_expand.gif', import.meta.url).href,
-	},
-	cellSealH1Idle: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H1_idle.webm', import.meta.url).href,
-	},
-	cellSealH2Idle: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H2_idle.webm', import.meta.url).href,
-	},
-	cellSealH3Idle: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H3_idle.webm', import.meta.url).href,
-	},
-	cellSealH4Idle: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H4_idle.webm', import.meta.url).href,
-	},
-	cellSealH5Idle: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/cellSeal/H5_idle.webm', import.meta.url).href,
-	},
-	cellSealH1Spine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/cellSeal/cellSeal.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/cellSeal/H1.json', import.meta.url).href,
-			scale: 1,
-		},
-	},
-	cellSealH2Spine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/cellSeal/cellSeal.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/cellSeal/H2.json', import.meta.url).href,
-			scale: 1,
-		},
-	},
-	cellSealH3Spine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/cellSeal/cellSeal.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/cellSeal/H3.json', import.meta.url).href,
-			scale: 1,
-		},
-	},
-	cellSealH4Spine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/cellSeal/cellSeal.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/cellSeal/H4.json', import.meta.url).href,
-			scale: 1,
-		},
-	},
-	cellSealH5Spine: {
-		type: 'spine',
-		src: {
-			atlas: new URL('../../assets/spines/cellSeal/cellSeal.atlas', import.meta.url).href,
-			skeleton: new URL('../../assets/spines/cellSeal/H5.json', import.meta.url).href,
-			scale: 1,
-		},
 	},
 	sound: {
 		type: 'audio',

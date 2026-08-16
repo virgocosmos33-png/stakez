@@ -34,10 +34,8 @@
 		oncomplete={props.oncomplete}
 	/>
 {:else}
-	<!-- win/land run once and report complete; postWin is the looping mesh
-	ripple that keeps the winning card alive while it rests -->
 	<SymbolSpine
-		loop={props.loop || props.state === 'postWin'}
+		loop={props.loop}
 		{symbolInfo}
 		x={props.x}
 		y={props.y}

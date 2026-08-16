@@ -14,7 +14,6 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
@@ -44,6 +43,7 @@
 	let toName = $state<SymbolName | null>(null);
 	let phase = $state<'idle' | 'charge' | 'flash' | 'reveal'>('idle');
 	let time = $state(0);
+	const morphing = $derived(phase !== 'idle');
 
 	const charge = new Tween(0);
 	const flash = new Tween(0);
@@ -117,20 +117,11 @@
 			layout(incoming);
 			fromName = from;
 			toName = to;
-			// the copies are linked: set them burning for the whole morph. The
-			// fire is what says "these belong together" — no line is drawn
-			// between them any more.
-			context.eventEmitter.broadcast({
-				type: 'cellFireShow',
-				cells: cells.map((c) => ({ reel: c.reel, row: c.row })),
-				level: cells.length,
-			});
 			await run();
 		},
 		// the next spin is under way: the morphed cards ride down and off with
 		// the symbols instead of popping when the reveal lands.
 		featureFxFallOut: async () => {
-			context.eventEmitter.broadcast({ type: 'cellFireHide' });
 			await fallOutFeatureFx(fallOut, phase !== 'idle' && cells.length > 0);
 			phase = 'idle';
 			cells = [];
@@ -138,8 +129,8 @@
 			toName = null;
 			fallOut.set(0, { duration: 0 });
 		},
+		// Overlay only. Fire stays on the wilds until the next spin's fall-out.
 		cloneMorphHide: () => {
-			context.eventEmitter.broadcast({ type: 'cellFireHide' });
 			phase = 'idle';
 			cells = [];
 			fromName = null;
@@ -148,7 +139,8 @@
 		},
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (!morphing) return;
 		let raf = 0;
 		const start = performance.now();
 		const tick = (now: number) => {

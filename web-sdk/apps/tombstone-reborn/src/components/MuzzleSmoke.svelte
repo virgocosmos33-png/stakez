@@ -8,6 +8,10 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicOut, quadIn } from 'svelte/easing';
 	import { Container, SpriteSheet } from 'pixi-svelte';
+	import { getContext } from '../game/context';
+
+	const context = getContext();
+	const ready = $derived(Boolean(context.stateApp.loadedAssets?.['muzzleSmoke']));
 
 	let {
 		x,
@@ -31,15 +35,17 @@
 	const alpha = $derived(0.82 * fade.current);
 </script>
 
-<Container x={x} y={cy} eventMode="none" zIndex={9} alpha={alpha}>
-	<SpriteSheet
-		key="muzzleSmoke"
-		anchor={0.5}
-		width={dim}
-		height={dim}
-		animationSpeed={0.72}
-		loop={false}
-		play={true}
-		eventMode="none"
-	/>
-</Container>
+{#if ready}
+	<Container x={x} y={cy} eventMode="none" zIndex={9} alpha={alpha}>
+		<SpriteSheet
+			key="muzzleSmoke"
+			anchor={0.5}
+			width={dim}
+			height={dim}
+			animationSpeed={0.72}
+			loop={false}
+			play={true}
+			eventMode="none"
+		/>
+	</Container>
+{/if}

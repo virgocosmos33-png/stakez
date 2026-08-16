@@ -1,24 +1,22 @@
 <script lang="ts" module>
 	import type { SymbolName } from '../game/types';
 
-	// SPLIT (no-tear): the scored symbol is NEVER cut apart. The cell stays a
-	// single whole card and the multiplier is told by a bullet volley stamping
-	// holes into it plus an "Nx" wanted-poster badge. The user rejected every
-	// version that visibly split / parted / sliced the cell — bullet holes and
-	// the badge are the entire read.
+	// SPLIT: knife slashes horizontally; the card comes apart into N wide layers
+	// stacked top-to-bottom (capped at 4). Count text only from 6+ (one symbol).
 	export type EmitterEventSplitPanes =
 		| { type: 'splitPanesShow'; cells: { reel: number; row: number; count: number; name?: SymbolName }[] }
 		| { type: 'splitPanesHide' };
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
+	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Text } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
+	import { playExternalOnce } from 'utils-sound';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
-	import { fxDur, fxWait } from '../game/fxTiming';
+	import { fxDur } from '../game/fxTiming';
 	import { getContext } from '../game/context';
 	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
 	import { isVisibleBoardCell } from '../game/boardCells';
@@ -27,125 +25,152 @@
 		SYMBOL_CARD_H as CARD_H,
 		HIGH_SYMBOLS,
 	} from '../game/constants';
-	import {
-		type HoleMark,
-		EXPLOSION_MIN_MULT,
-		EXPLOSION_READ_MS,
-		holePose,
-		shotsForMultiplier,
-		nextShotGap,
-		buildCountUp,
-	} from '../game/splitBullets';
-	import { EXPLOSION_LIFE_MS } from '../game/splitExplosion';
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
-	import { trValueStyle, TR_INK_GOLD, TR_INK_IRON } from '../game/typography';
+	import { trValueStyle } from '../game/typography';
 	import SymbolSprite from './SymbolSprite.svelte';
-	import BulletHoleMark from './BulletHoleMark.svelte';
-	import SplitExplosion from './SplitExplosion.svelte';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
+
+	const MAX_PANES = 4;
+	/** stacked panes carry 2–5; from 6 the cell stays one symbol and shows the count */
+	const COUNT_LABEL_MIN = 6;
+	const COUNT_PAD = 8;
+	const KNIFE_ASPECT = 1024 / 290;
+	const SLASH_ASPECT = 1280 / 172;
+	const KNIFE_W = CARD_W * 1.58;
+	const KNIFE_H = KNIFE_W / KNIFE_ASPECT;
+	const SLASH_W = CARD_W * 1.9;
+	const SLASH_H = SLASH_W / SLASH_ASPECT;
+
+	const KNIFE_MS = 1180;
+	/** knife has arrived at the left of the card, blade on the cut line */
+	const KNIFE_READY = 0.36;
+	/** pull-back finished — the slash starts here */
+	const KNIFE_WIND = 0.5;
+	/** tip is through the card — copies snap apart */
+	const KNIFE_IMPACT = 0.7;
+	const KNIFE_OUT = 0.86;
+	const SPLIT_SFX = '/assets/audio/sfx_split.mp3';
+	const READY_X = -CARD_W * 0.62;
+	const READY_Y = 0;
+	const START_X = -CARD_W * 1.55;
+	const START_Y = -CARD_H * 0.42;
+	const END_X = CARD_W * 1.28;
+	const END_Y = CARD_H * 0.1;
 
 	type SplitCell = {
 		key: string;
 		reel: number;
 		row: number;
 		count: number;
-		/** only set when the caller names the symbol explicitly; otherwise the
-			cell follows whatever the board is currently showing there */
 		pinned?: SymbolName;
 		cx: number;
 		cy: number;
 		seed: number;
-		/** true only while this cell is part of the currently-playing strike;
-			persisted cells from earlier events stay settled and untouched */
 		fresh: boolean;
 	};
 	type DrawnCell = SplitCell & { name: SymbolName };
 
 	let cells = $state<SplitCell[]>([]);
 	let show = $state(false);
-	/**
-	 * The multiplier value each cell's badge is CURRENTLY showing. During a
-	 * strike this rolls up in random small steps (one per shot) from the cell's
-	 * previous value to its target, landing on the final shot — instead of the
-	 * badge snapping straight to the target. Settled cells read their final count
-	 * via the `?? cell.count` fallback in the badge.
-	 */
-	let displayCounts = $state<Record<string, number>>({});
-	/** wall clock for muzzle flashes on stamped holes */
-	let nowMs = $state(performance.now());
-	/** stamped bullet holes that stay on their cells until fall-out */
-	let holeMarks = $state<HoleMark[]>([]);
-	/** one-shot detonations on cells whose multiplier cleared EXPLOSION_MIN_MULT */
-	let explosionMarks = $state<{ id: string; cellKey: string; born: number }[]>([]);
-	// rides the scored cells off the bottom edge when the next spin starts
+	let time = $state(0);
+	/** -1 when idle, else normalised progress through the slash */
+	let knifeT = $state(-1);
 	const fallOut = new Tween(0);
+	const splitProgress = new Tween(1);
+	const seamFlare = new Tween(0);
+	const detonation = new Tween(0);
+	const pulse = new Tween(1);
 
-	// Rotated so several cells detonating on one board are not the same boom
-	// three times. forcePlay so a stacked chain still rings each blast.
-	const EXPLOSION_SFX = [
-		'sfx_multiplier_explosion_a',
-		'sfx_multiplier_explosion_b',
-		'sfx_multiplier_explosion_c',
-	] as const;
+	const mix = (from: number, to: number, t: number) => from + (to - from) * t;
+	const span = (t: number, from: number, to: number) =>
+		Math.min(Math.max((t - from) / (to - from), 0), 1);
 
-	const playShotSfx = (isFinal: boolean) => {
-		// forcePlay: stacked volleys must not get swallowed by the once-player.
-		// Earlier rounds are the dry pistol-into-wood punch. The LAST round always
-		// RICOCHETS — and it plays ALONE, not stacked on the wood punch, because
-		// the ricochet cue already carries the magnum crack PLUS the whine ringing
-		// off iron. Stacking wood under it (the old behaviour) buried the zing. So
-		// a volley now reads BANG .. BANG .. CRACK-ZING and the ear knows the
-		// count-up has landed on its target on that final shot.
-		context.eventEmitter.broadcast({
-			type: 'soundOnce',
-			name: isFinal ? 'sfx_bullet_ricochet' : 'sfx_bullet_wood',
-			forcePlay: true,
+	const rand = (seed: number) => {
+		const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+		return value - Math.floor(value);
+	};
+
+	/** blade tip, card-local. Approach → settle → pull back → slash → exit. */
+	const knifeTipX = (t: number) => {
+		if (t < KNIFE_READY) return mix(START_X, READY_X, cubicOut(span(t, 0, KNIFE_READY)));
+		if (t < KNIFE_WIND) return mix(READY_X, READY_X - CARD_W * 0.1, span(t, KNIFE_READY, KNIFE_WIND));
+		if (t <= KNIFE_IMPACT) {
+			return mix(READY_X - CARD_W * 0.1, CARD_W * 0.2, cubicIn(span(t, KNIFE_WIND, KNIFE_IMPACT)));
+		}
+		return mix(CARD_W * 0.2, END_X, cubicIn(span(t, KNIFE_IMPACT, 1)));
+	};
+	const knifeY = (t: number) => {
+		if (t < KNIFE_READY) return mix(START_Y, READY_Y, cubicOut(span(t, 0, KNIFE_READY)));
+		if (t < KNIFE_WIND) return READY_Y;
+		if (t <= KNIFE_IMPACT) return mix(READY_Y, READY_Y + CARD_H * 0.02, span(t, KNIFE_WIND, KNIFE_IMPACT));
+		return mix(READY_Y + CARD_H * 0.02, END_Y, span(t, KNIFE_IMPACT, 1));
+	};
+	const knifeRoll = (t: number) => {
+		if (t < KNIFE_READY) return mix(-0.72, -0.22, cubicOut(span(t, 0, KNIFE_READY)));
+		if (t < KNIFE_WIND) return mix(-0.22, -0.4, span(t, KNIFE_READY, KNIFE_WIND));
+		if (t <= KNIFE_IMPACT) return mix(-0.4, 0.08, cubicIn(span(t, KNIFE_WIND, KNIFE_IMPACT)));
+		return mix(0.08, 0.18, span(t, KNIFE_IMPACT, 1));
+	};
+	const knifeAlpha = (t: number) =>
+		t < KNIFE_READY * 0.45
+			? 0.88 * cubicOut(span(t, 0, KNIFE_READY * 0.45))
+			: 0.88 * (1 - cubicIn(span(t, KNIFE_OUT, 1)));
+	const knifeScale = (t: number) => {
+		if (t < KNIFE_READY) return mix(0.86, 1, cubicOut(span(t, 0, KNIFE_READY)));
+		if (t < KNIFE_WIND) return mix(1, 0.96, span(t, KNIFE_READY, KNIFE_WIND));
+		if (t <= KNIFE_IMPACT) return mix(0.96, 1.1, span(t, KNIFE_WIND, KNIFE_IMPACT));
+		return mix(1.1, 0.94, span(t, KNIFE_IMPACT, 1));
+	};
+
+	const slashHeat = (t: number) => {
+		if (t < KNIFE_WIND) return 0;
+		if (t <= KNIFE_IMPACT) return span(t, KNIFE_WIND, KNIFE_IMPACT);
+		return 1 - cubicIn(span(t, KNIFE_IMPACT, 0.96));
+	};
+
+	const playKnife = (onSlash: () => void, onImpact: () => void) =>
+		new Promise<void>((resolve) => {
+			const start = performance.now();
+			const dur = fxDur(KNIFE_MS);
+			let slashed = false;
+			let fired = false;
+			knifeT = 0;
+			const step = (now: number) => {
+				const t = (now - start) / dur;
+				if (!slashed && t >= KNIFE_WIND) {
+					slashed = true;
+					onSlash();
+				}
+				if (!fired && t >= KNIFE_IMPACT) {
+					fired = true;
+					onImpact();
+				}
+				if (t >= 1) {
+					knifeT = -1;
+					resolve();
+					return;
+				}
+				knifeT = t;
+				requestAnimationFrame(step);
+			};
+			requestAnimationFrame(step);
 		});
-	};
-
-	/** Stamp one hole on a cell (SFX is fired once per volley, not per cell). */
-	const stampHole = (cell: SplitCell, shotIndex: number) => {
-		const pose = holePose(cell.seed, shotIndex, CARD_W, CARD_H);
-		const born = performance.now();
-		holeMarks = [
-			...holeMarks,
-			{
-				id: `${cell.key}-${shotIndex}-${born}`,
-				cellKey: cell.key,
-				x: pose.x,
-				y: pose.y,
-				tex: pose.tex,
-				scale: pose.scale,
-				rot: pose.rot,
-				born,
-			},
-		];
-	};
 
 	/**
 	 * MERGE the incoming split cells into whatever is already up.
 	 *
-	 * A spin can fire several feature events back to back (split, clone, split
-	 * again — see combo_features_book). The panes are supposed to stay on their
-	 * cells until the next reveal, but replacing `cells` wholesale here meant
-	 * every later `splitPanesShow` wiped the earlier cells' panes — and a split
-	 * that only hit wild-column cells (all filtered out) cleared the entire
-	 * overlay. Cells already up keep their panes; a cell named again gets its
-	 * new count and re-animates.
-	 *
-	 * Returns true when at least one cell is new or changed, i.e. there is
-	 * something for the bullet strike to play on.
+	 * A spin can fire several feature events back to back. Cells already up
+	 * keep their panes; a cell named again gets its new count and re-animates.
+	 * Returns true when at least one cell is new or changed.
 	 */
 	const layout = (incoming: { reel: number; row: number; count: number; name?: SymbolName }[]) => {
 		const wildReels = new Set([
 			...context.stateGame.wildReelReels,
 			...context.stateGame.stretchedReels,
 		]);
-		// carry surviving cells over settled, refreshing their centres — features
-		// that ran since their split (wild reel, stretch) can shift reel offsets
 		const merged = new Map<string, SplitCell>(
 			cells
 				.filter((cell) => !wildReels.has(cell.reel))
@@ -162,7 +187,6 @@
 		let anyFresh = false;
 		for (const c of incoming) {
 			if (c.count <= 1 || wildReels.has(c.reel)) continue;
-			// pad / OOB rows sit in empty diamond gaps — never tear those
 			if (!isVisibleBoardCell(c.reel, c.row)) continue;
 			const reelSymbol = context.stateGame.board[c.reel]?.reelState.symbols[c.row];
 			if (!c.name && !reelSymbol) continue;
@@ -170,12 +194,6 @@
 			const existing = merged.get(key);
 			if (existing && existing.count === c.count && existing.pinned === c.name) continue;
 			anyFresh = true;
-			// SEED the count-up start: a re-struck cell climbs from what it already
-			// showed (e.g. 10x -> 20x); a brand-new cell climbs from a low base
-			// (~a quarter of its target) so the roll-up is felt, not a snap.
-			const prev = displayCounts[key];
-			const startBase = prev != null ? prev : Math.max(1, Math.round(c.count * 0.25));
-			displayCounts = { ...displayCounts, [key]: startBase };
 			merged.set(key, {
 				key,
 				reel: c.reel,
@@ -193,20 +211,10 @@
 		return anyFresh;
 	};
 
-	/**
-	 * The symbol each split cell is CURRENTLY showing, re-read every frame.
-	 *
-	 * The panes stay up until the next reveal, so a later feature on the same
-	 * cell can move the board out from under them. Holding the name from layout
-	 * time meant a CLONE morphing a split cell left the old symbol painted over
-	 * the new premium, since this overlay mounts above the board.
-	 */
 	const drawn = $derived(
 		cells
 			.map((cell) => ({
 				...cell,
-				// position re-solved LIVE too: a STRETCH racking this reel after the
-				// split moves every row, and the panes must ride along
 				cy: getCellCenterY(cell.reel, cell.row),
 				name:
 					cell.pinned ??
@@ -216,167 +224,71 @@
 			.filter((cell): cell is DrawnCell => cell.name != null),
 	);
 
-	/**
-	 * Detonate the given big cells: a one-shot gunpowder blast on each card plus a
-	 * rotated boom, and a heavier board shake so a big hit is FELT, not just seen.
-	 *
-	 * This is the FINAL step of the strike — it runs after the whole bullet volley
-	 * has stamped the multiplier AND a read-beat has passed, so the explosion
-	 * never covers the Nx before the player can read it. Only cells over
-	 * EXPLOSION_MIN_MULT ever reach here, and each detonates exactly once.
-	 */
-	const detonateBigCells = (big: SplitCell[]) => {
-		if (!big.length) return;
-		const born = performance.now();
-		explosionMarks = [
-			...explosionMarks,
-			...big.map((cell) => ({ id: `${cell.key}-boom-${born}`, cellKey: cell.key, born })),
-		];
-		big.forEach((cell, i) => {
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: EXPLOSION_SFX[i % EXPLOSION_SFX.length],
-				forcePlay: true,
-			});
-		});
-		shakeBoard({ intensity: 20, duration: fxDur(340) });
-		context.eventEmitter.broadcast({ type: 'saloonCheers' });
-	};
-
-	// BULLET STRIKE: each fresh cell takes 1–4 rounds (scaled by its multiplier).
-	// Volleys fire across the board so a big multi gets more holes. Wood + ricochet
-	// on every shot. The cell is NEVER cut — the holes and the badge carry the
-	// read; cells over EXPLOSION_MIN_MULT also DETONATE. One shake on the first
-	// volley for impact (upgraded to a heavier one when something blows up).
 	const runSplit = async () => {
-		const fresh = cells.filter((c) => c.fresh);
-		// drop prior marks on cells that are re-striking this event
-		const freshKeys = new Set(fresh.map((c) => c.key));
-		holeMarks = holeMarks.filter((m) => !freshKeys.has(m.cellKey));
-		explosionMarks = explosionMarks.filter((m) => !freshKeys.has(m.cellKey));
+		splitProgress.set(0, { duration: 0 });
+		seamFlare.set(0, { duration: 0 });
+		detonation.set(0, { duration: 0 });
+		pulse.set(1.28, { duration: 0 });
+		knifeT = -1;
 
-		const maxShots = Math.max(1, ...fresh.map((c) => shotsForMultiplier(c.count)));
-
-		// Per cell, the random step values its badge visits, one per shot, from
-		// its seeded start (set in layout) up to its target on its LAST shot.
-		const countUp = new Map<string, number[]>(
-			fresh.map((cell) => [
-				cell.key,
-				buildCountUp(
-					displayCounts[cell.key] ?? cell.count,
-					cell.count,
-					shotsForMultiplier(cell.count),
-				),
-			]),
+		let settle: Promise<unknown> = Promise.resolve();
+		await playKnife(
+			() => playExternalOnce(SPLIT_SFX),
+			() => {
+				seamFlare.set(1, { duration: 20 });
+				seamFlare.set(0, { duration: 180 });
+				shakeBoard({
+					intensity: Math.min(10 + cells.filter((c) => c.fresh).length * 2.5, 18),
+					duration: fxDur(240),
+				});
+				const fx = detonation.set(1, { duration: 300, easing: cubicOut });
+				const punch = pulse.set(1, { duration: 400, easing: backOut });
+				const apart = splitProgress.set(1, { duration: 180, easing: backOut });
+				settle = Promise.all([fx, punch, apart]);
+			},
 		);
-
-		for (let shot = 0; shot < maxShots; shot++) {
-			let stamped = 0;
-			const stepped: Record<string, number> = {};
-			for (const cell of fresh) {
-				const cellShots = shotsForMultiplier(cell.count);
-				if (shot >= cellShots) continue;
-				stampHole(cell, shot);
-				// roll this cell's multiplier to its value for this shot
-				stepped[cell.key] = countUp.get(cell.key)?.[shot] ?? cell.count;
-				stamped += 1;
-			}
-			if (stamped > 0) {
-				// commit this shot's rolled multiplier values in one reactive write
-				displayCounts = { ...displayCounts, ...stepped };
-				const isFinal = shot === maxShots - 1;
-				playShotSfx(isFinal);
-				// one light impact shake on the first volley — the HEAVY blast shake
-				// belongs to the detonation, which now comes last (below)
-				if (shot === 0) {
-					shakeBoard({
-						intensity: Math.min(10 + fresh.length * 2.5, 18),
-						duration: fxDur(240),
-					});
-				}
-			}
-			// uneven rest between shots so the volley never sounds metronomic
-			if (shot < maxShots - 1) await fxWait(nextShotGap());
-		}
-
-		// pin every struck cell exactly on its target once the volley is done
-		displayCounts = {
-			...displayCounts,
-			...Object.fromEntries(fresh.map((c) => [c.key, c.count])),
-		};
-
-		// SEQUENCE (the whole point of this feature's read):
-		//   flame → bullets stamp the multiplier (Nx badge up) → HOLD so the
-		//   player can READ the Nx → THEN only cells over EXPLOSION_MIN_MULT
-		//   detonate, exactly once, as the final beat. Never during the volley.
-		const big = fresh.filter((c) => c.count > EXPLOSION_MIN_MULT);
-		if (big.length) {
-			await fxWait(EXPLOSION_READ_MS);
-			detonateBigCells(big);
-		}
+		await settle;
 	};
 
 	context.eventEmitter.subscribeOnMount({
 		splitPanesShow: async ({ cells: incoming }) => {
 			const anyFresh = layout(incoming);
-			// nothing new to strike (e.g. the split only hit wild columns):
-			// leave the surviving panes exactly as they are
 			if (!anyFresh || !cells.length) return;
-			// scored cells burn while the strike plays: with no divider drawn
-			// down a split, the fire is what ties the struck cells together,
-			// and it climbs with the biggest multiplier on the board.
-			context.eventEmitter.broadcast({
-				type: 'cellFireShow',
-				cells: cells.map((c) => ({ reel: c.reel, row: c.row })),
-				level: Math.max(...cells.map((c) => c.count)),
-			});
 			await runSplit();
-			// strike done: the fresh cells settle in with the persisted ones
 			cells = cells.map((cell) => (cell.fresh ? { ...cell, fresh: false } : cell));
 		},
-		// the next spin is under way: the panes ride down and off with the symbols
-		// they were cut into, rather than popping when the reveal lands.
 		featureFxFallOut: async () => {
-			context.eventEmitter.broadcast({ type: 'cellFireHide' });
 			await fallOutFeatureFx(fallOut, show && cells.length > 0);
 			show = false;
 			cells = [];
-			holeMarks = [];
-			explosionMarks = [];
-			displayCounts = {};
+			knifeT = -1;
 			fallOut.set(0, { duration: 0 });
 		},
 		splitPanesHide: () => {
-			context.eventEmitter.broadcast({ type: 'cellFireHide' });
 			show = false;
 			cells = [];
-			holeMarks = [];
-			explosionMarks = [];
-			displayCounts = {};
+			knifeT = -1;
 			fallOut.set(0, { duration: 0 });
 		},
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (!show) return;
 		let raf = 0;
+		const start = performance.now();
 		const tick = (now: number) => {
-			nowMs = now;
-			// drop detonations that have finished playing so the list never grows
-			// unbounded across a long session of big hits
-			if (explosionMarks.length) {
-				const live = explosionMarks.filter((m) => now - m.born < EXPLOSION_LIFE_MS);
-				if (live.length !== explosionMarks.length) explosionMarks = live;
-			}
+			time = (now - start) / 1000;
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
 	});
 
-	// Weathered iron frame around the settled scored cell. High symbols used to
-	// get a bright brass stroke, which drew a glossy gold rounded rectangle
-	// around the card — the exact gilded-pane look the reskin is removing. Both
-	// tiers are dark iron now; the tier reads from the warmth, not the shine.
+	const drawUnderGlow = (g: import('pixi.js').Graphics) => {
+		g.roundRect(-CARD_W / 2 - 2, -CARD_H / 2 - 2, CARD_W + 4, CARD_H + 4, 8);
+		g.fill({ color: TOMBSTONE_FX.dark, alpha: 0.92 });
+	};
+
 	const drawFrame = (g: import('pixi.js').Graphics, isHigh: boolean) => {
 		g.roundRect(-CARD_W / 2 - 3, -CARD_H / 2 - 3, CARD_W + 6, CARD_H + 6, 8);
 		g.stroke({
@@ -386,63 +298,172 @@
 		});
 	};
 
-	const drawBadgePlate = (g: import('pixi.js').Graphics) => {
-		g.roundRect(-28, -18, 56, 36, 4);
-		g.fill({ color: TOMBSTONE_FX.iron, alpha: 0.82 });
-		g.roundRect(-28, -18, 56, 36, 4);
-		g.stroke({ color: TOMBSTONE_FX.dust, width: 1.6, alpha: 0.85 });
-		g.roundRect(-25, -15, 50, 30, 3);
-		g.stroke({ color: TOMBSTONE_FX.bloodRust, width: 1, alpha: 0.45 });
+	const drawDivider = (g: import('pixi.js').Graphics, cell: SplitCell, i: number, slim: number) => {
+		const flicker = 0.88 + 0.12 * Math.sin(time * 11 + cell.seed * 3 + i * 1.7);
+		g.roundRect(-CARD_W / 2, -1.6 * slim, CARD_W, 3.2 * slim, 1.2);
+		g.fill({ color: TOMBSTONE_FX.dust, alpha: 0.28 * flicker * slim });
+		g.roundRect(-CARD_W / 2, -0.55 * slim, CARD_W, 1.1 * slim, 0.4);
+		g.fill({ color: TOMBSTONE_FX.boneDust, alpha: 0.7 * flicker });
+	};
+
+	const drawCutLine = (g: import('pixi.js').Graphics, t: number) => {
+		const heat = slashHeat(t);
+		if (heat <= 0.01) return;
+		const tip = knifeTipX(t);
+		const left = -CARD_W / 2 - 6;
+		const right = Math.min(tip, CARD_W / 2 + 10);
+		if (right <= left) return;
+		g.roundRect(left, -6, right - left, 12, 5);
+		g.fill({ color: TOMBSTONE_FX.bloodRust, alpha: 0.2 * heat });
+		g.roundRect(left, -1.4, right - left, 2.8, 1);
+		g.fill({ color: 0xfff1c2, alpha: 0.95 * heat });
+		if (t < KNIFE_OUT) {
+			g.ellipse(tip, 0, 14, 3.2);
+			g.fill({ color: 0xffe08a, alpha: 0.7 * heat });
+			for (let k = 0; k < 5; k++) {
+				const sparkSeed = 19 + k * 11 + Math.floor(t * 40);
+				const life = (time * (4 + rand(sparkSeed) * 2) + rand(sparkSeed + 1)) % 1;
+				const side = rand(sparkSeed + 2) > 0.5 ? 1 : -1;
+				const x = tip - 4 - rand(sparkSeed + 3) * 18;
+				const y = side * (4 + life * 16);
+				g.circle(x, y, 1.1 + (1 - life) * 1.4);
+				g.fill({ color: k % 2 === 0 ? 0xffe8a0 : TOMBSTONE_FX.spentBrass, alpha: 0.8 * (1 - life) * heat });
+			}
+		}
+	};
+
+	const drawSeamFlare = (g: import('pixi.js').Graphics, flare: number) => {
+		if (flare <= 0.01) return;
+		g.ellipse(0, 0, CARD_W * 0.55 * flare + 10, 5 * flare + 1.5);
+		g.fill({ color: 0xfff4d0, alpha: 0.8 * flare });
+		g.roundRect(-CARD_W / 2 - 8, -3.2, CARD_W + 16, 6.4, 3);
+		g.fill({ color: TOMBSTONE_FX.spentBrass, alpha: 0.65 * flare });
+	};
+
+	const drawDetonation = (
+		g: import('pixi.js').Graphics,
+		cell: SplitCell,
+		panes: number,
+		d: number,
+		split: number,
+	) => {
+		if (d <= 0 || d >= 1) return;
+		const fade = 1 - d;
+		g.roundRect(-CARD_W / 2 - 4, -CARD_H / 2 - 4, CARD_W + 8, CARD_H + 8, 10);
+		g.fill({ color: TOMBSTONE_FX.spentBrass, alpha: 0.28 * fade * fade });
+		const ring = CARD_H * (0.2 + 0.85 * d);
+		g.circle(0, 0, ring);
+		g.stroke({ color: TOMBSTONE_FX.boneDust, width: 2.4 * fade + 0.5, alpha: 0.7 * fade });
+		for (let seamIndex = 0; seamIndex < panes - 1; seamIndex++) {
+			const seamY = (-CARD_H / 2 + ((seamIndex + 1) / panes) * CARD_H) * split;
+			for (let k = 0; k < 4; k++) {
+				const sparkSeed = cell.seed * 17 + seamIndex * 71 + k * 13;
+				const side = rand(sparkSeed) > 0.5 ? 1 : -1;
+				const x0 = (rand(sparkSeed + 1) - 0.5) * CARD_W * 0.75;
+				const speed = 30 + rand(sparkSeed + 2) * 48;
+				const x = x0 + (rand(sparkSeed + 3) - 0.5) * 20 * d;
+				const y = seamY + side * speed * d;
+				g.moveTo(x, y);
+				g.lineTo(x, y - side * 7 * fade);
+				g.stroke({
+					color: k % 2 === 0 ? TOMBSTONE_FX.spentBrass : TOMBSTONE_FX.boneDust,
+					width: 1.3,
+					alpha: 0.8 * fade,
+				});
+			}
+		}
 	};
 
 </script>
 
 {#snippet splitCell(cell: DrawnCell)}
+	{@const panes = cell.count >= COUNT_LABEL_MIN ? 1 : Math.min(cell.count, MAX_PANES)}
+	{@const sliceHeight = CARD_H / panes}
 	{@const symbolInfo = getSymbolInfo({ rawSymbol: { name: cell.name }, state: 'postWinStatic' })}
 	{@const isHigh = HIGH_SYMBOLS.includes(cell.name)}
-	<!-- The cell is a SINGLE whole card. It is never cut, sliced, parted or
-		masked into panes — that was rejected repeatedly. The scored symbol is
-		redrawn here (so a clone/stretch that moved the board stays correct),
-		wearing a thin iron frame, and the ONLY feature marks are the bullet
-		holes stamped into it and the multiplier badge above it. -->
-	<Container x={cell.cx} y={cell.cy}>
-		<SymbolSprite {symbolInfo} />
-		<Graphics draw={(g) => drawFrame(g, isHigh)} />
-		<!-- bullet holes sit ON the card — stamped into the wood, not a hand in front -->
-		{#each holeMarks.filter((m) => m.cellKey === cell.key) as mark (mark.id)}
-			<BulletHoleMark
-				tex={mark.tex}
-				x={mark.x}
-				y={mark.y}
-				scale={mark.scale}
-				rot={mark.rot}
-				born={mark.born}
-				now={nowMs}
+	{@const split = cell.fresh ? splitProgress.current : 1}
+	{@const slim = Math.min(1, 3 / panes)}
+	{@const gap = CARD_H * Math.min(0.03, 0.1 / panes)}
+	{@const paneHeight = Math.max((sliceHeight - gap) * split + CARD_H * (1 - split), 2)}
+	<Container x={cell.cx} y={cell.cy} scale={cell.fresh ? pulse.current : 1}>
+		<Graphics draw={drawUnderGlow} />
+		{#each Array.from({ length: panes }) as _, i (i)}
+			{@const paneY = (-CARD_H / 2 + (i + 0.5) * sliceHeight) * split}
+			<Container y={paneY}>
+				<Rectangle isMask anchor={0.5} width={CARD_W} height={paneHeight} backgroundColor={0xffffff} />
+				<SymbolSprite {symbolInfo} />
+			</Container>
+		{/each}
+		{#each Array.from({ length: panes - 1 }) as _, i (i)}
+			<Container y={(-CARD_H / 2 + (i + 1) * sliceHeight) * split} alpha={split}>
+				<Graphics draw={(g) => drawDivider(g, cell, i, slim)} />
+			</Container>
+		{/each}
+		<Container alpha={split}>
+			<Graphics draw={(g) => drawFrame(g, isHigh)} />
+		</Container>
+		{#if cell.fresh}
+			<Graphics draw={(g) => drawDetonation(g, cell, panes, detonation.current, split)} />
+			<Graphics draw={(g) => drawSeamFlare(g, seamFlare.current)} />
+			{@render knifeStrike()}
+		{/if}
+		{#if cell.count >= COUNT_LABEL_MIN}
+			<Text
+				x={CARD_W / 2 - COUNT_PAD}
+				y={CARD_H / 2 - COUNT_PAD}
+				anchor={{ x: 1, y: 1 }}
+				text={`${cell.count}x`}
+				alpha={cell.fresh ? splitProgress.current : 1}
+				style={trValueStyle({
+					fontSize: 22,
+					fill: 0xffffff,
+					align: 'right',
+					stroke: { color: 0x000000, width: 3, join: 'round' },
+				})}
 			/>
-		{/each}
-		<!-- big-multiplier detonation, drawn ABOVE the holes so the blast reads
-			over the freshly punched wood -->
-		{#each explosionMarks.filter((m) => m.cellKey === cell.key) as boom (boom.id)}
-			<SplitExplosion x={0} y={0} born={boom.born} now={nowMs} size={CARD_W * 1.85} />
-		{/each}
+		{/if}
 	</Container>
 {/snippet}
 
-{#snippet badgeMarker(cell: SplitCell)}
-	<!-- EVERY scored cell states exactly what it is worth. Wanted-poster plaque
-		— dusty amber on iron, not clinical white "3x" HUD text. -->
-	<Container x={cell.cx} y={cell.cy}>
-		<Graphics draw={drawBadgePlate} />
-		<Text
+{#snippet knifeStrike()}
+	{#if knifeT >= 0}
+		{@const t = knifeT}
+		{@const tip = knifeTipX(t)}
+		{@const alpha = knifeAlpha(t)}
+		{@const heat = slashHeat(t)}
+		<Graphics draw={(g) => drawCutLine(g, t)} />
+		<Sprite
+			key="splitSlash"
+			x={mix(-CARD_W * 0.15, tip * 0.15, span(t, KNIFE_WIND, KNIFE_IMPACT))}
+			y={0}
 			anchor={0.5}
-			text={`${Math.round(displayCounts[cell.key] ?? cell.count)}x`}
-			style={trValueStyle({
-				fontSize: 28,
-				fill: TR_INK_GOLD,
-				stroke: { color: TR_INK_IRON, width: 5, join: 'round' },
-			})}
+			width={SLASH_W * mix(0.35, 1.05, span(t, KNIFE_WIND, KNIFE_IMPACT))}
+			height={SLASH_H}
+			alpha={heat}
+			blendMode="add"
 		/>
-	</Container>
+		<Sprite
+			key="splitKnife"
+			x={tip - 10}
+			y={knifeY(t) + CARD_H * 0.03}
+			anchor={{ x: 0.88, y: 0.52 }}
+			width={KNIFE_W * knifeScale(t)}
+			height={KNIFE_H * knifeScale(t)}
+			rotation={knifeRoll(t)}
+			alpha={alpha * 0.28}
+			tint={0x000000}
+		/>
+		<Sprite
+			key="splitKnife"
+			x={tip}
+			y={knifeY(t)}
+			anchor={{ x: 0.88, y: 0.52 }}
+			width={KNIFE_W * knifeScale(t)}
+			height={KNIFE_H * knifeScale(t)}
+			rotation={knifeRoll(t)}
+			alpha={alpha}
+		/>
+	{/if}
 {/snippet}
 
 <!-- MainContainer stays MOUNTED even while hidden: a remounted node appends to
@@ -453,9 +474,6 @@
 		<BoardSpace yOffset={fallOut.current}>
 			{#each drawn as cell (cell.key)}
 				{@render splitCell(cell)}
-			{/each}
-			{#each drawn as cell (cell.key)}
-				{@render badgeMarker(cell)}
 			{/each}
 		</BoardSpace>
 	{/if}

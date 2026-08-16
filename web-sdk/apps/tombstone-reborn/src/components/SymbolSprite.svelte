@@ -18,17 +18,11 @@
 	const props: Props = $props();
 	const pulse = new Tween(1);
 
-	// Sprite-only symbols (WILD / SCATTER / special-cell cards) animate via scale.
-	// The paying H/L cards run their spine rigs now, so this pulse is the WILD /
-	// scatter beat. The win emphasis is a clean upward POP (overshoot above 1 then
-	// settle) — reads as a celebratory jump, not the old shrink-dip. The overshoot
-	// is kept modest so it stays within the cell gutter + the timber frame gap.
+	// Sprite-only symbols stay flat on a win — no scale pop, no mesh warp.
+	// Land still does a short settle so a dropping WILD / scatter reads as a hit.
 	const animate = async (state?: SymbolState) => {
 		if (state === 'win') {
-			await pulse.set(1.12, { duration: 150, easing: backOut });
-			await pulse.set(1, { duration: 220, easing: quadOut });
-			await pulse.set(1.06, { duration: 120, easing: backOut });
-			await pulse.set(1, { duration: 200, easing: quadOut });
+			pulse.set(1, { duration: 0 });
 			props.oncomplete?.();
 		} else if (state === 'land') {
 			pulse.set(0.92, { duration: 0 });

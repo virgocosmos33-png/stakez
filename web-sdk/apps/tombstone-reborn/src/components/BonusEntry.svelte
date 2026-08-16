@@ -49,7 +49,6 @@
 	 * Performance: every animated layer is a sprite transform. The only Graphics in
 	 * the tree are Rectangles with constant geometry, so nothing redraws per frame.
 	 */
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import type { Texture } from 'pixi.js';
@@ -196,7 +195,8 @@
 		return () => window.clearTimeout(id);
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (tier === null) return;
 		let raf = 0;
 		const start = performance.now();
 		const tick = (now: number) => {

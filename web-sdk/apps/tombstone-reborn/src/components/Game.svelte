@@ -35,21 +35,25 @@
 	import FrameMorphHud from './FrameMorphHud.svelte';
 	import SplitPanes from './SplitPanes.svelte';
 	import CloneMorph from './CloneMorph.svelte';
+	import WildFlip from './WildFlip.svelte';
+	import GunsmokeAim from './GunsmokeAim.svelte';
 	import LinkedCellFire from './LinkedCellFire.svelte';
 	import StretchWays from './StretchWays.svelte';
 	import NudgeSlide from './NudgeSlide.svelte';
+	import NudgeWays from './NudgeWays.svelte';
 	import FeatureBurst from './FeatureBurst.svelte';
 	import WinSweep from './WinSweep.svelte';
 	import TapToSkip from './TapToSkip.svelte';
 	import BonusEntry from './BonusEntry.svelte';
 	import BulletHits from './BulletHits.svelte';
+	import SaloonLampHit from './SaloonLampHit.svelte';
 	import LaneLidLock from './LaneLidLock.svelte';
 	import LaneGoldCard from './LaneGoldCard.svelte';
 
 	const context = getContext();
 
-	// logo_v3 master ~2048×2082 (Scenario transparent stack)
-	const LOGO_ASPECT = 2082 / 2048;
+	// sheriff wordmark — bloody wanted-poster type (1514×717)
+	const LOGO_ASPECT = 717 / 1514;
 
 	// portrait / tablet → above reels; desktop / landscape → Layout* top-right slot
 	const logoStacked = $derived.by(() => {
@@ -63,10 +67,10 @@
 		const frameTop = board.visualTop + stateShake.y;
 		const gap = 10;
 		const topPad = 28;
-		// Fit into the clear band above the frame (logo_v3 is nearly square).
-		const maxH = Math.max(56, frameTop - gap - topPad);
+		// Fit the wide wordmark into the band above the frame.
+		const maxH = Math.max(48, frameTop - gap - topPad);
 		const widthBySpace = maxH / LOGO_ASPECT;
-		const widthByBoard = (board.visualRight - board.visualLeft) * 0.72;
+		const widthByBoard = (board.visualRight - board.visualLeft) * 0.78;
 		const width = Math.min(widthBySpace, widthByBoard);
 		const height = width * LOGO_ASPECT;
 		return {
@@ -85,8 +89,8 @@
 		// Readable mark; leave room for spin/HUD bottom bar and board crest.
 		const width =
 			layoutType === 'landscape'
-				? Math.min(128, Math.max(96, canvas.height * 0.17))
-				: Math.min(172, Math.max(132, canvas.height * 0.155));
+				? Math.min(240, Math.max(168, canvas.height * 0.28))
+				: Math.min(280, Math.max(200, canvas.height * 0.26));
 		return {
 			width,
 			height: width * LOGO_ASPECT,
@@ -162,19 +166,11 @@
 			</MainContainer>
 		{/if}
 
-		<!-- The steel plate the symbols are recessed into. Its own MainContainer,
-			mounted first, so a board remount can never shuffle it in front. -->
-		<MainContainer>
-			<BoardPlate />
-		</MainContainer>
-
-		<!-- Six special-card nameplates, one per reel, on a plank rail down the
-			LEFT of the board (always visible; a card lights its plaque on the
-			specialBar book event). Lies down above the board when the side margin
-			is too narrow — see SpecialBar.svelte. Needs the MainContainer around
-			it: the rail is a raw nine-slice attached to this parent. -->
+		<!-- Chains (z 0) under the timber (z 1), boxes (z 2) in front.
+			Same MainContainer so zIndex actually sorts them. -->
 		<MainContainer>
 			<SpecialBar />
+			<BoardPlate />
 		</MainContainer>
 
 		<MainContainer>
@@ -183,7 +179,7 @@
 		</MainContainer>
 
 		<!-- LAST-REEL LANE: boarded-shut cover while the lane is locked (every
-			base/small spin until DIG UP; open all round in the super bonus), and
+			base/small spin until TOMBSTONE; open all round in the super bonus), and
 			the golden sheriff card that flashes when the lane's special fires. -->
 		<LaneLidLock />
 		<LaneGoldCard />
@@ -191,28 +187,38 @@
 		<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle
 			fire, and smoke. Cleared the moment a spin starts. -->
 		<BulletHits />
+		<!-- Left lantern globe: smash the glass, kill the light until next spin. -->
+		<SaloonLampHit />
 
 		<!-- BOUNTY: the landed premium's WIN multiplier badge. -->
 		<StretchWays />
 
-		<!-- NUDGE: premium slides LEFT from the last lane, WIN mult climbs. -->
+		<!-- Legacy sideways nudge (old books only). -->
 		<NudgeSlide />
 
-		<!-- GUNSMOKE / TOMBSTONE OPEN / DIG UP / BOUNTY western bursts. -->
+		<!-- NUDGE WAYS: full-reel totem, clipped from the top, grows down. -->
+		<NudgeWays />
+
+		<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
 		<FeatureBurst />
 
-		<!-- SPLIT-GANG / SPLIT-OUTLAWS / SUPERSPLIT pane tear. -->
+		<!-- SPLIT / SUPERSPLIT: knife slash, then N panes (up to 4). -->
 		<SplitPanes />
 
 		<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD. -->
 		<CloneMorph />
 
+		<!-- Any symbol becoming a WILD flips to show the bottle on the back. -->
+		<WildFlip />
+
+		<!-- GUNSMOKE: revolver sits on the landed GS card and turns to aim. -->
+		<GunsmokeAim />
+
 		<!-- Marks the symbols a feature is about to hit. -->
 		<TargetLock />
 
 		<!-- Linked / connected cells burn: cell borders and the reel edges they
-			sit on. This is the connector language now that split cells draw no
-			divider at all. -->
+			sit on. Split cells now carry their own thin pane seams. -->
 		<LinkedCellFire />
 
 		<!-- SceneCharacter REMOVED: the patient beside the reels is gone. The

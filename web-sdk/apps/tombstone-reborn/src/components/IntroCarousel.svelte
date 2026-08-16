@@ -89,9 +89,9 @@
 	const blockBudget = $derived(canvas.height * 0.92);
 	const gap = $derived(Math.min(canvas.height * 0.022, unit * 0.035));
 
-	// clinical stack logo_v3 master is 2048×2082 transparent (Scenario Photoroom alpha)
-	const LOGO_RATIO = 2082 / 2048;
-	const logoWidth = $derived(Math.min(contentW * 0.42, (blockBudget * 0.26) / LOGO_RATIO));
+	// sheriff wordmark — bloody wanted-poster type (1514×717)
+	const LOGO_RATIO = 717 / 1514;
+	const logoWidth = $derived(Math.min(contentW * 0.62, (blockBudget * 0.22) / LOGO_RATIO));
 	const logoHeight = $derived(logoWidth * LOGO_RATIO);
 
 	const ctaW = $derived(Math.min(contentW * 0.5, 380));

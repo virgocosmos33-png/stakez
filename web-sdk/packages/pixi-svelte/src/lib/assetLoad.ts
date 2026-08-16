@@ -19,7 +19,7 @@ const PROCESS_METHOD_MAP = {
 	sprite: ({ key, rawAsset }: { key: string; rawAsset: RawSprites }) => ({ [key]: rawAsset }),
 	sprites: ({ rawAsset }: { rawAsset: RawSprites }) => rawAsset.textures,
 	spriteSheet: ({ key, rawAsset }: { key: string; rawAsset: RawSprites }) => ({
-		[key]: Object.values(rawAsset.textures),
+		[key]: Object.values(rawAsset?.textures ?? {}),
 	}),
 	audio: ({ key, rawAsset }: { key: string; rawAsset: RawAudio }) => {
 		return { [key]: rawAsset };

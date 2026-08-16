@@ -67,10 +67,27 @@ type BookEventCreateBonusSnapshot = {
 // TOMBSTONE REBORN custom events
 // ---------------------------------------------------------------------------
 
-/** the card kinds the top special bar can reveal */
-export type SpecialBarKind = 'split_gang' | 'split_outlaws' | 'gunsmoke' | 'digup' | 'coffin';
+/** the card kinds planted on the board */
+export type SpecialBarKind =
+	| 'split'
+	| 'gunsmoke'
+	| 'tombstone'
+	| 'nudge'
+	| 'split_gang'
+	| 'split_outlaws'
+	| 'digup'
+	| 'coffin';
 
-/** The special bar resolves: one entry per NON-EMPTY bar cell. */
+/** Feature symbols that landed on the board this spin. */
+type BookEventBoardSpecials = {
+	index: number;
+	type: 'boardSpecials';
+	barMode: 'off' | 'base' | 'small' | 'super' | 'wake';
+	lastUnlocked: boolean;
+	cells: { reel: number; row: number; kind: SpecialBarKind }[];
+};
+
+/** The special bar resolves: one entry per NON-EMPTY bar cell. (legacy books) */
 type BookEventSpecialBar = {
 	index: number;
 	type: 'specialBar';
@@ -78,21 +95,27 @@ type BookEventSpecialBar = {
 	cells: { reel: number; kind: SpecialBarKind }[];
 };
 
-/** DIG UP unlocked the last-reel lane mid-spin. */
+/** TOMBSTONE unlocked the last-reel lane mid-spin. */
+type BookEventTombstone = {
+	index: number;
+	type: 'tombstone';
+	reel: number;
+};
+
+/** DIG UP — legacy name for tombstone. */
 type BookEventDigUp = {
 	index: number;
 	type: 'digUp';
 	reel: number;
 };
 
-/** TOMBSTONE OPEN grew short reels taller, revealing extra symbols. */
+/** TOMBSTONE OPEN — removed. Kept so older books still type-check. */
 type BookEventCoffinOpen = {
 	index: number;
 	type: 'coffinOpen';
 	reels: {
 		reel: number;
 		added: number;
-		/** freshly revealed symbols, PADDED row indices, bottom-most last */
 		newCells: { row: number; name: SymbolName }[];
 	}[];
 	totalWays: number;
@@ -107,7 +130,17 @@ type BookEventGunsmoke = {
 	totalWays: number;
 };
 
-/** SPLIT-GANG added ways to every premium on the board. */
+/** SPLIT added ways to every copy of one chosen symbol type. */
+type BookEventSplit = {
+	index: number;
+	type: 'split';
+	factor: number;
+	symbols: SymbolName[];
+	cells: (Position & { multiplier: number })[];
+	totalWays: number;
+};
+
+/** SPLIT-GANG — legacy. */
 type BookEventSplitGang = {
 	index: number;
 	type: 'splitGang';
@@ -116,7 +149,7 @@ type BookEventSplitGang = {
 	totalWays: number;
 };
 
-/** SPLIT-OUTLAWS added ways to every low on the board. */
+/** SPLIT-OUTLAWS — legacy. */
 type BookEventSplitOutlaws = {
 	index: number;
 	type: 'splitOutlaws';
@@ -125,7 +158,21 @@ type BookEventSplitOutlaws = {
 	totalWays: number;
 };
 
-/** SUPERSPLIT: the last reel turned wild and EVERY paying symbol was split. */
+/** NUDGE WAYS: a ways-wild on reel 1 or 2, optionally nudging down. */
+type BookEventNudgeWays = {
+	index: number;
+	type: 'nudgeWays';
+	reel: number;
+	fullReel: boolean;
+	startRow: number;
+	initialWays: number;
+	finalWays: number;
+	steps: { row: number; ways: number }[];
+	cells: (Position & { multiplier: number })[];
+	totalWays: number;
+};
+
+/** SUPERSPLIT: the last reel turned wild and EVERY symbol was split. */
 type BookEventSuperSplit = {
 	index: number;
 	type: 'superSplit';
@@ -135,18 +182,43 @@ type BookEventSuperSplit = {
 	totalWays: number;
 };
 
-/** BOUNTY: a random premium landed on the last reel carrying a WIN multiplier. */
+/** BOUNTY: a premium on the last reel stacked onto the WIN multiplier. */
 type BookEventBounty = {
 	index: number;
 	type: 'bounty';
 	reel: number;
 	symbol: SymbolName;
 	winMult: number;
+	added?: number;
 };
 
-/** NUDGE: the nudge wild racked LEFT from the lane one notch per reel,
- * stepping onto exactly one cell per column and leaving it WILD, climbing its
- * WIN multiplier for every premium it crushed. */
+/** MARK: last-reel shooter fired at every premium, +1 WIN multi per hit. */
+type BookEventShooter = {
+	index: number;
+	type: 'shooter';
+	reel: number;
+	hits: Position[];
+	added: number;
+	winMult: number;
+};
+
+/** Feature symbols remaining on the board became the revolver WILD. */
+type BookEventSpecialsWild = {
+	index: number;
+	type: 'specialsWild';
+	cells: Position[];
+};
+
+/** HUD tick for the stacked WIN multiplier. */
+type BookEventWinMult = {
+	index: number;
+	type: 'winMult';
+	added: number;
+	winMult: number;
+	source: string;
+};
+
+/** NUDGE: legacy books only — the mechanic was removed. */
 type BookEventNudge = {
 	index: number;
 	type: 'nudge';
@@ -211,13 +283,20 @@ export type BookEvent =
 	| BookEventWincap
 	// customised
 	| BookEventSpecialBar
+	| BookEventBoardSpecials
+	| BookEventTombstone
 	| BookEventDigUp
 	| BookEventCoffinOpen
 	| BookEventGunsmoke
+	| BookEventSplit
 	| BookEventSplitGang
 	| BookEventSplitOutlaws
+	| BookEventNudgeWays
 	| BookEventSuperSplit
 	| BookEventBounty
+	| BookEventShooter
+	| BookEventSpecialsWild
+	| BookEventWinMult
 	| BookEventNudge
 	// bonus rounds
 	| BookEventFreeSpinTrigger

@@ -19,13 +19,13 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
 	import { Container, Rectangle, Text } from 'pixi-svelte';
-	import { stateBet } from 'state-shared';
 	import { stateSlots } from 'utils-slots';
 	import { waitForTimeout } from 'utils-shared/wait';
 
 	import Symbol from './Symbol.svelte';
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, SPIN_OPTIONS_DEFAULT, SPIN_OPTIONS_FAST } from '../game/constants';
+	import { SYMBOL_SIZE } from '../game/constants';
+	import { currentSpinOptions } from '../game/fxTiming';
 	import { TR_INK_GOLD, trValueStyle } from '../game/typography';
 	import type { SymbolName, SymbolState } from '../game/types';
 
@@ -70,7 +70,7 @@
 	// The cell reels on the board's own terms: same px/ms fall speed, same
 	// backOut bounce on landing, same turbo response. Read per transition rather
 	// than derived — the options must be fixed for the whole of one drop.
-	const spinOptions = () => (stateBet.isTurbo ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT);
+	const spinOptions = () => currentSpinOptions();
 
 	// What is CURRENTLY in the cell, held separately from the props so the
 	// OUTGOING symbol can finish reeling out before the incoming one moves in

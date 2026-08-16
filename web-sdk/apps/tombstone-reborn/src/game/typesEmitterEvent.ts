@@ -11,12 +11,15 @@ import type { EmitterEventCellSeal } from '../components/CellSealOverlay.svelte'
 import type { EmitterEventWildReel } from '../components/WildReelSlide.svelte';
 import type { EmitterEventSplitPanes } from '../components/SplitPanes.svelte';
 import type { EmitterEventCloneMorph } from '../components/CloneMorph.svelte';
+import type { EmitterEventWildFlip } from '../components/WildFlip.svelte';
+import type { EmitterEventGunsmokeAim } from '../components/GunsmokeAim.svelte';
 import type { EmitterEventStretchFx } from '../components/StretchFx.svelte';
 import type { EmitterEventStretchWays } from '../components/StretchWays.svelte';
 import type { EmitterEventCellLightning } from '../components/CellLightning.svelte';
 import type { EmitterEventCellFire } from '../components/LinkedCellFire.svelte';
 import type { EmitterEventTargetLock } from '../components/TargetLock.svelte';
 import type { EmitterEventNudgeSlide } from '../components/NudgeSlide.svelte';
+import type { EmitterEventNudgeWays } from '../components/NudgeWays.svelte';
 import type { EmitterEventFeatureBurst } from '../components/FeatureBurst.svelte';
 import type { EmitterEventBonusEntry } from '../components/BonusEntry.svelte';
 import type { EmitterEventLaneCard } from '../components/LaneGoldCard.svelte';
@@ -57,12 +60,15 @@ export type EmitterEventGame =
 	| EmitterEventWildReel
 	| EmitterEventSplitPanes
 	| EmitterEventCloneMorph
+	| EmitterEventWildFlip
+	| EmitterEventGunsmokeAim
 	| EmitterEventStretchFx
 	| EmitterEventStretchWays
 	| EmitterEventCellLightning
 	| EmitterEventCellFire
 	| EmitterEventTargetLock
 	| EmitterEventNudgeSlide
+	| EmitterEventNudgeWays
 	| EmitterEventFeatureBurst
 	| EmitterEventBonusEntry
 	| EmitterEventLaneCard

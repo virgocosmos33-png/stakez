@@ -3,7 +3,7 @@
 	 *  fires: BOUNTY star / SUPER SPLIT revolvers / NUDGE spur. */
 	export type EmitterEventLaneCard = {
 		type: 'laneCardShow';
-		kind: 'bounty' | 'supersplit' | 'nudge';
+		kind: 'bounty' | 'supersplit' | 'nudge' | 'shooter';
 	};
 </script>
 
@@ -26,6 +26,7 @@
 		bounty: 'laneGoldBounty',
 		supersplit: 'laneGoldSupersplit',
 		nudge: 'laneGoldNudge',
+		shooter: 'laneGoldNudge',
 	} as const;
 
 	/** source art is 384x576 — keep its aspect so the gold isn't squashed */

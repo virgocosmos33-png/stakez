@@ -1,15 +1,14 @@
 /**
- * Shared geometry for the side rails so two components agree on ONE truth:
- *   - SpecialBar.svelte draws the LEFT special-symbol timber rail, and (when
- *     vertical) stacked WAYS + WIN nameplates on the right (no timber slab).
- *   - FrameMorphHud.svelte shows the same WAYS + WIN stack ONLY when the bar is
- *     NOT vertical (narrow/portrait), where the left rail lies flat above the
- *     board and there is no room for a right column.
+ * Shared geometry so two components agree on ONE truth:
+ *   - SpecialBar.svelte draws stacked WAYS / MULTI / WIN nameplates on the
+ *     right when the side margin is wide enough.
+ *   - FrameMorphHud.svelte shows the same stack under the board when it is not.
  *
  * Keeping the vertical decision here stops the two from drifting — if the left
  * rail ever stops standing upright, WAYS/WIN move under the board, and vice-versa.
  */
 import { SYMBOL_SIZE, SYMBOL_CARD_W, BOARD_PLATE_PAD } from './constants';
+import { stateLayoutDerived } from './stateLayout';
 
 /** plaques sit inside the wood field, clear of the iron rivet band */
 export const PLAQUE_WIDTH_FRACTION = 0.7;
@@ -35,8 +34,10 @@ export const specialBarSideWidth = (board: BoardBox): number => {
 };
 
 /**
- * true when the left special-symbol rail stands upright (desktop/wide). In that
- * mode SpecialBar also owns the stacked WAYS/WIN nameplates on the right.
+ * Desktop / landscape: WAYS+MULTI hang on the skull wall, WIN on the bar.
+ * Portrait / tablet: FrameMorphHud shows the same boxes under the board.
  */
-export const isSpecialBarVertical = (board: BoardBox): boolean =>
-	specialBarSideWidth(board) >= MIN_SIDE_WIDTH;
+export const isSpecialBarVertical = (_board?: BoardBox): boolean => {
+	const { width, height } = stateLayoutDerived.canvasSizes();
+	return width / Math.max(height, 1) >= 1.15;
+};

@@ -44,19 +44,10 @@ export const NUM_ROWS: number[] = GEN_NUM_ROWS;
 // the tallest reel defines the board's vertical extent (mask/frame height)
 export const MAX_ROWS = Math.max(...NUM_ROWS);
 
-// Full-reel-column WILD art pool: each premium inmate (H1..H5) standing in a
-// padded cell. A Wild Reel drop (WildReelSlide) and a Stretch (StretchFx) each
-// pick ONE of these at random per appearance, so the risen wild column varies.
-// `width`/`height` are the source PNG dims used for cover-fit (never squished).
-export const WILD_REEL_ARTS = [
-	{ key: 'wrReelH1', width: 512, height: 1680 },
-	{ key: 'wrReelH2', width: 512, height: 1680 },
-	// H3 is a VIDEO column (with audio): `video` is the asset key WildReelSlide
-	// plays once with sound then freezes; `key` stays a still poster fallback.
-	{ key: 'wrReelH3', width: 1080, height: 1920, video: 'wrReelWildH3Video' },
-	{ key: 'wrReelH4', width: 512, height: 1680 },
-	{ key: 'wrReelH5', width: 512, height: 1680 },
-] as const;
+// Full-reel-column WILD art. The White Room inmate padded-cell columns
+// (wrReelH1..H5 + wr_reel_wild_h3.mp4) are unregistered — leftover overlay
+// components that used them are not mounted.
+export const WILD_REEL_ARTS = [{ key: 'wrWild', width: 300, height: 300 }] as const;
 
 export type WildReelArt = {
 	readonly key: string;
@@ -84,8 +75,9 @@ export const BOARD_FRAME_THICK = 26;
 export const BOARD_FRAME_CORNER = BOARD_FRAME_THICK;
 /** Staircase step plates, same rule as the corners. */
 export const BOARD_FRAME_STEP = BOARD_FRAME_THICK;
-/** How far timber sits past each card pocket (plank, plates are on the plank). */
-export const BOARD_FRAME_OUTER = BOARD_FRAME_THICK;
+/** How far the baked plank frame sits past the card pockets (plank thickness
+ *  plus split-end overhang — tools/make_board_frame_image.py). */
+export const BOARD_FRAME_OUTER = 48;
 /** BoardPlate wood overhang past each reel window (top and bottom). Shared by
  *  SpecialBar spacing and the WAYS/WIN console clearance math. */
 export const BOARD_PLATE_PAD = 18;
@@ -143,50 +135,51 @@ const LOW_SYMBOL_SIZE = 0.9;
 const SPECIAL_SYMBOL_SIZE = 1;
 
 const SPIN_OPTIONS_SHARED = {
-	// Per-reel stagger before each reel starts falling IN (× an accumulating
-	// padding multiplier). At 80 with a 1.25 multiplier the rightmost reel waited
-	// ~520ms after the reveal before it dropped, so it stayed blank far longer
-	// than the fall-out stagger did — once fall-out was tightened this became the
-	// dominant part of the empty window. Cut so the reveal refills the board in a
-	// tight left-to-right sweep.
-	reelFallInDelay: 20,
-	reelPaddingMultiplierNormal: 1.05,
-	// was 18 (an ~18x drawn-out scatter tension hang). Kept short so the
-	// scatter "anticipation" is a quick beat, not a slow crawl — and it's now
-	// fully skippable with a tap / space.
+	// Per-reel fall-IN stagger (× accumulating padding). Gap between reel
+	// starts is delay × multiplier ≈ 200ms, so on normal speed each column
+	// drops after the one to its left has landed — not a simultaneous dump.
+	// Turbo skips this wait entirely (createReelForCascading).
+	reelFallInDelay: 160,
+	reelPaddingMultiplierNormal: 1.25,
+	// Extra hang on scatter-tension reels. Still skippable with a tap / space.
 	reelPaddingMultiplierAnticipated: 4,
-	// Per-reel stagger before each reel starts falling OUT (× reelIndex). This
-	// was 145, which across 6 reels spread the fall-out over ~725ms — and since
-	// the reveal fall-in is gated on the SLOWEST reel reaching 'hanging'
-	// (createEnhanceBoardSpin), the leftmost reel emptied first and then sat as
-	// blank outlined cells for over a second before it could refill. That empty
-	// board on every spin was the "empty cells" defect. Tightened so the whole
-	// board clears in a quick left-to-right sweep instead of a long drawn wipe;
-	// a light stagger is kept so it still reads as a sweep, not a snap.
+	// Fall-OUT stays a short sweep. A long out-stagger (was 145) emptied the
+	// left reels first and left them blank until the rightmost finished
+	// clearing — the old "empty cells" defect. Clear together, drop one by one.
 	reelFallOutDelay: 25,
 };
 
 export const SPIN_OPTIONS_DEFAULT = {
 	...SPIN_OPTIONS_SHARED,
-	// fall-in / fall-out speeds bumped from 3.5: with the tighter stagger the
-	// travel itself is now the dominant part of the empty window, so a faster
-	// clear and refill keeps the blank beat short without feeling like a snap.
-	symbolFallInSpeed: 6.5,
-	symbolFallInInterval: 22,
+	// Readable drop: slow enough that the stagger reads as one reel at a time.
+	symbolFallInSpeed: 4,
+	symbolFallInInterval: 28,
 	symbolFallInBounceSpeed: 0.15,
 	symbolFallInBounceSizeMulti: 0.5,
-	symbolFallOutSpeed: 6.5,
-	symbolFallOutInterval: 14,
+	// Clear stays quicker than the drop so the board does not sit empty.
+	symbolFallOutSpeed: 6,
+	symbolFallOutInterval: 16,
 };
 
 export const SPIN_OPTIONS_FAST = {
 	...SPIN_OPTIONS_SHARED,
-	// turbo drops: much snappier fall + near-instant settle (hacksaw-style)
+	// turbo: snappy fall, still a visible bounce
 	symbolFallInSpeed: 12,
 	symbolFallInInterval: 0,
 	symbolFallInBounceSpeed: 0.6,
 	symbolFallInBounceSizeMulti: 0.2,
 	symbolFallOutSpeed: 12,
+	symbolFallOutInterval: 0,
+};
+
+export const SPIN_OPTIONS_SUPER = {
+	...SPIN_OPTIONS_SHARED,
+	// super turbo: slam — faster than turbo, almost no settle
+	symbolFallInSpeed: 20,
+	symbolFallInInterval: 0,
+	symbolFallInBounceSpeed: 1.2,
+	symbolFallInBounceSizeMulti: 0.1,
+	symbolFallOutSpeed: 20,
 	symbolFallOutInterval: 0,
 };
 
@@ -233,9 +226,9 @@ const wExpandStatic = {
 // New special-cell symbols (bonus every spin + rare base-game unlock). Sprite-only
 // White Room cards, keyed transparent PNGs. They only ever appear inside the
 // reserved cells (LockedSlots), never on the reel strips.
-const stretchStatic = { type: 'sprite', assetKey: 'wrStretch', sizeRatios: { width: 1, height: 1 } };
-const splitStatic = { type: 'sprite', assetKey: 'wrSplit', sizeRatios: { width: 1, height: 1 } };
-const cloneStatic = { type: 'sprite', assetKey: 'wrClone', sizeRatios: { width: 1, height: 1 } };
+const stretchStatic = { type: 'sprite', assetKey: 'trTS', sizeRatios: { width: 1, height: 1 } };
+const splitStatic = { type: 'sprite', assetKey: 'trSP', sizeRatios: { width: 1, height: 1 } };
+const cloneStatic = { type: 'sprite', assetKey: 'trGS', sizeRatios: { width: 1, height: 1 } };
 // Madam's Eye: turns every split symbol wild for the spin, then resolves to a wild
 const meStatic = { type: 'sprite', assetKey: 'me.png', sizeRatios: { width: 1, height: 1 } };
 // Haunted Mirror: intact while on the reels, cracked once it bursts/resolves
@@ -247,11 +240,9 @@ const hmCrackedStatic = { type: 'sprite', assetKey: 'hm_cracked.png', sizeRatios
 //   spin    -> baked SMEAR frame (vertical motion blur, 300x480) so the
 //              falling reels streak; board mask clips at board edges
 //   land    -> '<id>_land' spine: weighty bottom-pinned squash-and-stretch
-//   win     -> '<id>' spine: punch + wobble + glow flash + sheen + shards
-//   postWin -> '<id>_postwin' spine: a LOOPING mesh-deform ripple of the
-//              card's own artwork (the symbol itself gently undulates like a
-//              living/haunted photograph) - winners keep animating while they
-//              rest, no green overlay or baked fire ring.
+//   win / postWin -> the same crisp card sprite. The old spine punch/wobble
+//              and looping mesh-deform ripple warped faces on connect and
+//              kept burning GPU after a few spins.
 // postWinStatic stays the crisp card sprite (the apparition pane slicing
 // needs a deterministic plain frame).
 // Spine asset keys match assets.ts (e.g. 'H1'), animations the skeleton ids.
@@ -270,20 +261,17 @@ const blurState = (cardAssetKey: string) => ({
 	sizeRatios: { width: 1, height: 1.6 },
 });
 
-// TOMBSTONE REBORN: the mm_symbols spine atlas is now re-skinned with the live
-// Tombstone faces (tools/reskin_symbol_spines.py), so the animated beats route
-// through the rig again: land / win run once (fire `complete` -> Board oncomplete)
-// and postWin loops the mesh-deform ripple (living portrait). static / spin /
-// postWinStatic stay SPRITE — spin needs the baked smear frame and postWinStatic
-// needs a deterministic plain frame for the apparition/slice paths.
+// TOMBSTONE REBORN: land still uses the spine squash. Win / postWin stay the
+// crisp card sprite — the mesh-deform ripple on connect was warping faces and
+// looping spines were melting the frame after a few spins.
 const cardStates = (
 	card: { type: string; assetKey: string; sizeRatios: { width: number; height: number } },
 	spineKey: string,
 	id: string,
 ) => ({
 	explosion,
-	win: spineState(spineKey, id),
-	postWin: spineState(spineKey, `${id}_postwin`),
+	win: card,
+	postWin: card,
 	postWinStatic: card,
 	static: card,
 	spin: blurState(card.assetKey),
@@ -390,6 +378,47 @@ export const SYMBOL_INFO_MAP = {
 		win: cloneStatic,
 		land: cloneStatic,
 	},
+	// Feature symbols that land on the board, fire, then become wild.
+	SP: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trSP', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	GS: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trGS', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	TS: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trTS', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	NW: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trNW', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	SG: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trSP', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	SO: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trSP', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	DU: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trTS', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	CF: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trTS', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	SH: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trSH', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
+	SS: (() => {
+		const card = { type: 'sprite' as const, assetKey: 'trSS', sizeRatios: { width: 1, height: 1 } };
+		return { explosion, postWin: card, postWinStatic: card, static: card, spin: card, win: card, land: card };
+	})(),
 	// SCATTER: the cracked BONUS tombstone (tools/make_scatter_card.py).
 	// Sprite-only in every state like W — the trigger celebration and the
 	// bonus banner own the FX; the land squash comes from SymbolSprite.
@@ -402,6 +431,22 @@ export const SYMBOL_INFO_MAP = {
 		win: scatterStatic,
 		land: scatterStatic,
 	},
+	SU: (() => {
+		const card = {
+			type: 'sprite' as const,
+			assetKey: 'trScatterSuper',
+			sizeRatios: { width: 1, height: 1 },
+		};
+		return {
+			explosion,
+			postWin: card,
+			postWinStatic: card,
+			static: card,
+			spin: card,
+			win: card,
+			land: card,
+		};
+	})(),
 	// Haunted Mirror: intact on the reels, cracked once it bursts and resolves.
 	// HM keeps deterministic sprite states because the burst visuals are owned
 	// by MirrorShatter/ApparitionOverlay and the intact->cracked swap must be

@@ -4,7 +4,8 @@
 		| { type: 'waysCounterHide' }
 		| { type: 'freeSpinCounterShow' }
 		| { type: 'freeSpinCounterHide' }
-		| { type: 'freeSpinCounterUpdate'; current?: number; total?: number };
+		| { type: 'freeSpinCounterUpdate'; current?: number; total?: number }
+		| { type: 'winMultUpdate'; value: number };
 </script>
 
 <script lang="ts">
@@ -33,13 +34,14 @@
 
 	/** air between BoardPlate bottom lip and the cluster */
 	const PLATE_CLEAR = 14;
-	const PLAQUE_ASPECT = 1.5;
+	const PLAQUE_ASPECT = 1.6;
 
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 	let ways = $state(BASE_WAYS);
 	let spinsShow = $state(false);
 	let spinsCurrent = $state(0);
 	let spinsTotal = $state(0);
+	let winMult = $state(1);
 
 	context.eventEmitter.subscribeOnMount({
 		waysCounterUpdate: (e) => {
@@ -58,6 +60,9 @@
 			if (e.current !== undefined) spinsCurrent = e.current;
 			if (e.total !== undefined) spinsTotal = e.total;
 		},
+		winMultUpdate: (e) => {
+			winMult = Math.max(1, e.value);
+		},
 	});
 
 	const layout = $derived.by(() => {
@@ -73,11 +78,12 @@
 		const spinsValue = `${spinsTotal - spinsCurrent}/${spinsTotal}`;
 		const slots = [
 			{ label: 'WAYS', value: waysValue },
+			{ label: 'MULTI', value: `${winMult}×` },
 			spinsShow ? { label: 'FREE SPINS', value: spinsValue } : null,
 			{ label: 'WIN', value: winValue },
 		].filter((d): d is { label: string; value: string } => d !== null);
 
-		const wellW = Math.max(72, (bw / Math.max(slots.length, 1)) * 0.42);
+		const wellW = Math.max(124, (bw / Math.max(slots.length, 1)) * 0.54);
 		const blockH = wellW / PLAQUE_ASPECT;
 
 		const plateBottom = board.visualBottom + BOARD_PLATE_PAD * s;
@@ -110,6 +116,7 @@
 				wellW={layout.wellW}
 				slots={layout.slots}
 				axis="x"
+				hang
 			/>
 		</Container>
 	</MainContainer>

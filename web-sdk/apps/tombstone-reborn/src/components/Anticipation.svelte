@@ -3,10 +3,9 @@
 	import { Container, Graphics } from 'pixi-svelte';
 	import { stateBetDerived } from 'state-shared';
 
-	import { getContext } from '../game/context';
 	import type { Reel } from '../game/stateGame.svelte';
-	import { SYMBOL_SIZE, CELL_PITCH_X, NUM_ROWS, MAX_ROWS } from '../game/constants';
-	import { getSymbolX } from '../game/utils';
+	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
+	import { getReelRows, getReelYOffset, getSymbolX } from '../game/utils';
 	import { drawDustAnticipation } from '../game/tombstoneVfx';
 
 	type Props = {
@@ -18,11 +17,12 @@
 	};
 
 	const props: Props = $props();
-	const context = getContext();
 
-	// Tombstone anticipation: dusty gunsmoke shaft + falling grit (not White Room tube).
+	// Sit on THIS reel's window. Board-centre + authored height put a dark
+	// shaft over the boarded lane and the short diamond steps.
 	const COL_W = CELL_PITCH_X;
-	const COL_H = SYMBOL_SIZE * (NUM_ROWS[props.reelIndex] ?? MAX_ROWS);
+	const colH = $derived(SYMBOL_SIZE * getReelRows(props.reelIndex));
+	const colY = $derived(getReelYOffset(props.reelIndex) + colH / 2);
 
 	const IN_DURATION = 0.18;
 	const OUT_DURATION = 0.22;
@@ -68,11 +68,8 @@
 	});
 </script>
 
-<Container
-	x={getSymbolX(props.reelIndex)}
-	y={context.stateGameDerived.boardLayout().pivot.y}
->
+<Container x={getSymbolX(props.reelIndex)} y={colY}>
 	<Graphics
-		draw={(graphics) => drawDustAnticipation(graphics, COL_W, COL_H, time, envelope)}
+		draw={(graphics) => drawDustAnticipation(graphics, COL_W, colH, time, envelope)}
 	/>
 </Container>

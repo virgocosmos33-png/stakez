@@ -20,12 +20,8 @@
 		unlockedCellKeys,
 	} from '../game/cellUnlock';
 	import type { SymbolName } from '../game/types';
-	import {
-		SYMBOL_SIZE,
-		NUM_ROWS,
-		SPIN_OPTIONS_DEFAULT,
-		SPIN_OPTIONS_FAST,
-	} from '../game/constants';
+	import { SYMBOL_SIZE, NUM_ROWS } from '../game/constants';
+	import { currentSpinOptions } from '../game/fxTiming';
 	import SlotSymbol from './SlotSymbol.svelte';
 
 	// Reserved "special symbol" slots that frame the diamond board: a BOTTOM row
@@ -232,7 +228,7 @@
 	// slot; zero on turbo, where the board skips its stagger too). Fall-IN can't
 	// be a fixed delay — anticipation and slams reshape the reveal — so each
 	// cell GATES on its own column's live reel motion instead (see SlotSymbol).
-	const spinOpts = () => (stateBet.isTurbo ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT);
+	const spinOpts = () => currentSpinOptions();
 
 	/** which fall-out stagger slot a cell's column occupies (left 0, reels 1..5, right 6) */
 	const staggerSlotOf = (key: string): number => {

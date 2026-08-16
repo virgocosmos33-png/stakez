@@ -17,6 +17,7 @@ import {
 	BOARD_DIMENSIONS,
 	SPIN_OPTIONS_DEFAULT,
 	SPIN_OPTIONS_FAST,
+	SPIN_OPTIONS_SUPER,
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
@@ -27,15 +28,17 @@ import { getReelRows, getReelYOffset } from './utils';
 /** Must match FrameMorphHud rail height + plate clearance. */
 const HUD_RAIL_H = 56;
 const HUD_PLATE_CLEAR = 14;
+/** Desktop: air between the tall timber and the HUD. WIN hangs in the short-reel step, not below the whole board. */
+const HUD_WIN_HANG = 28;
 const HUD_CLEAR_PX = 12;
 /** Extra main-space pad under the published HUD top — spin cluster + Storybook chrome. */
-const HUD_EXTRA_CLEAR = 40;
+const HUD_EXTRA_CLEAR = 8;
 /** When the HUD has not published yet, assume this much main-space is the control bar. */
 const HUD_FALLBACK_MAIN = 120;
 /** Breathing room above the timber (Storybook action toast + logo). */
-const BOARD_TOP_MARGIN = 52;
+const BOARD_TOP_MARGIN = 20;
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
-	if (rawSymbol.name === 'S') {
+	if (rawSymbol.name === 'S' || rawSymbol.name === 'SU') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
 		eventEmitter.broadcast({
 			type: 'soundOnce',
@@ -68,17 +71,37 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 		initialSymbols: INITIAL_BOARD[reelIndex],
 		initialSymbolState: INITIAL_SYMBOL_STATE,
 		onReelStopping: () => {
-			eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_reel_stop_1',
-				forcePlay: !stateBet.isTurbo,
-			});
+			const last = BOARD_DIMENSIONS.x - 1;
+			const mode = (stateBet.activeBetModeKey ?? 'base').toLowerCase();
+			// Last reel is boarded on a normal spin — no drop thud. Keep it for
+			// the feature buy (bonus_small) and super bonus (buy or open lane).
+			const lastReelDrop =
+				reelIndex !== last ||
+				stateGame.laneSuper ||
+				mode === 'bonus_small' ||
+				mode === 'bonus_super' ||
+				mode === 'superspins';
+			if (lastReelDrop) {
+				eventEmitter.broadcast({
+					type: 'soundOnce',
+					name: 'sfx_reel_stop_1',
+					forcePlay: !stateBet.isTurbo,
+				});
+			}
+			const pending = stateGame.pendingNudge;
+			if (pending && pending.reel === reelIndex) {
+				eventEmitter.broadcast({ type: 'nudgeWaysPark', ...pending });
+				stateGame.pendingNudge = null;
+			}
 		},
 		onSymbolLand,
 	});
 
-	reel.reelState.spinOptions = () =>
-		reel.reelState.spinType === 'fast' ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT;
+	reel.reelState.spinOptions = () => {
+		if (stateBet.isSuperTurbo) return SPIN_OPTIONS_SUPER;
+		if (reel.reelState.spinType === 'fast') return SPIN_OPTIONS_FAST;
+		return SPIN_OPTIONS_DEFAULT;
+	};
 
 	return reel;
 });
@@ -180,6 +203,17 @@ export const stateGame = $state({
 	// one synchronised drop — a natural "land after the board" reel-in. Starts true
 	// so the idle board shows its cells at rest; each reveal parks then releases.
 	slotsReleased: true,
+	// NUDGE WAYS: look-ahead from the reveal book so the column can park the
+	// instant that reel stops — not after the individual NW cards have landed.
+	pendingNudge: null as null | {
+		reel: number;
+		fullReel: boolean;
+		startRow: number;
+		initialWays: number;
+	},
+	// while set, Board hides that reel's cell symbols so the tall column is
+	// the only nudge the player sees.
+	nudgeCoverReel: null as number | null,
 });
 
 const boardLayout = () => {
@@ -216,25 +250,25 @@ const boardLayout = () => {
 		const canvasH = stateLayoutDerived.canvasSizes().height;
 		const hudTopMain =
 			main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale;
-		const reserve = (barVertical ? HUD_PLATE_CLEAR : HUD_RAIL_H + HUD_PLATE_CLEAR) + HUD_EXTRA_CLEAR;
+		const reserve = (barVertical ? HUD_WIN_HANG : HUD_RAIL_H + HUD_PLATE_CLEAR) + HUD_EXTRA_CLEAR;
 		floorY = hudTopMain - reserve;
 	}
 
-	// Shrink the whole board (symbols + staircase + overlays) so LIVE timber
-	// always sits between the top margin and the HUD. Landscape/desktop also
-	// cap rest scale so the idle diamond is not filling the viewport.
+	// Grow to fill the safe band — past authored size if the window has room.
+	// Width leaves a strip on the right for the WAYS/MULTI/WIN plaques.
 	const available = Math.max(1, floorY - BOARD_TOP_MARGIN);
 	const liveH = Math.max(1, contentBot - contentTop);
-	const layoutType = stateLayoutDerived.layoutType();
-	const restCap = layoutType === 'portrait' ? 1 : 0.8;
-	const scale = Math.min(restCap, available / liveH);
+	const liveW = BOARD_SIZES.width + BOARD_FRAME_OUTER * 2;
+	const plaqueCol = 48;
+	const scaleH = available / liveH;
+	const scaleW = Math.max(0.2, (main.width - plaqueCol) / liveW);
+	const scale = Math.min(scaleH, scaleW);
 
 	// Centre the LIVE timber in the safe band (not the authored 4-row box).
-	const liveMid = (contentTop + contentBot) / 2;
-	const bandMid = (BOARD_TOP_MARGIN + floorY) / 2;
 	const yMin = BOARD_TOP_MARGIN - (contentTop - pivotY) * scale;
 	const yMax = floorY - (contentBot - pivotY) * scale;
-	let y = bandMid - (liveMid - pivotY) * scale;
+	// Sit on the HUD floor so leftover height is above the timber, not a gap under it.
+	let y = yMax;
 	y = Math.min(Math.max(y, yMin), yMax);
 
 	const visualTop = y + (contentTop - pivotY) * scale;

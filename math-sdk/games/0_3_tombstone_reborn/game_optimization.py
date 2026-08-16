@@ -56,18 +56,18 @@ class OptimizationSetup:
                 }
 
             if profile == "super2000":
-                # BIG BONUS (2000x cost): the cap is only 50x cost, so the
-                # 3-star fences bite in COST terms - 5,000x base bet is just
-                # 2.5x cost and P(>=5,000) must stay under 5%. Most RTP is
-                # packed under 2.5x cost; the 5k/10k/20k/50k bands are starved
-                # progressively so P(>=10k) ~ 0.008 and CVaR ~ 45k of 50k.
+                # BIG BONUS (2000x cost): only ~25% of rounds should pay more
+                # than they cost. Pack RTP into duds + break-even, starve
+                # everything above 1x cost. Tail bands stay starved for 3-star
+                # P(>=10k) / CVaR ceilings.
                 bands = [
-                    band(1.20, 0, 0.6 * cost),
-                    band(0.80, 0.8 * cost, 1.4 * cost),
-                    band(1.35, 1.5 * cost, 2.4 * cost),
-                    band(0.15, 5000, 10000),
-                    band(0.10, 10000, 20000),
-                    band(0.04, 20000, 50000),
+                    band(1.55, 0, 0.6 * cost),
+                    band(1.45, 0.6 * cost, 1.0 * cost),
+                    band(0.28, 1.0 * cost, 1.5 * cost),
+                    band(0.18, 1.5 * cost, 2.4 * cost),
+                    band(0.10, 5000, 10000),
+                    band(0.06, 10000, 20000),
+                    band(0.03, 20000, 50000),
                     band(0.008, 50000, 99999),
                 ]
                 return ConstructScaling(bands).return_dict()
@@ -191,12 +191,23 @@ class OptimizationSetup:
             # (passes every 3-star check as-is - do not disturb)
             "bonus_small": mode_block("bonus_small", wincap_rtp=0.08, base_hr=1.667,
                                       test_spins=[20, 50, 100], cost=80),
-            # super buy (1000x): cap slice 0.008 (P(cap) ~ 0.008%, inside the
-            # worst-0.1% CVaR window with room for the sub-cap tail), and the
-            # super scaling keeps P(>=10k) ~0.008 of the 0.01 allowance
-            "bonus_super": mode_block("bonus_super", wincap_rtp=0.006, base_hr=1.35,
-                                      test_spins=[10, 20, 50], cost=1000, max_m2m=60,
-                                      profile="super"),
+            # SUPER BONUS (1000x): no exact-zero fence — 6 board specials plus
+            # an open last reel almost never dead. ~25% of spins profitable;
+            # RTP packed into duds + break-even. Cap slice stays tiny for the
+            # 3-star CVaR fence.
+            "bonus_super": {
+                "conditions": {
+                    "wincap": ConstructConditions(
+                        rtp=0.006, av_win=wincaps["bonus_super"],
+                        search_conditions=wincaps["bonus_super"]
+                    ).return_dict(),
+                    "basegame": ConstructConditions(
+                        rtp=round(mode_rtps["bonus_super"] - 0.006, 5), hr="x"
+                    ).return_dict(),
+                },
+                "scaling": scaling(1000, profile="super2000"),
+                "parameters": params([10, 20, 50], max_m2m=60),
+            },
             # SMALL BONUS rounds (80x buy): shaped like bonus_small, whose
             # numbers pass every 3-star check at the same cost
             "freespins": round_block("freespins", wincap_rtp=0.08,

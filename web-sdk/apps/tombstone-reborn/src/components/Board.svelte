@@ -51,10 +51,6 @@
 							window.setTimeout(resolve, 2500);
 						}),
 					]);
-					// rest on the looping postWin spine — the winning card keeps
-					// gently undulating (living portrait) while WinDim overlays every
-					// other cell. The mm_symbols atlas now carries the Tombstone faces
-					// so this no longer flashes the old art.
 					reelSymbol.symbolState = 'postWin';
 				});
 

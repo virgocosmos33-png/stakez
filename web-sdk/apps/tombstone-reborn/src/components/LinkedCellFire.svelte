@@ -47,12 +47,14 @@
 	const RING_FRAC_Y = 0.65;
 	const FIRE_W = SYMBOL_CARD_W / RING_FRAC_X;
 	const FIRE_H = SYMBOL_CARD_H / RING_FRAC_Y;
-	const FIRE_RATIO = FIRE_W / FIRE_H;
+	/** Cell-quad aspect. Tall rings (nudge column) keep this ratio and use uYScale. */
+	export const FIRE_RATIO = FIRE_W / FIRE_H;
 
 	// Stock Pixi v8 filter vertex: gives 0..1 across the filtered quad.
 	const VERTEX = `
 in vec2 aPosition;
 out vec2 vTextureCoord;
+out vec2 vLocalUv;
 
 uniform vec4 uInputSize;
 uniform vec4 uOutputFrame;
@@ -77,6 +79,10 @@ void main(void)
 {
     gl_Position = filterVertexPosition();
     vTextureCoord = filterTextureCoord();
+    // 0..1 over the filtered quad. Texture-space UVs go wrong on a tall
+    // column (Pixi filter atlas ≠ sprite), which shrinks the ring to a
+    // centred box. aPosition is the geometry itself.
+    vLocalUv = aPosition;
 }
 `;
 
@@ -87,16 +93,20 @@ precision highp float;
 #define TWO_PI 6.28318530718
 
 in vec2 vTextureCoord;
+in vec2 vLocalUv;
 out vec4 finalColor;
 
 uniform vec4 uInputSize;
 uniform vec4 uOutputFrame;
 
 uniform float uTime;       // MILLISECONDS (+ per-cell phase) — matches reference u_time
-uniform float uRatio;      // quad width / height (== card_w/card_h scaled by frac)
+uniform float uRatio;      // cell-quad width / height (locked; do not pass a tall aspect)
 uniform float uIntensity;  // 0..1 overall dim (burstDim when overlays are up)
 uniform float uProgress;   // 0..1 ONE-SHOT ignite sweep, bottom -> top, then HOLD
 uniform float uFlash;      // 0..1 brief hot pop the instant it fully ignites
+uniform float uYScale;     // 1 = one card; visH/cardH for a tall column (keeps flame unstretched)
+uniform float uHideTop;    // 1 = drop the top bar AND its rounded corners
+uniform float uHideBot;    // 1 = drop the bottom bar AND its rounded corners
 
 float rand(vec2 n) {
     return fract(cos(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
@@ -164,9 +174,12 @@ void main() {
     // vUv (0..1 over the quad), then to [-1, 1] with aspect correction, exactly
     // the reference's  uv = vUv*2-1; uv.x *= u_ratio . NOTE: Pixi texture space
     // has y DOWN, so +uv.y is the SCREEN BOTTOM here (the reference has y UP).
-    vec2 uv01 = vTextureCoord * uInputSize.xy / uOutputFrame.zw;
+    vec2 uv01 = vLocalUv;
     vec2 uv = uv01 * 2.0 - 1.0;
+    // Ignite sweep stays in quad space so a tall column still lights end-to-end.
+    float uvYQuad = uv.y;
     uv.x *= uRatio;
+    uv.y *= uYScale;
 
     float noise_scale = 4.0;
     // reference verbatim: t = .0003 * u_time (u_time in MILLISECONDS)
@@ -188,12 +201,18 @@ void main() {
     // thickness .16, distortion (.92 + .45*noise). The quad is sized so the CARD
     // border lands on this box, so the ring's inner edge hugs the card and
     // flames lick outward.
-    vec2 boxHalf = vec2(0.42 * uRatio, 0.65);
+    vec2 boxHalf = vec2(0.42 * uRatio, 0.65 * uYScale);
     float corner = 0.12;
     float radius = 0.55;
     float thickness = 0.16;
     vec2 uvN = uv * (0.92 + 0.45 * noiseV);
     float ring_shape = get_ring_shape(uvN, boxHalf, corner, radius - 0.8 * thickness, radius + 0.2 * thickness);
+    // Drop the end caps (horizontal bar + the rounded-rect corner blobs).
+    // Thresholds are in cell units so a tall column only loses the tips.
+    float sideEnd = boxHalf.y - corner;
+    float keepFromTop = mix(1.0, smoothstep(-(sideEnd + 0.08), -(sideEnd - 0.02), uv.y), uHideTop);
+    float keepFromBot = mix(1.0, smoothstep(sideEnd + 0.08, sideEnd - 0.02, uv.y), uHideBot);
+    ring_shape *= keepFromTop * keepFromBot;
 
     // ENTRY then HOLD (this is the ONLY deliberate change from the reference's
     // forever-loop): the front climbs screen-bottom -> top as uProgress 0->1 and
@@ -201,13 +220,13 @@ void main() {
     // at progress 1 the WHOLE ring is lit with no dim leading edge — it then just
     // stays fully lit (steady fire) until douse pulls uProgress back to 0.
     float front_y = mix(1.15, -1.15, uProgress);
-    float mask = smoothstep(front_y - 0.15, front_y + 0.15, uv.y);
+    float mask = smoothstep(front_y - 0.15, front_y + 0.15, uvYQuad);
     ring_shape *= mask;
 
     // bright hot edge riding the climbing front (the ignite "surge"); folds away
     // once fully lit so the held state is clean steady fire, not a stuck glow.
     float climbing = smoothstep(0.02, 0.12, uProgress) * (1.0 - smoothstep(0.88, 1.0, uProgress));
-    float front_glow = (1.0 - smoothstep(0.0, 0.22, abs(uv.y - front_y))) * climbing;
+    float front_glow = (1.0 - smoothstep(0.0, 0.22, abs(uvYQuad - front_y))) * climbing;
 
     // fire gradient VERBATIM: deep ember red -> orange -> bright yellow-white core
     vec3 ember_col = vec3(0.5, 0.03, 0.0);
@@ -240,9 +259,12 @@ void main() {
 		uIntensity: number;
 		uProgress: number;
 		uFlash: number;
+		uYScale: number;
+		uHideTop: number;
+		uHideBot: number;
 	};
 
-	const createFireRingFilter = () =>
+	export const createFireRingFilter = () =>
 		Filter.from({
 			gl: { vertex: VERTEX, fragment: FRAGMENT, name: 'linked-cell-fire-ring' },
 			resources: {
@@ -252,13 +274,116 @@ void main() {
 					uIntensity: { value: 0, type: 'f32' },
 					uProgress: { value: 0, type: 'f32' },
 					uFlash: { value: 0, type: 'f32' },
+					uYScale: { value: 1, type: 'f32' },
+					uHideTop: { value: 0, type: 'f32' },
+					uHideBot: { value: 0, type: 'f32' },
+				},
+			},
+		});
+
+	export const fireQuadSize = (cardW: number, cardH: number) => ({
+		w: cardW / RING_FRAC_X,
+		h: cardH / RING_FRAC_Y,
+	});
+
+	/**
+	 * 1D edge fire for the nudge column. Four thin strips (L/R/T/B) — never a
+	 * rounded-rect SDF, so the long sides cannot grow mid-column corners.
+	 * depth=0 is the plaque edge; tongues only grow outward.
+	 */
+	const EDGE_FRAGMENT = `
+precision highp float;
+
+in vec2 vLocalUv;
+out vec4 finalColor;
+
+uniform vec4 uInputSize;
+uniform vec4 uOutputFrame;
+
+uniform float uTime;
+uniform float uIntensity;
+uniform float uProgress;
+uniform float uHorizontal;
+uniform float uFlipDepth;
+
+float rand(vec2 n) {
+    return fract(cos(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+}
+float noise(vec2 n) {
+    const vec2 d = vec2(0.0, 1.0);
+    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+    return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+}
+float fbm(vec2 n) {
+    float total = 0.0, amplitude = 0.4;
+    for (int i = 0; i < 12; i++) {
+        total += noise(n) * amplitude;
+        n += n;
+        amplitude *= 0.6;
+    }
+    return total;
+}
+
+void main() {
+    float depth = mix(vLocalUv.x, vLocalUv.y, uHorizontal);
+    float along = mix(vLocalUv.y, vLocalUv.x, uHorizontal);
+    if (uFlipDepth > 0.5) depth = 1.0 - depth;
+
+    float t = 0.0003 * uTime;
+    float n = fbm(vec2(along * 8.0, t * 10.0));
+    float reach = 0.38 + n * 0.50;
+    float ring = smoothstep(0.0, 0.10, depth) * (1.0 - smoothstep(reach * 0.28, reach, depth));
+
+    float yN = vLocalUv.y * 2.0 - 1.0;
+    float front = mix(1.15, -1.15, uProgress);
+    float sideMask = smoothstep(front - 0.15, front + 0.15, yN);
+    float capMask = mix(
+        smoothstep(0.0, 0.22, uProgress),
+        smoothstep(0.72, 1.0, uProgress),
+        uFlipDepth
+    );
+    float mask = mix(sideMask, capMask, uHorizontal);
+    ring *= mask;
+
+    float heat = 1.0 - smoothstep(0.0, reach * 0.55, depth);
+    vec3 ember_col = vec3(0.5, 0.03, 0.0);
+    vec3 flame_col = vec3(1.0, 0.38, 0.03);
+    vec3 hot_core = vec3(1.0, 0.92, 0.55);
+    vec3 fire_color = mix(ember_col, flame_col, smoothstep(0.0, 0.55, heat));
+    fire_color = mix(fire_color, hot_core, smoothstep(0.55, 1.0, heat));
+
+    vec3 color = fire_color * ring;
+    float a = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0) * uIntensity;
+    if (a <= 0.01) discard;
+    finalColor = vec4(color * a, a);
+}
+`;
+
+	export type EdgeFireUniforms = {
+		uTime: number;
+		uIntensity: number;
+		uProgress: number;
+		uHorizontal: number;
+		uFlipDepth: number;
+	};
+
+	export const createEdgeFireFilter = () =>
+		Filter.from({
+			gl: { vertex: VERTEX, fragment: EDGE_FRAGMENT, name: 'nudge-edge-fire' },
+			resources: {
+				edgeUniforms: {
+					uTime: { value: 0, type: 'f32' },
+					uIntensity: { value: 1, type: 'f32' },
+					uProgress: { value: 0, type: 'f32' },
+					uHorizontal: { value: 0, type: 'f32' },
+					uFlipDepth: { value: 0, type: 'f32' },
 				},
 			},
 		});
 </script>
 
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut, cubicInOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
@@ -267,6 +392,7 @@ void main() {
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { filterVisibleCells } from '../game/boardCells';
+	import { fxDur } from '../game/fxTiming';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
@@ -319,11 +445,14 @@ void main() {
 	});
 
 	const placed = $derived.by(() =>
-		cells.slice(0, MAX_CELLS).map((cell) => ({
-			key: `${cell.reel}-${cell.row}`,
-			cx: getSymbolX(cell.reel),
-			cy: getCellCenterY(cell.reel, cell.row),
-		})),
+		cells
+			.filter((cell) => cell.reel !== context.stateGame.nudgeCoverReel)
+			.slice(0, MAX_CELLS)
+			.map((cell) => ({
+				key: `${cell.reel}-${cell.row}`,
+				cx: getSymbolX(cell.reel),
+				cy: getCellCenterY(cell.reel, cell.row),
+			})),
 	);
 
 	/**
@@ -368,19 +497,27 @@ void main() {
 		cellFireShow: ({ cells: incoming }) => {
 			const visible = filterVisibleCells([...incoming]);
 			if (!visible.length) return;
-			cells = visible;
-			startFire(visible.length);
-			// arm the ignition flash for this fresh light-up
-			hasFlashed = false;
-			flashStart = -1;
-			// cubicInOut: an even climb the eye can follow bottom -> top, rather
-			// than cubicOut which front-loads the bottom and crawls at the top.
-			ignite.set(1, { duration: IGNITE_MS, easing: cubicInOut });
+			// MERGE — a later feature (gunsmoke after split) adds cells; it
+			// must not replace the ones already burning. Lit cells stay lit
+			// until the next spin's fall-out.
+			const seen = new Set(cells.map((cell) => `${cell.reel}-${cell.row}`));
+			const added = visible.filter((cell) => !seen.has(`${cell.reel}-${cell.row}`));
+			if (!added.length && cells.length) {
+				startFire(cells.length);
+				return;
+			}
+			cells = [...cells, ...added];
+			startFire(cells.length);
+			if (ignite.current < 0.99) {
+				hasFlashed = false;
+				flashStart = -1;
+				ignite.set(1, { duration: fxDur(IGNITE_MS), easing: cubicInOut });
+			}
 		},
 		cellFireHide: async () => {
 			if (!cells.length) return;
 			stopFire(true);
-			await ignite.set(0, { duration: DOUSE_MS });
+			await ignite.set(0, { duration: fxDur(DOUSE_MS) });
 			cells = [];
 		},
 		// dim the fire while a feature overlay owns the foreground, restore after
@@ -388,24 +525,26 @@ void main() {
 		featureBurstHide: () => popOverlay(),
 		nudgeSlideShow: () => pushOverlay(),
 		nudgeSlideHide: () => popOverlay(),
-		featureFxFallOut: () => resetOverlays(),
+		nudgeWaysShow: () => pushOverlay(),
+		nudgeWaysHide: () => popOverlay(),
+		// next spin: this is the ONLY place fire goes out. Split / morph hide
+		// must not douse it mid-round.
+		featureFxFallOut: async () => {
+			resetOverlays();
+			if (!cells.length) return;
+			stopFire(true);
+			await ignite.set(0, { duration: fxDur(DOUSE_MS) });
+			cells = [];
+		},
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (!cells.length) return;
 		let raf = 0;
 		const start = performance.now();
 		const tick = (now: number) => {
-			// uTime is MILLISECONDS (reference `u_time`); the flame noise/embers
-			// formulas expect ms. Each cell gets its own ms phase so adjacent
-			// rings never animate in lockstep (no clone look).
 			const ms = now - start;
-			// The ignite ramp IS the one-shot sweep (bottom -> top). Once it
-			// reaches 1 the sweep holds full, so the ring STAYS on fire until a
-			// hide pulls it back down. burstDim only dims (never resets) the fire
-			// while a feature overlay owns the foreground.
 			const progress = ignite.current;
-
-			// fire a single hot pop the instant the sweep completes
 			if (!hasFlashed && ignite.target === 1 && progress > 0.985) {
 				hasFlashed = true;
 				flashStart = now;
@@ -413,7 +552,8 @@ void main() {
 			const flash =
 				hasFlashed && flashStart >= 0 ? Math.max(0, 1 - (now - flashStart) / FLASH_MS) : 0;
 
-			for (let i = 0; i < pool.length; i++) {
+			const n = Math.min(cells.length, pool.length);
+			for (let i = 0; i < n; i++) {
 				pool[i].uniforms.uTime = ms + i * 3170;
 				pool[i].uniforms.uIntensity = burstDim.current;
 				pool[i].uniforms.uProgress = progress;

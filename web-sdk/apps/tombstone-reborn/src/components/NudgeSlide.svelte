@@ -36,7 +36,6 @@
 	 * game/featureVfx.ts). The residue is deliberately off-centre and low-alpha
 	 * so the wild it marks always reads through it.
 	 */
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicInOut, cubicOut, backOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
@@ -244,13 +243,13 @@
 		},
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (!show) return;
 		let raf = 0;
 		const started = performance.now();
 		const tick = (now: number) => {
 			time = (now - started) / 1000;
-			if (show) dropTrail(rideX.current, rideY.current);
-			else if (trail.length) trail = trail.filter((puff) => time - puff.born < TRAIL_LIFE);
+			dropTrail(rideX.current, rideY.current);
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);

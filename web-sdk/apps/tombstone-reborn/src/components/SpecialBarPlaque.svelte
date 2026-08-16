@@ -32,10 +32,10 @@
 	import { backOut } from 'svelte/easing';
 	import * as PIXI from 'pixi.js';
 	import { Container, Graphics, Rectangle, Sprite } from 'pixi-svelte';
-	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE, SPIN_OPTIONS_DEFAULT, SPIN_OPTIONS_FAST } from '../game/constants';
+	import { SYMBOL_SIZE } from '../game/constants';
+	import { currentSpinOptions } from '../game/fxTiming';
 
 	type Props = {
 		/** the board reel this cell belongs to; it reels with it */
@@ -73,7 +73,7 @@
 
 	// read per transition, never derived: the options must be fixed for the
 	// whole of one drop, and a turbo toggle can land in the middle of a spin
-	const spinOptions = () => (stateBet.isTurbo ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT);
+	const spinOptions = () => currentSpinOptions();
 	/** board px/ms restated in this cell's units, so the rhythm carries over */
 	const cellSpeed = (boardSpeed: number) => boardSpeed * (props.h / SYMBOL_SIZE);
 

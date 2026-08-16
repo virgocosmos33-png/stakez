@@ -1,4 +1,1 @@
-<!-- ambient flies (static/bugs.js) — the app loads this from app.html, but
-     Storybook renders stories in its own iframe that never sees app.html, so
-     it gets the same script here. Served from staticDirs ('../static'). -->
-<script defer src="/bugs.js"></script>
+<!-- Storybook iframe head. Do not load leftover scripts here. -->

@@ -11,7 +11,6 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut, quadIn } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
@@ -25,6 +24,7 @@
 		SYMBOL_CARD_H as CARD_H,
 	} from '../game/constants';
 	import { TARGET_ACCENT, TOMBSTONE_FX } from '../game/tombstoneVfx';
+	import { fxDur, fxWait } from '../game/fxTiming';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
@@ -72,13 +72,13 @@
 			// iron gunsight snapping onto the target
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lock_snap' });
 			await lock.set(1, {
-				duration: LOCK_MS + marks.length * STAGGER * LOCK_MS,
+				duration: fxDur(LOCK_MS + marks.length * STAGGER * LOCK_MS),
 				easing: cubicOut,
 			});
-			await new Promise((resolve) => window.setTimeout(resolve, HOLD_MS));
+			await fxWait(HOLD_MS);
 			// the sight releasing as the reticle lets go
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lock_release' });
-			await fade.set(0, { duration: FADE_MS, easing: quadIn });
+			await fade.set(0, { duration: fxDur(FADE_MS), easing: quadIn });
 			marks = [];
 		},
 		targetLockHide: () => {
@@ -87,7 +87,8 @@
 		},
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (!marks.length) return;
 		let raf = 0;
 		const start = performance.now();
 		const tick = (now: number) => {

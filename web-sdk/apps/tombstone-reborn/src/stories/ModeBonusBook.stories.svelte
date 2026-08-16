@@ -46,14 +46,14 @@
 	</StoryGameTemplate>
 {/snippet}
 
-<!-- SMALL BONUS (80x): the special bar is fully awake for one enhanced spin -->
+<!-- SMALL BONUS (80x): feature symbols drop on the board for one enhanced spin -->
 <Story
 	name="smallBonusWin"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('small_bonus_win') })}
 	{template}
 />
 
-<!-- SUPER BONUS (1000x): bar awake + last lane open -->
+<!-- SUPER BONUS (1000x): feature symbols on the board + last lane open -->
 <Story
 	name="superBonusWin"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('super_bonus_win') })}
@@ -67,14 +67,14 @@
 	{template}
 />
 
-<!-- NUDGE: the bounty premium slides left, climbing its WIN multiplier -->
+<!-- MARK: last-reel shooter fires at every premium, +1 stacked WIN multi each -->
 <Story
-	name="nudge"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('nudge') })}
+	name="shooter"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('shooter') })}
 	{template}
 />
 
-<!-- SUPERSPLIT: the lane turns WILD and every paying symbol splits at once -->
+<!-- SUPERSPLIT: the lane turns WILD and every symbol on the board splits -->
 <Story
 	name="superSplit"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('super_split') })}

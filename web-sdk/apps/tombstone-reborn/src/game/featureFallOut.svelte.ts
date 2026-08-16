@@ -10,15 +10,15 @@
 // Every overlay now rides this offset down and off the bottom edge on the same
 // curve the symbols use, then clears itself.
 import { Tween } from 'svelte/motion';
-import { stateBet } from 'state-shared';
 
-import { SYMBOL_SIZE, SPIN_OPTIONS_DEFAULT, SPIN_OPTIONS_FAST } from './constants';
+import { SYMBOL_SIZE } from './constants';
+import { currentSpinOptions } from './fxTiming';
 
 /** matches the push the wild column gives a reel: clear of the bottom edge
  * whatever the reel's height, without measuring each one */
 const FALL_ROWS = 6;
 
-const spinOptions = () => (stateBet.isTurbo ? SPIN_OPTIONS_FAST : SPIN_OPTIONS_DEFAULT);
+const spinOptions = () => currentSpinOptions();
 
 /** how far the art travels, in pixels */
 export const fallOutDistance = () => FALL_ROWS * SYMBOL_SIZE;

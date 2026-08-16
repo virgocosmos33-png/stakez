@@ -9,7 +9,7 @@
 		argTypes: {
 			symbol: {
 				control: 'select',
-				options: ['H1', 'H2', 'H3', 'H4', 'H5', 'L1', 'L2', 'L3', 'L4', 'L5', 'W', 'S'],
+				options: ['H1', 'H2', 'H3', 'H4', 'H5', 'L1', 'L2', 'L3', 'L4', 'L5', 'W', 'S', 'SU', 'SP', 'GS', 'NW'],
 			},
 			state: {
 				control: 'select',
@@ -34,7 +34,10 @@
 	const context = getContext();
 
 	// every symbol the player sees on the reels (specials never land there)
-	const NAMES: SymbolName[] = ['H1', 'H2', 'H3', 'H4', 'H5', 'L1', 'L2', 'L3', 'L4', 'L5', 'W', 'S'];
+	const NAMES: SymbolName[] = [
+		'H1', 'H2', 'H3', 'H4', 'H5', 'L1', 'L2', 'L3', 'L4', 'L5', 'W',
+		'S', 'SU', 'SP', 'GS', 'NW',
+	];
 	const COLS = 4;
 	const CELL = SYMBOL_SIZE * 1.25;
 	const LABEL_STYLE = {

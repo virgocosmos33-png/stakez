@@ -3,19 +3,19 @@ import { tick } from 'svelte';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
 import { stateBet, stateBetDerived } from 'state-shared';
-import { fxWait, fxDur } from './fxTiming';
+import { fxWait, fxDur, fxHold } from './fxTiming';
 
 import { SYMBOL_SIZE } from './constants';
 import { eventEmitter } from './eventEmitter';
 import { playBookEvent } from './utils';
-import { filterVisibleCells } from './boardCells';
+import { filterVisibleCells, isVisibleBoardCell } from './boardCells';
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { shakeBoard } from './stateShake.svelte';
 import { isMegaWin } from './winConnection';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
-import type { Position, RawSymbol } from './types';
+import type { Position, RawSymbol, SymbolName } from './types';
 
 type WinSoundsData = {
 	alias: string;
@@ -129,10 +129,6 @@ export const presentWinCelebration = async (amount: number, waysOverride?: numbe
 	const celebration = getWinCelebration(amount);
 	const ways = waysOverride ?? connectedWays;
 
-	if (ways > 0) {
-		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways });
-	}
-
 	eventEmitter.broadcast({ type: 'winShow' });
 	winLevelSoundsPlay({ winLevelData: celebration });
 	await eventEmitter.broadcastAsync({
@@ -146,10 +142,13 @@ export const presentWinCelebration = async (amount: number, waysOverride?: numbe
 	eventEmitter.broadcast({ type: 'winCycleStart' });
 };
 
-/** shared by splitGang / splitOutlaws: mark the targets, stamp the per-cell
- * ways multipliers, tear the panes apart, climb the WAYS rail. */
+/** shared by split / splitGang / splitOutlaws: mark the targets, stamp the
+ * per-cell ways multipliers, tear the panes apart, climb the WAYS rail. */
 const applySplit = async (
-	bookEvent: BookEventOfType<'splitGang'> | BookEventOfType<'splitOutlaws'>,
+	bookEvent:
+		| BookEventOfType<'split'>
+		| BookEventOfType<'splitGang'>
+		| BookEventOfType<'splitOutlaws'>,
 	tone: 'split' | 'stretch' | 'clone',
 ) => {
 	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
@@ -185,7 +184,92 @@ const applySplit = async (
 	});
 
 	eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
-	await fxWait(150);
+	await fxHold();
+};
+
+/** Settle those cells to WILD, then flip each card so the bottle is on the back. */
+const playWildFlip = async (
+	cells: { reel: number; row: number; from?: SymbolName }[],
+	opts?: { shoot?: boolean },
+) => {
+	const visible = filterVisibleCells(cells);
+	if (!visible.length) return;
+	const faces = visible.map((cell) => ({
+		reel: cell.reel,
+		row: cell.row,
+		from: (cell.from ??
+			stateGameDerived.boardRaw()[cell.reel]?.[cell.row]?.name ??
+			'L1') as SymbolName,
+	}));
+	const newBoard = rawBoardCopy();
+	faces.forEach(({ reel, row }) => {
+		if (newBoard[reel]?.[row]) {
+			newBoard[reel][row] = { ...newBoard[reel][row], name: 'W' };
+		}
+	});
+	eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
+	parkCells(faces);
+	await eventEmitter.broadcastAsync({
+		type: 'wildFlipShow',
+		cells: faces,
+		shoot: opts?.shoot,
+	});
+};
+
+/** Landed GS cards the revolver sits on. Prefer the live board so row is real. */
+const findGunsmokeOrigins = (): { reel: number; row: number }[] => {
+	const raw = stateGameDerived.boardRaw();
+	const found: { reel: number; row: number }[] = [];
+	for (let reel = 0; reel < raw.length; reel++) {
+		const col = raw[reel] ?? [];
+		for (let row = 0; row < col.length; row++) {
+			if (col[row]?.name === 'GS' && isVisibleBoardCell(reel, row)) {
+				found.push({ reel, row });
+			}
+		}
+	}
+	return found;
+};
+
+const showGunsmokeGun = async (cells?: { reel: number; row: number }[]) => {
+	const origins = filterVisibleCells(cells ?? findGunsmokeOrigins());
+	if (!origins.length) return;
+	await eventEmitter.broadcastAsync({ type: 'gunsmokeGunShow', cells: origins });
+};
+
+const aimGunsmokeGun = async (cell: { reel: number; row: number }) => {
+	await eventEmitter.broadcastAsync({
+		type: 'gunsmokeGunAim',
+		reel: cell.reel,
+		row: cell.row,
+	});
+	await eventEmitter.broadcastAsync({ type: 'gunsmokeGunFire' });
+};
+
+/** GUNSMOKE: shoot each copy into a WILD. One-by-one at normal speed; one volley in turbo. */
+const playGunsmokeShoot = async (
+	cells: { reel: number; row: number }[],
+	from: SymbolName,
+) => {
+	const visible = filterVisibleCells(cells);
+	if (!visible.length) return;
+	await showGunsmokeGun();
+	const together = stateBet.isTurbo || stateBet.isSuperTurbo;
+	const first = visible[0];
+	if (together && first) {
+		await aimGunsmokeGun(first);
+		await playWildFlip(
+			visible.map((cell) => ({ ...cell, from })),
+			{ shoot: true },
+		);
+		await eventEmitter.broadcastAsync({ type: 'gunsmokeGunHide' });
+		return;
+	}
+	for (const cell of visible) {
+		await aimGunsmokeGun(cell);
+		await playWildFlip([{ ...cell, from }], { shoot: true });
+	}
+	await eventEmitter.broadcastAsync({ type: 'gunsmokeGunHide' });
 };
 
 /** BOUNTY: the premium lands in the last-reel lane wearing its WIN multiplier. */
@@ -214,18 +298,15 @@ const applyBounty = async ({
 	eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
 	parkCells([cell]);
 
-	// the gold starburst blooms behind the card as its multiplier badge climbs
-	await Promise.all([
-		eventEmitter.broadcastAsync({
-			type: 'featureBurstShow',
-			kind: 'bounty',
-			cells: filterVisibleCells([cell]),
-		}),
-		eventEmitter.broadcastAsync({
-			type: 'stretchWaysShow',
-			cells: [{ ...cell, multiplier: winMult }],
-		}),
-	]);
+	await eventEmitter.broadcastAsync({
+		type: 'featureBurstShow',
+		kind: 'bounty',
+		cells: filterVisibleCells([cell]),
+	});
+	await eventEmitter.broadcastAsync({
+		type: 'stretchWaysShow',
+		cells: [{ ...cell, multiplier: winMult }],
+	});
 	await animateSymbols({ positions: [cell] });
 };
 
@@ -251,13 +332,14 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.specialBarActiveKind = null;
 		// the lane relocks every spin unless the SUPER bonus dug it up for the
 		// whole round; leaving the bonus drops that too
-		if (bookEvent.gameType === 'basegame') stateGame.laneSuper = false;
+		if (bookEvent.gameType === 'basegame') {
+			stateGame.laneSuper = false;
+			eventEmitter.broadcast({ type: 'winMultUpdate', value: 1 });
+		}
 		stateGame.lidOpen = stateGame.laneSuper;
 		stateGame.slotWinPositions = [];
 		stateGame.featureCells = [];
 		stateGame.reelStretch = stateGame.reelStretch.map(() => null);
-		eventEmitter.broadcast({ type: 'splitPanesHide' });
-		eventEmitter.broadcast({ type: 'cloneMorphHide' });
 		eventEmitter.broadcast({ type: 'stretchWaysHide' });
 		eventEmitter.broadcast({ type: 'cellLightningHide' });
 		stateGame.revealNonce += 1;
@@ -266,6 +348,18 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		connectedWays = 0;
 		winPresented = false;
 		eventEmitter.broadcast({ type: 'waysCounterHide' });
+
+		stateGame.nudgeCoverReel = null;
+		const nudgeEv = bookEvents.find((event) => event.type === 'nudgeWays');
+		stateGame.pendingNudge =
+			nudgeEv && nudgeEv.type === 'nudgeWays'
+				? {
+						reel: nudgeEv.reel,
+						fullReel: nudgeEv.fullReel,
+						startRow: nudgeEv.startRow,
+						initialWays: nudgeEv.initialWays,
+					}
+				: null;
 
 		const spinning = stateGameDerived.enhancedBoard.spin({ revealEvent: bookEvent });
 		await tick();
@@ -276,19 +370,16 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		const betCost = stateBetDerived.betCost();
 		const megaWin = bookEvent.wins.find((win) => isMegaWin(win.win, betCost));
 
-		// every way that paid, across all winning symbols
+		// every way that paid, across all winning symbols — used by the
+		// celebration only. The hanging WAYS plaque stays on the full-board count.
 		connectedWays = bookEvent.wins.reduce((total, win) => total + (win.meta?.ways ?? 0), 0);
-		if (connectedWays > 0) {
-			eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: connectedWays });
-		}
 
 		if (!megaWin) {
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_winlevel_small' });
 		}
 
-		// Feature glass has done its job — clear it so the win dim/sweep reads
-		// the board symbols, not White Room pane overlays on top of them.
-		eventEmitter.broadcast({ type: 'splitPanesHide' });
+		// Split holes, badges and cell fire stay up through the shine — they
+		// are this spin's state. Fall-out on the next reveal is what clears them.
 
 		// The pre-money shine never holds the count-up hostage: each type's beat
 		// is capped, and a click/tap fast-forwards straight to the money.
@@ -346,26 +437,41 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// plays in its own following event.
 	specialBar: async (bookEvent: BookEventOfType<'specialBar'>) => {
 		stateGame.specialBar = bookEvent.cells;
-		// the SUPER bonus starts with the lane already dug up — blast the boards
-		// off the moment the bar resolves and keep them off for the whole round
 		if (bookEvent.barMode === 'super') {
 			stateGame.laneSuper = true;
 			stateGame.lidOpen = true;
 		}
 		if (bookEvent.cells.length > 0) {
-			// a round hitting the iron plaques on the rail
 			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
 			shakeBoard({ intensity: 4, duration: fxDur(180) });
-			await fxWait(650);
+			await fxWait(350);
 		}
 	},
-	// DIG UP — the last-reel lane cracks open for this spin. A spade is driven
-	// into each dug cell and left standing in it while the card lands, so the
-	// player can read which cells were worked (FeatureBurst, kind 'digUp').
-	// The strike is announced ONCE for the whole event, not once per cell: the
-	// spades land in a staggered volley and per-cell triggers machine-gun.
-	digUp: async (bookEvent: BookEventOfType<'digUp'>) => {
-		stateGame.specialBarActiveKind = 'digup';
+	boardSpecials: async (bookEvent: BookEventOfType<'boardSpecials'>) => {
+		stateGame.specialBar = bookEvent.cells.map(({ reel, kind }) => ({ reel, kind }));
+		if (bookEvent.lastUnlocked || bookEvent.barMode === 'super') {
+			stateGame.lidOpen = true;
+		}
+		if (bookEvent.barMode === 'super') {
+			stateGame.laneSuper = true;
+		}
+		if (bookEvent.cells.length > 0) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
+			shakeBoard({ intensity: 4, duration: fxDur(180) });
+			const guns = bookEvent.cells.filter((cell) => cell.kind === 'gunsmoke');
+			if (guns.length) {
+				void showGunsmokeGun(guns);
+			}
+			// Do not lock every planted card here — each following feature
+			// locks its own targets. A board-wide lock then a second lock is
+			// the stacked-reticle glitch.
+			await fxHold();
+		}
+	},
+	// SUPER scatter opened the last-reel lane this spin. A spade is driven
+	// into the boarded cover (FeatureBurst, kind 'digUp').
+	tombstone: async (bookEvent: BookEventOfType<'tombstone'>) => {
+		stateGame.specialBarActiveKind = 'tombstone';
 		// the shovel strikes themselves are scheduled by FeatureBurst, which
 		// knows the per-cell stagger; nothing else announces the dig
 		shakeBoard({ intensity: 7, duration: fxDur(260) });
@@ -373,66 +479,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// its break-away the moment this flips
 		stateGame.lidOpen = true;
 		const lane = filterVisibleCells([{ reel: bookEvent.reel, row: 1 }]);
-		await Promise.all([
-			eventEmitter.broadcastAsync({ type: 'featureBurstShow', kind: 'digUp', cells: lane }),
-			animateSymbols({ positions: [{ reel: bookEvent.reel, row: 1 }] }),
-		]);
-		await fxWait(200);
+		await eventEmitter.broadcastAsync({ type: 'featureBurstShow', kind: 'digUp', cells: lane });
+		await animateSymbols({ positions: [{ reel: bookEvent.reel, row: 1 }] });
+		await fxHold();
 		stateGame.specialBarActiveKind = null;
 	},
-	// TOMBSTONE OPEN — the reel under each coffin card grows by at most +1.
-	// The last-reel special lane is never grown. Grown height + buried symbol
-	// stay on the board until the next reveal resets authored heights.
-	coffinOpen: async (bookEvent: BookEventOfType<'coffinOpen'>) => {
-		stateGame.specialBarActiveKind = 'coffin';
-		// the slab grinding open is fired by FeatureBurst with the burst itself
-		const last = stateGame.board.length - 1;
-
-		const newBoard = rawBoardCopy();
-		const grown: Position[] = [];
-		const grownReels = new Set<number>();
-		bookEvent.reels.forEach(({ reel, newCells }) => {
-			if (reel === last) return; // special lane — never expand
-			const strip = newBoard[reel];
-			if (!strip) return;
-			// clamp to a single extra symbol even if an old book asks for more
-			const added = newCells.slice(0, 1);
-			if (!added.length) return;
-			const bottomPad = strip[strip.length - 1];
-			const body = strip.slice(0, strip.length - 1);
-			newBoard[reel] = [...body, ...added.map(({ name }) => ({ name })), bottomPad];
-			grown.push({ reel, row: body.length }); // padded row of the new cell
-			grownReels.add(reel);
-		});
-		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
-		await tick();
-
-		// park the WHOLE grown reel so every row's Y matches the new length;
-		// SymbolWrap culls anything outside the live window.
-		grownReels.forEach((reel) => parkReel(reel));
-
-		const grownVisible = filterVisibleCells(grown);
-		if (grownVisible.length) {
-			await eventEmitter.broadcastAsync({
-				type: 'targetLockShow',
-				cells: grownVisible,
-				tone: 'stretch',
-			});
-			shakeBoard({ intensity: 9, duration: fxDur(280) });
-			// the plot bursts open under the new cell as it lands
-			await Promise.all([
-				eventEmitter.broadcastAsync({
-					type: 'featureBurstShow',
-					kind: 'coffinOpen',
-					cells: grownVisible,
-				}),
-				landCells(grownVisible),
-			]);
-		}
-
-		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
-		await fxWait(150);
-		stateGame.specialBarActiveKind = null;
+	digUp: async (bookEvent: BookEventOfType<'digUp'>) => {
+		await playBookEvent({ ...bookEvent, type: 'tombstone' }, { bookEvents: [] });
+	},
+	// TOMBSTONE OPEN — removed. Older books still emit this; ignore the grow.
+	coffinOpen: async (_bookEvent: BookEventOfType<'coffinOpen'>) => {
+		return;
 	},
 	// GUNSMOKE — every copy of one symbol type morphs into the revolver WILD
 	gunsmoke: async (bookEvent: BookEventOfType<'gunsmoke'>) => {
@@ -451,49 +508,56 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			tone: 'clone',
 		});
 
-		// swap underneath, hidden by the morph overlay (keep any split multiplier)
+		await playGunsmokeShoot(cells, bookEvent.symbol as SymbolName);
+		await animateSymbols({ positions: cells });
+
+		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
+		await fxHold();
+		stateGame.specialBarActiveKind = null;
+	},
+	// SPLIT — one symbol type on the board gains extra ways
+	split: async (bookEvent: BookEventOfType<'split'>) => {
+		stateGame.specialBarActiveKind = 'split';
+		await applySplit(bookEvent, 'split');
+		stateGame.specialBarActiveKind = null;
+	},
+	splitGang: async (bookEvent: BookEventOfType<'splitGang'>) => {
+		stateGame.specialBarActiveKind = 'split';
+		await applySplit(bookEvent, 'split');
+		stateGame.specialBarActiveKind = null;
+	},
+	splitOutlaws: async (bookEvent: BookEventOfType<'splitOutlaws'>) => {
+		stateGame.specialBarActiveKind = 'split';
+		await applySplit(bookEvent, 'stretch');
+		stateGame.specialBarActiveKind = null;
+	},
+	// NUDGE WAYS — reel 2 or 3 slams down, doubling ways on every notch
+	nudgeWays: async (bookEvent: BookEventOfType<'nudgeWays'>) => {
+		stateGame.specialBarActiveKind = 'nudge';
+		const cells = filterVisibleCells(bookEvent.cells);
 		const newBoard = rawBoardCopy();
-		cells.forEach(({ reel, row }) => {
+		cells.forEach(({ reel, row, multiplier }) => {
 			if (newBoard[reel]?.[row]) {
-				newBoard[reel][row] = { ...newBoard[reel][row], name: 'W' };
+				newBoard[reel][row] = {
+					...newBoard[reel][row],
+					name: 'W',
+					multiplier,
+				};
 			}
 		});
 		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
 		parkCells(cells);
-
-		// play the morph: every copy charges, flashes and becomes the revolver
 		await eventEmitter.broadcastAsync({
-			type: 'cloneMorphShow',
-			cells: cells.map(({ reel, row }) => ({ reel, row })),
-			from: bookEvent.symbol,
-			to: 'W',
+			type: 'nudgeWaysShow',
+			reel: bookEvent.reel,
+			fullReel: bookEvent.fullReel,
+			startRow: bookEvent.startRow,
+			initialWays: bookEvent.initialWays,
+			finalWays: bookEvent.finalWays,
+			steps: bookEvent.steps,
 		});
-		eventEmitter.broadcast({ type: 'cloneMorphHide' });
-		// the shot lands: muzzle blast across each cell, then the powder cloud
-		shakeBoard({ intensity: 8, duration: fxDur(240) });
-		await Promise.all([
-			eventEmitter.broadcastAsync({
-				type: 'featureBurstShow',
-				kind: 'gunsmoke',
-				cells: cells.map(({ reel, row }) => ({ reel, row })),
-			}),
-			animateSymbols({ positions: cells }),
-		]);
-
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
-		await fxWait(160);
-		stateGame.specialBarActiveKind = null;
-	},
-	// SPLIT-GANG — every premium on the board splits (+factor ways each)
-	splitGang: async (bookEvent: BookEventOfType<'splitGang'>) => {
-		stateGame.specialBarActiveKind = 'split_gang';
-		await applySplit(bookEvent, 'split');
-		stateGame.specialBarActiveKind = null;
-	},
-	// SPLIT-OUTLAWS — every low on the board splits (+factor ways each)
-	splitOutlaws: async (bookEvent: BookEventOfType<'splitOutlaws'>) => {
-		stateGame.specialBarActiveKind = 'split_outlaws';
-		await applySplit(bookEvent, 'stretch');
+		await fxHold();
 		stateGame.specialBarActiveKind = null;
 	},
 	// SUPERSPLIT — the last-reel lane turns wild (stays 1-high) and every
@@ -545,15 +609,62 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		});
 
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
-		await fxWait(150);
+		await fxHold();
 	},
 	// BOUNTY — a premium drops into the last-reel lane with a WIN multiplier
 	bounty: async (bookEvent: BookEventOfType<'bounty'>) => {
-		stateGame.lidOpen = true; // the lane fired, so it can't still be boarded
-		// golden sheriff star flashes in the lane before the mark is named
+		stateGame.lidOpen = true;
 		await eventEmitter.broadcastAsync({ type: 'laneCardShow', kind: 'bounty' });
+		eventEmitter.broadcast({ type: 'winMultUpdate', value: bookEvent.winMult });
 		await applyBounty(bookEvent);
-		await fxWait(150);
+		await fxHold();
+	},
+	// MARK — last-reel shooter fires at every premium, +1 stacked WIN multi each
+	shooter: async (bookEvent: BookEventOfType<'shooter'>) => {
+		stateGame.lidOpen = true;
+		await eventEmitter.broadcastAsync({ type: 'laneCardShow', kind: 'shooter' });
+		const last = stateGame.board.length - 1;
+		const origin = { reel: last, row: 1 };
+		const hits = filterVisibleCells(bookEvent.hits);
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot' });
+		if (hits.length) {
+			await eventEmitter.broadcastAsync({
+				type: 'targetLockShow',
+				cells: hits,
+				tone: 'clone',
+			});
+		}
+		const start = Math.max(1, bookEvent.winMult - bookEvent.added);
+		eventEmitter.broadcast({ type: 'winMultUpdate', value: start });
+		let running = start;
+		for (const cell of hits) {
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot' });
+			shakeBoard({ intensity: 6, duration: fxDur(140) });
+			await eventEmitter.broadcastAsync({
+				type: 'featureBurstShow',
+				kind: 'gunsmoke',
+				cells: [cell],
+			});
+			running += 1;
+			eventEmitter.broadcast({ type: 'winMultUpdate', value: running });
+			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up' });
+		}
+		eventEmitter.broadcast({ type: 'winMultUpdate', value: bookEvent.winMult });
+		await eventEmitter.broadcastAsync({
+			type: 'stretchWaysShow',
+			cells: [{ ...origin, multiplier: bookEvent.winMult }],
+		});
+		await fxHold();
+	},
+	specialsWild: async (bookEvent: BookEventOfType<'specialsWild'>) => {
+		const cells = filterVisibleCells(bookEvent.cells);
+		if (!cells.length) return;
+		await eventEmitter.broadcastAsync({ type: 'gunsmokeGunHide' });
+		await playWildFlip(cells);
+		await fxHold();
+	},
+	winMult: async (bookEvent: BookEventOfType<'winMult'>) => {
+		eventEmitter.broadcast({ type: 'winMultUpdate', value: bookEvent.winMult });
 	},
 	// NUDGE — xNudge sideways. The NUDGE WILD (its own card) drops into the last
 	// lane, then racks LEFT one mechanical notch per reel, stepping onto exactly
@@ -634,7 +745,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			type: 'stretchWaysShow',
 			cells: [{ reel: rest.reel, row: rest.row, multiplier: bookEvent.winMult }],
 		});
-		await fxWait(120);
+		await fxHold();
 	},
 	// ------------------------------------------------------------------
 	// BONUS ROUNDS: 3 scatters -> SMALL BONUS (bar awake all round),
@@ -669,6 +780,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			current: 0,
 			total: bookEvent.totalFs,
 		});
+		eventEmitter.broadcast({ type: 'winMultUpdate', value: 1 });
 	},
 	updateFreeSpin: async (bookEvent: BookEventOfType<'updateFreeSpin'>) => {
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
@@ -682,6 +794,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		// the round total is celebrated by setWin/finalWin like every book —
 		// this only strikes the round chrome
 		eventEmitter.broadcast({ type: 'freeSpinCounterHide' });
+		eventEmitter.broadcast({ type: 'winMultUpdate', value: 1 });
 		stateGame.gameType = 'basegame';
 		stateGame.laneSuper = false;
 	},

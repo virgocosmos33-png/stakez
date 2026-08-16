@@ -52,6 +52,7 @@ class GameState(GameStateOverride):
 
     def run_freespin(self) -> None:
         self.reset_fs_spin()
+        self.win_multiplier = 0
         conditions = self.get_current_distribution_conditions()
         while self.fs < self.tot_fs:
             self.update_freespin()

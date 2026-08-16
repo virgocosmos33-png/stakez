@@ -4,9 +4,8 @@
 	// COMPONENTS/FeatureFx exercises two feature presentations in isolation, driven
 	// straight through the event emitter (no book, no spin) so the beat is reliable
 	// to film and easy to eyeball:
-	//   bullet explosion — a split cell whose multiplier cleared EXPLOSION_MIN_MULT
-	//                       DETONATES (SplitExplosion flipbook + boom), on top of
-	//                       the usual bullet holes + Nx badge.
+	//   knife split — 2 / 3 / 4 panes after a horizontal knife slash; 6+ is one
+	//                 symbol plus a corner count.
 	//   shovel dig break — the digUp spade drives in and the cell cracks open in a
 	//                       burst of dirt and smoke at the point of impact.
 	const { Story } = defineMeta({
@@ -39,14 +38,15 @@
 		run();
 	};
 
-	// A big-multiplier split: reel 2 / row 1 carries a 15x cell (detonates) and
-	// reel 1 / row 1 a 3x cell (holes only), so the story shows the >10x threshold.
-	const detonate = onBoard(() =>
+	// 2 / 3 / 4 panes, plus a 6+ cell (one symbol + corner count).
+	const knifeSplit = onBoard(() =>
 		context.eventEmitter.broadcast({
 			type: 'splitPanesShow',
 			cells: [
-				{ reel: 2, row: 1, count: 15, name: 'H1' },
-				{ reel: 1, row: 1, count: 3, name: 'L1' },
+				{ reel: 1, row: 1, count: 2, name: 'L1' },
+				{ reel: 2, row: 1, count: 3, name: 'H1' },
+				{ reel: 3, row: 1, count: 4, name: 'H4' },
+				{ reel: 4, row: 1, count: 7, name: 'L5' },
 			],
 		}),
 	);
@@ -102,10 +102,10 @@
 	</StoryGameTemplate>
 {/snippet}
 
-<!-- a split cell over 10x DETONATES: gunpowder blast + boom over the bullet holes -->
+<!-- knife slash, then 2 / 3 / 4 panes; 6+ is one symbol plus a corner count -->
 <Story
-	name="bullet explosion (15x)"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: detonate })}
+	name="knife split (2 3 4 7)"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: knifeSplit })}
 	{template}
 />
 

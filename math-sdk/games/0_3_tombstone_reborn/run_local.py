@@ -1,6 +1,6 @@
 """Quick LOCAL math build for TOMBSTONE REBORN (main game only).
 
-Real books + lookup tables + index.json for the base mode, at reduced sim
+Real books + lookup tables + index.json for every bet mode, at reduced sim
 counts so it finishes fast. NOT for production - use run.py for that.
 
     ../../env/Scripts/python.exe run_local.py
@@ -24,6 +24,8 @@ if __name__ == "__main__":
         "base": int(1e5),
         "bonus_small": int(5e4),
         "bonus_super": int(5e4),
+        "freespins": int(2e4),
+        "superspins": int(1.2e4),
     }
 
     run_conditions = {"run_sims": True, "run_optimization": True}

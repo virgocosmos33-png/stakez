@@ -50,14 +50,13 @@ def feature(*names, lo=0.01, hi=FEATURE_MAX_X, any_of=False):
 # label -> (mode preference order, predicate on the set of event types)
 WANTS = [
     ("base_dead",      ["base"],        lambda t, p: p == 0),
-    ("base_special",   ["base"],        feature("splitGang", "gunsmoke", "coffinOpen", any_of=True)),
-    ("coffin_open",    ["bonus_small", "bonus_super"], feature("coffinOpen")),
+    ("base_special",   ["base"],        feature("split", "gunsmoke", "nudgeWays", any_of=True)),
     ("gunsmoke",       ["bonus_small", "bonus_super"], feature("gunsmoke")),
-    ("split_gang",     ["bonus_small", "bonus_super"], feature("splitGang")),
-    ("split_outlaws",  ["bonus_small", "bonus_super"], feature("splitOutlaws")),
-    ("dig_up",         ["bonus_small"], feature("digUp")),
+    ("split",          ["bonus_small", "bonus_super"], feature("split")),
+    ("nudge_ways",     ["bonus_small", "bonus_super"], feature("nudgeWays")),
+    ("tombstone",      ["bonus_small"], feature("tombstone")),
     ("bounty",         ["bonus_super", "bonus_small"], feature("bounty")),
-    ("nudge",          ["bonus_super", "bonus_small"], feature("nudge")),
+    ("shooter",        ["bonus_super", "superspins"], feature("shooter")),
     ("super_split",    ["bonus_super"], feature("superSplit")),
     # A genuinely small win. This used to be an unbounded `p >= 200`, which kept
     # resolving to a 99,999x wincap book — the same presentation as max_win, so
@@ -143,8 +142,8 @@ def main():
         clone["id"] = pos
         showcase.append(clone)
         feats = [t for t in (
-            "coffinOpen", "gunsmoke", "splitGang", "splitOutlaws", "digUp",
-            "bounty", "nudge", "superSplit",
+            "gunsmoke", "split", "nudgeWays", "tombstone",
+            "bounty", "shooter", "superSplit",
         ) if t in types]
         index[label] = {
             "showcaseId": pos,

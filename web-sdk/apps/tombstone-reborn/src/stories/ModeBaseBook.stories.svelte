@@ -53,17 +53,10 @@
 	{template}
 />
 
-<!-- the rare base-game spin where the special bar wakes up and drops a card -->
+<!-- the rare base-game spin where a feature symbol drops onto the board -->
 <Story
-	name="specialBarHit"
+	name="boardSpecial"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('base_special') })}
-	{template}
-/>
-
-<!-- TOMBSTONE OPEN: short reels grow taller, revealing buried symbols -->
-<Story
-	name="tombstoneOpen"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('coffin_open') })}
 	{template}
 />
 
@@ -74,23 +67,44 @@
 	{template}
 />
 
-<!-- GANG SPLIT: every premium on the board splits into extra ways -->
+<!-- SPLIT: one symbol type on the board gains extra ways -->
 <Story
-	name="splitGang"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('split_gang') })}
+	name="split"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('split') })}
 	{template}
 />
 
-<!-- OUTLAW SPLIT: every low on the board splits into extra ways -->
+<!-- SUPER scatter: the sealed last-reel lane cracks open for this spin -->
 <Story
-	name="splitOutlaws"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('split_outlaws') })}
+	name="super scatter"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('tombstone') })}
 	{template}
 />
 
-<!-- DIG UP: the sealed last-reel lane cracks open mid-spin -->
+<!-- NUDGE WAYS: lands on the top of reel 2, slams down, ways 2 → 4 → 8 → 16 -->
 <Story
-	name="digUp"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('dig_up') })}
+	name="nudgeWays"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('nudge_ways') })}
+	{template}
+/>
+
+<!-- NUDGE WAYS full reel: the whole column is visible from the first frame -->
+<Story
+	name="nudgeWaysFull"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('nudge_ways_full') })}
+	{template}
+/>
+
+<!-- NUDGE WAYS mid land: row 3 already shows 3/4 of the column, then one step down -->
+<Story
+	name="nudgeWaysRow3"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('nudge_ways_row3') })}
+	{template}
+/>
+
+<!-- 3 BONUS tombstones: anticipation hang after the 2nd, then SMALL BONUS -->
+<Story
+	name="naturalTrigger"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('natural_trigger') })}
 	{template}
 />

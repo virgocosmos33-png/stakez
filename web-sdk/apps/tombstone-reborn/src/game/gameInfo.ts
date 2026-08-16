@@ -37,54 +37,49 @@ export const WHITE_ROOM_SPECIALS: SpecialSymbol[] = [
 	{
 		key: 's',
 		name: 'Scatter — The Bonus Tombstone',
-		desc: 'Pays nothing on its own and lands only in the base game. 3 scatters trigger the SMALL BONUS: 10 bonus spins with the special bar awake on every one. 4 or more trigger the BIG BONUS: 10 bonus spins with the bar awake AND the grave lane torn open throughout. No retriggers — but around 1 in 100 small bonuses drops a 4th scatter mid-round and UPGRADES to the big bonus, with the spin count topped back up.',
+		desc: 'Pays nothing on its own and lands only in the base game. 3 BONUS tombstones trigger the SMALL BONUS: 10 bonus spins with feature symbols dropping on the board. A SUPER scatter as the 4th scatter triggers the BIG BONUS.',
 	},
 	{
-		key: 'split_gang',
-		name: 'Gang Split',
-		desc: 'A bar card that splits EVERY premium character on the board: each one gains +1 to +10 extra ways. The dead multiply.',
+		key: 'su',
+		name: 'Super Scatter',
+		desc: 'When it lands, the last-reel lane opens for that spin. On a base spin it is the 4th scatter and opens the BIG BONUS. During a small bonus it is the upgrade drop: the grave lane stays open for the rest of the round and the spins top back up.',
 	},
 	{
-		key: 'split_outlaws',
-		name: 'Outlaw Split',
-		desc: 'A bar card that splits EVERY low symbol on the board: each one gains +1 to +10 extra ways.',
+		key: 'split',
+		name: 'Split',
+		desc: 'Lands on the board, picks one symbol type and adds 2 to 7 extra ways to every copy of that type — extremely weighted toward 2. Then turns into the revolver WILD.',
 	},
 	{
 		key: 'gunsmoke',
 		name: 'Gunsmoke',
-		desc: 'A bar card that turns every copy of one symbol type into the revolver WILD. The smoke clears and only gun metal remains.',
+		desc: 'Lands on the board, turns every copy of one symbol type into the revolver WILD, then becomes a wild itself.',
 	},
 	{
-		key: 'digup',
-		name: 'Dig Up',
-		desc: 'A bar card that cracks open the sealed LAST-REEL LANE for the current spin — even in the base game. Whatever is buried there joins the board.',
-	},
-	{
-		key: 'coffin',
-		name: 'Tombstone Open',
-		desc: 'A bar card that grows short reels taller, revealing extra buried symbols and multiplying the ways.',
+		key: 'nudge',
+		name: 'Nudge Ways',
+		desc: 'Drops only on the 2nd or 3rd reel with 2 to 9 ways (extremely weighted toward 2). If it does not already fill the reel it nudges DOWN, doubling its ways on every step. A full-reel drop keeps the initial ways with no doubling.',
 	},
 	{
 		key: 'bounty',
 		name: 'Bounty',
-		desc: 'The unlocked last-reel lane can drop a random premium carrying a WIN multiplier (×2 up to ×100) that multiplies the WHOLE spin win.',
+		desc: 'When the last-reel lane is open it drops premiums only, each carrying a WIN multiplier (×2 up to ×100) that STACKS onto the round\'s WIN multi.',
 	},
 	{
-		key: 'nudge',
-		name: 'Horizontal Nudge',
-		desc: 'A bounty premium can NUDGE left across the board, climbing its WIN multiplier for every premium it passes — and leaving each one as a WILD.',
+		key: 'shooter',
+		name: 'Mark',
+		desc: 'The open last-reel lane can drop MARK: it shoots every premium on the board and adds +1 to the stacked WIN multiplier for each hit, then becomes a wild.',
 	},
 	{
 		key: 'supersplit',
 		name: 'Supersplit',
-		desc: 'The rarest thing the open last-reel lane can drop: the last reel turns fully WILD and EVERY paying symbol on the board splits at once. The SUPER BONUS opens the lane on every spin, but DIG UP opens it in the base game and the small bonus too.',
+		desc: 'The other last-reel special: the last reel turns WILD and EVERY paying symbol on the board splits at 2× / 5× / 10×. Then MARK/SUPERSPLIT become wilds.',
 	},
 ];
 
 export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 	{
 		title: 'GAME INFO',
-		body: 'TOMBSTONE REBORN is a 6-reel ways slot on a broken-grave grid (3/4/4/2/2/1 rows) with 10 paying symbols (5 highs, 5 lows) plus the revolver Wild and the special bar cards. Wins are awarded strictly left to right on adjacent columns, regardless of row.',
+		body: 'TOMBSTONE REBORN is a 6-reel ways slot on a broken-grave grid (3/4/4/2/2/1 rows) with 10 paying symbols (5 highs, 5 lows) plus the revolver Wild and feature symbols that land on the board. Wins are awarded strictly left to right on adjacent columns, regardless of row.',
 		bullets: [
 			'All wins are shown as a multiplier of the total bet and are awarded per way.',
 			'Cells carrying extra ways (splits) count as multiple symbols on their reel, multiplying the number of ways.',
@@ -93,38 +88,35 @@ export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 		],
 	},
 	{
-		title: 'THE SPECIAL BAR',
-		body: 'Six sealed cells run along the top of the board, one over each reel. In the base game each cell has a very small chance to flip a card that really fires; in the bonuses the bar is fully awake. Cards fire one at a time, left to right, so a later card lands on a board an earlier card already changed.',
+		title: 'FEATURE SYMBOLS',
+		body: 'Feature symbols land on the reel grid itself. After they fire they transform into the revolver WILD. In the base game they are rare; in the bonuses they drop much more often.',
 		bullets: [
-			'GANG SPLIT — every premium on the board gains extra ways.',
-			'OUTLAW SPLIT — every low on the board gains extra ways.',
-			'GUNSMOKE — every copy of one symbol type becomes the revolver WILD.',
-			'DIG UP — the sealed last-reel lane cracks open for this spin.',
-			'TOMBSTONE OPEN — short reels grow taller, revealing buried symbols.',
+			'SPLIT — one symbol type on the board gains 2 to 7 extra ways, then the card becomes a wild.',
+			'GUNSMOKE — every copy of one symbol type becomes the revolver WILD, then the card becomes a wild.',
+			'NUDGE WAYS — lands on the 2nd or 3rd reel and nudges down, doubling its ways on every step. A full-reel drop keeps the initial ways.',
 		],
 	},
 	{
 		title: 'THE LAST-REEL LANE',
-		body: 'The sixth reel is a single sealed grave cell. It opens through DIG UP, or on every spin of the SUPER BONUS. An open lane can drop:',
+		body: 'The sixth reel is a single sealed grave cell. It opens when a SUPER scatter lands, or on every spin of the SUPER BONUS / big bonus round. An open lane NEVER drops lows — only:',
 		bullets: [
-			'BOUNTY — a random premium carrying a WIN multiplier (×2 to ×100) on the whole spin.',
-			'NUDGE — the bounty premium slides left, climbing its WIN multiplier for every premium it passes and leaving each as a WILD.',
-			'SUPERSPLIT — the lane turns WILD and every paying symbol on the board splits. The rarest of the three.',
+			'A PREMIUM carrying a WIN multiplier (×2 to ×100) that STACKS onto the round\'s WIN multi — shown on the MULTI readout.',
+			'MARK — shoots every premium on the board, adding +1 to the stacked WIN multi per hit.',
+			'SUPERSPLIT — the lane turns WILD and every symbol on the board splits at 2× / 5× / 10×.',
 		],
 	},
 	{
 		title: 'BONUSES',
-		body: "Both bonuses are a SINGLE enhanced spin, not a set of free spins. The banner that opens each one names it: DEAD MAN'S HAND for the small buy, OPEN GRAVE for the super.",
+		body: 'Two single-spin buys and two 10-spin bonus rounds (scatter-triggered, also buyable).',
 		rows: [
-			{ label: "SMALL BONUS — DEAD MAN'S HAND, special bar fully awake", value: '80× bet' },
-			{
-				label: 'SUPER BONUS — OPEN GRAVE, bar awake + last lane open every spin',
-				value: '1,000× bet',
-			},
+			{ label: 'SMALL BONUS — one spin, feature symbols on the board', value: '80× bet' },
+			{ label: 'SUPER BONUS — one spin, last lane open (premiums / MARK / SUPERSPLIT)', value: '1,000× bet' },
+			{ label: 'THE WAKE — 10 spins, feature symbols on the board', value: '80× bet' },
+			{ label: 'THE RECKONING — 10 spins, last lane open; ~25% of rounds profitable', value: '2,000× bet' },
 		],
 		bullets: [
 			'The SMALL BONUS returns exactly 0 on about 40% of spins — and can, very rarely, reach the max win.',
-			'The SUPER BONUS returns less than it plays for most of the time; the top of its range reaches the max win.',
+			'THE RECKONING is built so only about 1 in 4 rounds pays more than it costs.',
 		],
 	},
 	{
@@ -132,8 +124,8 @@ export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 		body: 'Theoretical RTP by mode (long-term expected return):',
 		rows: [
 			{ label: 'Main game', value: '96.50%' },
-			{ label: 'SMALL BONUS', value: '96.50%' },
-			{ label: 'SUPER BONUS', value: '96.50%' },
+			{ label: 'SMALL BONUS / THE WAKE', value: '96.50%' },
+			{ label: 'SUPER BONUS / THE RECKONING', value: '96.50%' },
 		],
 	},
 	{

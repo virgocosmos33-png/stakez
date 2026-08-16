@@ -1,19 +1,33 @@
-// Feature animation timing, under turbo.
+// Feature + presentation timing under the three speed tiers.
 //
-// The clone morph, the split claw, the wild column, the stretch rack and the
-// beats between them were all written as fixed millisecond durations, so turbo
-// sped the REELS up and left every feature running at its full leisurely length
-// — the faster you span, the larger the share of the round spent watching a
-// clone charge up.
-//
-// Everything with a duration now goes through here, so both turbo tiers
-// (1.35x and 1.8x, from stateBetDerived.timeScale) shorten the features by the
-// same factor they shorten everything else.
-import { stateBetDerived } from 'state-shared';
+// Shared `timeScale` (1.35 / 1.8) is too close to feel like turbo vs super
+// turbo. This game uses its own present scale so:
+//   normal       1x   — every beat is readable, one after another
+//   turbo        2x   — same sequence, cut in half
+//   super turbo  3.2x — same sequence, slammed
+import { stateBet } from 'state-shared';
 import { waitForTimeout } from 'utils-shared/wait';
 
-/** a tween/animation length in ms, shortened by the active turbo tier */
-export const fxDur = (ms: number) => ms / stateBetDerived.timeScale();
+import { SPIN_OPTIONS_DEFAULT, SPIN_OPTIONS_FAST, SPIN_OPTIONS_SUPER } from './constants';
 
-/** a pause between feature beats, shortened by the active turbo tier */
+const presentScale = () => {
+	if (stateBet.isSuperTurbo) return 3.2;
+	if (stateBet.isTurbo) return 2;
+	return 1;
+};
+
+/** a tween/animation length in ms, shortened by the active speed tier */
+export const fxDur = (ms: number) => ms / presentScale();
+
+/** a pause between feature beats, shortened by the active speed tier */
 export const fxWait = (ms: number) => waitForTimeout(fxDur(ms));
+
+/** hold after a feature resolves so the next event does not pile on */
+export const fxHold = () => fxWait(400);
+
+/** reel / plaque fall speeds for the active tier */
+export const currentSpinOptions = () => {
+	if (stateBet.isSuperTurbo) return SPIN_OPTIONS_SUPER;
+	if (stateBet.isTurbo) return SPIN_OPTIONS_FAST;
+	return SPIN_OPTIONS_DEFAULT;
+};

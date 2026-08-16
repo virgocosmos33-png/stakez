@@ -49,8 +49,8 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'SMALL BONUS',
 			dialog:
-				'One enhanced spin at 80x your bet: the six-card special bar is fully awake and drops its cards far more often — Gang Split, Outlaw Split, Gunsmoke, Dig Up and Tombstone Open. Around 40% of these spins return exactly 0; the top of the range reaches the 99,999x max win.',
-			description: 'One enhanced spin. Special bar fully awake.',
+				'One enhanced spin at 80x your bet: feature symbols drop on the board — Gang Split, Outlaw Split, Gunsmoke, Dig Up and Tombstone Open — then turn into wilds. Around 40% of these spins return exactly 0; the top of the range reaches the 99,999x max win.',
+			description: 'One enhanced spin. Feature symbols drop on the board.',
 			button: 'BUY',
 			betAmountLabel: 'SMALL BONUS',
 			tickerIdle: 'SMALL BONUS',
@@ -76,8 +76,8 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'SUPER BONUS',
 			dialog:
-				'One enhanced spin at 1,000x your bet: the special bar is fully awake AND the sealed last-reel lane is open — Bounty premiums with WIN multipliers, the horizontal Nudge, and the SUPERSPLIT that turns the lane wild and splits every symbol on the board. Most of these spins return less than they play for; the top of the range reaches the 99,999x max win.',
-			description: 'One enhanced spin. Bar + last lane open, Supersplit live.',
+				'One enhanced spin at 1,000x your bet: feature symbols drop on the board AND the sealed last-reel lane is open — premiums with stacked WIN multipliers, MARK (shoots every premium, +1 multi per hit), and SUPERSPLIT. Most of these spins return less than they play for; the top of the range reaches the 99,999x max win.',
+			description: 'One enhanced spin. Last lane open: premiums, MARK, Supersplit.',
 			button: 'BUY',
 			betAmountLabel: 'SUPER BONUS',
 			tickerIdle: 'SUPER BONUS',
@@ -104,8 +104,8 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'SMALL BONUS · 10 SPINS',
 			dialog:
-				'THE WAKE — 10 bonus spins at 80x your bet, triggered by 3 BONUS tombstones. The six-card special bar is awake on every spin. No retriggers, and the rounds are extremely volatile: most pay back less than they cost, the top of the range reaches the 99,999x max win. Around 1 in 100 rounds drops a 4th scatter mid-round and UPGRADES to the big bonus — the grave lane tears open for the rest and the spins top back up.',
-			description: '10 bonus spins. The special bar is awake on every one.',
+				'THE WAKE — 10 bonus spins at 80x your bet, triggered by 3 BONUS tombstones. Feature symbols drop on the board every spin. No retriggers, and the rounds are extremely volatile: most pay back less than they cost, the top of the range reaches the 99,999x max win. Around 1 in 100 rounds drops a SUPER tombstone mid-round and UPGRADES to the big bonus — the grave lane tears open for the rest and the spins top back up.',
+			description: '10 bonus spins. Feature symbols drop on the board.',
 			button: 'BUY',
 			betAmountLabel: 'SMALL BONUS',
 			tickerIdle: 'THE WAKE',
@@ -132,8 +132,8 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'BIG BONUS · 10 SPINS',
 			dialog:
-				'THE RECKONING — 10 bonus spins at 2,000x your bet, triggered by 4+ BONUS tombstones. The special bar is awake AND the grave lane is torn open on every spin: Bounty premiums with WIN multipliers, the horizontal Nudge and SUPERSPLIT all live for the whole round. No retriggers, brutally volatile: most rounds pay back less than they cost, the top of the range reaches the 99,999x max win.',
-			description: '10 bonus spins. Bar awake + grave lane open on every one.',
+				'THE RECKONING — 10 bonus spins at 2,000x your bet, triggered by 3 BONUS tombstones plus a SUPER tombstone. Feature symbols drop on the board AND the grave lane is torn open on every spin: premiums with stacked WIN multipliers, MARK (shoots every premium) and SUPERSPLIT. About 1 in 4 rounds pays more than it costs. No retriggers, brutally volatile; the top of the range reaches the 99,999x max win.',
+			description: '10 bonus spins. Lane open: premiums, MARK, Supersplit. ~25% profitable.',
 			button: 'BUY',
 			betAmountLabel: 'BIG BONUS',
 			tickerIdle: 'THE RECKONING',

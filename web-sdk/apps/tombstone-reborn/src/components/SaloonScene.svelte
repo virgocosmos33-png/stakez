@@ -7,23 +7,21 @@
 
 <script lang="ts">
 	/**
-	 * Live saloon room: plate + the FULL lady-spine lamp layers (not a
-	 * silhouette crop) cover-fitted as ONE unit. Swing from the chain mount.
-	 *
-	 * idle = slow sway. A multiplier detonation plays cheers (the shake)
-	 * once, then returns to idle.
+	 * Live saloon room: plate + the LEFT hanging lamp. A click swaps the lit
+	 * lantern for the unlit PNG until the next spin.
 	 */
 	import { onMount } from 'svelte';
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { SALOON_LAMPS } from '../game/saloonLamps';
+	import { saloonLamp } from '../game/saloonLamp.svelte';
+	import { LAMP_GLOBE } from '../game/saloonLampSmash';
 	import { getContext } from '../game/context';
 
 	const context = getContext();
 
 	const IDLE_PERIOD_MS = 4000;
 	const IDLE_AMP_L = (4.4 * Math.PI) / 180;
-	const IDLE_AMP_R = (3.6 * Math.PI) / 180;
 	const CHEERS_MS = 2400;
 	const DEG = Math.PI / 180;
 	const CHEERS_L = [
@@ -32,12 +30,9 @@
 		{ t: 1.3, deg: -4.8 },
 		{ t: 2.4, deg: 0 },
 	] as const;
-	const CHEERS_R = [
-		{ t: 0, deg: 0 },
-		{ t: 0.4, deg: -5.4 },
-		{ t: 1.15, deg: 4.6 },
-		{ t: 2.4, deg: 0 },
-	] as const;
+
+	const L = SALOON_LAMPS.L;
+	const FLAME = { x: LAMP_GLOBE.x, y: LAMP_GLOBE.y };
 
 	const fit = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -52,14 +47,12 @@
 
 	const hasRoom = $derived(
 		Boolean(context.stateApp.loadedAssets?.['saloonPlate']) &&
-			Boolean(context.stateApp.loadedAssets?.['saloonLampL']) &&
-			Boolean(context.stateApp.loadedAssets?.['saloonLampR']),
+			Boolean(context.stateApp.loadedAssets?.['saloonLampL']),
 	);
 
 	let clip = $state<'idle' | 'cheers'>('idle');
 	let clipOrigin = $state(performance.now());
 	let rotL = $state(0);
-	let rotR = $state(0);
 
 	const sampleDeg = (keys: readonly { t: number; deg: number }[], sec: number) => {
 		if (sec <= keys[0].t) return keys[0].deg;
@@ -77,8 +70,15 @@
 		return 0;
 	};
 
+	$effect(() => {
+		if (!context.stateXstateDerived.isIdle() && saloonLamp.smashed) {
+			saloonLamp.smashed = false;
+		}
+	});
+
 	context.eventEmitter.subscribeOnMount({
 		saloonCheers: () => {
+			if (saloonLamp.smashed) return;
 			clip = 'cheers';
 			clipOrigin = performance.now();
 		},
@@ -93,22 +93,21 @@
 					clip = 'idle';
 					clipOrigin = now;
 					rotL = 0;
-					rotR = 0;
 				} else {
-					const sec = elapsed / 1000;
-					rotL = sampleDeg(CHEERS_L, sec) * DEG;
-					rotR = sampleDeg(CHEERS_R, sec) * DEG;
+					rotL = sampleDeg(CHEERS_L, elapsed / 1000) * DEG;
 				}
+			} else if (saloonLamp.smashed) {
+				rotL = 0;
 			} else {
 				const phase = ((now - clipOrigin) / IDLE_PERIOD_MS) * Math.PI * 2;
 				rotL = Math.sin(phase) * IDLE_AMP_L;
-				rotR = -Math.sin(phase) * IDLE_AMP_R;
 			}
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
 	});
+
 </script>
 
 <Container x={fit.x} y={fit.y} scale={fit.scale} pivot={fit.pivot}>
@@ -121,24 +120,37 @@
 			height={SCENE_ART.height}
 			anchor={0.5}
 		/>
-		<Sprite
-			key="saloonLampL"
-			x={SALOON_LAMPS.L.x}
-			y={SALOON_LAMPS.L.y}
-			width={SALOON_LAMPS.L.width}
-			height={SALOON_LAMPS.L.height}
-			anchor={{ x: SALOON_LAMPS.L.anchorX, y: SALOON_LAMPS.L.anchorY }}
-			rotation={rotL}
-		/>
-		<Sprite
-			key="saloonLampR"
-			x={SALOON_LAMPS.R.x}
-			y={SALOON_LAMPS.R.y}
-			width={SALOON_LAMPS.R.width}
-			height={SALOON_LAMPS.R.height}
-			anchor={{ x: SALOON_LAMPS.R.anchorX, y: SALOON_LAMPS.R.anchorY }}
-			rotation={rotR}
-		/>
+		<Container x={L.x} y={L.y} rotation={rotL}>
+			<Sprite
+				key="saloonLampGlow"
+				x={FLAME.x}
+				y={FLAME.y + 80}
+				anchor={0.5}
+				width={980}
+				height={1100}
+				alpha={saloonLamp.smashed ? 0 : 0.38}
+				blendMode="add"
+				eventMode="none"
+			/>
+			<Sprite
+				key="saloonLampL"
+				x={-L.anchorX * L.width}
+				y={-L.anchorY * L.height}
+				width={L.width}
+				height={L.height}
+				anchor={0}
+				alpha={saloonLamp.smashed ? 0 : 1}
+			/>
+			<Sprite
+				key="saloonLampLSmashed"
+				x={-L.anchorX * L.width}
+				y={-L.anchorY * L.height}
+				width={L.width}
+				height={L.height}
+				anchor={0}
+				alpha={saloonLamp.smashed ? 1 : 0}
+			/>
+		</Container>
 	{:else}
 		<Sprite
 			key="sceneBg"
