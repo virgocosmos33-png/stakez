@@ -26,7 +26,7 @@
 	import config from '../game/config';
 	import { BOARD_PLATE_PAD } from '../game/constants';
 	import { COLUMN_ROW_OFFSET } from '../game/chassisArt';
-	import { isSpecialBarVertical } from '../game/specialBarLayout';
+	import { hangPairXs, isSpecialBarVertical } from '../game/specialBarLayout';
 	import { stateShake } from '../game/stateShake.svelte';
 	import { formatWays } from '../game/waysFormat';
 
@@ -75,13 +75,11 @@
 
 		const waysValue = formatWays(ways);
 		const winValue = bookEventAmountToCurrencyString(stateBet.winBookEventAmount);
-		const spinsValue = `${spinsTotal - spinsCurrent}/${spinsTotal}`;
 		const slots = [
 			{ label: 'WAYS', value: waysValue },
 			{ label: 'MULTI', value: `${winMult}×` },
-			spinsShow ? { label: 'FREE SPINS', value: spinsValue } : null,
 			{ label: 'WIN', value: winValue },
-		].filter((d): d is { label: string; value: string } => d !== null);
+		];
 
 		const wellW = Math.max(124, (bw / Math.max(slots.length, 1)) * 0.54);
 		const blockH = wellW / PLAQUE_ASPECT;
@@ -97,12 +95,30 @@
 				? main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale - blockH / 2
 				: Number.POSITIVE_INFINITY;
 
+		const rowY = Math.min(preferredY, floor);
+		const pair = hangPairXs(board.x + COLUMN_ROW_OFFSET * s, wellW);
+		const spins = spinsShow
+			? {
+					x: pair.right,
+					y: rowY,
+					wellW,
+					chainFromY: rowY - blockH * 0.55,
+					slots: [
+						{
+							label: 'FREE SPINS',
+							value: `${spinsTotal - spinsCurrent}/${spinsTotal}`,
+						},
+					],
+				}
+			: null;
+
 		return {
 			anyShow: true as const,
 			x: board.x + COLUMN_ROW_OFFSET * s,
 			y: Math.min(preferredY, floor),
 			wellW,
 			slots,
+			spins,
 		};
 	});
 </script>
@@ -119,5 +135,16 @@
 				hang
 			/>
 		</Container>
+		{#if layout.spins}
+			<HudReadout
+				x={layout.spins.x}
+				y={layout.spins.y}
+				wellW={layout.spins.wellW}
+				slots={layout.spins.slots}
+				axis="y"
+				hang
+				chainFromY={layout.spins.chainFromY}
+			/>
+		{/if}
 	</MainContainer>
 {/if}

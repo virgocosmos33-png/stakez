@@ -4,6 +4,8 @@
 	 *   WAYS + MULTI hang from the TOP OF THE SCREEN in the sky above the
 	 *   short right reels.
 	 *   WIN hangs from the BOTTOM LIP of that same right-hand timber.
+	 *   WIN + FREE SPINS are the same pair as WAYS + MULTI: same width, same
+	 *   gap, same centre. FREE SPINS sits under MULTI.
 	 * Narrow layouts leave this empty; FrameMorphHud shows the boxes under the board.
 	 */
 	import { stateBet } from 'state-shared';
@@ -16,7 +18,7 @@
 	import { getContext } from '../game/context';
 	import config from '../game/config';
 	import { CELL_PITCH_X, SYMBOL_SIZE } from '../game/constants';
-	import { isSpecialBarVertical } from '../game/specialBarLayout';
+	import { HANG_PAIR_GAP, hangPairXs, isSpecialBarVertical } from '../game/specialBarLayout';
 	import { stateShake } from '../game/stateShake.svelte';
 	import { getCellLeft, getReelYOffset } from '../game/utils';
 	import { formatWays } from '../game/waysFormat';
@@ -68,7 +70,6 @@
 
 		const notchL = getCellLeft(3);
 		const notchR = getCellLeft(4) + CELL_PITCH_X;
-		const notchCx = toX((notchL + notchR) / 2);
 		const hangCx = toX((getCellLeft(4) + getCellLeft(5) + CELL_PITCH_X) / 2);
 		const shortTop = getReelYOffset(3);
 		const shortBot = shortTop + 2 * SYMBOL_SIZE;
@@ -85,17 +86,12 @@
 		const pocketBot = toY(shortTop) - 6;
 		const hangY = Math.min(screenTop + 40 + blockH * 0.5, pocketBot - blockH * 0.45);
 
-		const winSlots: { label: string; value: string }[] = [];
-		if (spinsShow) {
-			winSlots.push({
-				label: 'FREE SPINS',
-				value: `${spinsTotal - spinsCurrent}/${spinsTotal}`,
-			});
-		}
-		winSlots.push({ label: 'WIN', value: winValue });
-		const winStackH =
-			winSlots.length * blockH + Math.max(0, winSlots.length - 1) * blockH * 0.08;
-		const winY = lipY + 10 + winStackH * 0.5;
+		const HANG_DROP = 28;
+		const pair = hangPairXs(hangCx, wellW);
+		const pairGap = wellW * HANG_PAIR_GAP;
+		const winY = lipY + HANG_DROP + blockH * 0.5;
+		const last = context.stateGame.board.length - 1;
+		const notchHang = toY(getReelYOffset(last));
 
 		return {
 			hang: {
@@ -103,15 +99,30 @@
 				y: hangY + stateShake.y,
 				wellW,
 				slots: hangSlots,
+				gap: pairGap,
 				chainFromY: screenTop,
 			},
 			win: {
-				x: notchCx + CELL_PITCH_X * s * 0.18,
+				x: pair.left,
 				y: winY,
 				wellW,
-				slots: winSlots,
+				slots: [{ label: 'WIN', value: winValue }],
 				chainFromY: lipY,
 			},
+			spins: spinsShow
+				? {
+						x: pair.right,
+						y: winY,
+						wellW,
+						slots: [
+							{
+								label: 'FREE SPINS',
+								value: `${spinsTotal - spinsCurrent}/${spinsTotal}`,
+							},
+						],
+						chainFromY: notchHang,
+					}
+				: null,
 		};
 	});
 </script>
@@ -126,7 +137,7 @@
 			axis="x"
 			hang
 			parts="chains"
-			gap={-readout.hang.wellW * 0.16}
+			gap={readout.hang.gap}
 			chainFromY={readout.hang.chainFromY}
 		/>
 		<HudReadout
@@ -134,11 +145,23 @@
 			y={readout.win.y}
 			wellW={readout.win.wellW}
 			slots={readout.win.slots}
-			axis="y"
+			axis="x"
 			hang
 			parts="chains"
 			chainFromY={readout.win.chainFromY}
 		/>
+		{#if readout.spins}
+			<HudReadout
+				x={readout.spins.x}
+				y={readout.spins.y}
+				wellW={readout.spins.wellW}
+				slots={readout.spins.slots}
+				axis="x"
+				hang
+				parts="chains"
+				chainFromY={readout.spins.chainFromY}
+			/>
+		{/if}
 	</Container>
 	<Container zIndex={2}>
 		<HudReadout
@@ -149,7 +172,7 @@
 			axis="x"
 			hang
 			parts="boxes"
-			gap={-readout.hang.wellW * 0.16}
+			gap={readout.hang.gap}
 			chainFromY={readout.hang.chainFromY}
 		/>
 		<HudReadout
@@ -157,10 +180,22 @@
 			y={readout.win.y}
 			wellW={readout.win.wellW}
 			slots={readout.win.slots}
-			axis="y"
+			axis="x"
 			hang
 			parts="boxes"
 			chainFromY={readout.win.chainFromY}
 		/>
+		{#if readout.spins}
+			<HudReadout
+				x={readout.spins.x}
+				y={readout.spins.y}
+				wellW={readout.spins.wellW}
+				slots={readout.spins.slots}
+				axis="x"
+				hang
+				parts="boxes"
+				chainFromY={readout.spins.chainFromY}
+			/>
+		{/if}
 	</Container>
 {/if}

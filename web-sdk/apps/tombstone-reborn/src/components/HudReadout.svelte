@@ -41,8 +41,8 @@
 	const PLAQUE_ASPECT = 1.6;
 	/** hud_chain.png — keep this ratio so links never stretch */
 	const CHAIN_ASPECT = 1501 / 302;
-	/** hud_chain.png — keep this ratio so links never stretch */
-	const CHAIN_HW = 1501 / 302;
+	/** share the end oval (y 1260–1501) with the next copy so links interlock */
+	const CHAIN_TILE_STEP = 1260 / 1501;
 	/** dark inset well, as fractions of the baked sprite */
 	const OPENING = { y0: 0.27, y1: 0.73 };
 	const VALUE_COLOR = hudColor('text', 0xf0e6d0);
@@ -60,17 +60,17 @@
 
 	const chainCols = (cx: number, cy: number, w: number, h: number) => {
 		const chainBot = cy - h * 0.12;
-		// Same link size as the sky hangs — a short drop must not squash the tile.
 		const colW = Math.max(11, Math.min(w * 0.1, 18));
 		const colH = colW * CHAIN_ASPECT;
-		let chainTop = props.chainFromY != null ? props.chainFromY - props.y : cy - h * 1.15;
-		if (chainBot - chainTop < colH) chainTop = chainBot - colH;
-		const drop = chainBot - chainTop;
-		const copies = Math.max(1, Math.ceil(drop / colH - 0.02));
+		const step = colH * CHAIN_TILE_STEP;
+		let chainTop = props.chainFromY != null ? props.chainFromY - props.y - colH * 0.45 : cy - h * 1.15;
+		if (props.chainFromY == null && chainBot - chainTop < colH) chainTop = chainBot - colH;
+		const drop = Math.max(colH, chainBot - chainTop);
+		const copies = Math.max(1, Math.ceil(drop / step));
 		const inset = w * 0.22;
 		const segs: { id: string; x: number; y: number; w: number; h: number }[] = [];
 		for (let i = 0; i < copies; i += 1) {
-			const y = chainTop + i * colH;
+			const y = chainTop + i * step;
 			segs.push({ id: `l${i}`, x: cx - inset, y, w: colW, h: colH });
 			segs.push({ id: `r${i}`, x: cx + inset, y, w: colW, h: colH });
 		}

@@ -243,8 +243,8 @@
 				temp turbo). Win / FS panels / transition also listen on that bus. -->
 			<TapToSkip />
 
-			<!-- WAYS / WIN live as stacked nameplates on the right (SpecialBar);
-				this is the narrow-layout fallback only. -->
+			<!-- WAYS / WIN on the right (SpecialBar); FREE SPINS in the last-reel
+				empty frame. This is the narrow-layout fallback only. -->
 			<FrameMorphHud />
 
 			<UI>

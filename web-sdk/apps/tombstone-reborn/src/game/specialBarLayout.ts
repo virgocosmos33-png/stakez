@@ -1,8 +1,9 @@
 /**
  * Shared geometry so two components agree on ONE truth:
- *   - SpecialBar.svelte draws stacked WAYS / MULTI / WIN nameplates on the
- *     right when the side margin is wide enough.
- *   - FrameMorphHud.svelte shows the same stack under the board when it is not.
+ *   - SpecialBar.svelte draws WAYS / MULTI above the short reels and WIN on
+ *     the timber lip. FREE SPINS hangs immediately to the right of WIN.
+ *   - FrameMorphHud.svelte shows WAYS / MULTI / WIN under the board when the
+ *     side rail is flat. FREE SPINS still sits beside WIN.
  *
  * Keeping the vertical decision here stops the two from drifting — if the left
  * rail ever stops standing upright, WAYS/WIN move under the board, and vice-versa.
@@ -33,9 +34,23 @@ export const specialBarSideWidth = (board: BoardBox): number => {
 	return railRight - EDGE_MARGIN;
 };
 
+/** Same overlap the top WAYS / MULTI pair uses. */
+export const HANG_PAIR_GAP = -0.16;
+
+/** Left / right centres of a two-plate hang, matching the sky pair. */
+export const hangPairXs = (cx: number, wellW: number) => {
+	const gap = wellW * HANG_PAIR_GAP;
+	return {
+		left: cx - (wellW + gap) / 2,
+		right: cx + (wellW + gap) / 2,
+		gap,
+	};
+};
+
 /**
  * Desktop / landscape: WAYS+MULTI hang on the skull wall, WIN on the bar.
- * Portrait / tablet: FrameMorphHud shows the same boxes under the board.
+ * FREE SPINS sits in the last-reel empty frame, not under WIN.
+ * Portrait / tablet: FrameMorphHud shows WAYS/MULTI/WIN under the board.
  */
 export const isSpecialBarVertical = (_board?: BoardBox): boolean => {
 	const { width, height } = stateLayoutDerived.canvasSizes();
