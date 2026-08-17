@@ -1,15 +1,31 @@
+<script lang="ts" module>
+	import { ColorMatrixFilter } from 'pixi.js';
+
+	import {
+		LANE_DOOR_GRADE_BRIGHTNESS,
+		LANE_DOOR_GRADE_SATURATE,
+	} from '../game/laneDoor';
+
+	const WOOD_GRADE = new ColorMatrixFilter();
+	WOOD_GRADE.saturate(LANE_DOOR_GRADE_SATURATE);
+	WOOD_GRADE.brightness(LANE_DOOR_GRADE_BRIGHTNESS, true);
+	const WOOD_GRADE_FILTERS = [WOOD_GRADE];
+</script>
+
 <script lang="ts">
 	/**
 	 * The boarded cover over the LAST-REEL LANE.
 	 *
-	 * One box: the last-reel board slot. Closed face fills it. Open plays
-	 * the full 16-frame swing, then holds. Next locked reveal slams shut
-	 * in 10 poses (impact on the last). Super-bonus keeps lidOpen.
+	 * One box: the last-reel board slot. Left edge on the cell, full pitch
+	 * cover so the timber never shows as a grey strip. Height is the inner
+	 * opening (sill to lintel), not 16% past the wood. Closed face fills it.
+	 * Open plays the swing, then holds. Next locked reveal slams shut.
+	 * zIndex stays above the sliding gold card so a remount cannot cover
+	 * the hinge post.
 	 */
 	import * as PIXI from 'pixi.js';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
-	import { MainContainer } from 'components-layout';
 	import { BaseSprite, Container } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
@@ -21,9 +37,10 @@
 		LANE_DOOR_CLOSE_MS,
 		LANE_DOOR_CLOSE_SLAM,
 		LANE_DOOR_COVER_SCALE_X,
-		LANE_DOOR_COVER_SCALE_Y,
 		LANE_DOOR_FRAME_COUNT,
+		LANE_DOOR_FRAME_LIP,
 		LANE_DOOR_OPEN_MS,
+		LANE_DOOR_Z,
 	} from '../game/laneDoor';
 	import BoardSpace from './BoardSpace.svelte';
 
@@ -38,7 +55,7 @@
 		return {
 			x: getCellLeft(LAST),
 			y: (window.top + window.bottom) / 2,
-			h: h * LANE_DOOR_COVER_SCALE_Y,
+			h: h - LANE_DOOR_FRAME_LIP * 2,
 		};
 	});
 
@@ -55,7 +72,6 @@
 			if (gen !== slamGen) return;
 			pose = LANE_DOOR_CLOSE_SLAM[i];
 			if (i < last) {
-				// last gap is the impact — shorter than the steps into it
 				const ms = i === last - 1 ? stepMs * 0.55 : stepMs;
 				await fxWait(ms);
 			}
@@ -90,9 +106,9 @@
 </script>
 
 {#if texture}
-	<MainContainer>
-		<Container zIndex={12} eventMode="none">
-			<BoardSpace>
+	<Container zIndex={LANE_DOOR_Z} eventMode="none">
+		<BoardSpace>
+			<Container filters={WOOD_GRADE_FILTERS} eventMode="none">
 				<BaseSprite
 					{texture}
 					x={slot.x}
@@ -102,7 +118,7 @@
 					height={slot.h}
 					eventMode="none"
 				/>
-			</BoardSpace>
-		</Container>
-	</MainContainer>
+			</Container>
+		</BoardSpace>
+	</Container>
 {/if}

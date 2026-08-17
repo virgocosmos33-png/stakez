@@ -10,7 +10,6 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { cubicIn, cubicOut } from 'svelte/easing';
-	import { MainContainer } from 'components-layout';
 	import { Container, Rectangle, Sprite } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 
@@ -18,6 +17,7 @@
 	import { SYMBOL_CARD_W } from '../game/constants';
 	import { getSymbolX, getCellCenterY, getCardHeight } from '../game/utils';
 	import { fxDur, fxWait } from '../game/fxTiming';
+	import { LANE_CARD_Z } from '../game/laneDoor';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
@@ -58,7 +58,7 @@
 </script>
 
 {#if kind}
-	<MainContainer>
+	<Container zIndex={LANE_CARD_Z} eventMode="none">
 		<BoardSpace>
 			<Container x={cx} y={cy} eventMode="none">
 				<Rectangle
@@ -79,5 +79,5 @@
 				/>
 			</Container>
 		</BoardSpace>
-	</MainContainer>
+	</Container>
 {/if}

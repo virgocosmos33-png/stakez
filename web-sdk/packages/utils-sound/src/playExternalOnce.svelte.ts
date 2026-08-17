@@ -20,10 +20,10 @@ export const preloadExternal = (src: string) => {
 	getHowl(src);
 };
 
-export const playExternalOnce = (src: string, options?: { volume?: number }) => {
+export const playExternalOnce = (src: string, options?: { volume?: number; forcePlay?: boolean }) => {
 	const howl = getHowl(src);
 	howl.volume((options?.volume ?? 1) * stateSoundDerived.volumeSoundEffect());
-	howl.stop();
+	if (!options?.forcePlay) howl.stop();
 	howl.play();
 };
 

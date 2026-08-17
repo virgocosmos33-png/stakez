@@ -145,7 +145,11 @@ const applySplit = async (
 		| BookEventOfType<'splitOutlaws'>,
 	tone: 'split' | 'stretch' | 'clone',
 ) => {
-	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+	// Knives own the hit: one blade thunk on the first throw. A landing
+	// chime here stacked a second cue on the same beat.
+	if (tone !== 'split') {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+	}
 	// Never lock / tear pad rows or cells past a short reel's window — those
 	// sockets are empty graveyard, not symbols (diamond board).
 	const cells = filterVisibleCells(bookEvent.cells);

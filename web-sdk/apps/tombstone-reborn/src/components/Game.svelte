@@ -19,6 +19,7 @@
 	} from '../game/gameInfo';
 	import { applyHudTheme } from '../game/hudInit';
 	import { stateShake } from '../game/stateShake.svelte';
+	import { LANE_DOOR_Z } from '../game/laneDoor';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
 	import ResumeBet from './ResumeBet.svelte';
@@ -178,11 +179,14 @@
 			<Anticipations />
 		</MainContainer>
 
-		<!-- LAST-REEL LANE: door sits ABOVE the board plate (z 12) so the
-			timber slot never shows as a grey strip beside it. -->
-		<Container zIndex={12}>
-			<LaneLidLock />
-			<LaneGoldCard />
+		<!-- LAST-REEL LANE: one MainContainer so the lid zIndex actually
+			sorts above the sliding gold card. The wrapper stays above the
+			board (and the timber slot) so the door never sits under a card. -->
+		<Container zIndex={LANE_DOOR_Z}>
+			<MainContainer>
+				<LaneGoldCard />
+				<LaneLidLock />
+			</MainContainer>
 		</Container>
 
 		<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle

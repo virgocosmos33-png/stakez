@@ -9,12 +9,12 @@
 </script>
 
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
-	import { playExternalOnce } from 'utils-sound';
-
+	import { playExternalOnce, preloadExternal } from 'utils-sound';
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { fxDur, fxWait } from '../game/fxTiming';
 	import { getContext } from '../game/context';
@@ -44,11 +44,13 @@
 
 	const context = getContext();
 
+	onMount(() => preloadExternal(KNIFE_HIT_SFX));
+
 	const MAX_PANES = 4;
 	/** stacked panes carry 2–5; from 6 the cell stays one symbol and shows the count */
 	const COUNT_LABEL_MIN = 6;
 	const COUNT_PAD = 8;
-	const SPLIT_SFX = '/assets/audio/sfx_split.mp3';
+	const KNIFE_HIT_SFX = '/assets/audio/sfx_split.mp3';
 	const KNIFE_ASPECT = 1024 / 290;
 	const KNIFE_W = CARD_W * 0.79;
 	const KNIFE_H = KNIFE_W / KNIFE_ASPECT;
@@ -164,7 +166,6 @@
 		}
 		seamFlare.set(1, { duration: 20 });
 		seamFlare.set(0, { duration: 180 });
-		playExternalOnce(SPLIT_SFX);
 		pulse.set(1.06, { duration: 0 });
 		pulse.set(1, { duration: 180, easing: backOut });
 		const anim = Promise.all([
@@ -209,7 +210,7 @@
 			const shot = rhythm[i];
 			if (!target || !shot) continue;
 			await flyOneKnife(target, shot.side, target.seed, shot.flightScale);
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_wood', forcePlay: true });
+			playExternalOnce(KNIFE_HIT_SFX, { forcePlay: true });
 			shakeBoard({ intensity: 4 + shot.flightScale * 2, duration: fxDur(90) });
 			cells = cells.map((cell) => (cell.key === target.key ? { ...cell, shown: target.next } : cell));
 			const face =

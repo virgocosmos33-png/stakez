@@ -4,320 +4,180 @@
    "frame": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_01.png": {
    "frame": {
-    "x": 224,
+    "x": 622,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_02.png": {
    "frame": {
-    "x": 448,
+    "x": 1244,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_03.png": {
    "frame": {
-    "x": 672,
+    "x": 1866,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_04.png": {
    "frame": {
     "x": 0,
-    "y": 343,
-    "w": 224,
-    "h": 343
+    "y": 722,
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_05.png": {
    "frame": {
-    "x": 224,
-    "y": 343,
-    "w": 224,
-    "h": 343
+    "x": 622,
+    "y": 722,
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_06.png": {
    "frame": {
-    "x": 448,
-    "y": 343,
-    "w": 224,
-    "h": 343
+    "x": 1244,
+    "y": 722,
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_07.png": {
    "frame": {
-    "x": 672,
-    "y": 343,
-    "w": 224,
-    "h": 343
+    "x": 1866,
+    "y": 722,
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   },
   "door_08.png": {
    "frame": {
     "x": 0,
-    "y": 686,
-    "w": 224,
-    "h": 343
+    "y": 1444,
+    "w": 622,
+    "h": 722
    },
    "rotated": false,
    "trimmed": false,
    "spriteSourceSize": {
     "x": 0,
     "y": 0,
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    },
    "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_09.png": {
-   "frame": {
-    "x": 224,
-    "y": 686,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_10.png": {
-   "frame": {
-    "x": 448,
-    "y": 686,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_11.png": {
-   "frame": {
-    "x": 672,
-    "y": 686,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_12.png": {
-   "frame": {
-    "x": 0,
-    "y": 1029,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_13.png": {
-   "frame": {
-    "x": 224,
-    "y": 1029,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_14.png": {
-   "frame": {
-    "x": 448,
-    "y": 1029,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
-   }
-  },
-  "door_15.png": {
-   "frame": {
-    "x": 672,
-    "y": 1029,
-    "w": 224,
-    "h": 343
-   },
-   "rotated": false,
-   "trimmed": false,
-   "spriteSourceSize": {
-    "x": 0,
-    "y": 0,
-    "w": 224,
-    "h": 343
-   },
-   "sourceSize": {
-    "w": 224,
-    "h": 343
+    "w": 622,
+    "h": 722
    }
   }
  },
@@ -325,10 +185,10 @@
   "image": "lane_door.png",
   "format": "RGBA8888",
   "size": {
-   "w": 896,
-   "h": 1372
+   "w": 2488,
+   "h": 2166
   },
   "scale": "1",
-  "source": "VFXPACKSHEETS/saloon-door-swing (door.png swing)"
+  "source": "VFXPACKSHEETS/riveted-plank-door-swing (wooden door.png swing)"
  }
 }

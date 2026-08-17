@@ -1,14 +1,18 @@
-"""Bake the last-reel lane door flipbook from the saloon-door-swing pack.
+"""Bake the last-reel lane door flipbook from the riveted-plank-door-swing pack.
 
-Outputs (written to BOTH asset trees so neither drifts):
+Outputs (written to all three asset trees so none drift):
     assets/sprites/fx/lane_door.png + .json          (key `laneDoor`)
     static/assets/sprites/fx/lane_door.png + .json
+    assets-src/assets/sprites/fx/lane_door.png + .json
 
 Source
 ------
-VFXPACKSHEETS/saloon-door-swing/parts/frame_01..16.png — the door.png swing,
-hinge on the right. Each island is padded onto one shared canvas so the post
-stays put as the leaf swings edge-on.
+VFXPACKSHEETS/riveted-plank-door-swing/parts/frame_*.png — wooden door.png
+swing, hinge on the right. Each island is padded onto one shared canvas so the
+post stays put as the leaf swings edge-on. Count comes from the parts folder.
+
+Revert: point SRC_DIR back at saloon-door-swing/parts, FRAME_COUNT=16, and
+restore lane_door_saloon.png/.json over lane_door.png/.json.
 """
 
 from __future__ import annotations
@@ -21,7 +25,7 @@ from PIL import Image
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(APP)))
-SRC_DIR = os.path.join(REPO, "VFXPACKSHEETS", "saloon-door-swing", "parts")
+SRC_DIR = os.path.join(REPO, "VFXPACKSHEETS", "riveted-plank-door-swing", "parts")
 
 OUT_DIRS = (
 	os.path.join(APP, "assets", "sprites", "fx"),
@@ -29,9 +33,21 @@ OUT_DIRS = (
 	os.path.join(APP, "assets-src", "assets", "sprites", "fx"),
 )
 
-FRAME_COUNT = 16
 COLS = 4
 ALPHA_FLOOR = 8
+GREY_SAT_MAX = 32
+GREY_LUMA_MIN = 68
+
+
+def count_frames() -> int:
+	names = [
+		name
+		for name in os.listdir(SRC_DIR)
+		if name.startswith("frame_") and name.endswith(".png")
+	]
+	if not names:
+		raise SystemExit(f"no door frames in {SRC_DIR}")
+	return len(names)
 
 
 def clear_transparent_rgb(image: Image.Image) -> Image.Image:
@@ -43,11 +59,36 @@ def clear_transparent_rgb(image: Image.Image) -> Image.Image:
 	return image
 
 
+def strip_right_grey_fringe(image: Image.Image) -> Image.Image:
+	"""Recraft leaves a grey/white hinge-side halo. Wood and dark iron stay."""
+	pixels = image.load()
+	width, height = image.size
+	for x in range(width - 1, -1, -1):
+		live = 0
+		grey = 0
+		for y in range(height):
+			r, g, b, a = pixels[x, y]
+			if a <= 0:
+				continue
+			live += 1
+			mx = max(r, g, b)
+			if (mx - min(r, g, b)) < GREY_SAT_MAX and mx > GREY_LUMA_MIN:
+				grey += 1
+		if live == 0:
+			continue
+		if grey / live >= 0.7:
+			for y in range(height):
+				pixels[x, y] = (0, 0, 0, 0)
+			continue
+		break
+	return image
+
+
 def load_frame(index: int) -> Image.Image:
 	path = os.path.join(SRC_DIR, f"frame_{index:02d}.png")
 	if not os.path.isfile(path):
 		raise SystemExit(f"missing door frame: {path}")
-	return Image.open(path).convert("RGBA")
+	return strip_right_grey_fringe(clear_transparent_rgb(Image.open(path).convert("RGBA")))
 
 
 def pad_hinge(frames: list[Image.Image]) -> list[Image.Image]:
@@ -60,15 +101,16 @@ def pad_hinge(frames: list[Image.Image]) -> list[Image.Image]:
 		x = max_w - frame.width
 		y = max_h - frame.height
 		canvas.paste(frame, (x, y), frame)
-		aligned.append(clear_transparent_rgb(canvas))
+		aligned.append(strip_right_grey_fringe(clear_transparent_rgb(canvas)))
 	return aligned
 
 
 def main() -> None:
-	raw = [load_frame(i) for i in range(1, FRAME_COUNT + 1)]
+	frame_count = count_frames()
+	raw = [load_frame(i) for i in range(1, frame_count + 1)]
 	frames = pad_hinge(raw)
 	tile_w, tile_h = frames[0].size
-	rows = (FRAME_COUNT + COLS - 1) // COLS
+	rows = (frame_count + COLS - 1) // COLS
 	atlas = Image.new("RGBA", (tile_w * COLS, tile_h * rows), (0, 0, 0, 0))
 	meta_frames = {}
 	for index, frame in enumerate(frames):
@@ -93,7 +135,7 @@ def main() -> None:
 			"format": "RGBA8888",
 			"size": {"w": atlas.width, "h": atlas.height},
 			"scale": "1",
-			"source": "VFXPACKSHEETS/saloon-door-swing (door.png swing)",
+			"source": "VFXPACKSHEETS/riveted-plank-door-swing (wooden door.png swing)",
 		},
 	}
 
