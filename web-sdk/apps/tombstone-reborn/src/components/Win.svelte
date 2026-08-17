@@ -19,7 +19,7 @@
 	import WinCelebration from './WinCelebration.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import { getContext } from '../game/context';
-	import { getWinCelebration } from '../game/winCelebrationMap';
+	import { celebrationRollupMs, getWinCelebration } from '../game/winCelebrationMap';
 	import { waysLabel } from '../game/waysFormat';
 	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
 
@@ -66,9 +66,10 @@
 			gateUp = false;
 			const tier = getWinCelebration(emitterEvent.amount);
 			// Big/MAX wait on CONTINUE; Storybook iframe often steals those clicks.
+			const CELEB_CONTINUE_PAD_MS = 20_000;
 			const safetyMs =
 				tier.type === 'big'
-					? Math.max(tier.presentDuration + 12_000, 28_000)
+					? celebrationRollupMs(emitterEvent.amount) + CELEB_CONTINUE_PAD_MS
 					: tier.presentDuration + 5_000;
 			await waitForResolveOrTimeout(
 				(resolve) => (oncomplete = resolve),

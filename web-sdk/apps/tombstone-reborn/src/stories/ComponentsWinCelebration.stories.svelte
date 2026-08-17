@@ -101,7 +101,8 @@
 />
 
 <!-- win tiers staged rollup: the MAX amount climbs through every tier in one
-	presentation (getTiersPassed), so each hero plate is seen in sequence. -->
+	presentation (getTiersPassed). Each plate holds until its scene track ends,
+	unless skipped. -->
 <Story
 	name="win tiers staged rollup"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3_000_000, 46656) })}

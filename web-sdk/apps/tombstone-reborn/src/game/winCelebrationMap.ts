@@ -1,5 +1,6 @@
 import { SECOND } from 'constants-shared/time';
 
+import { CELEB_SCENE_MS, celebSceneDurationMs } from './celebSceneBgm';
 import type { MusicName, SoundEffectName } from './sound';
 
 // Tier thresholds are bet multiples (book amount / 100 = multiplier of bet).
@@ -38,9 +39,8 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		presentDuration: 1 * SECOND,
 		sound: { sfx: 'sfx_win_ways', bgm: undefined },
 	},
-	// Big tiers: WinCelebration.svelte drives the staged celebration bed.
-	// Seed a matching bed here so setWin has a stage cue to play before the
-	// takeover mounts.
+	// Big tiers: each plate holds for its scene track (scene 1..6). The
+	// takeover climbs 1 → next when that track ends, unless the player skips.
 	{
 		tier: 2,
 		alias: 'big',
@@ -48,7 +48,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		title: 'BOUNTY',
 		slug: 'bounty',
 		minMultiplier: 25,
-		presentDuration: 5 * SECOND,
+		presentDuration: CELEB_SCENE_MS.bgm_celeb_1,
 		sound: { sfx: undefined, bgm: 'bgm_celeb_1' },
 	},
 	{
@@ -58,7 +58,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		title: 'SHOWDOWN',
 		slug: 'showdown',
 		minMultiplier: 50,
-		presentDuration: 7 * SECOND,
+		presentDuration: CELEB_SCENE_MS.bgm_celeb_2,
 		sound: { sfx: undefined, bgm: 'bgm_celeb_2' },
 	},
 	{
@@ -68,7 +68,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		title: 'HIGH NOON',
 		slug: 'highnoon',
 		minMultiplier: 100,
-		presentDuration: 10 * SECOND,
+		presentDuration: CELEB_SCENE_MS.bgm_celeb_3,
 		sound: { sfx: undefined, bgm: 'bgm_celeb_3' },
 	},
 	{
@@ -78,7 +78,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		title: 'LAST STAND',
 		slug: 'laststand',
 		minMultiplier: 500,
-		presentDuration: 14 * SECOND,
+		presentDuration: CELEB_SCENE_MS.bgm_celeb_4,
 		sound: { sfx: undefined, bgm: 'bgm_celeb_4' },
 	},
 	{
@@ -88,7 +88,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		title: 'BLOOD MONEY',
 		slug: 'bloodmoney',
 		minMultiplier: 2500,
-		presentDuration: 18 * SECOND,
+		presentDuration: CELEB_SCENE_MS.bgm_celeb_5,
 		sound: { sfx: undefined, bgm: 'bgm_celeb_5' },
 	},
 	{
@@ -98,7 +98,7 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		title: 'BOOT HILL',
 		slug: 'boothill',
 		minMultiplier: 30000,
-		presentDuration: 24 * SECOND,
+		presentDuration: CELEB_SCENE_MS.bgm_celeb_6,
 		sound: { sfx: undefined, bgm: 'bgm_celeb_6' },
 	},
 ];
@@ -114,11 +114,18 @@ export const getWinCelebration = (bookAmount: number): WinCelebrationData => {
 	return result;
 };
 
-// every big-win tier this amount climbs through; the presentation gives each
-// one an equal slice of the count-up so all celebrations are actually seen
+// every big-win tier this amount climbs through; each plate holds for its
+// own scene track, then the next plate starts
 export const getTiersPassed = (bookAmount: number): WinCelebrationData[] => {
 	const multiplier = bookAmountToMultiplier(bookAmount);
 	return winCelebrationTiers.filter(
 		(tierData) => tierData.tier >= 2 && multiplier >= tierData.minMultiplier,
 	);
 };
+
+/** Wall-clock of every scene this amount will play, for the winUpdate safety net. */
+export const celebrationRollupMs = (bookAmount: number) =>
+	getTiersPassed(bookAmount).reduce(
+		(sum, tierData) => sum + celebSceneDurationMs(tierData.sound.bgm ?? ''),
+		0,
+	);

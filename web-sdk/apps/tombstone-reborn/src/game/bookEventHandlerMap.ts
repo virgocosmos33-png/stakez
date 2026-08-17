@@ -31,19 +31,10 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinSoundsData }) =
 	if (winLevelData?.sound?.sfx) {
 		eventEmitter.broadcast({ type: 'soundOnce', name: winLevelData.sound.sfx });
 	}
-	if (winLevelData?.sound?.bgm) {
-		// stop any celebration stage bed already running so the incoming one
-		// starts from its downbeat instead of stacking
-		for (const name of [
-			'bgm_celeb_1',
-			'bgm_celeb_2',
-			'bgm_celeb_3',
-			'bgm_celeb_4',
-			'bgm_celeb_5',
-			'bgm_celeb_6',
-		] as MusicName[]) {
-			eventEmitter.broadcast({ type: 'soundStop', name });
-		}
+	if (winLevelData?.sound?.bgm && winLevelData.type !== 'big') {
+		// Big-win plates own their scene tracks inside WinCelebration so a
+		// rollup always starts at scene 1. Playing the final tier here would
+		// start the wrong song for one frame.
 		eventEmitter.broadcast({ type: 'soundMusic', name: winLevelData.sound.bgm });
 	}
 };

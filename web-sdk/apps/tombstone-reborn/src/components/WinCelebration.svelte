@@ -34,6 +34,13 @@
 	import { getTiersPassed } from '../game/winCelebrationMap';
 	import { waysLabel } from '../game/waysFormat';
 	import { currentModeMusic } from '../game/bonusBgm';
+	import {
+		CELEB_SCENE_MS,
+		celebSceneDurationMs,
+		isCelebSceneBgm,
+		playCelebSceneBgm,
+		stopCelebSceneBgm,
+	} from '../game/celebSceneBgm';
 	import type { MusicName, SoundEffectName } from '../game/sound';
 	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
 	import {
@@ -61,15 +68,16 @@
 	const AMOUNT_TINT = winFontTint();
 
 	// ------------------------------------------------------------------
-	// staged counter: the tier switches EXACTLY when the rolling amount
-	// crosses each real trigger (25x / 50x / 100x / 500x / 2500x / maxwin),
-	// with per-segment pacing:
-	//   BOUNTY 25-50x      linear
-	//   SHOWDOWN 50-100x   linear
-	//   HIGH NOON 100-500x a bit fast at start, slowing near the target
-	//   LAST STAND 500-2500x super fast start, braking to a total stop
-	//   BLOOD MONEY 2500x+ starts slow, keeps building speed
-	//   BOOT HILL          tab appears, counter parked, CONTINUE gate
+	// staged counter: each plate holds for its scene track. The amount
+	// eases across that scene's range; the NEXT plate starts when the
+	// track ends (or the player skips). Ease only — duration comes from
+	// the mp3:
+	//   BOUNTY / scene 1      linear
+	//   SHOWDOWN / scene 2    linear
+	//   HIGH NOON / scene 3   a bit fast at start, slowing near the target
+	//   LAST STAND / scene 4  super fast start, braking to a total stop
+	//   BLOOD MONEY / scene 5 starts slow, keeps building speed
+	//   BOOT HILL / scene 6   tab appears, counter parked, CONTINUE gate
 	// ------------------------------------------------------------------
 	const finalMult = $derived(props.finalAmount / 100);
 	const tiers = $derived(getTiersPassed(props.finalAmount));
@@ -80,11 +88,11 @@
 	const easeOutQuart = (f: number) => 1 - Math.pow(1 - f, 4);
 	const easeInCubic = (f: number) => f * f * f;
 	const SEGMENT_STYLE = [
-		{ ease: linear, duration: 3000 },
-		{ ease: linear, duration: 3000 },
-		{ ease: easeOutQuad, duration: 3600 },
-		{ ease: easeOutQuart, duration: 4200 },
-		{ ease: easeInCubic, duration: 4800 },
+		{ ease: linear },
+		{ ease: linear },
+		{ ease: easeOutQuad },
+		{ ease: easeOutQuart },
+		{ ease: easeInCubic },
 	];
 
 	type Segment = { from: number; to: number; duration: number; ease: (f: number) => number };
@@ -93,10 +101,11 @@
 		return countingTiers.map((tierData, index) => {
 			const style = SEGMENT_STYLE[Math.min(index, SEGMENT_STYLE.length - 1)];
 			const next = tiers[index + 1];
+			const bgm = tierData.sound.bgm ?? '';
 			return {
 				from: index === 0 ? 0 : tierData.minMultiplier,
 				to: next ? Math.min(next.minMultiplier, finalMult) : finalMult,
-				duration: style.duration,
+				duration: celebSceneDurationMs(bgm) || CELEB_SCENE_MS.bgm_celeb_1,
 				ease: style.ease,
 			} satisfies Segment;
 		});
@@ -110,7 +119,7 @@
 	let displayedIndex = $state(0);
 	// the BOOT HILL scene recounts from 0: fast start, even faster ending
 	let maxRecountStart = $state<number | null>(null);
-	const MAX_RECOUNT_DURATION = 3500;
+	const MAX_RECOUNT_DURATION = CELEB_SCENE_MS.bgm_celeb_6;
 	const fastFaster = (f: number) => 0.55 * f + 0.45 * Math.pow(f, 4);
 
 	// ------------------------------------------------------------------
@@ -156,6 +165,7 @@
 	];
 
 	const silenceOldCelebrationAudio = () => {
+		stopCelebSceneBgm();
 		for (const name of OLD_CELEB_MUSIC) {
 			context.eventEmitter.broadcast({ type: 'soundStop', name });
 		}
@@ -164,11 +174,32 @@
 		}
 	};
 
+	let sceneGen = 0;
+
+	const advanceFromAudio = (gen: number) => {
+		if (gen !== sceneGen) return;
+		if (finished || waitContinue) return;
+		if (maxRecountStart !== null) {
+			countMult = finalMult;
+			finished = true;
+			waitContinue = true;
+			return;
+		}
+		const now = performance.now();
+		if (segIndex + 1 < segments.length) {
+			countMult = segments[segIndex].to;
+			enterSegment(segIndex + 1, now);
+			return;
+		}
+		finishCounting();
+	};
+
 	const playStageMusic = (target: number) => {
-		// Stop any prior stage bed so Howler starts the slice from its
-		// downbeat (pause-resume would keep the previous stage alive).
 		silenceOldCelebrationAudio();
-		context.eventEmitter.broadcast({ type: 'soundMusic', name: stageCue(target) });
+		const cue = stageCue(target);
+		const gen = ++sceneGen;
+		if (!isCelebSceneBgm(cue)) return;
+		playCelebSceneBgm(cue, () => advanceFromAudio(gen));
 	};
 
 	const showTier = (target: number) => {
@@ -227,6 +258,8 @@
 			return;
 		}
 		if (maxRecountStart !== null) {
+			sceneGen += 1;
+			stopCelebSceneBgm();
 			countMult = finalMult;
 			finished = true;
 			waitContinue = true;
@@ -236,7 +269,11 @@
 		if (segIndex + 1 < segments.length) {
 			countMult = segments[segIndex].to;
 			enterSegment(segIndex + 1, now);
+		} else if (hasMax) {
+			finishCounting();
 		} else {
+			sceneGen += 1;
+			stopCelebSceneBgm();
 			finishCounting();
 		}
 	};
@@ -295,13 +332,8 @@
 					const segment = segments[segIndex];
 					const f = Math.min((now - segStart) / segment.duration, 1);
 					countMult = segment.from + (segment.to - segment.from) * segment.ease(f);
-					if (f >= 1) {
-						if (segIndex + 1 < segments.length) {
-							enterSegment(segIndex + 1, now);
-						} else {
-							finishCounting();
-						}
-					}
+					// Park at this scene's amount. The next plate waits for
+					// the track to end (or a skip) — do not climb on the clock.
 				}
 			}
 			raf = requestAnimationFrame(tick);
@@ -309,6 +341,8 @@
 		raf = requestAnimationFrame(tick);
 		return () => {
 			cancelAnimationFrame(raf);
+			sceneGen += 1;
+			stopCelebSceneBgm();
 			context.eventEmitter.broadcast({ type: 'soundMusic', name: currentModeMusic() });
 		};
 	});

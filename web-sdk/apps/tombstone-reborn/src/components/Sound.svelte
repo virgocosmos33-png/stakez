@@ -26,22 +26,28 @@
 		stopBonusBgm,
 		syncBonusBgmVolume,
 	} from '../game/bonusBgm';
+	import {
+		isCelebSceneBgm,
+		playCelebSceneBgm,
+		preloadCelebSceneBgm,
+		stopCelebSceneBgm,
+		syncCelebSceneBgmVolume,
+	} from '../game/celebSceneBgm';
 
 	const WAYS_WIN_SFX = '/assets/audio/sfx_win_ways.mp3';
 
 	const context = getContext();
 
-	const SPRITE_BEDS: MusicName[] = [
-		'bgm_main',
-		'bgm_celeb_1',
-		'bgm_celeb_2',
-		'bgm_celeb_3',
-		'bgm_celeb_4',
-		'bgm_celeb_5',
-		'bgm_celeb_6',
-	];
+	const SPRITE_BEDS: MusicName[] = ['bgm_main'];
 
 	const playModeMusic = (name: MusicName) => {
+		if (isCelebSceneBgm(name)) {
+			for (const bed of SPRITE_BEDS) sound.stop({ name: bed });
+			pauseBonusBgm();
+			playCelebSceneBgm(name);
+			return;
+		}
+		stopCelebSceneBgm();
 		if (isBonusBgm(name)) {
 			for (const bed of SPRITE_BEDS) sound.stop({ name: bed });
 			playBonusBgm(name);
@@ -71,6 +77,10 @@
 			sound.players.once.play({ name, forcePlay });
 		},
 		soundStop: ({ name }) => {
+			if (isCelebSceneBgm(name)) {
+				stopCelebSceneBgm();
+				return;
+			}
 			if (isBonusBgm(name)) {
 				stopBonusBgm();
 				return;
@@ -82,11 +92,13 @@
 
 	onMount(() => {
 		preloadExternal(WAYS_WIN_SFX);
+		preloadCelebSceneBgm();
 		sound.players.music.play({ name: 'bgm_main' });
 	});
 
 	$effect(() => {
 		stateSoundDerived.volumeMusic();
 		syncBonusBgmVolume();
+		syncCelebSceneBgmVolume();
 	});
 </script>
