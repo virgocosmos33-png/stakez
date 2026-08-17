@@ -17,8 +17,7 @@
 	 * The boarded cover over the LAST-REEL LANE.
 	 *
 	 * One box: the last-reel board slot. Left edge on the cell, full pitch
-	 * cover so the timber never shows as a grey strip. Height is the inner
-	 * opening (sill to lintel), not 16% past the wood. Closed face fills it.
+	 * cover so the timber never shows as a grey strip. Closed face fills it.
 	 * Open plays the swing, then holds. Next locked reveal slams shut.
 	 * zIndex stays above the sliding gold card so a remount cannot cover
 	 * the hinge post.
@@ -38,8 +37,8 @@
 		LANE_DOOR_CLOSE_SLAM,
 		LANE_DOOR_COVER_SCALE_X,
 		LANE_DOOR_FRAME_COUNT,
-		LANE_DOOR_FRAME_LIP,
 		LANE_DOOR_OPEN_MS,
+		LANE_DOOR_SHIFT_Y,
 		LANE_DOOR_Z,
 	} from '../game/laneDoor';
 	import BoardSpace from './BoardSpace.svelte';
@@ -51,14 +50,11 @@
 
 	const slot = $derived.by(() => {
 		const window = getReelWindow(LAST);
-		const h = window.bottom - window.top;
 		return {
 			x: getCellLeft(LAST),
 			y: (window.top + window.bottom) / 2,
-			h: h - LANE_DOOR_FRAME_LIP * 2,
 		};
 	});
-
 	/** 0 = closed face, 1 = last swing frame. Stays at 1 while the lane is open. */
 	const swing = new Tween(context.stateGame.lidOpen ? 1 : 0, { duration: 0 });
 	let pose = $state(context.stateGame.lidOpen ? LANE_DOOR_FRAME_COUNT - 1 : 0);
@@ -103,6 +99,9 @@
 		(context.stateApp.loadedAssets?.[LANE_DOOR_ASSET] as PIXI.Texture[] | undefined) ?? [],
 	);
 	const texture = $derived(frames[pose]);
+	const doorH = $derived(
+		texture ? COVER_W * (texture.height / texture.width) : 0,
+	);
 </script>
 
 {#if texture}
@@ -112,10 +111,10 @@
 				<BaseSprite
 					{texture}
 					x={slot.x}
-					y={slot.y}
+					y={slot.y + LANE_DOOR_SHIFT_Y}
 					anchor={{ x: 0, y: 0.5 }}
 					width={COVER_W}
-					height={slot.h}
+					height={doorH}
 					eventMode="none"
 				/>
 			</Container>

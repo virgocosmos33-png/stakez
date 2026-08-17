@@ -16,11 +16,8 @@ export const LANE_DOOR_OPEN_MS = (LANE_DOOR_FRAME_COUNT / LANE_DOOR_FPS) * 1000;
 export const LANE_DOOR_CLOSE_SLAM = [5, 4, 3, 2, 1, 0] as const;
 export const LANE_DOOR_CLOSE_MS = 320;
 export const LANE_DOOR_COVER_SCALE_X = 1.28;
-/**
- * Wood-frame inner lip (make_board_frame_image.py punches silhouette -6).
- * The lid sits on that sill, not 16% past it. A 3px nudge was 13px short.
- */
-export const LANE_DOOR_FRAME_LIP = 6;
+/** Same box as the working lid — translate only, never squash the art. */
+export const LANE_DOOR_SHIFT_Y = -3;
 /** Lane layer above the board. The sliding gold card is under the lid. */
 export const LANE_DOOR_Z = 12;
 export const LANE_CARD_Z = 11;
