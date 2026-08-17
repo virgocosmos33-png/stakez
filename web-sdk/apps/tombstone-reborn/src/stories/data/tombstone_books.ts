@@ -17,12 +17,17 @@ const books = showcase as unknown as ShowcaseBook[];
 export const bookByLabel = (label: string) => {
 	const demo = FEATURE_DEMO_BOOKS.find((book) => book.label === label);
 	if (demo) {
-		return { id: 900 + FEATURE_DEMO_BOOKS.indexOf(demo), payoutMultiplier: demo.payoutX, events: demo.events };
+		return {
+			id: 900 + FEATURE_DEMO_BOOKS.indexOf(demo),
+			payoutMultiplier: demo.payoutX,
+			events: demo.events,
+			mode: demo.mode,
+		};
 	}
 	const index = books.findIndex((book) => book.label === label);
 	if (index < 0) throw new Error(`no showcase book labelled "${label}"`);
 	const book = books[index];
-	return { id: index, payoutMultiplier: book.payoutX, events: book.events };
+	return { id: index, payoutMultiplier: book.payoutX, events: book.events, mode: book.mode };
 };
 
 export default books;

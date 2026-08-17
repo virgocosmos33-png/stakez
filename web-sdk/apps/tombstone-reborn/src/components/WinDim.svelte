@@ -16,6 +16,7 @@
 	 * MainContainer via BoardSpace put the rects in the wrong space — they
 	 * floated off the cells and painted over the timber.
 	 */
+	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { Container, Rectangle } from 'pixi-svelte';
 
@@ -41,6 +42,29 @@
 
 	const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
+	const lightGroup = (positions: Position[]) => {
+		const keys = keysOf(positions);
+		context.stateGame.board.forEach((reel, reelIndex) => {
+			const symbols = reel.reelState.symbols;
+			for (let row = 1; row < symbols.length - 1; row += 1) {
+				const symbol = symbols[row];
+				if (!symbol) continue;
+				const on = keys.has(`${reelIndex}-${row}`);
+				if (on) {
+					if (symbol.symbolState === 'static') symbol.symbolState = 'postWin';
+					continue;
+				}
+				if (
+					symbol.symbolState === 'postWin' ||
+					symbol.symbolState === 'postWinStatic' ||
+					symbol.symbolState === 'win'
+				) {
+					symbol.symbolState = 'static';
+				}
+			}
+		});
+	};
+
 	const stopCycle = () => {
 		cycleId += 1;
 	};
@@ -58,21 +82,25 @@
 		while (id === cycleId) {
 			for (const positions of cycleWins) {
 				if (id !== cycleId) return;
+				// Dim keys only — no lantern sweep, no symbol-state flip. Those
+				// already played in winInfo; repeating them forever was the
+				// post-win Storybook hitch.
 				winKeys = keysOf(positions);
 				context.stateGame.slotWinPositions = positions;
-				await context.eventEmitter.broadcastAsync({ type: 'winSweep', positions });
-				if (id !== cycleId) return;
-				await wait(220);
-				winKeys = new Set();
-				context.stateGame.slotWinPositions = [];
-				await wait(200);
+				await wait(900);
 			}
 		}
 	};
 
+	onDestroy(() => {
+		cycleId += 1;
+		cycleWins = [];
+	});
+
 	context.eventEmitter.subscribeOnMount({
 		winDimShow: ({ positions }) => {
 			stopCycle();
+			lightGroup(positions);
 			winKeys = keysOf(positions);
 			active = true;
 			dimAlpha.set(DIM_ALPHA, { duration: 100 });

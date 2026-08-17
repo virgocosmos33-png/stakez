@@ -27,6 +27,8 @@
 	import { cubicOut } from 'svelte/easing';
 	import { BaseSprite, Container } from 'pixi-svelte';
 
+	import { playExternalOnce } from 'utils-sound';
+
 	import { getContext } from '../game/context';
 	import { CELL_PITCH_X } from '../game/constants';
 	import { getCellLeft, getReelWindow } from '../game/utils';
@@ -47,6 +49,7 @@
 
 	const LAST = context.stateGame.board.length - 1;
 	const COVER_W = CELL_PITCH_X * LANE_DOOR_COVER_SCALE_X;
+	const DOOR_CREAK = '/assets/audio/sfx_door_creak.mp3';
 
 	const slot = $derived.by(() => {
 		const window = getReelWindow(LAST);
@@ -89,6 +92,7 @@
 		wasOpen = open;
 		slamGen += 1;
 		if (open) {
+			playExternalOnce(DOOR_CREAK);
 			void swing.set(1, { duration: fxDur(LANE_DOOR_OPEN_MS), easing: cubicOut });
 		} else {
 			void slamShut(slamGen);

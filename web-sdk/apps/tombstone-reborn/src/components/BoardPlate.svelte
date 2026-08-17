@@ -14,8 +14,16 @@
 	import { getContext } from '../game/context';
 	import { CELL_PITCH_X, SYMBOL_SIZE, NUM_ROWS, MAX_ROWS } from '../game/constants';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
+	import ReelChains from './ReelChains.svelte';
 
 	const context = getContext();
+	const frameKey = $derived(
+		context.stateGame.atmosphere === 'super'
+			? 'boardFrameSuper'
+			: context.stateGame.atmosphere === 'small'
+				? 'boardFrameSmall'
+				: 'boardFrame',
+	);
 
 	/** MUST match BORDER + MARGIN in tools/make_board_frame_image.py */
 	const BORDER = 30 + 60;
@@ -85,8 +93,10 @@
 		/>
 	{/each}
 
+	<ReelChains />
+
 	<Sprite
-		key="boardFrame"
+		key={frameKey}
 		x={frameBox.x}
 		y={frameBox.y}
 		width={frameBox.w}

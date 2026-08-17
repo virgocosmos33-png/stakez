@@ -47,32 +47,27 @@ export const WHITE_ROOM_SPECIALS: SpecialSymbol[] = [
 	{
 		key: 'split',
 		name: 'Split',
-		desc: 'Lands on the board, picks one symbol type and adds 2 to 7 extra ways to every copy of that type — extremely weighted toward 2. Then turns into the revolver WILD.',
+		desc: 'Lands on the board, picks one symbol type and adds 2 to 7 extra ways to every copy of that type — extremely weighted toward 2. Adds +1 to the WIN multiplier, then turns into the revolver WILD.',
 	},
 	{
 		key: 'gunsmoke',
 		name: 'Gunsmoke',
-		desc: 'Lands on the board, turns every copy of one symbol type into the revolver WILD, then becomes a wild itself.',
+		desc: 'Lands on the board, turns every copy of one symbol type into the revolver WILD, adding +1 to the WIN multiplier for each shot, then becomes a wild itself.',
 	},
 	{
 		key: 'nudge',
 		name: 'Nudge Ways',
-		desc: 'Drops only on the 2nd or 3rd reel with 2 to 9 ways (extremely weighted toward 2). If it does not already fill the reel it nudges DOWN, doubling its ways on every step. A full-reel drop keeps the initial ways with no doubling.',
-	},
-	{
-		key: 'bounty',
-		name: 'Bounty',
-		desc: 'When the last-reel lane is open it drops premiums only, each carrying a WIN multiplier (×2 up to ×100) that STACKS onto the round\'s WIN multi.',
+		desc: 'Drops only on the 2nd or 3rd reel with 2 to 9 ways (extremely weighted toward 2). If it does not already fill the reel it nudges DOWN, doubling its ways and adding +1 to the WIN multiplier on every step. A full-reel drop keeps the initial ways with no doubling and no WIN tick.',
 	},
 	{
 		key: 'shooter',
 		name: 'Mark',
-		desc: 'The open last-reel lane can drop MARK: it shoots every premium on the board and adds +1 to the stacked WIN multiplier for each hit, then becomes a wild.',
+		desc: 'The open last-reel lane can drop MARK: it shoots every premium on the board and adds +1 to the WIN multiplier when it triggers, then becomes a wild.',
 	},
 	{
 		key: 'supersplit',
 		name: 'Supersplit',
-		desc: 'The other last-reel special: the last reel turns WILD and EVERY paying symbol on the board splits at 2× / 5× / 10×. Then MARK/SUPERSPLIT become wilds.',
+		desc: 'The other last-reel special: the last reel turns WILD, EVERY paying symbol on the board splits at 2× / 5× / 10×, and the WIN multiplier goes up by +1. Then MARK/SUPERSPLIT become wilds.',
 	},
 ];
 
@@ -82,7 +77,8 @@ export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 		body: 'TOMBSTONE REBORN is a 6-reel ways slot on a broken-grave grid (3/4/4/2/2/1 rows) with 10 paying symbols (5 highs, 5 lows) plus the revolver Wild and feature symbols that land on the board. Wins are awarded strictly left to right on adjacent columns, regardless of row.',
 		bullets: [
 			'All wins are shown as a multiplier of the total bet and are awarded per way.',
-			'Cells carrying extra ways (splits) count as multiple symbols on their reel, multiplying the number of ways.',
+			'Cells carrying extra ways (splits, nudge stacks, last-reel premiums) count as multiple symbols on their reel, multiplying the number of ways.',
+			'The HUD WIN multiplier is a separate stack. It starts at 1× and multiplies the whole spin after ways are counted.',
 			'Only the highest win per way counts. Simultaneous wins on different ways are added.',
 			'This game is EXTREMELY volatile: most spins return nothing at all, and the pay comes from the rare spins where the features stack.',
 		],
@@ -91,18 +87,19 @@ export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 		title: 'FEATURE SYMBOLS',
 		body: 'Feature symbols land on the reel grid itself. After they fire they transform into the revolver WILD. In the base game they are rare; in the bonuses they drop much more often.',
 		bullets: [
-			'SPLIT — one symbol type on the board gains 2 to 7 extra ways, then the card becomes a wild.',
-			'GUNSMOKE — every copy of one symbol type becomes the revolver WILD, then the card becomes a wild.',
-			'NUDGE WAYS — lands on the 2nd or 3rd reel and nudges down, doubling its ways on every step. A full-reel drop keeps the initial ways.',
+			'SPLIT — one symbol type on the board gains 2 to 7 extra ways, the WIN multiplier goes up by +1, then the card becomes a wild. If a NUDGE stack is already standing, the split also hits it and doubles its ways.',
+			'GUNSMOKE — every remaining copy of one symbol type becomes the revolver WILD (+1 WIN multi per shot), then the card becomes a wild. It cannot shoot a NUDGE stack or any row the nudge already swallowed.',
+			'NUDGE WAYS — fires first. Lands on the 2nd or 3rd reel and replaces every symbol from that cell down, doubling ways and adding +1 WIN multi on every step. A full-reel drop keeps the initial ways. Nothing is left below the totem for GUNSMOKE to shoot. A later SPLIT can land on that stack and double it again.',
 		],
 	},
 	{
 		title: 'THE LAST-REEL LANE',
 		body: 'The sixth reel is a single sealed grave cell. It opens when a SUPER scatter lands, or on every spin of the SUPER BONUS / big bonus round. An open lane NEVER drops lows — only:',
 		bullets: [
-			'A PREMIUM carrying a WIN multiplier (×2 to ×100) that STACKS onto the round\'s WIN multi — shown on the MULTI readout.',
-			'MARK — shoots every premium on the board, adding +1 to the stacked WIN multi per hit.',
-			'SUPERSPLIT — the lane turns WILD and every symbol on the board splits at 2× / 5× / 10×.',
+			'A PREMIUM carrying extra WAYS (×2 to ×100) on that cell — separate from the HUD WIN multiplier.',
+			'MARK — shoots every premium on the board and adds +1 to the WIN multiplier when it triggers.',
+			'SUPERSPLIT — the lane turns WILD, every symbol on the board splits at 2× / 5× / 10×, and the WIN multiplier goes up by +1.',
+			'The WIN multiplier is sticky across SUPER / big-bonus spins and resets every SMALL bonus spin.',
 		],
 	},
 	{

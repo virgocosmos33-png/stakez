@@ -97,7 +97,6 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Container } from 'pixi-svelte';
 
 	import { CELL_PITCH_X } from '../game/constants';
@@ -147,7 +146,8 @@
 		marks = [...marks, ...next];
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (props.t < 0) return;
 		let raf = 0;
 		const tick = (now: number) => {
 			nowMs = now;

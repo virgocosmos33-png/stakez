@@ -38,6 +38,10 @@ class GameCalculations(Executables):
         """Add `factor` ways to a cell (capped), return the new per-cell mult."""
         return self.set_cell_ways(reel, row, self.cell_ways(self.board[reel][row]) + factor)
 
+    def mul_cell_ways(self, reel: int, row: int, factor: int) -> int:
+        """Multiply a cell's ways (capped), return the new per-cell mult."""
+        return self.set_cell_ways(reel, row, self.cell_ways(self.board[reel][row]) * max(1, int(factor)))
+
     def set_cell_ways(self, reel: int, row: int, value: int) -> int:
         """SET a cell's ways multiplier (capped), return the stamped value."""
         cap = self.config.split_config["cell_cap"]

@@ -19,6 +19,7 @@ import {
 import { eventEmitter } from './eventEmitter';
 import { currentModeMusic, stopBonusBgm } from './bonusBgm';
 import { presentBonusEntry } from './bonusEntry';
+import { syncAtmosphere } from './atmosphere.svelte';
 import type { Bet, BookEventOfType } from './typesBookEvent';
 import { bookEventHandlerMap } from './bookEventHandlerMap';
 import { stateGame } from './stateGame.svelte';
@@ -32,6 +33,7 @@ export const { getEmptyBoard } = createGetEmptyPaddedBoard({
 export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEventHandlerMap });
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
+	syncAtmosphere();
 	// A bought bonus announces itself before its single enhanced spin. No-op on a
 	// base spin and on a resumed round — see game/bonusEntry.ts.
 	await presentBonusEntry(bet);

@@ -72,15 +72,18 @@ def bake(wild: Image.Image, art_path: str | None, fallback_title: str, fallback_
     x0, y0, x1, y1 = box
     if art_path:
         art = Image.open(art_path).convert("RGB")
-        if cover_banner:
+        # None = leave the plaque alone. "" = paint out the word band with no
+        # replacement stamp (MARK used to get burnt in here).
+        if cover_banner is not None:
             draw = ImageDraw.Draw(art)
             w, h = art.size
             draw.rectangle((0, int(h * 0.48), w, h), fill=(22, 18, 14))
-            try:
-                font = ImageFont.truetype("arialbd.ttf", max(28, h // 9))
-            except OSError:
-                font = ImageFont.load_default()
-            draw.text((w / 2, h * 0.72), cover_banner, fill=(240, 214, 150), font=font, anchor="mm")
+            if cover_banner:
+                try:
+                    font = ImageFont.truetype("arialbd.ttf", max(28, h // 9))
+                except OSError:
+                    font = ImageFont.load_default()
+                draw.text((w / 2, h * 0.72), cover_banner, fill=(240, 214, 150), font=font, anchor="mm")
         art = art.resize((x1 - x0, y1 - y0), Image.LANCZOS)
         canvas = Image.new("RGB", wild.size, (0, 0, 0))
         canvas.paste(art, (x0, y0))
@@ -109,8 +112,8 @@ def main():
         ("tr_gs.png", _first(os.path.join(APP, "assets-src", "sprites", "mirror", "tr_feat_gunsmoke.png")), "GUNSMOKE", "", None),
         ("tr_ts.png", _first(os.path.join(APP, "assets-src", "sprites", "mirror", "tr_feat_tombstone.png")), "TOMBSTONE", "", None),
         ("tr_nw.png", _first(os.path.join(APP, "assets-src", "sprites", "mirror", "tr_feat_nudge.png")), "NUDGE", "WAYS", None),
-        # reuse the gold spur card but stamp MARK over the old NUDGE banner
-        ("tr_sh.png", _plaque("lane_gold_nudge.webp"), "MARK", "SHOOT", "MARK"),
+        # crossed-gun gold card, word band painted out — no MARK stamp
+        ("tr_sh.png", _plaque("lane_gold_supersplit.webp"), "MARK", "SHOOT", ""),
         ("tr_ss.png", _plaque("lane_gold_supersplit.webp"), "SUPER", "SPLIT", None),
     ]
     for filename, src, title, sub, banner in specs:

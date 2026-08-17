@@ -7,9 +7,12 @@ Event stream order for a spin:
     reveal
     boardSpecials              (feature symbols planted on the board)
     [tombstone]  (lid crack when SUPER scatter opened the lane this spin)
-    [gunsmoke] [split] [nudgeWays]
-    [superSplit] [bounty|shooter]
-    [winMult]                  (stacked WIN multiplier tick)
+    [nudgeWays] [winMult]
+    [gunsmoke] [winMult]
+    [split] [winMult]   (also doubles a standing nudge stack)
+    [superSplit] [winMult]
+    [lanePremium]              (last-reel premium WAYS — not WIN multi)
+    [shooter] [winMult]
     [specialsWild]             (feature symbols become the revolver)
     winInfo / setWin / setTotal
     finalWin
@@ -88,28 +91,36 @@ def coffin_open_event(gamestate, grown):
     return
 
 
-def gunsmoke_event(gamestate, symbol, cells):
+def gunsmoke_event(gamestate, symbol, cells, added=0, win_mult=1):
     """GUNSMOKE turned one whole symbol type into WILDs.
 
-    symbol: the type that was converted.
-    cells:  the board cells that became wild (padding-adjusted rows).
+    symbol:  the type that was converted.
+    cells:   the board cells that became wild (padding-adjusted rows).
+             Never includes a NUDGE stack or the rows it already swallowed.
+    added:   WIN multi gained this volley (1 per shot).
+    winMult: stacked WIN multiplier AFTER this volley.
     """
     event = {
         "index": len(gamestate.book.events),
         "type": "gunsmoke",
         "symbol": symbol,
         "cells": [_padrow(c) for c in cells],
+        "added": int(added),
+        "winMult": int(win_mult),
         "totalWays": gamestate.count_board_ways(),
     }
     gamestate.book.add_event(event)
 
 
-def split_event(gamestate, factor, symbols, cells):
-    """SPLIT added ways to every copy of up to 3 chosen symbol types.
+def split_event(gamestate, factor, symbols, cells, added=0, win_mult=1):
+    """SPLIT added ways to every copy of the chosen symbol type.
 
-    factor:  ways added to each affected cell (2-7).
-    symbols: the types that were selected.
+    factor:  ways added to each paying face (2-7). A standing nudge stack
+             is also hit and doubled, even when it was not the chosen type.
+    symbols: the types that were selected (includes W when a nudge was doubled).
     cells:   affected cells, each with its resulting per-cell ways multiplier.
+    added:   WIN multi gained this split (1 per trigger).
+    winMult: stacked WIN multiplier AFTER this split.
     """
     event = {
         "index": len(gamestate.book.events),
@@ -120,20 +131,26 @@ def split_event(gamestate, factor, symbols, cells):
             {"reel": c["reel"], "row": c["row"] + 1, "multiplier": c["multiplier"]}
             for c in cells
         ],
+        "added": int(added),
+        "winMult": int(win_mult),
         "totalWays": gamestate.count_board_ways(),
     }
     gamestate.book.add_event(event)
 
 
-def nudge_ways_event(gamestate, reel, full_reel, start_row, initial, final, steps, cells):
+def nudge_ways_event(
+    gamestate, reel, full_reel, start_row, initial, final, steps, cells, added=0, win_mult=1
+):
     """NUDGE WAYS: a ways-wild on reel 1 or 2, optionally nudging down.
 
-    fullReel:     the whole reel landed as the nudge — no doubling.
+    fullReel:     the whole reel landed as the nudge — no doubling, no WIN tick.
     startRow:     padded origin row.
     initialWays:  ways on the origin (2-9).
     finalWays:    ways on the stack after every nudge (doubled each step).
     steps:        each downward notch {row (padded), ways}.
     cells:        final stack, each with its ways multiplier.
+    added:        WIN multi gained (1 per downward step).
+    winMult:      stacked WIN multiplier AFTER this nudge.
     """
     event = {
         "index": len(gamestate.book.events),
@@ -148,17 +165,21 @@ def nudge_ways_event(gamestate, reel, full_reel, start_row, initial, final, step
             {"reel": c["reel"], "row": c["row"] + 1, "multiplier": c["multiplier"]}
             for c in cells
         ],
+        "added": int(added),
+        "winMult": int(win_mult),
         "totalWays": gamestate.count_board_ways(),
     }
     gamestate.book.add_event(event)
 
 
-def super_split_event(gamestate, factor, wild_cells, split_cells):
+def super_split_event(gamestate, factor, wild_cells, split_cells, added=0, win_mult=1):
     """SUPERSPLIT: the last reel turned wild and EVERY symbol was split.
 
     factor:     ways added to each cell.
     wildCells:  cells on the last reel that became wild.
     cells:      every split cell with its resulting per-cell ways multiplier.
+    added:      WIN multi gained this trigger (always 1).
+    winMult:    stacked WIN multiplier AFTER this trigger.
     """
     event = {
         "index": len(gamestate.book.events),
@@ -168,6 +189,30 @@ def super_split_event(gamestate, factor, wild_cells, split_cells):
         "cells": [
             {"reel": c["reel"], "row": c["row"] + 1, "multiplier": c["multiplier"]}
             for c in split_cells
+        ],
+        "added": int(added),
+        "winMult": int(win_mult),
+        "totalWays": gamestate.count_board_ways(),
+    }
+    gamestate.book.add_event(event)
+
+
+def lane_premium_event(gamestate, symbol, ways, cells):
+    """Last-reel premium landed with extra WAYS. Does not touch the WIN multi.
+
+    symbol: the premium that landed.
+    ways:   per-cell ways stamped on the lane.
+    cells:  the lane cell with its ways multiplier.
+    """
+    event = {
+        "index": len(gamestate.book.events),
+        "type": "lanePremium",
+        "reel": gamestate.config.num_reels - 1,
+        "symbol": symbol,
+        "ways": int(ways),
+        "cells": [
+            {"reel": c["reel"], "row": c["row"] + 1, "multiplier": c["multiplier"]}
+            for c in cells
         ],
         "totalWays": gamestate.count_board_ways(),
     }
@@ -196,8 +241,8 @@ def shooter_event(gamestate, hits, added, win_mult):
     """MARK: the last-reel shooter fired at every premium.
 
     hits:    premium cells that were shot (padding-adjusted rows).
-    added:   WIN multi gained this shot (1 per hit).
-    winMult: stacked WIN multiplier AFTER this shot.
+    added:   WIN multi gained this trigger (always 1).
+    winMult: stacked WIN multiplier AFTER this trigger.
     """
     event = {
         "index": len(gamestate.book.events),

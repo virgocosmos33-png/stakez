@@ -128,6 +128,10 @@ type BookEventGunsmoke = {
 	symbol: SymbolName;
 	cells: Position[];
 	totalWays: number;
+	/** WIN multi gained this volley (1 per shot). */
+	added?: number;
+	/** stacked WIN multiplier AFTER this volley */
+	winMult?: number;
 };
 
 /** SPLIT added ways to every copy of one chosen symbol type. */
@@ -138,6 +142,8 @@ type BookEventSplit = {
 	symbols: SymbolName[];
 	cells: (Position & { multiplier: number })[];
 	totalWays: number;
+	added?: number;
+	winMult?: number;
 };
 
 /** SPLIT-GANG — legacy. */
@@ -170,6 +176,8 @@ type BookEventNudgeWays = {
 	steps: { row: number; ways: number }[];
 	cells: (Position & { multiplier: number })[];
 	totalWays: number;
+	added?: number;
+	winMult?: number;
 };
 
 /** SUPERSPLIT: the last reel turned wild and EVERY symbol was split. */
@@ -178,6 +186,19 @@ type BookEventSuperSplit = {
 	type: 'superSplit';
 	factor: number;
 	wildCells: Position[];
+	cells: (Position & { multiplier: number })[];
+	totalWays: number;
+	added?: number;
+	winMult?: number;
+};
+
+/** Last-reel premium landed with extra WAYS. Does not touch the WIN multi. */
+type BookEventLanePremium = {
+	index: number;
+	type: 'lanePremium';
+	reel: number;
+	symbol: SymbolName;
+	ways: number;
 	cells: (Position & { multiplier: number })[];
 	totalWays: number;
 };
@@ -192,7 +213,7 @@ type BookEventBounty = {
 	added?: number;
 };
 
-/** MARK: last-reel shooter fired at every premium, +1 WIN multi per hit. */
+/** MARK: last-reel shooter fired at every premium, +1 WIN multi per trigger. */
 type BookEventShooter = {
 	index: number;
 	type: 'shooter';
@@ -293,6 +314,7 @@ export type BookEvent =
 	| BookEventSplitOutlaws
 	| BookEventNudgeWays
 	| BookEventSuperSplit
+	| BookEventLanePremium
 	| BookEventBounty
 	| BookEventShooter
 	| BookEventSpecialsWild

@@ -18,7 +18,7 @@
 
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { filterVisibleCells } from '../game/boardCells';
+	import { filterSplitCells } from '../game/boardCells';
 	import {
 		SYMBOL_CARD_W as CARD_W,
 		SYMBOL_CARD_H as CARD_H,
@@ -50,7 +50,7 @@
 	const fade = new Tween(0);
 
 	const layout = (cells: { reel: number; row: number }[]) => {
-		marks = filterVisibleCells(cells).map((c) => ({
+		marks = filterSplitCells(cells).map((c) => ({
 			key: `${c.reel}-${c.row}`,
 			cx: getSymbolX(c.reel),
 			cy: getCellCenterY(c.reel, c.row),
@@ -114,7 +114,7 @@
 		const out = APPROACH * (1 - p);
 		const arm = 22 + 6 * p;
 		const settled = p >= 1;
-		const breathe = settled ? 0.55 + 0.45 * Math.sin(time * 7) : 0;
+		const breathe = settled ? 0.7 : 0;
 
 		for (const sx of [-1, 1]) {
 			for (const sy of [-1, 1]) {

@@ -222,6 +222,16 @@ export default {
 		src: new URL('../../assets/sprites/scene/saloon_plate.webp', import.meta.url).href,
 		preload: true,
 	},
+	saloonPlateSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_plate_small.webp', import.meta.url).href,
+		preload: true,
+	},
+	saloonPlateSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/saloon_plate_super.webp', import.meta.url).href,
+		preload: true,
+	},
 	saloonLampL: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/saloon_lamp_l.png', import.meta.url).href,
@@ -275,6 +285,27 @@ export default {
 	winCelebVfx: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/fx/win_celeb_vfx.json', import.meta.url).href,
+	},
+	// Nine metal impact holes (tools/make_win_celeb_holes.py). Stamped on the
+	// win-amount plate every celebration gunshot.
+	winCelebHoles: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/win_celeb_holes.json', import.meta.url).href,
+		preload: true,
+	},
+	// Rising fire sparks, black plate keyed to alpha (tools/make_ember_rise.py).
+	// Loops over the super-bonus room with the ember bed.
+	emberRise: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/ember_rise.webm', import.meta.url).href,
+		preload: true,
+	},
+	// Studio smoke, black plate keyed to luma-alpha (tools/make_room_smoke.py).
+	// Loops over the super-bonus room under the rising sparks.
+	roomSmoke: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/room_smoke.webm', import.meta.url).href,
+		preload: true,
 	},
 	// BONUS-ENTRY BANNER hero plates, one per real buy mode — DEAD MAN'S HAND for
 	// bonus_small (80x, the six-card special bar awake) and OPEN GRAVE for
@@ -774,6 +805,16 @@ export default {
 		src: new URL('../../assets/sprites/board/board_frame.png', import.meta.url).href,
 		preload: true,
 	},
+	boardFrameSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_frame_small.png', import.meta.url).href,
+		preload: true,
+	},
+	boardFrameSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/board_frame_super.png', import.meta.url).href,
+		preload: true,
+	},
 	boardStoneField: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/board/board_stone_grey.webp', import.meta.url).href,
@@ -885,11 +926,21 @@ export default {
 		src: new URL('../../assets/sprites/tombstone/bar_readout_plaque.png', import.meta.url).href,
 		preload: true,
 	},
-	// HUD timber boxes (tools/make_hud_wood_boxes.py) — same carpentry language
-	// as the staircase, cut from a separate plank/scrap sheet (not the reel frame).
+	// HUD timber boxes (tools/make_hud_wood_boxes.py) — same plank/scrap sheets
+	// as the staircase (tr_frame_planks_v2 / tr_frame_scraps).
 	woodReadoutWays: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/wood_readout_ways.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutWaysSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_ways_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutWaysSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_ways_super.png', import.meta.url).href,
 		preload: true,
 	},
 	woodReadoutMulti: {
@@ -897,9 +948,96 @@ export default {
 		src: new URL('../../assets/sprites/tombstone/wood_readout_multi.png', import.meta.url).href,
 		preload: true,
 	},
+	woodReadoutMultiSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_multi_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutMultiSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_multi_super.png', import.meta.url).href,
+		preload: true,
+	},
 	woodReadoutWin: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/wood_readout_win.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutWinSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_win_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutWinSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_win_super.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutSpins: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_spins.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutSpinsSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_spins_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodReadoutSpinsSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_readout_spins_super.png', import.meta.url).href,
+		preload: true,
+	},
+	// Top nameplate pallets — label is baked on the timber; the well only
+	// shows the number (tools/install_hud_pallets.py).
+	woodPalletWays: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_ways.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletMulti: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_multi.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletWin: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_win.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletSpins: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_spins.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletWaysSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_ways_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletMultiSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_multi_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletWinSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_win_small.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletWaysSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_ways_super.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletMultiSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_multi_super.png', import.meta.url).href,
+		preload: true,
+	},
+	woodPalletWinSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/wood_pallet_win_super.png', import.meta.url).href,
 		preload: true,
 	},
 	// Two rusty hanging chains drawn behind the HUD timber boxes.
@@ -908,10 +1046,21 @@ export default {
 		src: new URL('../../assets/sprites/tombstone/hud_hang_chain.png', import.meta.url).href,
 		preload: true,
 	},
-	// One unstretched rusty chain column for HUD hangers (never scale Y independently).
+	// One unstretched chain column for HUD hangers (never scale Y independently).
+	// Base = rusty iron, small = lantern bronze, super = charred ember iron.
 	hudChain: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/hud_chain.png', import.meta.url).href,
+		preload: true,
+	},
+	hudChainSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/hud_chain_small.png', import.meta.url).href,
+		preload: true,
+	},
+	hudChainSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/hud_chain_super.png', import.meta.url).href,
 		preload: true,
 	},
 	barPlaqueSplit: {

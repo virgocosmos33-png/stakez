@@ -1,21 +1,61 @@
 <script lang="ts">
 	/**
-	 * WAYS / MULTI / WIN as stacked timber boxes — four boards + corner scraps
-	 * baked from HUD-only wood (not the reel-frame sheet). Desktop sits this
-	 * to the right of the board; narrow layouts sit it under the board.
+	 * WAYS / MULTI / WIN / FREE SPINS as stacked timber boxes. A labeled
+	 * wood pallet sits on top of each box; the black well only shows the
+	 * number. Desktop sits this to the right of the board; narrow layouts
+	 * sit it under the board.
 	 */
-	import { Container, Sprite, Text } from 'pixi-svelte';
+	import type { Texture } from 'pixi.js';
+	import { Container, Rectangle, Sprite, Text } from 'pixi-svelte';
 
+	import { getContext } from '../game/context';
 	import { hudColor } from '../game/hud.generated';
-	import { TR_INK_BRASS, fitFontSize, trLabelStyle, trValueStyle } from '../game/typography';
+	import { fitFontSize, trValueStyle } from '../game/typography';
 
 	export type HudReadoutSlot = { label: string; value: string; w?: number };
 
-	const BOX_KEY: Record<string, 'woodReadoutWays' | 'woodReadoutMulti' | 'woodReadoutWin'> = {
+	const BOX_BASE: Record<
+		string,
+		'woodReadoutWays' | 'woodReadoutMulti' | 'woodReadoutWin' | 'woodReadoutSpins'
+	> = {
 		WAYS: 'woodReadoutWays',
 		MULTI: 'woodReadoutMulti',
 		WIN: 'woodReadoutWin',
-		'FREE SPINS': 'woodReadoutMulti',
+		'FREE SPINS': 'woodReadoutSpins',
+	};
+
+	const PALLET_BASE: Record<
+		string,
+		'woodPalletWays' | 'woodPalletMulti' | 'woodPalletWin' | 'woodPalletSpins'
+	> = {
+		WAYS: 'woodPalletWays',
+		MULTI: 'woodPalletMulti',
+		WIN: 'woodPalletWin',
+		'FREE SPINS': 'woodPalletSpins',
+	};
+
+	const context = getContext();
+	const boxKey = (label: string) => {
+		const base = BOX_BASE[label] ?? 'woodReadoutWays';
+		const atmo = context.stateGame.atmosphere;
+		if (atmo === 'super') return `${base}Super`;
+		if (atmo === 'small') return `${base}Small`;
+		return base;
+	};
+
+	const palletKey = (label: string) => {
+		const base = PALLET_BASE[label] ?? 'woodPalletWays';
+		const atmo = context.stateGame.atmosphere;
+		if (atmo === 'super' && label !== 'FREE SPINS') return `${base}Super`;
+		if (atmo === 'small' && label !== 'FREE SPINS') return `${base}Small`;
+		return base;
+	};
+
+	const chainKey = () => {
+		const atmo = context.stateGame.atmosphere;
+		if (atmo === 'super') return 'hudChainSuper';
+		if (atmo === 'small') return 'hudChainSmall';
+		return 'hudChain';
 	};
 
 	type Props = {
@@ -31,23 +71,20 @@
 		chainFromY?: number;
 		/** override gap between boxes (default 8% of block height) */
 		gap?: number;
-		/** chains behind the timber, boxes in front */
-		parts?: 'all' | 'chains' | 'boxes';
+		/** chains / plate behind the timber; wood + pallet + number in front */
+		parts?: 'all' | 'chains' | 'plate' | 'boxes';
 	};
 
 	const props: Props = $props();
+	const parts = $derived(props.parts ?? 'all');
 
 	/** wood_readout_*.png is 640x400 */
 	const PLAQUE_ASPECT = 1.6;
-	/** hud_chain.png — keep this ratio so links never stretch */
-	const CHAIN_ASPECT = 1501 / 302;
-	/** share the end oval (y 1260–1501) with the next copy so links interlock */
-	const CHAIN_TILE_STEP = 1260 / 1501;
-	/** dark inset well, as fractions of the baked sprite */
-	const OPENING = { y0: 0.27, y1: 0.73 };
+	/** share the end oval with the next copy so links interlock */
+	const CHAIN_TILE_STEP = 0.84;
+	const OPENING = { x0: 0.2156, x1: 0.7844, y0: 0.305, y1: 0.695 };
+	const PLATE = { x0: 0.2, x1: 0.8, y0: 0.28, y1: 0.72 };
 	const VALUE_COLOR = hudColor('text', 0xf0e6d0);
-	const LABEL_COLOR = TR_INK_BRASS;
-	const LABEL_TRACKING = 2;
 	const VALUE_TRACKING = 0.3;
 	const INK_STROKE = { color: 0x05070a, width: 2 } as const;
 	const INK_SHADOW = {
@@ -58,13 +95,34 @@
 		angle: Math.PI / 2,
 	} as const;
 
-	const chainCols = (cx: number, cy: number, w: number, h: number) => {
-		const chainBot = cy - h * 0.12;
+	const chainAspect = $derived.by(() => {
+		const tex = context.stateApp.loadedAssets?.[chainKey()] as Texture | undefined;
+		if (tex?.width) return tex.height / tex.width;
+		return 16 / 9;
+	});
+
+	const palletAspectOf = (key: string) => {
+		const tex = context.stateApp.loadedAssets?.[key] as Texture | undefined;
+		if (tex?.width) return tex.height / tex.width;
+		return 0.28;
+	};
+
+	const palletOf = (cx: number, cy: number, w: number, h: number, key: string) => {
+		// Cover the box's existing top beam (WELL.top = 112/400). Do not hang
+		// a second plank above it — that was the double pallet.
+		const topBeam = 112 / 400;
+		const pw = w * 1.02;
+		const ph = Math.min(h * 0.2, pw * palletAspectOf(key));
+		return { x: cx, y: cy - h * 0.5 + topBeam * h, w: pw, h: ph };
+	};
+
+	const chainCols = (cx: number, chainBot: number, w: number, h: number) => {
 		const colW = Math.max(11, Math.min(w * 0.1, 18));
-		const colH = colW * CHAIN_ASPECT;
+		const colH = colW * chainAspect;
 		const step = colH * CHAIN_TILE_STEP;
-		let chainTop = props.chainFromY != null ? props.chainFromY - props.y - colH * 0.45 : cy - h * 1.15;
-		if (props.chainFromY == null && chainBot - chainTop < colH) chainTop = chainBot - colH;
+		let chainTop =
+			props.chainFromY != null ? props.chainFromY - props.y - colH * 0.45 : chainBot - h * 1.03;
+		if (chainBot - chainTop < colH) chainTop = chainBot - colH;
 		const drop = Math.max(colH, chainBot - chainTop);
 		const copies = Math.max(1, Math.ceil(drop / step));
 		const inset = w * 0.22;
@@ -82,61 +140,58 @@
 		const blockH = wellW / PLAQUE_ASPECT;
 		const stackGap = props.gap ?? blockH * 0.08;
 		const panelH = (OPENING.y1 - OPENING.y0) * blockH;
-		const labelSize = Math.max(8, Math.floor(panelH * 0.26));
-		const valueSize = Math.max(12, Math.floor(panelH * 0.46));
+		const plateH = (PLATE.y1 - PLATE.y0) * blockH;
+		const valueSize = Math.max(11, Math.floor(Math.min(panelH * 0.34, plateH * 0.4)));
 		const axis = props.axis ?? 'y';
 		const widths = props.slots.map((slot) => slot.w ?? wellW);
 		const n = props.slots.length;
-		if (n === 0) return { blocks: [] as const, panelH };
+		if (n === 0) return { blocks: [] as const };
+
+		const block = (slot: HudReadoutSlot, cx: number, cy: number, w: number) => {
+			const pKey = palletKey(slot.label);
+			const pallet = palletOf(cx, cy, w, blockH, pKey);
+			return {
+				label: slot.label,
+				value: slot.value,
+				key: boxKey(slot.label),
+				palletKey: pKey,
+				cx,
+				cy,
+				w,
+				h: blockH,
+				valueSize,
+				pallet,
+			};
+		};
 
 		if (axis === 'x') {
 			const totalW = widths.reduce((sum, w) => sum + w, 0) + stackGap * (n - 1);
 			let cursor = -totalW / 2;
 			return {
-				panelH,
 				blocks: props.slots.map((slot, i) => {
 					const w = widths[i];
 					const cx = cursor + w / 2;
 					cursor += w + stackGap;
-					return {
-						label: slot.label,
-						value: slot.value,
-						key: BOX_KEY[slot.label] ?? 'woodReadoutWays',
-						cx,
-						cy: 0,
-						w,
-						h: blockH,
-						labelSize,
-						valueSize,
-					};
+					return block(slot, cx, 0, w);
 				}),
 			};
 		}
 
 		const totalH = n * blockH + (n - 1) * stackGap;
 		return {
-			panelH,
-			blocks: props.slots.map((slot, i) => ({
-				label: slot.label,
-				value: slot.value,
-				key: BOX_KEY[slot.label] ?? 'woodReadoutWays',
-				cx: 0,
-				cy: -totalH / 2 + blockH / 2 + i * (blockH + stackGap),
-				w: widths[i],
-				h: blockH,
-				labelSize,
-				valueSize,
-			})),
+			blocks: props.slots.map((slot, i) =>
+				block(slot, 0, -totalH / 2 + blockH / 2 + i * (blockH + stackGap), widths[i]),
+			),
 		};
 	});
 </script>
 
 <Container x={props.x} y={props.y}>
 	{#each metrics.blocks as b (b.label)}
-		{#if props.hang !== false && props.parts !== 'boxes'}
-			{#each chainCols(b.cx, b.cy, b.w, b.h) as seg (`${b.label}-${seg.id}`)}
+		{#if props.hang !== false && (parts === 'all' || parts === 'chains')}
+			{#each chainCols(b.cx, b.pallet.y - b.pallet.h * 0.38, b.w, b.h) as seg (`${b.label}-${seg.id}`)}
 				<Sprite
-					key="hudChain"
+					key={chainKey()}
 					x={seg.x}
 					y={seg.y}
 					anchor={{ x: 0.5, y: 0 }}
@@ -146,52 +201,57 @@
 				/>
 			{/each}
 		{/if}
-		{#if props.parts !== 'chains'}
-		<Sprite
-			key={b.key}
-			x={b.cx}
-			y={b.cy}
-			anchor={0.5}
-			width={b.w}
-			height={b.h}
-			eventMode="none"
-		/>
-		<Text
-			x={b.cx}
-			y={b.cy - metrics.panelH * 0.24}
-			anchor={0.5}
-			text={b.label}
-			eventMode="none"
-			style={trLabelStyle({
-				fill: LABEL_COLOR,
-				fontSize: fitFontSize(b.label, {
-					role: 'label',
-					base: b.labelSize,
-					maxWidth: b.w * 0.52,
-					letterSpacing: LABEL_TRACKING,
-				}),
-				letterSpacing: LABEL_TRACKING,
-			})}
-		/>
-		<Text
-			x={b.cx}
-			y={b.cy + metrics.panelH * 0.18}
-			anchor={0.5}
-			text={b.value}
-			eventMode="none"
-			style={trValueStyle({
-				fill: VALUE_COLOR,
-				fontSize: fitFontSize(b.value, {
-					role: 'value',
-					base: b.valueSize,
-					maxWidth: b.w * 0.52,
+		{#if parts === 'all' || parts === 'plate'}
+			<Rectangle
+				x={b.cx}
+				y={b.cy}
+				anchor={0.5}
+				width={b.w * (PLATE.x1 - PLATE.x0)}
+				height={b.h * (PLATE.y1 - PLATE.y0)}
+				borderRadius={Math.max(4, b.h * 0.04)}
+				backgroundColor={0x000000}
+				eventMode="none"
+			/>
+		{/if}
+		{#if parts === 'all' || parts === 'boxes'}
+			<Sprite
+				key={b.key}
+				x={b.cx}
+				y={b.cy}
+				anchor={0.5}
+				width={b.w}
+				height={b.h}
+				eventMode="none"
+			/>
+			<Sprite
+				key={b.palletKey}
+				x={b.pallet.x}
+				y={b.pallet.y}
+				anchor={0.5}
+				width={b.pallet.w}
+				height={b.pallet.h}
+				eventMode="none"
+			/>
+			<Text
+				x={b.cx}
+				y={b.cy}
+				anchor={0.5}
+				text={b.value}
+				eventMode="none"
+				style={trValueStyle({
+					fill: VALUE_COLOR,
+					fontSize: fitFontSize(b.value, {
+						role: 'value',
+						base: b.valueSize,
+						maxWidth: b.w * (PLATE.x1 - PLATE.x0) * 0.88,
+						min: 9,
+						letterSpacing: VALUE_TRACKING,
+					}),
 					letterSpacing: VALUE_TRACKING,
-				}),
-				letterSpacing: VALUE_TRACKING,
-				stroke: INK_STROKE,
-				dropShadow: INK_SHADOW,
-			})}
-		/>
+					stroke: INK_STROKE,
+					dropShadow: INK_SHADOW,
+				})}
+			/>
 		{/if}
 	{/each}
 </Container>

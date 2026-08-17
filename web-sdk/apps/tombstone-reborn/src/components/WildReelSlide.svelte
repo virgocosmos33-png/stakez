@@ -29,7 +29,6 @@
 </script>
 
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type { Texture, VideoSource } from 'pixi.js';
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
@@ -174,7 +173,8 @@
 	const PULSE_SPAN = 0.16; // how much of the perimeter the running charge covers
 
 	let time = $state(0);
-	onMount(() => {
+	$effect(() => {
+		if (!reels.length) return;
 		let raf = 0;
 		const tick = (now: number) => {
 			time = now;

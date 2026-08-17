@@ -128,6 +128,7 @@
 </script>
 
 {#if readout}
+	<Container sortableChildren>
 	<Container zIndex={0}>
 		<HudReadout
 			x={readout.hang.x}
@@ -159,6 +160,41 @@
 				axis="x"
 				hang
 				parts="chains"
+				chainFromY={readout.spins.chainFromY}
+			/>
+		{/if}
+	</Container>
+	<Container zIndex={1}>
+		<HudReadout
+			x={readout.hang.x}
+			y={readout.hang.y}
+			wellW={readout.hang.wellW}
+			slots={readout.hang.slots}
+			axis="x"
+			hang
+			parts="plate"
+			gap={readout.hang.gap}
+			chainFromY={readout.hang.chainFromY}
+		/>
+		<HudReadout
+			x={readout.win.x}
+			y={readout.win.y}
+			wellW={readout.win.wellW}
+			slots={readout.win.slots}
+			axis="x"
+			hang
+			parts="plate"
+			chainFromY={readout.win.chainFromY}
+		/>
+		{#if readout.spins}
+			<HudReadout
+				x={readout.spins.x}
+				y={readout.spins.y}
+				wellW={readout.spins.wellW}
+				slots={readout.spins.slots}
+				axis="x"
+				hang
+				parts="plate"
 				chainFromY={readout.spins.chainFromY}
 			/>
 		{/if}
@@ -197,5 +233,6 @@
 				chainFromY={readout.spins.chainFromY}
 			/>
 		{/if}
+	</Container>
 	</Container>
 {/if}

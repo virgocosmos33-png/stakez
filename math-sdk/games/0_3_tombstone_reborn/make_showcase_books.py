@@ -47,6 +47,24 @@ def feature(*names, lo=0.01, hi=FEATURE_MAX_X, any_of=False):
     return check
 
 
+def connect_score(events):
+    """Prefer books where a paying face actually runs left-to-right.
+
+    kind * 100 + reel-span. A 3-kind buried under a 9M ways plaque scores low;
+    a 5/6-kind of one symbol scores high.
+    """
+    best = 0
+    for event in events:
+        if event.get("type") != "winInfo":
+            continue
+        for win in event.get("wins") or []:
+            kind = int(win.get("kind") or 0)
+            reels = {p.get("reel") for p in win.get("positions") or []}
+            if kind >= 3 and 0 in reels:
+                best = max(best, kind * 100 + len(reels) * 10)
+    return best
+
+
 # label -> (mode preference order, predicate on the set of event types)
 WANTS = [
     ("base_dead",      ["base"],        lambda t, p: p == 0),
@@ -55,9 +73,12 @@ WANTS = [
     ("split",          ["bonus_small", "bonus_super"], feature("split")),
     ("nudge_ways",     ["bonus_small", "bonus_super"], feature("nudgeWays")),
     ("tombstone",      ["bonus_small"], feature("tombstone")),
-    ("bounty",         ["bonus_super", "bonus_small"], feature("bounty")),
+    ("last_reel_premium", ["bonus_super", "bonus_small"],
+        lambda t, p: "lanePremium" in t and "shooter" not in t and "superSplit" not in t and 0.01 <= p < FEATURE_MAX_X),
     ("shooter",        ["bonus_super", "superspins"], feature("shooter")),
     ("super_split",    ["bonus_super"], feature("superSplit")),
+    ("win_mult_climb", ["bonus_small", "bonus_super"],
+        lambda t, p: t >= {"gunsmoke", "split", "nudgeWays", "winMult"} and 0.01 <= p < FEATURE_MAX_X),
     # A genuinely small win. This used to be an unbounded `p >= 200`, which kept
     # resolving to a 99,999x wincap book — the same presentation as max_win, so
     # the low end of the win ladder could never be verified from the showcase.
@@ -106,7 +127,9 @@ def main():
     # One streaming pass per mode: every WANT that prefers this mode keeps the
     # FIRST matching book (per mode), then the preference order picks between
     # modes afterwards. Same selections as the old all-in-memory scan.
-    found = {}  # (label, mode) -> (book, payout, types)
+    found = {}  # (label, mode) -> (book, payout, types, score)
+    seen = {}  # (label, mode) -> matches kept
+    KEEP = 40
     for mode in MODES:
         wants_here = [(lbl, pred) for lbl, pref, pred in WANTS if mode in pref]
         open_wants = {lbl: pred for lbl, pred in wants_here}
@@ -116,8 +139,15 @@ def main():
             types = {e["type"] for e in b["events"]}
             payout = b["payoutMultiplier"] / 100.0
             for lbl in list(open_wants):
-                if open_wants[lbl](types, payout):
-                    found[(lbl, mode)] = (b, payout, types)
+                if not open_wants[lbl](types, payout):
+                    continue
+                score = connect_score(b["events"])
+                key = (lbl, mode)
+                prev = found.get(key)
+                if prev is None or score > prev[3]:
+                    found[key] = (b, payout, types, score)
+                seen[key] = seen.get(key, 0) + 1
+                if seen[key] >= KEEP:
                     del open_wants[lbl]
             if not open_wants:
                 break
@@ -130,20 +160,20 @@ def main():
         chosen = None
         for mode in mode_pref:
             if (label, mode) in found:
-                b, payout, types = found[(label, mode)]
-                chosen = (mode, b, payout, types)
+                b, payout, types, score = found[(label, mode)]
+                chosen = (mode, b, payout, types, score)
                 break
         if not chosen:
             print(f"  [skip] no book found for {label}")
             continue
-        mode, b, payout, types = chosen
+        mode, b, payout, types, score = chosen
         pos = len(showcase) + 1  # 1-based index within the showcase file
         clone = json.loads(json.dumps(b))
         clone["id"] = pos
         showcase.append(clone)
         feats = [t for t in (
             "gunsmoke", "split", "nudgeWays", "tombstone",
-            "bounty", "shooter", "superSplit",
+            "lanePremium", "winMult", "shooter", "superSplit",
         ) if t in types]
         index[label] = {
             "showcaseId": pos,
@@ -152,7 +182,7 @@ def main():
             "payoutX": round(payout, 2),
             "features": feats,
         }
-        print(f"  [{pos:>2}] {label:16s} {mode:12s} payout={payout:>10.2f}x  {feats}")
+        print(f"  [{pos:>2}] {label:16s} {mode:12s} payout={payout:>10.2f}x  connect={score}  {feats}")
 
     with open(os.path.join(BOOKS, "books_showcase.json"), "w", encoding="utf-8") as fh:
         json.dump(showcase, fh)

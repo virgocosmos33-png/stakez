@@ -2,17 +2,23 @@
 
 A spin is a single enhanced reveal. After the board is drawn we:
   1. plant feature symbols onto the board (no left special bar),
-  2. if the last-reel lane is open, fill it with a premium+WIN-mult or MARK
+  2. if the last-reel lane is open, fill it with a premium+WAYS or MARK
      or SUPERSPLIT — never a low,
   3. apply feature effects in a fixed order,
   4. transform every remaining feature symbol into the revolver WILD,
   5. then hand the mutated board to the ways evaluator, which applies the
      stacked WIN multiplier.
 
-Ordering matters: every effect that changes the ways COUNT (gunsmoke wildify,
-split, nudge-ways, supersplit) is applied BEFORE the single ways evaluation.
-WIN multiplier (bounty / MARK) is last so MARK counts premiums on the
-fully-enriched board.
+Two multiplier layers stay separate:
+  WAYS  = split / nudge-ways / supersplit / last-reel premium stamp per-cell
+          ways that fold into the ways COUNT.
+  WIN   = a HUD stack that starts at 1x. +1 per split, per gunsmoke shot,
+          per nudge-down step, and +1 each time MARK or SUPERSPLIT triggers.
+          Sticky across the SUPER / big bonus round; reset each SMALL bonus spin.
+
+Ordering: after the board lands, NUDGE WAYS fires first and grows down.
+Then gunsmoke / split / last-reel. A later SPLIT also hits the nudge
+stack and doubles its ways. WIN-multi ticks emit as each feature fires.
 """
 
 import random
@@ -27,10 +33,10 @@ from game_events import (
     split_event,
     nudge_ways_event,
     super_split_event,
-    bounty_event,
     shooter_event,
     specials_wild_event,
     win_mult_event,
+    lane_premium_event,
 )
 
 
@@ -49,19 +55,21 @@ class GameStateOverride(GameExecutables):
     # ------------------------------------------------------------------ setup
     def reset_book(self):
         super().reset_book()
-        # WIN multi resets per BASE book. Bonus rounds keep a sticky stack
-        # (run_freespin zeros it once at round start).
-        if getattr(self, "gametype", None) != getattr(self.config, "freegame_type", "freegame"):
-            self.win_multiplier = 0
+        # New book always starts at 1x. run_freespin keeps the stack only
+        # while the SUPER / big bonus is in progress.
+        self.win_multiplier = 1
         self.bar_mode = "off"
         self.boost = "none"
         self.last_unlocked = False
         self.special_bar = []
         self.board_specials = []
         self.last_reel_feature = "none"
-        self._pending_bounty_mult = 0
+        self._pending_premium_ways = 0
         self._emit_tombstone = False
         self._nudge_drops = []
+        self._nudge_cells = set()
+        self._force_gunsmoke_source = None
+        self._force_split_symbols = None
         self.fs_tier = "small"
         self.fs_upgraded = False
         self._pending_upgrade = False
@@ -97,10 +105,27 @@ class GameStateOverride(GameExecutables):
         return cells
 
     def _add_win_mult(self, amount: int, source: str):
-        """Stack onto the round/spin WIN multiplier."""
+        """Stack onto the round/spin WIN multiplier. Identity is 1x."""
         added = max(0, int(amount))
-        self.win_multiplier = int(getattr(self, "win_multiplier", 0) or 0) + added
+        current = int(getattr(self, "win_multiplier", 1) or 1)
+        if current < 1:
+            current = 1
+        self.win_multiplier = current + added
         return self.win_multiplier
+
+    def _tick_win_mult(self, amount: int, source: str) -> tuple:
+        """Add to the WIN stack. Caller emits the feature event, then the HUD tick."""
+        added = max(0, int(amount))
+        total = self._add_win_mult(added, source)
+        return added, total
+
+    def _emit_win_mult(self, added: int, total: int, source: str) -> None:
+        if added > 0:
+            win_mult_event(self, added, total, source)
+
+    def _premium_ways_weights(self) -> dict:
+        cfg = self.config.last_reel_config
+        return cfg.get("premium_ways_weights") or cfg.get("bounty_mult_weights") or {2: 1}
 
     def _weighted_sample(self, weights: dict, k: int) -> list:
         picked = []
@@ -200,6 +225,7 @@ class GameStateOverride(GameExecutables):
 
         placed = []
         self._nudge_drops = []
+        self._nudge_cells = set()
         reserved = set()
 
         available = [r for r in NUDGE_REELS if r < len(self.board)]
@@ -296,9 +322,10 @@ class GameStateOverride(GameExecutables):
             self._emit_tombstone = True
 
     def _fill_unlocked_lane(self):
-        """Open last reel: premium+WIN-mult, MARK, or SUPERSPLIT. Never a low."""
+        """Open last reel: premium+WAYS, MARK, or SUPERSPLIT. Never a low."""
         cfg = self.config.last_reel_config
         last = self.config.num_reels - 1
+        ways_weights = self._premium_ways_weights()
         if self._boosting():
             drop = "supersplit"
         else:
@@ -312,10 +339,10 @@ class GameStateOverride(GameExecutables):
         self.last_reel_feature = drop
         if drop == "shooter":
             self.board[last][0] = self.create_symbol("SH")
-            self._pending_bounty_mult = 0
+            self._pending_premium_ways = 0
         elif drop == "supersplit":
             self.board[last][0] = self.create_symbol("SS")
-            self._pending_bounty_mult = 0
+            self._pending_premium_ways = 0
         else:
             symbol = (
                 "H1"
@@ -323,12 +350,12 @@ class GameStateOverride(GameExecutables):
                 else get_random_outcome(cfg["premium_weights"])
             )
             self.board[last][0] = self.create_symbol(symbol)
-            self._pending_bounty_mult = (
-                max(cfg["bounty_mult_weights"].keys())
+            self._pending_premium_ways = (
+                max(ways_weights.keys())
                 if self._boosting()
-                else get_random_outcome(cfg["bounty_mult_weights"])
+                else get_random_outcome(ways_weights)
             )
-            self.last_reel_feature = "bounty"
+            self.last_reel_feature = "premium"
 
     # ------------------------------------------------------ feature pipeline
     def apply_features(self):
@@ -340,14 +367,15 @@ class GameStateOverride(GameExecutables):
             tombstone_event(self)
             self._emit_tombstone = False
 
+        # Nudge grows first so later splits can land on the stack and double it.
+        for drop in list(self._nudge_drops):
+            self._apply_nudge_ways(drop)
+
         for _ in self._cells_of({"GS"}):
             self._apply_gunsmoke()
 
         for _ in self._cells_of({"SP"}):
             self._apply_split()
-
-        for drop in list(self._nudge_drops):
-            self._apply_nudge_ways(drop)
 
         if self.last_unlocked:
             self._apply_last_reel()
@@ -356,19 +384,40 @@ class GameStateOverride(GameExecutables):
 
     def _apply_gunsmoke(self):
         cfg = self.config.gunsmoke_config
-        present = self._present_types(set(cfg["source_weights"].keys()))
+        blocked = getattr(self, "_nudge_cells", set()) or set()
+        # Nudge already ate its land cell and everything below. Those faces
+        # are gone — gunsmoke cannot shoot the totem or the swallowed rows.
+        present = {}
+        for reel, strip in enumerate(self.board):
+            for row, sym in enumerate(strip):
+                if (reel, row) in blocked:
+                    continue
+                name = sym.name
+                if name in cfg["source_weights"]:
+                    present[name] = present.get(name, 0) + 1
         if not present:
             return
-        if self._boosting():
+        forced = getattr(self, "_force_gunsmoke_source", None)
+        if forced and forced in present:
+            source = forced
+        elif self._boosting():
             lows = [n for n in self.config.low_symbols if n in present]
             source = lows[0] if lows else max(present, key=present.get)
         else:
             weights = {n: cfg["source_weights"][n] for n in present}
             source = get_random_outcome(weights)
-        cells = self._cells_of({source})
+        cells = [
+            c
+            for c in self._cells_of({source})
+            if (c["reel"], c["row"]) not in blocked
+        ]
+        if not cells:
+            return
         for c in cells:
             self.replace_keep_ways(c["reel"], c["row"], self.config.wild_symbol)
-        gunsmoke_event(self, source, cells)
+        added, total = self._tick_win_mult(len(cells), "gunsmoke")
+        gunsmoke_event(self, source, cells, added, total)
+        self._emit_win_mult(added, total, "gunsmoke")
 
     def _apply_split(self):
         cfg = self.config.split_config
@@ -377,16 +426,47 @@ class GameStateOverride(GameExecutables):
             return
         n = 1
         weights = {name: cfg["source_weights"][name] for name in present}
-        symbols = self._weighted_sample(weights, max(1, n))
+        forced = getattr(self, "_force_split_symbols", None)
+        if forced:
+            symbols = [name for name in forced if name in present]
+            if not symbols:
+                return
+        else:
+            symbols = self._weighted_sample(weights, max(1, n))
         factor = self._pick_factor(cfg["ways_weights"])
         cells = []
+        seen = set()
         for c in self._cells_of(set(symbols)):
-            new_mult = self.add_cell_ways(c["reel"], c["row"], factor)
-            cells.append({"reel": c["reel"], "row": c["row"], "multiplier": new_mult})
+            pos = (c["reel"], c["row"])
+            seen.add(pos)
+            new_mult = self._split_cell_ways(pos[0], pos[1], factor)
+            cells.append({"reel": pos[0], "row": pos[1], "multiplier": new_mult})
+        # A split always doubles a standing nudge stack, even when it picked
+        # another face — the stack is a legal split target.
+        for reel, row in sorted(getattr(self, "_nudge_cells", set())):
+            if (reel, row) in seen:
+                continue
+            if reel >= len(self.board) or row >= len(self.board[reel]):
+                continue
+            new_mult = self.mul_cell_ways(reel, row, 2)
+            cells.append({"reel": reel, "row": row, "multiplier": new_mult})
+            seen.add((reel, row))
+        if cells and getattr(self, "_nudge_cells", set()) and "W" not in symbols:
+            symbols = list(symbols) + ["W"]
         if cells:
-            split_event(self, factor, symbols, cells)
+            added, total = self._tick_win_mult(1, "split")
+            split_event(self, factor, symbols, cells, added, total)
+            self._emit_win_mult(added, total, "split")
+
+    def _split_cell_ways(self, reel: int, row: int, factor: int) -> int:
+        """Paying faces gain `factor` ways; a nudge stack doubles."""
+        if (reel, row) in getattr(self, "_nudge_cells", set()):
+            return self.mul_cell_ways(reel, row, 2)
+        return self.add_cell_ways(reel, row, factor)
 
     def _apply_nudge_ways(self, drop):
+        if not hasattr(self, "_nudge_cells") or self._nudge_cells is None:
+            self._nudge_cells = set()
         reel = drop["reel"]
         initial = int(drop["initial_ways"])
         height = len(self.board[reel])
@@ -397,8 +477,9 @@ class GameStateOverride(GameExecutables):
                     continue
                 self.replace_keep_ways(reel, row, self.config.wild_symbol)
                 self.set_cell_ways(reel, row, initial)
+                self._nudge_cells.add((reel, row))
                 cells.append({"reel": reel, "row": row, "multiplier": initial})
-            nudge_ways_event(self, reel, True, 0, initial, initial, [], cells)
+            nudge_ways_event(self, reel, True, 0, initial, initial, [], cells, 0, self.win_multiplier)
             return
 
         start = int(drop["start_row"])
@@ -420,7 +501,11 @@ class GameStateOverride(GameExecutables):
             steps.append({"row": row, "ways": ways})
 
         cells = [{"reel": reel, "row": r, "multiplier": ways} for r in filled]
-        nudge_ways_event(self, reel, False, start, initial, ways, steps, cells)
+        for r in filled:
+            self._nudge_cells.add((reel, r))
+        added, total = self._tick_win_mult(len(steps), "nudge")
+        nudge_ways_event(self, reel, False, start, initial, ways, steps, cells, added, total)
+        self._emit_win_mult(added, total, "nudge")
 
     def _apply_last_reel(self):
         last = self.config.num_reels - 1
@@ -430,7 +515,7 @@ class GameStateOverride(GameExecutables):
         elif name == "SS":
             self._apply_supersplit()
         elif name in self.config.premium_symbols:
-            self._apply_bounty(name)
+            self._apply_lane_premium(name)
 
     def _apply_supersplit(self):
         last = self.config.num_reels - 1
@@ -442,34 +527,33 @@ class GameStateOverride(GameExecutables):
         split_cells = []
         for reel in range(self.config.num_reels):
             for row in range(len(self.board[reel])):
-                new_mult = self.add_cell_ways(reel, row, factor)
+                new_mult = self._split_cell_ways(reel, row, factor)
                 split_cells.append({"reel": reel, "row": row, "multiplier": new_mult})
-        super_split_event(self, factor, wild_cells, split_cells)
+        added, total = self._tick_win_mult(1, "supersplit")
+        super_split_event(self, factor, wild_cells, split_cells, added, total)
+        self._emit_win_mult(added, total, "supersplit")
 
-    def _apply_bounty(self, symbol):
-        cfg = self.config.last_reel_config
+    def _apply_lane_premium(self, symbol):
+        """Open-lane premium stamps WAYS on its cell. Does not touch WIN multi."""
         last = self.config.num_reels - 1
-        base_mult = int(self._pending_bounty_mult or 0)
-        if base_mult <= 0:
-            base_mult = (
-                max(cfg["bounty_mult_weights"].keys())
+        ways_weights = self._premium_ways_weights()
+        ways = int(self._pending_premium_ways or 0)
+        if ways <= 0:
+            ways = (
+                max(ways_weights.keys())
                 if self._boosting()
-                else get_random_outcome(cfg["bounty_mult_weights"])
+                else get_random_outcome(ways_weights)
             )
-        total = self._add_win_mult(base_mult, "bounty")
-        bounty_event(self, symbol, total, added=base_mult)
-        win_mult_event(self, base_mult, total, "bounty")
+        stamped = self.set_cell_ways(last, 0, ways)
+        cells = [{"reel": last, "row": 0, "multiplier": stamped}]
+        lane_premium_event(self, symbol, stamped, cells)
 
     def _apply_shooter(self):
-        """MARK: shoot every premium on the board, +1 stacked WIN multi each."""
-        cfg = self.config.last_reel_config
-        add_per = int(cfg.get("shooter_add_per_premium", 1))
+        """MARK: shoot every premium on the board. +1 WIN multi once per trigger."""
         hits = self._cells_of(set(self.config.premium_symbols))
-        added = len(hits) * add_per
-        total = self._add_win_mult(added, "shooter")
+        added, total = self._tick_win_mult(1, "shooter")
         shooter_event(self, hits, added, total)
-        if added:
-            win_mult_event(self, added, total, "shooter")
+        self._emit_win_mult(added, total, "shooter")
 
     def _wildify_features(self):
         """Every remaining feature symbol becomes the revolver WILD."""

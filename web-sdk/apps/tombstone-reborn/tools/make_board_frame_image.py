@@ -175,7 +175,7 @@ def shift(arr, dx, dy):
     return out
 
 
-def load_plank_bands():
+def load_plank_bands(sheet_path=None):
     """Cut the generated sheet into its individual plank strips (RGBA).
 
     The sheet is planks on pure black. Bands are found by row luminance; within
@@ -183,7 +183,7 @@ def load_plank_bands():
     which keeps the ragged painted silhouette (split ends, chipped edges)
     without turning interior cracks into holes.
     """
-    sheet = Image.open(PLANK_SHEET).convert("RGB")
+    sheet = Image.open(sheet_path or PLANK_SHEET).convert("RGB")
     arr = np.array(sheet, float)
     lum = arr.mean(axis=2)
 
@@ -215,17 +215,17 @@ def load_plank_bands():
         bbox = img.getchannel("A").getbbox()
         planks.append(img.crop(bbox))
     if not planks:
-        raise SystemExit("no plank bands found in " + PLANK_SHEET)
+        raise SystemExit("no plank bands found in " + (sheet_path or PLANK_SHEET))
     return planks
 
 
-def load_scrap_pieces():
+def load_scrap_pieces(sheet_path=None):
     """Cut the scrap sheet (loose grid of offcuts on pure black) into RGBA
     pieces by projection splitting: black row gaps separate the grid rows,
     black column gaps within a row separate the pieces. Alpha comes straight
     from luminance (morphologically closed so wood shadows don't punch holes),
     which keeps true concavities like the X-braces' notches transparent."""
-    img = Image.open(SCRAP_SHEET).convert("RGB")
+    img = Image.open(sheet_path or SCRAP_SHEET).convert("RGB")
     arr = np.array(img, float)
     lum = arr.mean(axis=2)
     lit = lum > 16
@@ -257,7 +257,7 @@ def load_scrap_pieces():
                 if piece.width > 60 and piece.height > 60:
                     pieces.append(piece)
     if not pieces:
-        raise SystemExit("no scrap pieces found in " + SCRAP_SHEET)
+        raise SystemExit("no scrap pieces found in " + (sheet_path or SCRAP_SHEET))
     return pieces
 
 
@@ -284,7 +284,14 @@ def edges_of(pts):
     return out
 
 
-def main():
+OUT_TREES = (
+    os.path.join(APP, "assets-src", "sprites", "board"),
+    os.path.join(APP, "assets-src", "assets", "sprites", "board"),
+    os.path.join(APP, "static", "assets", "sprites", "board"),
+)
+
+
+def main(plank_sheet=None, scrap_sheet=None, out_name="board_frame.png"):
     cols = columns()
     outer = silhouette(cols, BORDER)
     x0, y0, x1, y1 = bounds(outer)
@@ -300,7 +307,7 @@ def main():
     # planks ride the MID-RING: half in, half out of the nominal frame line
     mid = silhouette(cols, BORDER / 2)
     mid_px = to_px(mid, x0, y0)
-    planks = load_plank_bands()
+    planks = load_plank_bands(plank_sheet)
     rng = random.Random(1887)
 
     thick = int(PLANK_THICK * SCALE)
@@ -354,7 +361,7 @@ def main():
     # wraps, splinter shards, strap plates — real painted art, not drawn
     # ellipses (the boards carry their own baked nails and bolt plates now).
     # Every corner gets one, cycling through the sheet so neighbours differ.
-    scraps = load_scrap_pieces()
+    scraps = load_scrap_pieces(scrap_sheet)
     corner_pts, min_gap = [], 40 * SCALE
     for p in mid_px:
         if all((p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 > min_gap**2 for q in corner_pts):
@@ -392,12 +399,11 @@ def main():
     arr[..., 3] = np.where(np.array(inner) > 0, 0, arr[..., 3])
     out = Image.fromarray(arr, "RGBA")
 
-    for base_dir in ("assets", os.path.join("static", "assets")):
-        dst = os.path.join(APP, base_dir, "sprites", "board")
-        if os.path.isdir(dst):
-            path = os.path.join(dst, "board_frame.png")
-            out.save(path, optimize=True)
-            print("wrote", path, out.size)
+    for dst in OUT_TREES:
+        os.makedirs(dst, exist_ok=True)
+        path = os.path.join(dst, out_name)
+        out.save(path, optimize=True)
+        print("wrote", path, out.size)
 
     # the component anchors the sprite at this authored box (board-local units)
     print("anchor box:", {"x": x0, "y": y0, "w": x1 - x0, "h": y1 - y0})
@@ -405,4 +411,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+
+    p = argparse.ArgumentParser()
+    p.add_argument("--planks", default=PLANK_SHEET)
+    p.add_argument("--scraps", default=SCRAP_SHEET)
+    p.add_argument("--out", default="board_frame.png")
+    args = p.parse_args()
+    main(args.planks, args.scraps, args.out)

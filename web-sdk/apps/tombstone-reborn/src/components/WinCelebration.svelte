@@ -33,10 +33,8 @@
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { getTiersPassed } from '../game/winCelebrationMap';
 	import { waysLabel } from '../game/waysFormat';
-	import { currentModeMusic } from '../game/bonusBgm';
+	import { resumeModeBeds } from '../game/bonusBgm';
 	import {
-		CELEB_SCENE_MS,
-		celebSceneDurationMs,
 		isCelebSceneBgm,
 		playCelebSceneBgm,
 		stopCelebSceneBgm,
@@ -44,6 +42,8 @@
 	import type { MusicName, SoundEffectName } from '../game/sound';
 	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
 	import {
+		WIN_CELEB_HOLES_ASSET,
+		WIN_CELEB_HOLE_COUNT,
 		WIN_CELEB_LIGHT_ASSET,
 		WIN_CELEB_VFX_ASSET,
 		WIN_FRAME_ASSET,
@@ -68,31 +68,23 @@
 	const AMOUNT_TINT = winFontTint();
 
 	// ------------------------------------------------------------------
-	// staged counter: each plate holds for its scene track. The amount
-	// eases across that scene's range; the NEXT plate starts when the
-	// track ends (or the player skips). Ease only — duration comes from
-	// the mp3:
-	//   BOUNTY / scene 1      linear
-	//   SHOWDOWN / scene 2    linear
-	//   HIGH NOON / scene 3   a bit fast at start, slowing near the target
-	//   LAST STAND / scene 4  super fast start, braking to a total stop
-	//   BLOOD MONEY / scene 5 starts slow, keeps building speed
-	//   BOOT HILL / scene 6   tab appears, counter parked, CONTINUE gate
+	// staged counter: the amount starts slow, then speeds up until the
+	// shot line. Shots walk the last % to this plate's max, hold 1s, then
+	// the next plate starts. Music rides along — it does not own the cut.
 	// ------------------------------------------------------------------
 	const finalMult = $derived(props.finalAmount / 100);
 	const tiers = $derived(getTiersPassed(props.finalAmount));
 	const hasMax = $derived(tiers[tiers.length - 1]?.alias === 'max');
 
-	const linear = (f: number) => f;
-	const easeOutQuad = (f: number) => 1 - (1 - f) * (1 - f);
-	const easeOutQuart = (f: number) => 1 - Math.pow(1 - f, 4);
+	const HOLD_AFTER_MAX_MS = 1000;
 	const easeInCubic = (f: number) => f * f * f;
+	const easeInQuart = (f: number) => f * f * f * f;
 	const SEGMENT_STYLE = [
-		{ ease: linear },
-		{ ease: linear },
-		{ ease: easeOutQuad },
-		{ ease: easeOutQuart },
-		{ ease: easeInCubic },
+		{ ease: easeInCubic, duration: 1800 },
+		{ ease: easeInCubic, duration: 2000 },
+		{ ease: easeInQuart, duration: 2200 },
+		{ ease: easeInQuart, duration: 2400 },
+		{ ease: easeInQuart, duration: 2600 },
 	];
 
 	type Segment = { from: number; to: number; duration: number; ease: (f: number) => number };
@@ -101,11 +93,10 @@
 		return countingTiers.map((tierData, index) => {
 			const style = SEGMENT_STYLE[Math.min(index, SEGMENT_STYLE.length - 1)];
 			const next = tiers[index + 1];
-			const bgm = tierData.sound.bgm ?? '';
 			return {
 				from: index === 0 ? 0 : tierData.minMultiplier,
 				to: next ? Math.min(next.minMultiplier, finalMult) : finalMult,
-				duration: celebSceneDurationMs(bgm) || CELEB_SCENE_MS.bgm_celeb_1,
+				duration: style.duration,
 				ease: style.ease,
 			} satisfies Segment;
 		});
@@ -117,10 +108,10 @@
 	let finished = $state(false);
 	let waitContinue = $state(false);
 	let displayedIndex = $state(0);
-	// the BOOT HILL scene recounts from 0: fast start, even faster ending
+	// the BOOT HILL scene recounts from 0: slow, then faster, until shots
 	let maxRecountStart = $state<number | null>(null);
-	const MAX_RECOUNT_DURATION = CELEB_SCENE_MS.bgm_celeb_6;
-	const fastFaster = (f: number) => 0.55 * f + 0.45 * Math.pow(f, 4);
+	const MAX_RECOUNT_DURATION = 3200;
+	const fastFaster = (f: number) => f * f * f;
 
 	// ------------------------------------------------------------------
 	// transition fx: micro-fade, slam, gunsmoke wipe and a starburst punch
@@ -133,7 +124,145 @@
 	const pop = new Tween(0);
 	const slam = new Tween(1);
 	const zoom = new Tween(1);
+	const amountPunch = new Tween(1);
+	const amountKickX = new Tween(0);
+	const amountKickY = new Tween(0);
 	let fadeToken = 0;
+
+	// Each plate finishes its own count with gunshots. Later plates start
+	// earlier and fire more; BOOT HILL is a ragged volley.
+	const SHOT_SCENES = [
+		{ left: 0.1, shots: 2, jitter: false },
+		{ left: 0.15, shots: 3, jitter: false },
+		{ left: 0.2, shots: 4, jitter: false },
+		{ left: 0.3, shots: 6, jitter: false },
+		{ left: 0.35, shots: 6, jitter: false },
+		{ left: 0.4, shots: 12, jitter: true, shotsMin: 10, shotsMax: 15 },
+	] as const;
+	type AmountHit = {
+		id: number;
+		x: number;
+		y: number;
+		rot: number;
+		kind: 'hole' | 'flash';
+		tex: number;
+		life: Tween<number>;
+	};
+	type ShotStep = { at: number; value: number };
+	let amountHits = $state<AmountHit[]>([]);
+	let shotPlan: ShotStep[] | null = null;
+	let shotCursor = 0;
+	let nextHitId = 0;
+	/** parked at this plate's max; next scene fires at this timestamp */
+	let holdUntil: number | null = null;
+	let shotsArmed = false;
+
+	const clearShots = () => {
+		shotPlan = null;
+		shotCursor = 0;
+	};
+
+	const sceneShotPlan = (index: number) =>
+		SHOT_SCENES[Math.min(Math.max(index, 0), SHOT_SCENES.length - 1)];
+
+	const buildShotValues = (from: number, to: number, count: number) => {
+		const span = Math.max(0, to - from);
+		const n = Math.max(1, count);
+		if (span <= 0) return [to];
+		const weights = Array.from({ length: n }, (_, i) => 0.55 + ((i * 13 + 7) % 9) * 0.07);
+		const sum = weights.reduce((total, weight) => total + weight, 0);
+		let acc = from;
+		return weights.map((weight, i) => {
+			acc = i === n - 1 ? to : acc + (span * weight) / sum;
+			return acc;
+		});
+	};
+
+	const fireAmountShot = (value: number) => {
+		countMult = value;
+		amountPunch.set(1.16, { duration: 0 });
+		void amountPunch.set(1, { duration: 180, easing: cubicOut });
+		const jx = (Math.random() - 0.5) * 10;
+		const jy = (Math.random() - 0.5) * 7;
+		amountKickX.set(jx, { duration: 0 });
+		amountKickY.set(jy, { duration: 0 });
+		void amountKickX.set(0, { duration: 160, easing: cubicOut });
+		void amountKickY.set(0, { duration: 160, easing: cubicOut });
+
+		const hx = (Math.random() - 0.5) * frameW * 0.78;
+		const hy = (Math.random() - 0.5) * frameH * 0.72;
+		const rot = Math.random() * Math.PI * 2;
+		const tex = Math.floor(Math.random() * WIN_CELEB_HOLE_COUNT);
+		const hole: AmountHit = {
+			id: nextHitId++,
+			x: hx,
+			y: hy,
+			rot,
+			kind: 'hole',
+			tex,
+			life: new Tween(0),
+		};
+		const flash: AmountHit = {
+			id: nextHitId++,
+			x: hx,
+			y: hy,
+			rot,
+			kind: 'flash',
+			tex,
+			life: new Tween(1),
+		};
+		hole.life.set(1, { duration: 90, easing: cubicOut });
+		void flash.life.set(0, { duration: 220, easing: cubicOut });
+		const kept = amountHits.filter((hit) => hit.kind === 'hole' || hit.life.current > 0.02);
+		const holes = kept.filter((hit) => hit.kind === 'hole');
+		amountHits = [...(holes.length > 10 ? holes.slice(holes.length - 10) : holes), flash, hole];
+
+		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_gunshot' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
+	};
+
+	const armShotVolley = (
+		from: number,
+		to: number,
+		remainMs: number,
+		plan: (typeof SHOT_SCENES)[number],
+	) => {
+		const count = plan.jitter
+			? plan.shotsMin + Math.floor(Math.random() * (plan.shotsMax - plan.shotsMin + 1))
+			: plan.shots;
+		const values = buildShotValues(from, to, count);
+		// Pace the volley across the remaining % of this plate. Floor at
+		// 280ms a shot so later plates (6–15 hits) cannot machine-gun.
+		const budget = Math.max(remainMs, 280 * values.length);
+		const t0 = performance.now();
+		if (plan.jitter) {
+			const gaps = values.map(() => 0.35 + Math.random() * 1.7);
+			const gapSum = gaps.reduce((total, gap) => total + gap, 0);
+			let at = t0;
+			shotPlan = values.map((value, i) => {
+				at += (gaps[i] / gapSum) * budget;
+				return { at, value };
+			});
+		} else {
+			const gap = budget / values.length;
+			shotPlan = values.map((value, i) => ({ at: t0 + (i + 1) * gap, value }));
+		}
+		shotCursor = 0;
+	};
+
+	const drainShots = (now: number) => {
+		if (!shotPlan) return;
+		while (shotCursor < shotPlan.length && now >= shotPlan[shotCursor].at) {
+			fireAmountShot(shotPlan[shotCursor].value);
+			shotCursor += 1;
+		}
+		if (shotCursor >= shotPlan.length) clearShots();
+	};
+
+	const snapShots = () => {
+		if (shotPlan?.length) countMult = shotPlan[shotPlan.length - 1].value;
+		clearShots();
+	};
 
 	// One evolving score cut into contiguous stage slices (bgm_celeb_1..6 =
 	// BOUNTY..BOOT HILL). Music alone carries the celebration — do NOT layer
@@ -150,7 +279,6 @@
 		'bgm_celeb_4',
 		'bgm_celeb_5',
 		'bgm_celeb_6',
-		'bgm_main',
 	];
 	const OLD_CELEB_SFX: SoundEffectName[] = [
 		'sfx_celeb_whoosh',
@@ -176,30 +304,12 @@
 
 	let sceneGen = 0;
 
-	const advanceFromAudio = (gen: number) => {
-		if (gen !== sceneGen) return;
-		if (finished || waitContinue) return;
-		if (maxRecountStart !== null) {
-			countMult = finalMult;
-			finished = true;
-			waitContinue = true;
-			return;
-		}
-		const now = performance.now();
-		if (segIndex + 1 < segments.length) {
-			countMult = segments[segIndex].to;
-			enterSegment(segIndex + 1, now);
-			return;
-		}
-		finishCounting();
-	};
-
 	const playStageMusic = (target: number) => {
 		silenceOldCelebrationAudio();
 		const cue = stageCue(target);
-		const gen = ++sceneGen;
+		sceneGen += 1;
 		if (!isCelebSceneBgm(cue)) return;
-		playCelebSceneBgm(cue, () => advanceFromAudio(gen));
+		playCelebSceneBgm(cue);
 	};
 
 	const showTier = (target: number) => {
@@ -224,14 +334,33 @@
 	};
 
 	const enterSegment = (index: number, now: number) => {
+		clearShots();
+		amountHits = [];
+		holdUntil = null;
+		shotsArmed = false;
 		segIndex = index;
 		segStart = now;
 		showTier(index);
 	};
 
+	const leaveSegment = (now: number) => {
+		snapShots();
+		const segment = segments[segIndex];
+		if (segment) countMult = segment.to;
+		if (segIndex + 1 < segments.length) {
+			enterSegment(segIndex + 1, now);
+			return;
+		}
+		finishCounting();
+	};
+
 	const finishCounting = () => {
 		if (hasMax) {
 			// the BOOT HILL tab appears and the amount rolls again from zero
+			clearShots();
+			amountHits = [];
+			holdUntil = null;
+			shotsArmed = false;
 			countMult = 0;
 			maxRecountStart = performance.now();
 			showTier(tiers.length - 1);
@@ -260,22 +389,13 @@
 		if (maxRecountStart !== null) {
 			sceneGen += 1;
 			stopCelebSceneBgm();
+			snapShots();
 			countMult = finalMult;
 			finished = true;
 			waitContinue = true;
 			return;
 		}
-		const now = performance.now();
-		if (segIndex + 1 < segments.length) {
-			countMult = segments[segIndex].to;
-			enterSegment(segIndex + 1, now);
-		} else if (hasMax) {
-			finishCounting();
-		} else {
-			sceneGen += 1;
-			stopCelebSceneBgm();
-			finishCounting();
-		}
+		leaveSegment(performance.now());
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -317,23 +437,78 @@
 		zoom.set(intensity.push, { duration: 8000, easing: cubicOut });
 		let raf = 0;
 		const start = performance.now();
+		let lastVfx = 0;
 		segStart = start;
 		const tick = (now: number) => {
-			time = (now - start) / 1000;
+			if (now - lastVfx >= 33) {
+				lastVfx = now;
+				time = (now - start) / 1000;
+			}
 			if (!finished) {
 				if (maxRecountStart !== null) {
-					const f = Math.min((now - maxRecountStart) / MAX_RECOUNT_DURATION, 1);
-					countMult = finalMult * fastFaster(f);
-					if (f >= 1) {
-						finished = true;
-						waitContinue = true;
+					const plan = sceneShotPlan(5);
+					if (holdUntil !== null) {
+						if (now >= holdUntil) {
+							countMult = finalMult;
+							finished = true;
+							waitContinue = true;
+						}
+					} else if (shotPlan) {
+						drainShots(now);
+						if (!shotPlan) {
+							countMult = finalMult;
+							holdUntil = now + HOLD_AFTER_MAX_MS;
+						}
+					} else {
+						const f = Math.min((now - maxRecountStart) / MAX_RECOUNT_DURATION, 1);
+						const eased = finalMult * fastFaster(f);
+						const shotLine = finalMult * (1 - plan.left);
+						if (eased >= shotLine) {
+							shotsArmed = true;
+							armShotVolley(
+								Math.max(countMult, shotLine),
+								finalMult,
+								MAX_RECOUNT_DURATION * plan.left,
+								plan,
+							);
+							drainShots(now);
+						} else {
+							countMult = eased;
+						}
 					}
 				} else {
 					const segment = segments[segIndex];
-					const f = Math.min((now - segStart) / segment.duration, 1);
-					countMult = segment.from + (segment.to - segment.from) * segment.ease(f);
-					// Park at this scene's amount. The next plate waits for
-					// the track to end (or a skip) — do not climb on the clock.
+					const plan = sceneShotPlan(segIndex);
+					const span = Math.max(0, segment.to - segment.from);
+					if (holdUntil !== null) {
+						if (now >= holdUntil) leaveSegment(now);
+					} else if (shotPlan) {
+						drainShots(now);
+						if (!shotPlan) {
+							countMult = segment.to;
+							holdUntil = now + HOLD_AFTER_MAX_MS;
+						}
+					} else {
+						const f = Math.min((now - segStart) / segment.duration, 1);
+						const eased = segment.from + span * segment.ease(f);
+						const shotLine = segment.from + span * (1 - plan.left);
+						if (span > 0.01 && eased >= shotLine) {
+							shotsArmed = true;
+							armShotVolley(
+								Math.max(countMult, shotLine),
+								segment.to,
+								segment.duration * plan.left,
+								plan,
+							);
+							drainShots(now);
+						} else {
+							countMult = eased;
+							if (f >= 1) {
+								countMult = segment.to;
+								holdUntil = now + HOLD_AFTER_MAX_MS;
+							}
+						}
+					}
 				}
 			}
 			raf = requestAnimationFrame(tick);
@@ -343,7 +518,7 @@
 			cancelAnimationFrame(raf);
 			sceneGen += 1;
 			stopCelebSceneBgm();
-			context.eventEmitter.broadcast({ type: 'soundMusic', name: currentModeMusic() });
+			resumeModeBeds();
 		};
 	});
 
@@ -361,8 +536,13 @@
 	const vfxTextures = $derived(
 		(context.stateApp.loadedAssets?.[WIN_CELEB_VFX_ASSET] as Texture[] | undefined) ?? [],
 	);
+	const holeTextures = $derived(
+		(context.stateApp.loadedAssets?.[WIN_CELEB_HOLES_ASSET] as Texture[] | undefined) ?? [],
+	);
 	const light = (index: number) => lightTextures[index];
 	const vfx = (index: number) => vfxTextures[index];
+	const holeTex = (index: number) =>
+		holeTextures[Math.min(Math.max(index, 0), Math.max(holeTextures.length - 1, 0))];
 
 	// ------------------------------------------------------------------
 	// geometry
@@ -494,6 +674,33 @@
 				height={plateCover.height * zoom.current}
 				x={Math.sin(time * 0.22) * frameW * 0.008}
 			/>
+
+			{#each amountHits as hit (hit.id)}
+				{#if hit.kind === 'flash' && vfx(WIN_VFX.muzzleFlare)}
+					<BaseSprite
+						texture={hit.id % 2 === 0 ? vfx(WIN_VFX.muzzleFlare) : vfx(WIN_VFX.flashPop)}
+						anchor={0.5}
+						x={hit.x}
+						y={hit.y}
+						width={frameW * 0.16 * (1.05 + 0.25 * hit.life.current)}
+						height={frameW * 0.16 * (1.05 + 0.25 * hit.life.current)}
+						rotation={hit.rot}
+						blendMode="add"
+						alpha={0.9 * hit.life.current}
+					/>
+				{:else if hit.kind === 'hole' && holeTex(hit.tex)}
+					<BaseSprite
+						texture={holeTex(hit.tex)}
+						anchor={0.5}
+						x={hit.x}
+						y={hit.y}
+						width={frameW * 0.075}
+						height={frameW * 0.075}
+						rotation={hit.rot}
+						alpha={0.94 * hit.life.current}
+					/>
+				{/if}
+			{/each}
 
 			<!-- grave dust drifting across the plate -->
 			{#if vfx(WIN_VFX.dustPuffA)}
@@ -659,7 +866,7 @@
 	</Container>
 
 	<!-- amount: dark iron plate keeps gold numerals readable over any plate -->
-	<Container y={amountY}>
+	<Container y={amountY} x={amountKickX.current} scale={amountPunch.current}>
 		{#if light(WIN_LIGHT.glowWarm)}
 			<BaseSprite
 				texture={light(WIN_LIGHT.glowWarm)}
@@ -678,7 +885,7 @@
 			backgroundColor={WIN_PALETTE.dark}
 			backgroundAlpha={0.82}
 		/>
-		<Container scale={amountPulse * slam.current}>
+		<Container y={amountKickY.current} scale={amountPulse * slam.current}>
 			<ResponsiveBitmapText
 				anchor={0.5}
 				maxWidth={amountPlateW * 0.9}

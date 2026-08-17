@@ -52,6 +52,7 @@
 		"utils-layout": "workspace:*",
 		"utils-shared": "workspace:*",
 		"utils-slots": "workspace:*",
+		"howler": "2.2.4",
 		"utils-sound": "workspace:*",
 		"utils-xstate": "workspace:*",
 		"vite": "6.2.0"

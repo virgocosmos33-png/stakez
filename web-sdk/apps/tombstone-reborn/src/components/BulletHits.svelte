@@ -1,11 +1,11 @@
 <script lang="ts">
 	/**
-	 * CLICK-TO-SHOOT. While the board is IDLE a left click on the reel area punches
-	 * a shattered-glass bullet hole at the cursor, flashes muzzle fire, hangs
-	 * Kenney gunsmoke. The holes
-	 * persist until a spin starts, then they clear. No revolver sprite — fire
-	 * and smoke only. The hit region only exists while idle, so it never fights
-	 * TapToSkip.
+	 * CLICK-TO-SHOOT. While the board is at rest a left click on the reel area
+	 * punches a shattered-glass bullet hole at the cursor, flashes muzzle fire,
+	 * hangs Kenney gunsmoke. The holes persist until a spin starts, then they
+	 * clear. No revolver sprite — fire and smoke only. The hit region only
+	 * exists while idle AND the reels are stopped, so a click during a spin
+	 * goes to TapToSkip (super turbo + slam-stop) instead.
 	 */
 	import * as PIXI from 'pixi.js';
 	import { Tween } from 'svelte/motion';
@@ -22,6 +22,8 @@
 	const context = getContext();
 
 	const idle = $derived(context.stateXstateDerived.isIdle());
+	const spinning = $derived(context.stateGameDerived.reelsSpinning());
+	const canShoot = $derived(idle && !spinning);
 	const board = $derived(context.stateGameDerived.boardLayout());
 
 	/** the shooter has a six-shooter: 6 rounds, then dry until the next spin. */
@@ -57,10 +59,11 @@
 
 	const burst = new Tween(0);
 
-	// reload the six-shooter + wipe the glass the instant the board leaves idle
-	// (spin / feature start), so each new round starts clean with 6 shots.
+	// reload the six-shooter + wipe the glass the instant a spin starts
+	// (xstate leave-idle, or Storybook playBet that stays idle). Each new
+	// round starts clean with 6 shots.
 	$effect(() => {
-		if (!idle) {
+		if (!canShoot) {
 			if (hits.length) hits = [];
 			if (puffs.length) puffs = [];
 			shotsFired = 0;
@@ -136,7 +139,7 @@
 		/>
 	{/each}
 
-	{#if idle}
+	{#if canShoot}
 		<!-- invisible-but-hittable reel-area catcher (same trick as TapToSkip). -->
 		<Rectangle
 			eventMode="static"

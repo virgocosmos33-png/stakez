@@ -126,14 +126,39 @@
 {#if layout.anyShow}
 	<MainContainer>
 		<Container x={stateShake.x} y={stateShake.y}>
-			<HudReadout
-				x={layout.x}
-				y={layout.y}
-				wellW={layout.wellW}
-				slots={layout.slots}
-				axis="x"
-				hang
-			/>
+			<Container zIndex={0}>
+				<HudReadout
+					x={layout.x}
+					y={layout.y}
+					wellW={layout.wellW}
+					slots={layout.slots}
+					axis="x"
+					hang
+					parts="chains"
+				/>
+			</Container>
+			<Container zIndex={1}>
+				<HudReadout
+					x={layout.x}
+					y={layout.y}
+					wellW={layout.wellW}
+					slots={layout.slots}
+					axis="x"
+					hang
+					parts="plate"
+				/>
+			</Container>
+			<Container zIndex={2}>
+				<HudReadout
+					x={layout.x}
+					y={layout.y}
+					wellW={layout.wellW}
+					slots={layout.slots}
+					axis="x"
+					hang
+					parts="boxes"
+				/>
+			</Container>
 		</Container>
 		{#if layout.spins}
 			<HudReadout

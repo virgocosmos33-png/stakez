@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
@@ -56,7 +55,8 @@
 		},
 	});
 
-	onMount(() => {
+	$effect(() => {
+		if (KILLED || !glowActive) return;
 		let raf = 0;
 		const start = performance.now();
 		const tick = (now: number) => {

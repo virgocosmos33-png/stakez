@@ -22,17 +22,20 @@
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 	import { presentWinCelebration } from '../game/bookEventHandlerMap';
+	import { forceStorySpeed } from './playStory';
 
 	setContext();
 
 	// storybook has no wallet: fund the demo so bets and buy-bonus are clickable
 	stateBet.balanceAmount = 10_000_000;
 	stateBet.betAmount = 1;
+	forceStorySpeed(false);
 
 	// amount is a book amount; tier = amount / 100 as a multiple of bet. This runs
 	// the SAME live presentation setWin runs (tier art + coins + sound bed +
 	// staged rollup), so what a story shows is exactly what a real win shows.
 	const celebrate = (amount: number, ways: number) => async () => {
+		forceStorySpeed(false);
 		console.log(`Presenting a ${amount / 100}x win (${ways} ways)`);
 		await presentWinCelebration(amount, ways);
 	};
@@ -101,8 +104,8 @@
 />
 
 <!-- win tiers staged rollup: the MAX amount climbs through every tier in one
-	presentation (getTiersPassed). Each plate holds until its scene track ends,
-	unless skipped. -->
+	presentation (getTiersPassed). Each plate holds 1s after its max, then the
+	next starts, unless skipped. -->
 <Story
 	name="win tiers staged rollup"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3_000_000, 46656) })}

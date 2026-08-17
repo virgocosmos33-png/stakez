@@ -20,9 +20,9 @@ from src.state.run_sims import create_books
 
 SMOKE = len(sys.argv) > 1 and sys.argv[1] == "smoke"
 NUM_SIMS = (
-    {"base": 60, "bonus_small": 60, "bonus_super": 60}
+    {"base": 60, "bonus_small": 60, "bonus_super": 60, "freespins": 20, "superspins": 20}
     if SMOKE
-    else {"base": 6000, "bonus_small": 4000, "bonus_super": 4000}
+    else {"base": 800, "bonus_small": 800, "bonus_super": 800, "freespins": 200, "superspins": 200}
 )
 
 if __name__ == "__main__":

@@ -26,7 +26,7 @@
 		bounty: 'laneGoldBounty',
 		supersplit: 'laneGoldSupersplit',
 		nudge: 'laneGoldNudge',
-		shooter: 'laneGoldNudge',
+		shooter: 'laneGoldSupersplit',
 	} as const;
 
 	let kind = $state<null | keyof typeof KIND_SPRITE>(null);

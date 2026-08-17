@@ -195,7 +195,7 @@
 		<!-- Left lantern globe: smash the glass, kill the light until next spin. -->
 		<SaloonLampHit />
 
-		<!-- BOUNTY: the landed premium's WIN multiplier badge. -->
+		<!-- Last-reel premium WAYS badge (HUD WIN multi is a separate stack). -->
 		<StretchWays />
 
 		<!-- Legacy sideways nudge (old books only). -->
@@ -243,8 +243,9 @@
 			that dims the whole screen or banners over it lives in this
 			container so the flames can never burn through a win panel. -->
 		<Container zIndex={20}>
-			<!-- Shared skip bus: reel tap + Space → stopButtonClick (slam-stop +
-				temp turbo). Win / FS panels / transition also listen on that bus. -->
+			<!-- Shared skip bus: reel tap + Space → stopButtonClick (slam-stop;
+				a tap on moving reels also engages super turbo). Win / FS panels
+				/ transition also listen on that bus. -->
 			<TapToSkip />
 
 			<!-- WAYS / WIN on the right (SpecialBar); FREE SPINS in the last-reel

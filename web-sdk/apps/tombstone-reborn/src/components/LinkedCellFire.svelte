@@ -1,4 +1,4 @@
-<script lang="ts" module>
+storybook<script lang="ts" module>
 	/**
 	 * LINKED CELL FIRE — every linked/wild cell gets a CONTINUOUS burning ring
 	 * that traces its card border and licks outward, card face fully readable
@@ -107,6 +107,11 @@ uniform float uFlash;      // 0..1 brief hot pop the instant it fully ignites
 uniform float uYScale;     // 1 = one card; visH/cardH for a tall column (keeps flame unstretched)
 uniform float uHideTop;    // 1 = drop the top bar AND its rounded corners
 uniform float uHideBot;    // 1 = drop the bottom bar AND its rounded corners
+uniform float uBoxX;       // ring half-width as a fraction of the quad (cell = 0.42)
+uniform float uBoxY;       // ring half-height as a fraction of the quad (cell = 0.65)
+uniform float uCorner;     // rounded-rect radius in shader units (cell = 0.12)
+uniform float uThickness;  // ring thickness in shader units (cell = 0.16)
+uniform float uLockBox;    // 1 = noise offsets distance (tall totem); 0 = cell uv-scale
 
 float rand(vec2 n) {
     return fract(cos(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
@@ -195,18 +200,31 @@ void main() {
     float noise_left = fbm(polar_uv);
     polar_uv.x = mod(polar_uv.x, noise_scale * TWO_PI);
     float noise_right = fbm(polar_uv);
-    float noiseV = mix(noise_right, noise_left, smoothstep(-0.2, 0.2, uv.x));
+    // atan jumps at -X; blend across that seam. Wider on a tall totem so
+    // the left mid-border cannot show a hard cut.
+    float seam = mix(0.2, 0.45, uLockBox);
+    float noiseV = mix(noise_right, noise_left, smoothstep(-seam, seam, uv.x));
 
     // box VERBATIM from (1)5: vec2(.42 * u_ratio, .65), corner .12, radius .55,
     // thickness .16, distortion (.92 + .45*noise). The quad is sized so the CARD
     // border lands on this box, so the ring's inner edge hugs the card and
     // flames lick outward.
-    vec2 boxHalf = vec2(0.42 * uRatio, 0.65 * uYScale);
-    float corner = 0.12;
+    vec2 boxHalf = vec2(uBoxX * uRatio, uBoxY * uYScale);
+    float corner = uCorner;
     float radius = 0.55;
-    float thickness = 0.16;
-    vec2 uvN = uv * (0.92 + 0.45 * noiseV);
+    float thickness = uThickness;
+    // Cell path scales UV by noise (verbatim (1)5). On a tall totem that
+    // pull is a % of the FULL height and eats the header — lock the box
+    // and only offset distance so tongues stay, the outline does not shrink.
+    vec2 uvN = mix(uv * (0.92 + 0.45 * noiseV), uv, uLockBox);
     float ring_shape = get_ring_shape(uvN, boxHalf, corner, radius - 0.8 * thickness, radius + 0.2 * thickness);
+    float locked = rounded_box_sdf(uv, boxHalf, corner) - (noiseV - 0.5) * thickness * 2.2;
+    float locked_inner = radius - 0.8 * thickness;
+    float locked_outer = radius + 0.2 * thickness;
+    float locked_w = locked_outer - locked_inner;
+    float locked_ring = smoothstep(locked_inner, locked_inner + locked_w, locked + locked_inner);
+    locked_ring -= smoothstep(locked_outer, locked_outer + locked_w, locked + locked_inner);
+    ring_shape = mix(ring_shape, clamp(locked_ring, 0.0, 1.0), uLockBox);
     // Drop the end caps (horizontal bar + the rounded-rect corner blobs).
     // Thresholds are in cell units so a tall column only loses the tips.
     float sideEnd = boxHalf.y - corner;
@@ -253,7 +271,7 @@ void main() {
 }
 `;
 
-	type RingUniforms = {
+	export type RingUniforms = {
 		uTime: number;
 		uRatio: number;
 		uIntensity: number;
@@ -262,6 +280,11 @@ void main() {
 		uYScale: number;
 		uHideTop: number;
 		uHideBot: number;
+		uBoxX: number;
+		uBoxY: number;
+		uCorner: number;
+		uThickness: number;
+		uLockBox: number;
 	};
 
 	export const createFireRingFilter = () =>
@@ -277,14 +300,136 @@ void main() {
 					uYScale: { value: 1, type: 'f32' },
 					uHideTop: { value: 0, type: 'f32' },
 					uHideBot: { value: 0, type: 'f32' },
+					uBoxX: { value: RING_FRAC_X, type: 'f32' },
+					uBoxY: { value: RING_FRAC_Y, type: 'f32' },
+					uCorner: { value: 0.12, type: 'f32' },
+					uThickness: { value: 0.16, type: 'f32' },
+					uLockBox: { value: 0, type: 'f32' },
 				},
 			},
 		});
 
-	export const fireQuadSize = (cardW: number, cardH: number) => ({
-		w: cardW / RING_FRAC_X,
-		h: cardH / RING_FRAC_Y,
+	export const fireQuadSize = (
+		cardW: number,
+		cardH: number,
+		fracX = RING_FRAC_X,
+		fracY = RING_FRAC_Y,
+	) => ({
+		w: cardW / fracX,
+		h: cardH / fracY,
 	});
+
+	/**
+	 * Tall totem ring (NUDGE header + shaft + x16). Pixel-space SDF so fBm
+	 * cannot shrink the box — the cell shader's `uv * noise` pull is a % of
+	 * the FULL height, which ate the header. Distortion only offsets distance.
+	 */
+	const COLUMN_FRAGMENT = `
+precision highp float;
+#define TWO_PI 6.28318530718
+
+in vec2 vTextureCoord;
+in vec2 vLocalUv;
+out vec4 finalColor;
+
+uniform vec4 uInputSize;
+uniform vec4 uOutputFrame;
+
+uniform float uTime;
+uniform float uIntensity;
+uniform float uProgress;
+uniform float uQuadW;
+uniform float uQuadH;
+uniform float uTotemW;
+uniform float uTotemH;
+uniform float uCorner;
+uniform float uThickness;
+
+float rand(vec2 n) {
+    return fract(cos(dot(n, vec2(12.9898, 4.1414))) * 43758.5453);
+}
+float noise(vec2 n) {
+    const vec2 d = vec2(0.0, 1.0);
+    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+    return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+}
+float fbm(vec2 n) {
+    float total = 0.0, amplitude = 0.4;
+    for (int i = 0; i < 12; i++) {
+        total += noise(n) * amplitude;
+        n += n;
+        amplitude *= 0.6;
+    }
+    return total;
+}
+float rounded_box_sdf(vec2 uv, vec2 b, float r) {
+    vec2 q = abs(uv) - b + r;
+    return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
+}
+
+void main() {
+    vec2 px = vec2(vLocalUv.x * uQuadW, vLocalUv.y * uQuadH);
+    vec2 center = vec2(uQuadW, uQuadH) * 0.5;
+    vec2 halfBox = vec2(uTotemW, uTotemH) * 0.5;
+    float dist = rounded_box_sdf(px - center, halfBox, uCorner);
+
+    float t = 0.0003 * uTime;
+    vec2 fromC = px - center;
+    float atg = atan(fromC.y, fromC.x);
+    float n = fbm(vec2(atg * 2.4, t * 10.0));
+    dist -= (n - 0.32) * uThickness * 1.6;
+
+    float inner = -2.0;
+    float outer = uThickness;
+    float ring = smoothstep(inner - 3.0, inner, dist) * (1.0 - smoothstep(outer, outer + 6.0, dist));
+
+    float uvYQuad = vLocalUv.y * 2.0 - 1.0;
+    float front_y = mix(1.15, -1.15, uProgress);
+    ring *= smoothstep(front_y - 0.15, front_y + 0.15, uvYQuad);
+
+    vec3 ember_col = vec3(0.5, 0.03, 0.0);
+    vec3 flame_col = vec3(1.0, 0.38, 0.03);
+    vec3 hot_core = vec3(1.0, 0.92, 0.55);
+    float heat = 1.0 - smoothstep(inner, outer, dist);
+    vec3 fire_color = mix(ember_col, flame_col, smoothstep(0.0, 0.55, heat));
+    fire_color = mix(fire_color, hot_core, smoothstep(0.55, 1.0, heat));
+
+    vec3 color = fire_color * ring;
+    float a = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0) * uIntensity;
+    if (a <= 0.01) discard;
+    finalColor = vec4(color * a, a);
+}
+`;
+
+	export type ColumnFireUniforms = {
+		uTime: number;
+		uIntensity: number;
+		uProgress: number;
+		uQuadW: number;
+		uQuadH: number;
+		uTotemW: number;
+		uTotemH: number;
+		uCorner: number;
+		uThickness: number;
+	};
+
+	export const createColumnFireFilter = () =>
+		Filter.from({
+			gl: { vertex: VERTEX, fragment: COLUMN_FRAGMENT, name: 'nudge-column-fire' },
+			resources: {
+				columnUniforms: {
+					uTime: { value: 0, type: 'f32' },
+					uIntensity: { value: 1, type: 'f32' },
+					uProgress: { value: 0, type: 'f32' },
+					uQuadW: { value: 1, type: 'f32' },
+					uQuadH: { value: 1, type: 'f32' },
+					uTotemW: { value: 1, type: 'f32' },
+					uTotemH: { value: 1, type: 'f32' },
+					uCorner: { value: 14, type: 'f32' },
+					uThickness: { value: 16, type: 'f32' },
+				},
+			},
+		});
 
 	/**
 	 * 1D edge fire for the nudge column. Four thin strips (L/R/T/B) — never a
@@ -336,13 +481,10 @@ void main() {
 
     float yN = vLocalUv.y * 2.0 - 1.0;
     float front = mix(1.15, -1.15, uProgress);
-    float sideMask = smoothstep(front - 0.07, front + 0.07, yN);
-    float capMask = mix(
-        smoothstep(0.0, 0.16, uProgress),
-        smoothstep(0.68, 1.0, uProgress),
-        uFlipDepth
-    );
-    float mask = mix(sideMask, capMask, uHorizontal);
+    float sideMask = smoothstep(front - 0.15, front + 0.15, yN);
+    // caps stay fully on once the column is lit — a progress gate was
+    // hiding the top/bottom bars and leaving the corners empty
+    float mask = mix(sideMask, 1.0, uHorizontal);
     ring *= mask;
 
     float heat = 1.0 - smoothstep(0.0, reach * 0.55, depth);
@@ -353,9 +495,6 @@ void main() {
     fire_color = mix(fire_color, hot_core, smoothstep(0.55, 1.0, heat));
 
     vec3 color = fire_color * ring;
-    float climbing = smoothstep(0.02, 0.10, uProgress) * (1.0 - smoothstep(0.80, 1.0, uProgress));
-    float front_glow = (1.0 - smoothstep(0.0, 0.16, abs(yN - front))) * climbing;
-    color += hot_core * front_glow * ring * 1.9;
     float a = clamp(max(max(color.r, color.g), color.b), 0.0, 1.0) * uIntensity;
     if (a <= 0.01) discard;
     finalColor = vec4(color * a, a);
@@ -394,7 +533,7 @@ void main() {
 
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { filterVisibleCells } from '../game/boardCells';
+	import { filterVisibleCells, isNudgeCoveredReel } from '../game/boardCells';
 	import { fxDur } from '../game/fxTiming';
 	import BoardSpace from './BoardSpace.svelte';
 
@@ -449,7 +588,7 @@ void main() {
 
 	const placed = $derived.by(() =>
 		cells
-			.filter((cell) => cell.reel !== context.stateGame.nudgeCoverReel)
+			.filter((cell) => !isNudgeCoveredReel(cell.reel))
 			.slice(0, MAX_CELLS)
 			.map((cell) => ({
 				key: `${cell.reel}-${cell.row}`,

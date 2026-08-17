@@ -76,8 +76,8 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'SUPER BONUS',
 			dialog:
-				'One enhanced spin at 1,000x your bet: feature symbols drop on the board AND the sealed last-reel lane is open — premiums with stacked WIN multipliers, MARK (shoots every premium, +1 multi per hit), and SUPERSPLIT. Most of these spins return less than they play for; the top of the range reaches the 99,999x max win.',
-			description: 'One enhanced spin. Last lane open: premiums, MARK, Supersplit.',
+				'One enhanced spin at 1,000x your bet: feature symbols drop on the board AND the sealed last-reel lane is open — premiums with extra WAYS, MARK (shoots every premium, +1 WIN multi when it triggers), and SUPERSPLIT (+1 WIN multi). Most of these spins return less than they play for; the top of the range reaches the 99,999x max win.',
+			description: 'One enhanced spin. Last lane open: premium ways, MARK, Supersplit.',
 			button: 'BUY',
 			betAmountLabel: 'SUPER BONUS',
 			tickerIdle: 'SUPER BONUS',
@@ -104,7 +104,7 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'SMALL BONUS · 10 SPINS',
 			dialog:
-				'THE WAKE — 10 bonus spins at 80x your bet, triggered by 3 BONUS tombstones. Feature symbols drop on the board every spin. No retriggers, and the rounds are extremely volatile: most pay back less than they cost, the top of the range reaches the 99,999x max win. Around 1 in 100 rounds drops a SUPER tombstone mid-round and UPGRADES to the big bonus — the grave lane tears open for the rest and the spins top back up.',
+				'THE WAKE — 10 bonus spins at 80x your bet, triggered by 3 BONUS tombstones. Feature symbols drop on the board every spin. The WIN multiplier resets each spin. No retriggers, and the rounds are extremely volatile: most pay back less than they cost, the top of the range reaches the 99,999x max win. Around 1 in 100 rounds drops a SUPER tombstone mid-round and UPGRADES to the big bonus — the grave lane tears open for the rest, the WIN multi becomes sticky, and the spins top back up.',
 			description: '10 bonus spins. Feature symbols drop on the board.',
 			button: 'BUY',
 			betAmountLabel: 'SMALL BONUS',
@@ -132,8 +132,8 @@ export const betModeMeta: BetModeMeta = {
 			detail: 'RTP 96.50%',
 			title: 'BIG BONUS · 10 SPINS',
 			dialog:
-				'THE RECKONING — 10 bonus spins at 2,000x your bet, triggered by 3 BONUS tombstones plus a SUPER tombstone. Feature symbols drop on the board AND the grave lane is torn open on every spin: premiums with stacked WIN multipliers, MARK (shoots every premium) and SUPERSPLIT. About 1 in 4 rounds pays more than it costs. No retriggers, brutally volatile; the top of the range reaches the 99,999x max win.',
-			description: '10 bonus spins. Lane open: premiums, MARK, Supersplit. ~25% profitable.',
+				'THE RECKONING — 10 bonus spins at 2,000x your bet, triggered by 3 BONUS tombstones plus a SUPER tombstone. Feature symbols drop on the board AND the grave lane is torn open on every spin: premiums with extra WAYS, MARK and SUPERSPLIT. The WIN multiplier is sticky across the round. About 1 in 4 rounds pays more than it costs. No retriggers, brutally volatile; the top of the range reaches the 99,999x max win.',
+			description: '10 bonus spins. Lane open: premium ways, MARK, Supersplit. WIN multi sticky.',
 			button: 'BUY',
 			betAmountLabel: 'BIG BONUS',
 			tickerIdle: 'THE RECKONING',

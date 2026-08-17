@@ -49,6 +49,17 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 		initSoundVolume: (soundName: TSoundName) => initSoundVolume(soundName),
 	});
 
+	const pause = () => {
+		(Object.values(soundMap) as Sound[]).forEach((existingSound) => {
+			if (existingSound.soundState !== 'playing') return;
+			playerOptions.howl.pause(existingSound.soundId);
+			soundMap[existingSound.soundName] = {
+				...existingSound,
+				soundState: 'paused',
+			};
+		});
+	};
+
 	const stop = (stopOptions: StopOptions<TSoundName>) => {
 		const existingSound = soundMap[stopOptions.name];
 		if (existingSound) {
@@ -100,6 +111,7 @@ function createPlayer<TSoundName extends string, TPlay extends Function>(playerO
 
 	return {
 		play,
+		pause,
 		stop,
 		fade,
 		volume,

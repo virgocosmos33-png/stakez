@@ -3,6 +3,9 @@
 Base / bought single spins are one enhanced reveal: draw, run the special
 system, evaluate ways with the accumulated WIN multiplier, settle.
 
+The WIN multiplier starts at 1x. It is sticky across SUPER / big-bonus
+spins and resets every SMALL bonus spin (and every base / single-spin book).
+
 BONUS ROUNDS (natural 3/4+ scatter triggers, or bought as freespins /
 superspins): fs_spins spins on the scatter-free FR0 strip. The SMALL tier
 keeps the special bar awake every spin; the BIG tier opens the grave lane
@@ -52,10 +55,15 @@ class GameState(GameStateOverride):
 
     def run_freespin(self) -> None:
         self.reset_fs_spin()
-        self.win_multiplier = 0
+        self.win_multiplier = 1
         conditions = self.get_current_distribution_conditions()
         while self.fs < self.tot_fs:
             self.update_freespin()
+            # SMALL bonus: reset the WIN stack every spin. SUPER / upgraded
+            # rounds keep it sticky. Check BEFORE the upgrade so the upgrade
+            # spin starts fresh, then carries forward.
+            if self.fs_tier == "small" and not self.fs_upgraded:
+                self.win_multiplier = 1
 
             # the 4th-scatter UPGRADE: rolled per spin on un-upgraded small
             # rounds; wincap books force it onto spin 1 (the cap is only

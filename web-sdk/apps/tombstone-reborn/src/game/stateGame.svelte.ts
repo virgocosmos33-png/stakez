@@ -1,11 +1,12 @@
 import _ from 'lodash';
-import type { Tween } from 'svelte/motion';
+import { Tween } from 'svelte/motion';
 
 import { stateBet, stateUi } from 'state-shared';
-import { createEnhanceBoard, createReelForCascading } from 'utils-slots';
+import { createEnhanceBoard, createReelForCascading, stateSlots } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
 import type { GameType, RawSymbol, SymbolState, SymbolName } from './types';
+import type { Atmosphere } from './atmosphere.svelte';
 import { stateLayoutDerived } from './stateLayout';
 import { winLevelMap } from './winLevelMap';
 import { eventEmitter } from './eventEmitter';
@@ -88,10 +89,11 @@ const board = _.range(BOARD_DIMENSIONS.x).map((reelIndex) => {
 					forcePlay: !stateBet.isTurbo,
 				});
 			}
-			const pending = stateGame.pendingNudge;
-			if (pending && pending.reel === reelIndex) {
+			const pendingIndex = stateGame.pendingNudges.findIndex((pending) => pending.reel === reelIndex);
+			if (pendingIndex >= 0) {
+				const pending = stateGame.pendingNudges[pendingIndex];
+				stateGame.pendingNudges = stateGame.pendingNudges.filter((_, i) => i !== pendingIndex);
 				eventEmitter.broadcast({ type: 'nudgeWaysPark', ...pending });
-				stateGame.pendingNudge = null;
 			}
 		},
 		onSymbolLand,
@@ -122,6 +124,7 @@ export type MultiplierSymbol = {
 export const stateGame = $state({
 	board,
 	gameType: 'basegame' as GameType,
+	atmosphere: 'base' as Atmosphere,
 	// TOMBSTONE REBORN: the special bar's revealed cards this spin (one entry per
 	// non-empty bar cell). Set by the specialBar book event, cleared on reveal.
 	specialBar: [] as { reel: number; kind: string }[],
@@ -205,17 +208,28 @@ export const stateGame = $state({
 	// one synchronised drop — a natural "land after the board" reel-in. Starts true
 	// so the idle board shows its cells at rest; each reveal parks then releases.
 	slotsReleased: true,
-	// NUDGE WAYS: look-ahead from the reveal book so the column can park the
-	// instant that reel stops — not after the individual NW cards have landed.
-	pendingNudge: null as null | {
+	// NUDGE WAYS: look-ahead from THIS spin's reveal so the column can park
+	// the instant that reel stops — not after the individual NW cards land.
+	// Must be this spin only: a 10-spin book has many nudgeWays, and finding
+	// the first in the whole book parked a ghost totem on every other spin.
+	pendingNudges: [] as {
 		reel: number;
 		fullReel: boolean;
 		startRow: number;
 		initialWays: number;
-	},
-	// while set, Board hides that reel's cell symbols so the tall column is
-	// the only nudge the player sees.
+	}[],
+	// while set, Board hides only the cells the totem currently covers — not
+	// the whole reel, or a bottom-cell land blanks the column above it.
 	nudgeCoverReel: null as number | null,
+	nudgeCoverReels: [] as number[],
+	nudgeCoverCells: [] as { reel: number; row: number }[],
+	// Rows being shoved off the pocket bottom while the totem grows. `t` is
+	// 0–1; each sliding symbol travels from its seat to just below the clip.
+	nudgePush: board.map(() => ({
+		rows: [] as number[],
+		bumpRows: [] as number[],
+		t: new Tween(0),
+	})),
 });
 
 const boardLayout = () => {
@@ -315,6 +329,13 @@ const scatterLandIndex = () => {
 const { enhanceBoard } = createEnhanceBoard();
 const enhancedBoard = enhanceBoard({ board: stateGame.board });
 
+/** Reels are in flight: pre-spin stagger, fall-out, hang, or fall-in.
+ *  Storybook Action keeps xstate idle during playBet, so callers must not
+ *  treat isIdle() as "the board is at rest". */
+const reelsSpinning = () =>
+	stateSlots.isPreSpinning ||
+	stateGame.board.some((reel) => reel.reelState.motion !== 'stopped');
+
 export const { getWinLevelDataByWinLevelAlias } = createGetWinLevelDataByWinLevelAlias({
 	winLevelMap,
 });
@@ -325,6 +346,7 @@ export const stateGameDerived = {
 	boardToWorld,
 	boardRaw,
 	scatterLandIndex,
+	reelsSpinning,
 	enhancedBoard,
 	getWinLevelDataByWinLevelAlias,
 };

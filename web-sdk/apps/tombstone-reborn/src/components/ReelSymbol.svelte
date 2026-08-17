@@ -8,7 +8,15 @@
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getContext } from '../game/context';
-	import { getSymbolInfo, getSymbolX, getReelYOffset, getCardHeight } from '../game/utils';
+	import {
+		getCardHeight,
+		getCellCenterY,
+		getReelPocket,
+		getReelYOffset,
+		getSymbolInfo,
+		getSymbolX,
+	} from '../game/utils';
+	import { isNudgeBumping, isNudgeCoveredCell, isNudgeSliding } from '../game/boardCells';
 	import { SYMBOL_CARD_W } from '../game/constants';
 	import { fxDur } from '../game/fxTiming';
 	import { createGlassDentFilter } from '../game/glassDentFilter';
@@ -27,12 +35,27 @@
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
 	const spinning = $derived(props.reelSymbol.symbolState === 'spin');
-	const covered = $derived(context.stateGame.nudgeCoverReel === props.reelIndex);
+	const covered = $derived(isNudgeCoveredCell(props.reelIndex, props.row));
+	const sliding = $derived(isNudgeSliding(props.reelIndex, props.row));
+	const bumping = $derived(isNudgeBumping(props.reelIndex, props.row));
 	const lastReel = context.stateGame.board.length - 1;
 	const laneShut = $derived(props.reelIndex === lastReel && !context.stateGame.lidOpen);
 	const hide = $derived(
-		covered || laneShut || (props.reelSymbol.rawSymbol.name === 'NW' && !spinning),
+		(covered && !sliding) ||
+			laneShut ||
+			(props.reelSymbol.rawSymbol.name === 'NW' && !spinning && !sliding),
 	);
+	const shoveY = $derived.by(() => {
+		const push = context.stateGame.nudgePush[props.reelIndex];
+		const t = push?.t.current ?? 0;
+		if (sliding) {
+			const pocket = getReelPocket(props.reelIndex);
+			const seat = getCellCenterY(props.reelIndex, props.row);
+			return t * (pocket.bottom + pocket.cardH - seat);
+		}
+		if (bumping) return Math.sin(t * Math.PI) * getReelPocket(props.reelIndex).cardH * 0.4;
+		return 0;
+	});
 	const laneSwap = $derived(
 		props.reelIndex === lastReel && props.row === 1 ? context.stateGame.laneCardSwap : 0,
 	);
@@ -97,7 +120,9 @@
 <SymbolWrap
 	reelIndex={props.reelIndex}
 	x={getSymbolX(props.reelIndex)}
-	y={props.reelSymbol.symbolY.current + getReelYOffset(props.reelIndex)}
+	y={props.reelSymbol.symbolY.current + getReelYOffset(props.reelIndex) + shoveY}
+	stay={sliding || bumping}
+	zIndex={sliding ? 5 : 0}
 	animating={symbolInfo.type === 'spine' &&
 		(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
 >

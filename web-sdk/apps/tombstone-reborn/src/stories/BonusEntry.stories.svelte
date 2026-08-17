@@ -35,18 +35,19 @@
 	import { playBet } from '../game/utils';
 	import type { BonusEntryTier } from '../game/bonusEntryArt';
 	import { bookByLabel } from './data/tombstone_books';
+	import { forceStorySpeed } from './playStory';
 
 	setContext();
 
 	// storybook has no wallet: fund the demo so bets and buy-bonus are clickable
 	stateBet.balanceAmount = 100000;
 	stateBet.betAmount = 1;
+	forceStorySpeed(false);
 
 	const buy =
 		(mode: BonusEntryTier, label: string, options?: { turbo?: boolean }) => async () => {
 			const data = bookByLabel(label);
-			stateBet.isTurbo = options?.turbo ?? false;
-			stateBet.isSuperTurbo = false;
+			forceStorySpeed(!!options?.turbo);
 			// what ModalBuyBonusConfirm does on confirm, and the only signal that
 			// tells playBet this round was bought
 			stateBet.activeBetModeKey = mode;

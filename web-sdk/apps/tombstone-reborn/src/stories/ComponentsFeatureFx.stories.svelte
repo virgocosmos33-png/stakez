@@ -28,6 +28,7 @@
 	import Game from '../components/Game.svelte';
 	import { getContext, setContext } from '../game/context';
 	import { planWoundRhythm, volleySeed } from '../game/gunsmokeSpin';
+	import { forceStorySpeed } from './playStory';
 
 	setContext();
 	const context = getContext();
@@ -35,9 +36,11 @@
 	// storybook has no wallet: fund the demo so the board and bets are live
 	stateBet.balanceAmount = 10_000;
 	stateBet.betAmount = 1;
+	forceStorySpeed(false);
 
 	/** Populate the resting board, then run one feature presentation on it. */
 	const onBoard = (run: () => void) => async () => {
+		forceStorySpeed(false);
 		await context.stateGameDerived.enhancedBoard.preSpin({});
 		run();
 	};

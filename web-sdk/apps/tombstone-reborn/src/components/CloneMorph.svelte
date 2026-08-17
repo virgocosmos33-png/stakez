@@ -20,7 +20,7 @@
 	import { Container, Graphics, Rectangle } from 'pixi-svelte';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
-	import { filterVisibleCells } from '../game/boardCells';
+	import { filterSplitCells } from '../game/boardCells';
 	import { fxDur } from '../game/fxTiming';
 	import { getContext } from '../game/context';
 	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
@@ -61,7 +61,7 @@
 		// opaque plates over live board cells, so if two clone cells are neighbours
 		// an arbitrary order lets a later cell's plate clip the one next to it.
 		// Skip pad / OOB rows — those sockets are empty on the diamond board.
-		cells = filterVisibleCells([...incoming])
+		cells = filterSplitCells([...incoming])
 			.sort((a, b) => a.reel - b.reel || a.row - b.row)
 			.map((c) => ({
 				key: `${c.reel}-${c.row}`,

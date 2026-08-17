@@ -1,12 +1,13 @@
 <script lang="ts" module>
-	import { ColorMatrixFilter, Filter } from 'pixi.js';
+	import { Filter } from 'pixi.js';
 
 	import { SCENE_ART as SCENE_ART_SRC } from '../game/saloonLamps';
+	import { createGradeFilter, gradeUniformsOf } from './AtmosphereFx.svelte';
 
 	export const SCENE_ART = SCENE_ART_SRC;
 
-	const BG_BW = new ColorMatrixFilter();
-	BG_BW.desaturate();
+	const bgGrade = createGradeFilter();
+	const bgGradeU = gradeUniformsOf(bgGrade);
 
 	const FILTER_VERTEX = `
 in vec2 aPosition;
@@ -44,15 +45,11 @@ void main() {
 	coc = max(coc, smoothstep(0.16, 0.0, uv.y) * 0.35);
 	coc = mix(0.0637, 0.7004, coc);
 	vec2 px = uInputSize.zw * uRadius * coc;
-	vec4 acc = texture(uTexture, uv) * 0.18;
-	acc += texture(uTexture, uv + vec2(1.0, 0.0) * px) * 0.12;
-	acc += texture(uTexture, uv + vec2(-1.0, 0.0) * px) * 0.12;
-	acc += texture(uTexture, uv + vec2(0.0, 1.0) * px) * 0.12;
-	acc += texture(uTexture, uv + vec2(0.0, -1.0) * px) * 0.12;
-	acc += texture(uTexture, uv + vec2(0.70, 0.70) * px) * 0.085;
-	acc += texture(uTexture, uv + vec2(-0.70, 0.70) * px) * 0.085;
-	acc += texture(uTexture, uv + vec2(0.70, -0.70) * px) * 0.085;
-	acc += texture(uTexture, uv + vec2(-0.70, -0.70) * px) * 0.085;
+	vec4 acc = texture(uTexture, uv) * 0.36;
+	acc += texture(uTexture, uv + vec2(1.0, 0.0) * px) * 0.16;
+	acc += texture(uTexture, uv + vec2(-1.0, 0.0) * px) * 0.16;
+	acc += texture(uTexture, uv + vec2(0.0, 1.0) * px) * 0.16;
+	acc += texture(uTexture, uv + vec2(0.0, -1.0) * px) * 0.16;
 	finalColor = acc;
 }
 `;
@@ -103,9 +100,15 @@ void main() {
 		grainFilter.resources as Record<string, { uniforms: { uTime: number; uAmount: number } }>
 	).grainUniforms.uniforms;
 
-	export const BG_PLATE_FILTERS = [BG_BW, fieldBlurFilter, grainFilter];
+	export const BG_PLATE_FILTERS = [bgGrade, fieldBlurFilter, grainFilter];
 	export const tickBgGrain = (seconds: number) => {
 		grainUniforms.uTime = seconds;
+	};
+	export const tickBgGrade = (seconds: number, sat: number, warm: number, ember: number) => {
+		bgGradeU.uTime = seconds;
+		bgGradeU.uSat = sat;
+		bgGradeU.uWarm = warm;
+		bgGradeU.uEmber = ember;
 	};
 
 	/** tungsten / kerosene — a bit warmer than the raw PNG, retro against the BW plate */
@@ -125,6 +128,7 @@ void main() {
 	import { saloonLamp } from '../game/saloonLamp.svelte';
 	import { LAMP_GLOBE } from '../game/saloonLampSmash';
 	import { getContext } from '../game/context';
+	import SuperFire from './SuperFire.svelte';
 
 	const context = getContext();
 
@@ -149,24 +153,60 @@ void main() {
 		Boolean(context.stateApp.loadedAssets?.['saloonPlate']) &&
 			Boolean(context.stateApp.loadedAssets?.['saloonLampL']),
 	);
+	const plateKey = $derived(
+		context.stateGame.atmosphere === 'super'
+			? 'saloonPlateSuper'
+			: context.stateGame.atmosphere === 'small'
+				? 'saloonPlateSmall'
+				: 'saloonPlate',
+	);
+	const showLamp = $derived(context.stateGame.atmosphere === 'base');
+	const showFire = $derived(context.stateGame.atmosphere === 'super');
 
 	let swayOrigin = $state(performance.now());
 	let rotL = $state(0);
+	/** Shot: light is already out, but the globe still rides the sway until
+	 *  the next pass through hanging-straight, then it parks. */
+	let settling = $state(false);
+	let prevRot = 0;
 
 	$effect(() => {
 		if (!context.stateXstateDerived.isIdle() && saloonLamp.smashed) {
 			saloonLamp.smashed = false;
+			settling = false;
 		}
+	});
+
+	$effect(() => {
+		if (saloonLamp.smashed) settling = true;
+		else settling = false;
 	});
 
 	onMount(() => {
 		let raf = 0;
 		const tick = (now: number) => {
-			if (saloonLamp.smashed) {
+			if (context.stateGame.atmosphere !== 'base') {
+				if (rotL !== 0) rotL = 0;
+				raf = requestAnimationFrame(tick);
+				return;
+			}
+			const phase = ((now - swayOrigin) / IDLE_PERIOD_MS) * Math.PI * 2;
+			const idle = Math.sin(phase) * IDLE_AMP_L;
+			if (!saloonLamp.smashed) {
+				if (Math.abs(idle - rotL) > 0.0004) rotL = idle;
+				prevRot = idle;
+			} else if (settling) {
+				const crossed = prevRot !== 0 && idle * prevRot <= 0;
+				if (crossed || Math.abs(idle) < 0.0015) {
+					if (rotL !== 0) rotL = 0;
+					prevRot = 0;
+					settling = false;
+				} else {
+					if (Math.abs(idle - rotL) > 0.0004) rotL = idle;
+					prevRot = idle;
+				}
+			} else if (rotL !== 0) {
 				rotL = 0;
-			} else {
-				const phase = ((now - swayOrigin) / IDLE_PERIOD_MS) * Math.PI * 2;
-				rotL = Math.sin(phase) * IDLE_AMP_L;
 			}
 			raf = requestAnimationFrame(tick);
 		};
@@ -180,7 +220,7 @@ void main() {
 	{#if hasRoom}
 		<Container filters={BG_PLATE_FILTERS}>
 			<Sprite
-				key="saloonPlate"
+				key={plateKey}
 				x={SCENE_ART.width / 2}
 				y={SCENE_ART.height / 2}
 				width={SCENE_ART.width}
@@ -188,39 +228,44 @@ void main() {
 				anchor={0.5}
 			/>
 		</Container>
-		<Container x={L.x} y={L.y} rotation={rotL}>
-			<Sprite
-				key="saloonLampGlow"
-				x={FLAME.x}
-				y={FLAME.y + 80}
-				anchor={0.5}
-				width={980}
-				height={1100}
-				alpha={saloonLamp.smashed ? 0 : 0.4}
-				tint={LAMP_GLOW_WARM}
-				blendMode="add"
-				eventMode="none"
-			/>
-			<Sprite
-				key="saloonLampL"
-				x={-L.anchorX * L.width}
-				y={-L.anchorY * L.height}
-				width={L.width}
-				height={L.height}
-				anchor={0}
-				alpha={saloonLamp.smashed ? 0 : 1}
-				tint={LAMP_WARM}
-			/>
-			<Sprite
-				key="saloonLampLSmashed"
-				x={-L.anchorX * L.width}
-				y={-L.anchorY * L.height}
-				width={L.width}
-				height={L.height}
-				anchor={0}
-				alpha={saloonLamp.smashed ? 1 : 0}
-			/>
-		</Container>
+		{#if showLamp}
+			<Container x={L.x} y={L.y} rotation={rotL}>
+				<Sprite
+					key="saloonLampGlow"
+					x={FLAME.x}
+					y={FLAME.y + 80}
+					anchor={0.5}
+					width={980}
+					height={1100}
+					alpha={saloonLamp.smashed ? 0 : 0.4}
+					tint={LAMP_GLOW_WARM}
+					blendMode="add"
+					eventMode="none"
+				/>
+				<Sprite
+					key="saloonLampL"
+					x={-L.anchorX * L.width}
+					y={-L.anchorY * L.height}
+					width={L.width}
+					height={L.height}
+					anchor={0}
+					alpha={saloonLamp.smashed ? 0 : 1}
+					tint={LAMP_WARM}
+				/>
+				<Sprite
+					key="saloonLampLSmashed"
+					x={-L.anchorX * L.width}
+					y={-L.anchorY * L.height}
+					width={L.width}
+					height={L.height}
+					anchor={0}
+					alpha={saloonLamp.smashed ? 1 : 0}
+				/>
+			</Container>
+		{/if}
+		{#if showFire}
+			<SuperFire />
+		{/if}
 	{:else}
 		<Container filters={BG_PLATE_FILTERS}>
 			<Sprite

@@ -19,6 +19,7 @@ import { stateBet } from 'state-shared';
 import { eventEmitter } from './eventEmitter';
 import { musicForBonusTier } from './bonusBgm';
 import { bonusEntryTierOf } from './bonusEntryArt';
+import { atmosphereFromMode, syncAtmosphere } from './atmosphere.svelte';
 import type { Bet } from './typesBookEvent';
 
 /**
@@ -33,6 +34,7 @@ import type { Bet } from './typesBookEvent';
 export const presentBonusEntry = async (bet: Bet) => {
 	const tier = bonusEntryTierOf(stateBet.activeBetModeKey);
 	if (tier === null) return;
+	syncAtmosphere(atmosphereFromMode(tier) ?? 'small');
 
 	// A RESUMED round is already in flight — the player saw the banner when they
 	// bought it, and its first book event is the snapshot that rebuilds state, so

@@ -13,21 +13,25 @@ Wild  (W):        the revolver (substitutes; pays only on a full 6-wide line)
 FEATURE SYMBOLS land ON THE BOARD (no left special bar). After they fire they
 transform into the revolver WILD. Nearly dead in the base game; awake in the
 Small Bonus and Super Bonus:
-  SP SPLIT          (pick 1 symbol type, add 2-7 ways to every copy)
-  GS GUNSMOKE       (turn one whole symbol type into WILDs)
-  NW NUDGE WAYS     (reels 2-3 only: land, then nudge down doubling ways)
+  SP SPLIT          (pick 1 symbol type, add 2-7 ways to every copy;
+                     also doubles a standing NUDGE stack)
+  GS GUNSMOKE       (turn one whole symbol type into WILDs;
+                     cannot hit a NUDGE stack or the rows it already ate)
+  NW NUDGE WAYS     (reels 2-3 only: fires first, nudges down doubling ways)
   SU SUPER SCATTER  (4th scatter / upgrade; also opens the last reel this spin)
 
 THE LAST-REEL LANE (reel index 5, the 1-high column). Locked normally; opened
 when a SUPER scatter lands, and permanently open in the Super Bonus / big
 bonus round. When open it drops ONLY:
-  a PREMIUM carrying a WIN multiplier (no lows, ever)
-  SH MARK     (shoots every premium; +1 stacked WIN multi per hit)
-  SS SUPERSPLIT (reel 5 turns wild AND every symbol on the board is split)
+  a PREMIUM carrying extra WAYS (no lows, ever — not a WIN multiplier)
+  SH MARK     (shoots every premium; +1 WIN multi when it triggers)
+  SS SUPERSPLIT (reel 5 turns wild AND every symbol on the board is split; +1 WIN multi)
 
 MULTIPLIERS - two distinct kinds:
-  WAYS mult  = split / nudge-ways / supersplit fold into the ways COUNT.
-  WIN  mult  = bounty / MARK stack a spin (and bonus-round) WIN multiplier.
+  WAYS mult  = split / nudge-ways / supersplit / last-reel premium fold into the ways COUNT.
+  WIN  mult  = a separate HUD stack. +1 per split, per gunsmoke shot, per
+               nudge-down step, and +1 each time MARK or SUPERSPLIT triggers.
+               Sticky across the SUPER / big bonus round; reset each SMALL bonus spin.
 
 MODES (all single enhanced spins, all can reach the 99,999x cap):
   base         1x     bar nearly dead, last lane locked, ~92% dead spins
@@ -68,8 +72,9 @@ class GameConfig(Config):
         self.num_rows = [3, 4, 4, 2, 2, 1]
 
         # WAYS paytable (per-way x bet). Per-way values are intentionally small:
-        # the extreme tail comes from split/gunsmoke exploding the ways COUNT and
-        # bounty / MARK stacking a WIN multiplier on top - not from fat base pays.
+        # the extreme tail comes from split/gunsmoke exploding the ways COUNT,
+        # last-reel premium WAYS, and the stacked WIN multiplier on top - not
+        # from fat base pays.
         self.paytable = {
             (6, "W"): 10.0,
             (6, "H1"): 5.0, (5, "H1"): 1.5, (4, "H1"): 0.5, (3, "H1"): 0.2,
@@ -151,8 +156,8 @@ class GameConfig(Config):
         }
 
         # ---- LAST-REEL LANE (reel 5) ----------------------------------------
-        # Unlocked lane NEVER drops lows. Only a premium (always with a WIN
-        # multiplier) or one of the two lane specials: MARK / SUPERSPLIT.
+        # Unlocked lane NEVER drops lows. Only a premium (always with extra
+        # WAYS on that cell) or one of the two lane specials: MARK / SUPERSPLIT.
         self.last_reel_config = {
             "drop_weights": {
                 # single unlocked spin (bought super / super-scatter open): premiums dominate
@@ -162,13 +167,13 @@ class GameConfig(Config):
                 "round": {"premium": 82, "shooter": 12, "supersplit": 6},
             },
             "premium_weights": {"H5": 26, "H4": 20, "H3": 15, "H2": 10, "H1": 6},
-            "bounty_mult_weights": {2: 40, 3: 26, 5: 16, 10: 9, 25: 5, 50: 3, 100: 1},
-            # MARK: +1 stacked WIN multi per premium it shoots
-            "shooter_add_per_premium": 1,
+            # WAYS stamped on the last-reel premium cell (not the HUD WIN multi)
+            "premium_ways_weights": {2: 40, 3: 26, 5: 16, 10: 9, 25: 5, 50: 3, 100: 1},
         }
 
         # ---- FEATURE TUNING --------------------------------------------------
         # SPLIT: pick ONE type on the board, ADD 2-7 ways to every copy.
+        # Also doubles any standing NUDGE stack (nudge fires first).
         # Ways are extremely weighted toward the low end.
         self.split_config = {
             "count_weights": {1: 1},
@@ -388,7 +393,7 @@ class GameConfig(Config):
             ),
             # BIG BONUS: 4+ scatters trigger fs_spins spins with the bar awake
             # at the bought-small level AND the grave lane permanently open -
-            # bounty / MARK / supersplit live on every spin.
+            # last-reel premium ways / MARK / supersplit live on every spin.
             BetMode(
                 name="superspins",
                 cost=2000.00,

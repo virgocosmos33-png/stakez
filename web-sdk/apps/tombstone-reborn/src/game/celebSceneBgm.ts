@@ -10,8 +10,7 @@ import { Howl } from 'howler';
 
 import { stateSoundDerived } from 'state-shared';
 
-import { pauseBonusBgm } from './bonusBgm';
-import { sound, type MusicName } from './sound';
+import { pauseModeBeds } from './bonusBgm';
 
 export const CELEB_SCENE_NAMES = [
 	'bgm_celeb_1',
@@ -44,16 +43,6 @@ export const CELEB_SCENE_MS: Record<CelebSceneName, number> = {
 };
 
 const AUDIO_END_GUARD_MS = 200;
-
-const SPRITE_BEDS: MusicName[] = [
-	'bgm_main',
-	'bgm_celeb_1',
-	'bgm_celeb_2',
-	'bgm_celeb_3',
-	'bgm_celeb_4',
-	'bgm_celeb_5',
-	'bgm_celeb_6',
-];
 
 const howls = new Map<CelebSceneName, Howl>();
 let active: CelebSceneName | null = null;
@@ -95,8 +84,7 @@ export const preloadCelebSceneBgm = () => {
 
 export const playCelebSceneBgm = (name: CelebSceneName, onEnd?: () => void) => {
 	stopCelebSceneBgm();
-	pauseBonusBgm();
-	for (const bed of SPRITE_BEDS) sound.stop({ name: bed });
+	pauseModeBeds();
 
 	const howl = track(name);
 	const gen = ++playGen;

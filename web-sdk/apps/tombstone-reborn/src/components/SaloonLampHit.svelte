@@ -2,7 +2,7 @@
 	/**
 	 * Click target over the left lantern globe. Lives in the game layer (not
 	 * the zIndex -2 room) so the board never swallows the shot. Only armed
-	 * while idle and the lamp is still lit.
+	 * while the board is at rest and the lamp is still lit.
 	 */
 	import { Rectangle } from 'pixi-svelte';
 
@@ -12,8 +12,14 @@
 
 	const context = getContext();
 	const idle = $derived(context.stateXstateDerived.isIdle());
+	const spinning = $derived(context.stateGameDerived.reelsSpinning());
 	const globe = $derived(lampGlobeCanvas(context.stateLayoutDerived.canvasSizes()));
-	const armed = $derived(idle && !saloonLamp.smashed);
+	const armed = $derived(
+		idle &&
+			!spinning &&
+			!saloonLamp.smashed &&
+			context.stateGame.atmosphere === 'base',
+	);
 
 	const smash = () => {
 		if (!armed) return;

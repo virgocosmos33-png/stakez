@@ -39,8 +39,8 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		presentDuration: 1 * SECOND,
 		sound: { sfx: 'sfx_win_ways', bgm: undefined },
 	},
-	// Big tiers: each plate holds for its scene track (scene 1..6). The
-	// takeover climbs 1 → next when that track ends, unless the player skips.
+	// Big tiers: each plate counts to its max, holds 1s, then the next
+	// plate starts (unless the player skips). Scene tracks ride along.
 	{
 		tier: 2,
 		alias: 'big',
@@ -114,8 +114,8 @@ export const getWinCelebration = (bookAmount: number): WinCelebrationData => {
 	return result;
 };
 
-// every big-win tier this amount climbs through; each plate holds for its
-// own scene track, then the next plate starts
+// every big-win tier this amount climbs through; each plate counts to its
+// max, holds 1s, then the next plate starts
 export const getTiersPassed = (bookAmount: number): WinCelebrationData[] => {
 	const multiplier = bookAmountToMultiplier(bookAmount);
 	return winCelebrationTiers.filter(

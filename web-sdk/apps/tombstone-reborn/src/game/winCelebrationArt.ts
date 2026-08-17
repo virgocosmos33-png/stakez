@@ -13,6 +13,8 @@
 
 export const WIN_CELEB_VFX_ASSET = 'winCelebVfx';
 export const WIN_CELEB_LIGHT_ASSET = 'winCelebLight';
+export const WIN_CELEB_HOLES_ASSET = 'winCelebHoles';
+export const WIN_CELEB_HOLE_COUNT = 9;
 export const WIN_SCATTER_ASSET = 'winScatter';
 export const WIN_FRAME_ASSET = 'winFrame';
 

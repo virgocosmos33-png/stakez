@@ -23,6 +23,7 @@
 		isBonusBgm,
 		pauseBonusBgm,
 		playBonusBgm,
+		preloadBonusBgm,
 		stopBonusBgm,
 		syncBonusBgmVolume,
 	} from '../game/bonusBgm';
@@ -38,18 +39,14 @@
 
 	const context = getContext();
 
-	const SPRITE_BEDS: MusicName[] = ['bgm_main'];
-
 	const playModeMusic = (name: MusicName) => {
 		if (isCelebSceneBgm(name)) {
-			for (const bed of SPRITE_BEDS) sound.stop({ name: bed });
-			pauseBonusBgm();
 			playCelebSceneBgm(name);
 			return;
 		}
 		stopCelebSceneBgm();
 		if (isBonusBgm(name)) {
-			for (const bed of SPRITE_BEDS) sound.stop({ name: bed });
+			sound.players.music.pause();
 			playBonusBgm(name);
 			return;
 		}
@@ -93,6 +90,7 @@
 	onMount(() => {
 		preloadExternal(WAYS_WIN_SFX);
 		preloadCelebSceneBgm();
+		preloadBonusBgm();
 		sound.players.music.play({ name: 'bgm_main' });
 	});
 

@@ -17,20 +17,16 @@
 
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
-	import { playBet } from '../game/utils';
-	import { bookByLabel } from './data/tombstone_books';
+	import { forceStorySpeed, playStory } from './playStory';
 
 	setContext();
 
 	// storybook has no wallet: fund the demo so bets and buy-bonus are clickable
 	stateBet.balanceAmount = 10000;
 	stateBet.betAmount = 1;
+	forceStorySpeed(false);
 
-	const play = (label: string) => async () => {
-		const data = bookByLabel(label);
-		console.log(`Running the "${label}" showcase book (${data.payoutMultiplier}x)`);
-		await playBet({ ...data, state: data.events } as never);
-	};
+	const play = playStory;
 </script>
 
 {#snippet template(args: TemplateArgs<any>)}
@@ -53,14 +49,14 @@
 	{template}
 />
 
-<!-- the rare base-game spin where a feature symbol drops onto the board -->
+<!-- SPLIT on a gunslinger board: one face connects, then every copy gains ways -->
 <Story
 	name="boardSpecial"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('base_special') })}
 	{template}
 />
 
-<!-- GUNSMOKE: lows get holes only; specials stain the iron cell-frame mask -->
+<!-- GUNSMOKE: shoots the L5s into wilds; the gunslinger then runs the whole board -->
 <Story
 	name="gunsmoke"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('gunsmoke') })}
@@ -72,14 +68,14 @@
 	{template}
 />
 
-<!-- SPLIT: one symbol type on the board gains extra ways -->
+<!-- SPLIT: gunslinger fills the first four reels, then every copy gains ways -->
 <Story
 	name="split"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('split') })}
 	{template}
 />
 
-<!-- SUPER scatter: the sealed last-reel lane cracks open for this spin -->
+<!-- SUPER scatter: the sealed last-reel lane cracks open; the premium wears WAYS, not WIN multi -->
 <Story
 	name="super scatter"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('tombstone') })}

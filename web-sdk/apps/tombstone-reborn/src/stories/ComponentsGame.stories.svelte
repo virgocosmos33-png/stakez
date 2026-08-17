@@ -21,9 +21,11 @@
 	import Game from '../components/Game.svelte';
 	import { getContext, setContext } from '../game/context';
 	import { getReelWindow, getReelYOffset } from '../game/utils';
+	import { forceStorySpeed } from './playStory';
 
 	setContext();
 	const context = getContext();
+	forceStorySpeed(false);
 
 	// QA probe: run a whole spin cycle (preSpin fall-out -> reveal fall-in) and
 	// measure, from live reel state, how long the board shows ZERO symbols inside
