@@ -12,19 +12,32 @@
 	const context = getContextApp();
 
 	let preLoaded = $state(false);
+	let lazyStarted = $state(false);
+
+	const VIDEO_LOAD_MS = 8_000;
 
 	const assetNameList = $derived(
 		context.stateApp.assets
-			? Object.keys(context.stateApp.assets).filter(
-					(key) => Boolean(context.stateApp.assets?.[key].preload) === false,
-				)
+			? Object.keys(context.stateApp.assets).filter((key) => {
+					const asset = context.stateApp.assets?.[key];
+					return Boolean(asset?.preload) === false && asset?.lazy !== true;
+				})
 			: [],
 	);
 
 	const preAssetNameList = $derived(
 		context.stateApp.assets
+			? Object.keys(context.stateApp.assets).filter((key) => {
+					const asset = context.stateApp.assets?.[key];
+					return asset?.preload === true && asset?.lazy !== true;
+				})
+			: [],
+	);
+
+	const lazyAssetNameList = $derived(
+		context.stateApp.assets
 			? Object.keys(context.stateApp.assets).filter(
-					(key) => context.stateApp.assets?.[key].preload === true,
+					(key) => context.stateApp.assets?.[key].lazy === true,
 				)
 			: [],
 	);
@@ -46,7 +59,19 @@
 					const { type, src } = context.stateApp.assets![key];
 					const loadSrc =
 						type === 'spine' ? Object.values(src).filter((item) => typeof item === 'string') : src;
-					const rawAsset = await PIXI.Assets.load<RawAsset>(loadSrc, onProgress);
+					const loadPromise = PIXI.Assets.load<RawAsset>(loadSrc, onProgress);
+					const srcUrl = typeof src === 'string' ? src : '';
+					const isVideo = /\.(webm|mp4|mov)(\?|#|$)/i.test(srcUrl);
+					const rawAsset = isVideo
+						? await Promise.race([
+								loadPromise,
+								new Promise<never>((_, reject) => {
+									setTimeout(() => {
+										reject(new Error(`Asset "${key}" timed out after ${VIDEO_LOAD_MS}ms`));
+									}, VIDEO_LOAD_MS);
+								}),
+							])
+						: await loadPromise;
 					const processed = getProcessed({ key, rawAsset, type, src });
 					return processed;
 				} catch (error) {
@@ -89,6 +114,22 @@
 				}
 				context.stateApp.loaded = true;
 			})();
+		}
+	});
+
+	$effect(() => {
+		if (context.stateApp.loaded && !lazyStarted) {
+			lazyStarted = true;
+			if (lazyAssetNameList.length > 0) {
+				loadAssets(lazyAssetNameList).then((lazyAssets) => {
+					if (lazyAssets) {
+						context.stateApp.loadedAssets = {
+							...context.stateApp.loadedAssets,
+							...lazyAssets,
+						};
+					}
+				});
+			}
 		}
 	});
 </script>

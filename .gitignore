@@ -22,6 +22,7 @@ Thumbs.db
 # API credentials — never commit
 scenariocrd.txt
 godmodeapi.txt
+elevenlabscrd.txt
 
 # QA capture output (screenshots/videos, regenerable via tools/qa_*.py)
 qa-shots/

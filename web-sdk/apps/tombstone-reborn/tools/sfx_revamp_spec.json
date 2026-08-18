@@ -1,0 +1,251 @@
+{
+  "_readme": "Live Tombstone Reborn SFX. Authored file length equals the 1x visual beat. Door cues are already locked and must not be regenerated. Dead Madam / tumble / celeb-whoosh / cell-seal leftovers are omitted. bonus_handoff stays on the Howler sprite (stem-layered).",
+  "shared_suffix": "Starts immediately. Dry close dusty western slap. Wood iron brass powder dirt only. No choir crystal synth cartoon laser voices.",
+  "skip": ["sfx_door_creak", "sfx_door_close", "sfx_bonus_handoff"],
+  "families": {
+    "knives": [
+      {
+        "name": "sfx_split",
+        "duration_ms": 450,
+        "prompt": "A throwing knife cuts the air then steel bites a painted card in one continuous slash. Air hiss into a hard steel slice, no gunshot, no wood splinter, no explosion."
+      },
+      {
+        "name": "sfx_split_hit",
+        "duration_ms": 180,
+        "prompt": "A steel knife tip punching through a stiff painted card. Short sharp metal bite, one hit only, no gunshot, no ricochet, no wood."
+      },
+      {
+        "name": "sfx_split_bite",
+        "duration_ms": 220,
+        "prompt": "A heavier steel knife finishing bite through a card, last stab of a volley. Deeper metal crunch than a light poke, still steel not powder, no gunshot, no ricochet."
+      },
+      {
+        "name": "sfx_split_thunk",
+        "duration_ms": 180,
+        "prompt": "A heavy throwing knife thunking into a wooden card, steel tip biting dry oak, solid low wood thud, short grit, no gunshot, no ricochet, no slash whoosh."
+      },
+      {
+        "name": "sfx_split_seam_tear",
+        "duration_ms": 180,
+        "prompt": "A painted card seam tearing open as knives start, dry canvas and paper rip with a tiny grit puff, no metal clash, no gunshot."
+      }
+    ],
+    "guns": [
+      {
+        "name": "sfx_muzzle",
+        "duration_ms": 160,
+        "prompt": "Close .44 revolver muzzle blast only: hard gunpowder crack and a puff of smoke, no ricochet, no wood hit, no shell bounce, no echo tail."
+      },
+      {
+        "name": "sfx_gunsmoke",
+        "duration_ms": 900,
+        "prompt": "A revolver powder bloom swallowing a card: gunpowder burst then thick dry gunsmoke rolling outward across wood, grit in the air, no extra gunshots after the first crack."
+      },
+      {
+        "name": "sfx_lamp_smash",
+        "duration_ms": 400,
+        "prompt": "A hanging brass saloon lantern smashed by a bullet: brass cage crumple, lantern glass bursting, oil lamp puff, iron hook rattle. This is the one allowed glass sound. No gunshot layered on top, no mirror shatter."
+      },
+      {
+        "name": "sfx_celeb_stamp",
+        "duration_ms": 180,
+        "prompt": "A small brass hole punch stamping a paper wanted poster, soft dry thud with a tiny brass tick, not a gunshot, not a ricochet, not a slam."
+      },
+      {
+        "name": "sfx_shot_reveal",
+        "duration_ms": 280,
+        "prompt": "A shot card flipping to a revolver wild: painted face folding, brass cylinder click, dry wood seat. Not a gunshot, not an explosion, not a whoosh."
+      }
+    ],
+    "board": [
+      {
+        "name": "sfx_reel_stop_1",
+        "duration_ms": 220,
+        "prompt": "One slot reel settling into a dry oak frame, short wooden thunk with a little dust, no metal ring, no bounce."
+      },
+      {
+        "name": "sfx_scatter_stop_1",
+        "duration_ms": 400,
+        "prompt": "A scatter tombstone token landing, lowest of a rising set: light granite tap on wood and a faint iron tick."
+      },
+      {
+        "name": "sfx_scatter_stop_2",
+        "duration_ms": 480,
+        "prompt": "A scatter tombstone token landing, step two of five: firmer granite and iron, slightly heavier than the first."
+      },
+      {
+        "name": "sfx_scatter_stop_3",
+        "duration_ms": 560,
+        "prompt": "A scatter tombstone token landing, middle of a rising set: solid granite drop, iron chain tick, more weight."
+      },
+      {
+        "name": "sfx_scatter_stop_4",
+        "duration_ms": 640,
+        "prompt": "A scatter tombstone token landing, step four of five: heavy granite and cracked iron, urgent and close."
+      },
+      {
+        "name": "sfx_scatter_stop_5",
+        "duration_ms": 720,
+        "prompt": "A scatter tombstone token landing, highest of five: hardest granite slam with a short cracked-iron accent, still dry and short."
+      },
+      {
+        "name": "sfx_tombstone_toll",
+        "duration_ms": 1000,
+        "prompt": "One cracked cast-iron church bell struck hard, layered with a granite tombstone hitting dry dirt and a deep timpani thump. Fast dusty decay, no long cathedral tail, no choir."
+      },
+      {
+        "name": "sfx_wild_land",
+        "duration_ms": 280,
+        "prompt": "A revolver wild card planting onto a board: cylinder click, brass and wood seating, dry and confident. Not a gunshot, not an explosion."
+      }
+    ],
+    "lane": [
+      {
+        "name": "sfx_lane_card",
+        "duration_ms": 320,
+        "prompt": "A gold bounty card sliding across dry oak into a pocket, wood scrape then a short brass-edged stop, no slam, no explosion."
+      },
+      {
+        "name": "sfx_lane_wild",
+        "duration_ms": 280,
+        "prompt": "A lane announcing a wild: iron and brass plant with a dry wood knock. Not an explosion, not a gunshot."
+      },
+      {
+        "name": "sfx_special_hit",
+        "duration_ms": 200,
+        "prompt": "A special symbol planting into an iron cell bar, short cold-iron clack on wood, one hit."
+      },
+      {
+        "name": "sfx_bounty",
+        "duration_ms": 820,
+        "prompt": "A lantern-gold bounty bloom behind a card: warm brass swell, oil-lamp flicker, dry dust lift, no choir, no crystal shimmer."
+      },
+      {
+        "name": "sfx_lock_snap",
+        "duration_ms": 150,
+        "prompt": "Iron wanted-poster corner brackets snapping shut onto a card, one hard iron snap, no gunshot."
+      },
+      {
+        "name": "sfx_lock_release",
+        "duration_ms": 180,
+        "prompt": "Iron wanted-poster brackets releasing off a card, short iron scrape and lift, no chain pile-up."
+      },
+      {
+        "name": "sfx_ways_stretch",
+        "duration_ms": 280,
+        "prompt": "A brass ways badge popping onto a card, wood and brass pop, stretchy but dry, no synth, no cartoon boing."
+      }
+    ],
+    "fire": [
+      {
+        "name": "sfx_fire_ignite",
+        "duration_ms": 400,
+        "prompt": "Dry black-powder fuse catching: sharp match scrape into a whoosh of flame on pine, grit in the air, no explosion yet."
+      },
+      {
+        "name": "sfx_fire_loop",
+        "duration_ms": 6000,
+        "loop": true,
+        "prompt": "Seamless looping close campfire on dry pine and oak, steady crackle and low flame roar, dusty saloon hearth, no impacts, no music, loop with no gap."
+      },
+      {
+        "name": "sfx_fire_flare",
+        "duration_ms": 350,
+        "prompt": "A fire flaring hotter for a moment, dry flame whoosh and crackle spike, no explosion."
+      },
+      {
+        "name": "sfx_fire_out",
+        "duration_ms": 500,
+        "prompt": "Flames dying on charred wood: last crackles, smoke hiss, coals settling, no water, no explosion."
+      },
+      {
+        "name": "sfx_reel_nudge",
+        "duration_ms": 200,
+        "prompt": "One slot reel nudged a single notch, dry wood ratchet and a short iron tick, one step only."
+      },
+      {
+        "name": "sfx_fuse_crackle",
+        "duration_ms": 600,
+        "prompt": "A short mining fuse burning: sizzle, spark spit, powder hiss, dry and close, no boom at the end."
+      },
+      {
+        "name": "sfx_ember_whoosh",
+        "duration_ms": 400,
+        "prompt": "Hot embers and grit whooshing past, dry dusty air, no tonal synth, no shimmer."
+      },
+      {
+        "name": "sfx_wild_explode",
+        "duration_ms": 800,
+        "prompt": "A wild card detonating as a black-powder charge: contained blast, smoke and grit, wood debris, not a revolver muzzle, not a ricochet."
+      }
+    ],
+    "bonus": [
+      {
+        "name": "sfx_anticipation",
+        "duration_ms": 8000,
+        "loop": true,
+        "prompt": "Seamless looping western standoff bed: low dusty wind over a graveyard, distant thunder rumble, rope and dry wood under strain, barely-there tremolo guitar drone. No melody resolution, no impacts, seamless loop."
+      },
+      {
+        "name": "sfx_bonus_entry_small",
+        "duration_ms": 3000,
+        "prompt": "Dead man's hand bonus entry: a deck of cards riffled fast then slapped on a bare plank table, a tin sheriff star ringing once, deep low hit underneath. Continuous for the whole three seconds, no silence at the start, no vocals."
+      },
+      {
+        "name": "sfx_bonus_entry_super",
+        "duration_ms": 3000,
+        "prompt": "Open grave bonus entry: a heavy wooden coffin lid cracking apart, packed earth tearing and soil pouring, rising brass swell underneath. Continuous for three seconds, dark dusty graveyard, no vocals."
+      },
+      {
+        "name": "sfx_win_ways",
+        "duration_ms": 900,
+        "prompt": "A dark western ways-win sting: wood sign slam, dark brass stab, distant revolver echo and low thunder, iron chain rattle. Grim and short, no harmonica flourish, no vocals."
+      },
+      {
+        "name": "sfx_multiplier_up",
+        "duration_ms": 280,
+        "prompt": "A brass tally ratchet climbing one short step, dry mechanical tick-up with a tiny iron latch, no long climb, no chime."
+      },
+      {
+        "name": "sfx_thunder",
+        "duration_ms": 2500,
+        "prompt": "Close prairie lightning over a graveyard: sharp electric crack then rolling thunder across open desert, dry wind underneath. Win-cap only, no rain music, no choir."
+      },
+      {
+        "name": "sfx_shovel_strike_1",
+        "duration_ms": 200,
+        "prompt": "A spade blade biting dry grave dirt, take one, lowest thunk, grit spray, no metal clang."
+      },
+      {
+        "name": "sfx_shovel_strike_2",
+        "duration_ms": 200,
+        "prompt": "A spade blade biting dry grave dirt, take two, different angle, slightly brighter grit, no copy of take one."
+      },
+      {
+        "name": "sfx_shovel_strike_3",
+        "duration_ms": 200,
+        "prompt": "A spade blade biting dry grave dirt, take three, heavier scoop of packed earth, still a short strike."
+      },
+      {
+        "name": "sfx_shovel_settle",
+        "duration_ms": 220,
+        "prompt": "A planted shovel handle shivering then settling in dry dirt after the last blade bite, wood and grit, no more strikes."
+      },
+      {
+        "name": "sfx_tombstone_open",
+        "duration_ms": 1000,
+        "prompt": "A wooden coffin lid bursting open in dry dirt: wood crack, spoil thrown, lantern light shaft whoosh, graveyard grit. One action, no choir."
+      },
+      {
+        "name": "sfx_btn_general",
+        "duration_ms": 120,
+        "prompt": "A short brass-and-wood UI click, dry saloon switch, tiny and tight, no beep, no glass."
+      },
+      {
+        "name": "sfx_btn_spin",
+        "duration_ms": 150,
+        "prompt": "A revolver hammer cock used as a spin button, short dry click, no gunshot."
+      }
+    ]
+  }
+}

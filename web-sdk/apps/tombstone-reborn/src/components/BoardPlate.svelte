@@ -81,25 +81,38 @@
 	const layout = $derived(context.stateGameDerived.boardLayout());
 </script>
 
-<Container zIndex={1} x={layout.x} y={layout.y} pivot={layout.pivot} scale={layout.scale}>
-	{#each slots as slot (slot.key)}
+<Container
+	sortableChildren
+	x={layout.x}
+	y={layout.y}
+	pivot={layout.pivot}
+	scale={layout.scale}
+>
+	<!-- Atmosphere swaps remount the small/super chain + frame sprites.
+		Without explicit z, the new chain tiles attach after the timber and
+		ride on top of it. Always: chains, then slots, then the ring. -->
+	<Container zIndex={0}>
+		<ReelChains />
+	</Container>
+	<Container zIndex={1}>
+		{#each slots as slot (slot.key)}
+			<Sprite
+				key="boardSlotFrame"
+				x={slot.cx}
+				y={slot.cy}
+				anchor={0.5}
+				width={CELL_PITCH_X}
+				height={slot.h}
+			/>
+		{/each}
+	</Container>
+	<Container zIndex={2}>
 		<Sprite
-			key="boardSlotFrame"
-			x={slot.cx}
-			y={slot.cy}
-			anchor={0.5}
-			width={CELL_PITCH_X}
-			height={slot.h}
+			key={frameKey}
+			x={frameBox.x}
+			y={frameBox.y}
+			width={frameBox.w}
+			height={frameBox.h}
 		/>
-	{/each}
-
-	<ReelChains />
-
-	<Sprite
-		key={frameKey}
-		x={frameBox.x}
-		y={frameBox.y}
-		width={frameBox.w}
-		height={frameBox.h}
-	/>
+	</Container>
 </Container>

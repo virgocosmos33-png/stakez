@@ -31,7 +31,14 @@ export type RawAsset = RawSpine | RawSprite | RawSprites | RawSpriteSheet | RawA
 export type RawType = 'spine' | 'sprite' | 'sprites' | 'spriteSheet' | 'font' | 'audio';
 
 export type SpineSrc = { skeleton: string; atlas: string; scale?: number };
-export type Asset = { type: RawType; src: string | SpineSrc; preload?: boolean };
+export type Asset = {
+	type: RawType;
+	src: string | SpineSrc;
+	preload?: boolean;
+	// Skip both boot batches. Use for video / other decoders that can hang
+	// PIXI.Assets.load and leave Storybook or the game on a permanent loader.
+	lazy?: boolean;
+};
 export type Assets = PIXI.Dict<Asset>;
 
 export type ParticleSpawnOption =

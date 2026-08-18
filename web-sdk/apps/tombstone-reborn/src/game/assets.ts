@@ -299,7 +299,10 @@ export default {
 	roomSmoke: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/room_smoke.webm', import.meta.url).href,
-		preload: true,
+		// Super-only weather. PIXI.Assets.load of a webm can sit on
+		// loadeddata forever in the Storybook iframe and freeze every story
+		// on "Initialising...". Boot must not wait on it.
+		lazy: true,
 	},
 	// BONUS-ENTRY BANNER hero plates, one per real buy mode — DEAD MAN'S HAND for
 	// bonus_small (80x, the six-card special bar awake) and OPEN GRAVE for
@@ -538,8 +541,8 @@ export default {
 		src: new URL('../../assets/sprites/mirror/wr_scatter_blur.png', import.meta.url).href,
 		preload: true,
 	},
-	// SPLIT: transparent Bowie + horizontal ember slash (tools/make_split_knife.py).
-	// The knife flies right→left; the slash is the cut it leaves. Panes snap on impact.
+	// SPLIT: older throw / slash stills kept on disk for revert. Live stab
+	// uses splitHandKnife (Knife split.png) — no airborne knife, no wood burst.
 	splitKnife: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_split_knife.png', import.meta.url).href,
@@ -548,6 +551,57 @@ export default {
 	splitSlash: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_split_slash.png', import.meta.url).href,
+		preload: true,
+	},
+	splitThrowKnife: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_throw_knife.png', import.meta.url).href,
+		preload: true,
+	},
+	splitKnifeImpact: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_knife_impact.png', import.meta.url).href,
+		preload: true,
+	},
+	splitHandKnife: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_hand_knife.png', import.meta.url).href,
+		preload: true,
+	},
+	// SPLIT cut: Kenney CC0 trace/scratch/slash + splat drips, blood-baked.
+	splitCutLine: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_cut_line.png', import.meta.url).href,
+		preload: true,
+	},
+	splitCutScratch: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_cut_scratch.png', import.meta.url).href,
+		preload: true,
+	},
+	splitCutSmear: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_cut_smear.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_1.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_2.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_3.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_4.png', import.meta.url).href,
 		preload: true,
 	},
 	// GUNSMOKE: prop_19 revolver on the landed GS card. It wheel-spins

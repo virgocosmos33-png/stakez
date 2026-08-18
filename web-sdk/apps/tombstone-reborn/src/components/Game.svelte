@@ -19,6 +19,7 @@
 	} from '../game/gameInfo';
 	import { applyHudTheme } from '../game/hudInit';
 	import { stateShake } from '../game/stateShake.svelte';
+	import { BOARD_HIT_Z, BOARD_REELS_Z, BOARD_TIMBER_Z, SPLIT_KNIFE_Z } from '../game/constants';
 	import { LANE_DOOR_Z } from '../game/laneDoor';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
@@ -129,6 +130,11 @@
 			stateModal.modal = { name: 'buyBonusConfirm' };
 		},
 	});
+
+	$effect(() => {
+		const stage = context.stateApp.pixiApplication?.stage;
+		if (stage) stage.sortableChildren = true;
+	});
 </script>
 
 <App>
@@ -168,74 +174,76 @@
 			</MainContainer>
 		{/if}
 
-		<!-- Chains (z 0) under the timber (z 1), boxes (z 2) in front.
-			Same MainContainer so zIndex actually sorts them. -->
-		<MainContainer>
-			<SpecialBar />
-			<BoardPlate />
-		</MainContainer>
+		<!-- ONE sortable board stack. Timber at 1 buried FeatureBurst / any
+			z-0 pistol FX under boardFrameSmall. Every board hit lives here
+			above the wood, so a remount cannot jump the frame over the holes. -->
+		<Container sortableChildren>
+			<Container zIndex={BOARD_TIMBER_Z} sortableChildren>
+				<MainContainer>
+					<SpecialBar />
+					<BoardPlate />
+				</MainContainer>
+			</Container>
 
-		<MainContainer>
-			<Board />
-			<Anticipations />
-		</MainContainer>
+			<Container zIndex={BOARD_REELS_Z}>
+				<MainContainer>
+					<Board />
+					<Anticipations />
+				</MainContainer>
+			</Container>
 
-		<!-- LAST-REEL LANE: one MainContainer so the lid zIndex actually
-			sorts above the sliding gold card. The wrapper stays above the
-			board (and the timber slot) so the door never sits under a card. -->
-		<Container zIndex={LANE_DOOR_Z}>
-			<MainContainer>
-				<LaneGoldCard />
-				<LaneLidLock />
-			</MainContainer>
+			<Container zIndex={BOARD_HIT_Z}>
+				<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle
+					fire, and smoke. Cleared the moment a spin starts. -->
+				<BulletHits />
+				<!-- Left lantern globe: smash the glass, kill the light until next spin. -->
+				<SaloonLampHit />
+
+				<!-- Last-reel premium WAYS badge (HUD WIN multi is a separate stack). -->
+				<StretchWays />
+
+				<!-- Legacy sideways nudge (old books only). -->
+				<NudgeSlide />
+
+				<!-- NUDGE WAYS: full-reel totem slides down; header seats on the board. -->
+				<NudgeWays />
+
+				<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
+				<FeatureBurst />
+
+				<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD. -->
+				<CloneMorph />
+
+				<!-- Any symbol becoming a WILD flips to show the bottle on the back. -->
+				<WildFlip />
+
+				<!-- Marks the symbols a feature is about to hit. -->
+				<TargetLock />
+
+				<!-- Linked / connected cells burn: cell borders and the reel edges they
+					sit on. Split cells now carry their own thin pane seams. -->
+				<LinkedCellFire />
+
+				<!-- GUNSMOKE / special hits: blood stains clip to the iron cell frame. -->
+				<GunsmokeWounds />
+
+				<WinSweep />
+			</Container>
+
+			<!-- LAST-REEL LANE: one MainContainer so the lid zIndex actually
+				sorts above the sliding gold card. -->
+			<Container zIndex={LANE_DOOR_Z}>
+				<MainContainer>
+					<LaneGoldCard />
+					<LaneLidLock />
+				</MainContainer>
+			</Container>
+
+			<!-- SPLIT / SUPERSPLIT: knife slash, then N panes (up to 4). -->
+			<Container zIndex={SPLIT_KNIFE_Z}>
+				<SplitPanes />
+			</Container>
 		</Container>
-
-		<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle
-			fire, and smoke. Cleared the moment a spin starts. -->
-		<BulletHits />
-		<!-- Left lantern globe: smash the glass, kill the light until next spin. -->
-		<SaloonLampHit />
-
-		<!-- Last-reel premium WAYS badge (HUD WIN multi is a separate stack). -->
-		<StretchWays />
-
-		<!-- Legacy sideways nudge (old books only). -->
-		<NudgeSlide />
-
-		<!-- NUDGE WAYS: full-reel totem slides down; header seats on the board. -->
-		<NudgeWays />
-
-		<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
-		<FeatureBurst />
-
-		<!-- SPLIT / SUPERSPLIT: knife slash, then N panes (up to 4). -->
-		<SplitPanes />
-
-		<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD. -->
-		<CloneMorph />
-
-		<!-- Any symbol becoming a WILD flips to show the bottle on the back. -->
-		<WildFlip />
-
-		<!-- Marks the symbols a feature is about to hit. -->
-		<TargetLock />
-
-		<!-- Linked / connected cells burn: cell borders and the reel edges they
-			sit on. Split cells now carry their own thin pane seams. -->
-		<LinkedCellFire />
-
-		<!-- GUNSMOKE / special hits: blood stains clip to the iron cell frame. -->
-		<GunsmokeWounds />
-
-		<!-- SceneCharacter REMOVED: the patient beside the reels is gone. The
-			right of the board is now empty room by design — do not remount her
-			without asking. -->
-
-		<!-- BoardFramePlasma REMOVED: freegame fluorescent frame overlay was blamed
-			for dashed cutlines; real dashes were baked into mirror_frame_wide.png
-			lips (see tools/strip_frame_quilt_dashes.py). Do not remount. -->
-
-		<WinSweep />
 
 		<!-- SCREEN-LEVEL PRESENTATION — one zIndex layer ABOVE the cell effects.
 			CellFlameBorder (9) / CellLightning (10) carry a zIndex so stretch /

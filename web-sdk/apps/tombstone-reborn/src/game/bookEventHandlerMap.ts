@@ -222,7 +222,6 @@ const applySplit = async (
 		| BookEventOfType<'splitOutlaws'>,
 	tone: 'split' | 'stretch' | 'clone',
 ) => {
-	eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 	// Pad / mid-shove cells stay out. A parked nudge stack is a legal split
 	// target — the book already doubled those ways.
 	const cells = filterSplitCells(bookEvent.cells);
@@ -285,7 +284,7 @@ const applySplit = async (
 /** Settle those cells to WILD, then flip each card so the bottle is on the back. */
 const playWildFlip = async (
 	cells: { reel: number; row: number; from?: SymbolName }[],
-	opts?: { shoot?: boolean },
+	opts?: { shoot?: boolean; afterShot?: boolean },
 ) => {
 	const visible = filterVisibleCells(cells);
 	if (!visible.length) return;
@@ -308,6 +307,7 @@ const playWildFlip = async (
 		type: 'wildFlipShow',
 		cells: faces,
 		shoot: opts?.shoot,
+		afterShot: opts?.afterShot,
 	});
 };
 
@@ -337,7 +337,7 @@ const playGunsmokeShoot = async (
 			flightScale: shot?.flightScale,
 			side: shot?.side,
 		});
-		await playWildFlip([{ ...cell, from }], { shoot: false });
+		await playWildFlip([{ ...cell, from }], { afterShot: true });
 		if ((shot?.beatMs ?? 0) > 0) await fxWait(shot.beatMs);
 	}
 };
@@ -549,7 +549,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// GUNSMOKE — every copy of one symbol type morphs into the revolver WILD
 	gunsmoke: async (bookEvent: BookEventOfType<'gunsmoke'>) => {
 		stateGame.specialBarActiveKind = 'gunsmoke';
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
 		const cells = filterGunsmokeCells(bookEvent.cells);
 		if (!cells.length) {
 			eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
@@ -647,7 +646,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.lidOpen = true; // the lane fired, so it can't still be boarded
 		// the lane announces itself: golden crossed revolvers flash in the cell
 		await eventEmitter.broadcastAsync({ type: 'laneCardShow', kind: 'supersplit' });
-		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lane_wild' });
 		const last = stateGame.board.length - 1;
 
 		const newBoard = rawBoardCopy();

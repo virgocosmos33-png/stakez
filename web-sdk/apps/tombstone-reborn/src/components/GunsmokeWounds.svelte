@@ -38,7 +38,7 @@
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { getContext } from '../game/context';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
-	import { SYMBOL_CARD_W } from '../game/constants';
+	import { GUNSMOKE_WOUND_Z, SYMBOL_CARD_W } from '../game/constants';
 	import { fxDur, fxWait } from '../game/fxTiming';
 	import { fxRandom } from '../game/featureVfx';
 	import {
@@ -281,10 +281,12 @@
 	});
 </script>
 
+<!-- Stage z: nested 11 never beat a remounted boardFrameSmall at App sort. -->
+<Container zIndex={GUNSMOKE_WOUND_Z} eventMode="none">
 <MainContainer>
 	{#if placed.length || flying.length || puffs.length}
 		<BoardSpace yOffset={fallOut.current}>
-			<Container zIndex={11} eventMode="none">
+			<Container eventMode="none">
 				{#each flying as round (round.id)}
 					<Sprite
 						key={round.bulletKey}
@@ -349,3 +351,4 @@
 		</BoardSpace>
 	{/if}
 </MainContainer>
+</Container>

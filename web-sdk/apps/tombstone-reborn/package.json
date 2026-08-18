@@ -7,6 +7,8 @@
 		"format": "prettier --write --ignore-path=../../.prettierignore .",
 		"lint": "eslint \"src\"",
 		"storybook": "cross-env PUBLIC_CHROMATIC=true storybook dev -p 6009 public",
+		"prestorybook": "python tools/sync_static_assets.py",
+		"predev": "python tools/sync_static_assets.py",
 		"dev": "vite dev --host --port 3009",
 		"build": "vite build",
 		"preview": "vite preview"

@@ -217,8 +217,8 @@
 		const holes = kept.filter((hit) => hit.kind === 'hole');
 		amountHits = [...(holes.length > 10 ? holes.slice(holes.length - 10) : holes), flash, hole];
 
-		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_gunshot' });
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
+		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_celeb_stamp' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_stamp', forcePlay: true });
 	};
 
 	const armShotVolley = (

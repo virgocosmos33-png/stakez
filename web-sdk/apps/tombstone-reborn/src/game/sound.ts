@@ -60,6 +60,18 @@ export type SoundEffectName =
 	| 'sfx_bullet_wood'
 	| 'sfx_bullet_ricochet'
 	| 'sfx_gunshot'
+	| 'sfx_muzzle'
+	| 'sfx_lamp_smash'
+	| 'sfx_celeb_stamp'
+	| 'sfx_shot_reveal'
+	| 'sfx_wild_land'
+	| 'sfx_lane_card'
+	| 'sfx_lane_wild'
+	| 'sfx_split'
+	| 'sfx_split_hit'
+	| 'sfx_split_bite'
+	| 'sfx_split_thunk'
+	| 'sfx_ways_stretch'
 	| 'sfx_split_seam_tear'
 	// fire on linked cells / reel edges: ignite one-shot, sustained burn bed,
 	// escalation flare, burn-out tail
