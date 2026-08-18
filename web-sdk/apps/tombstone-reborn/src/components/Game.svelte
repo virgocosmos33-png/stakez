@@ -46,6 +46,7 @@
 	import WinSweep from './WinSweep.svelte';
 	import TapToSkip from './TapToSkip.svelte';
 	import BonusEntry from './BonusEntry.svelte';
+	import RoomAtmosphere from './RoomAtmosphere.svelte';
 	import BulletHits from './BulletHits.svelte';
 	import SaloonLampHit from './SaloonLampHit.svelte';
 	import LaneLidLock from './LaneLidLock.svelte';
@@ -201,7 +202,7 @@
 		<!-- Legacy sideways nudge (old books only). -->
 		<NudgeSlide />
 
-		<!-- NUDGE WAYS: full-reel totem, clipped from the top, grows down. -->
+		<!-- NUDGE WAYS: full-reel totem slides down; header seats on the board. -->
 		<NudgeWays />
 
 		<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
@@ -283,6 +284,8 @@
 		</Container>
 	{/if}
 </App>
+
+<RoomAtmosphere />
 
 <Modals>
 	{#snippet version()}

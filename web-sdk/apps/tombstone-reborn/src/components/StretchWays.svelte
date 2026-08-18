@@ -18,6 +18,7 @@
 	import { SYMBOL_CARD_W } from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { shakeBoard } from '../game/stateShake.svelte';
+	import { formatWaysMult } from '../game/waysFormat';
 	import MultBadge from './MultBadge.svelte';
 	import BoardSpace from './BoardSpace.svelte';
 
@@ -108,7 +109,7 @@
 			{#each drawn as cell (cell.key)}
 				{#if cell.shown > 0}
 					<MultBadge
-						label={`x${cell.shown}`}
+						label={formatWaysMult(cell.shown)}
 						x={cell.cx}
 						y={cell.cy}
 						width={BADGE_W}

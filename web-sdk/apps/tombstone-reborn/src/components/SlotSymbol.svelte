@@ -18,7 +18,7 @@
 	import { untrack } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut } from 'svelte/easing';
-	import { Container, Rectangle, Text } from 'pixi-svelte';
+	import { Container, Rectangle } from 'pixi-svelte';
 	import { stateSlots } from 'utils-slots';
 	import { waitForTimeout } from 'utils-shared/wait';
 
@@ -26,7 +26,8 @@
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import { currentSpinOptions } from '../game/fxTiming';
-	import { TR_INK_GOLD, trValueStyle } from '../game/typography';
+	import { formatWaysMult } from '../game/waysFormat';
+	import RedGlowMark from './RedGlowMark.svelte';
 	import type { SymbolName, SymbolState } from '../game/types';
 
 	type Props = {
@@ -270,15 +271,9 @@
 					y={Math.min(maskH, SYMBOL_SIZE) * 0.3}
 				>
 
-					<Text
-						anchor={0.5}
-						text={`x${shown.multiplier}`}
-						style={trValueStyle({
-							fontSize: SYMBOL_SIZE * 0.26,
-							fill: TR_INK_GOLD,
-							stroke: { color: 0x1a1816, width: 4 },
-							letterSpacing: 1,
-						})}
+					<RedGlowMark
+						label={formatWaysMult(shown.multiplier)}
+						fontSize={SYMBOL_SIZE * 0.22}
 					/>
 				</Container>
 			{/if}

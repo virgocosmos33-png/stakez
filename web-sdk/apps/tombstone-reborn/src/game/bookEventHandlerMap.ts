@@ -11,7 +11,7 @@ import { playBookEvent } from './utils';
 import { filterGunsmokeCells, filterSplitCells, filterVisibleCells, isNudgeCoveredReel } from './boardCells';
 import { isHighPaySymbol, planWoundRhythm, volleySeed } from './gunsmokeSpin';
 import { LANE_DOOR_OPEN_MS } from './laneDoor';
-import { currentModeMusic, musicForBonusTier, resumeModeBeds, stopBonusBgm } from './bonusBgm';
+import { musicForBonusTier, restoreBaseMusic, resumeModeBeds, stopBonusBgm } from './bonusBgm';
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
@@ -168,6 +168,9 @@ let winPresented = false;
 export const presentWinCelebration = async (amount: number, waysOverride?: number) => {
 	if (amount <= 0) return;
 	winPresented = true;
+	// Bought single-spin bonuses are basegame books. Kill the bonus bed
+	// before the plate so resumeModeBeds comes back on bgm_main, not Showdown.
+	if (stateGame.gameType !== 'freegame') stopBonusBgm();
 
 	// the celebration tier is chosen by win amount in bet multiples
 	const celebration = getWinCelebration(amount);
@@ -891,8 +894,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'winMultUpdate', value: 1 });
 		stateGame.gameType = 'basegame';
 		stateGame.laneSuper = false;
-		stopBonusBgm();
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
+		restoreBaseMusic();
 		syncAtmosphere('base');
 	},
 	// the 1-in-100 UPGRADE: a 4th scatter dropped mid small-bonus round — the

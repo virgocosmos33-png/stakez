@@ -49,6 +49,7 @@
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import { FX, FEATURE_ART, seqFrame, fxRandom, puffFade } from '../game/featureVfx';
 	import FeatureFxSprite from './FeatureFxSprite.svelte';
+	import { formatWinMult } from '../game/waysFormat';
 	import MultBadge from './MultBadge.svelte';
 	import Symbol from './Symbol.svelte';
 	import BoardSpace from './BoardSpace.svelte';
@@ -442,7 +443,7 @@
 						{/if}
 
 						<MultBadge
-							label={`x${mult}`}
+							label={formatWinMult(mult)}
 							y={SYMBOL_CARD_H * 0.6}
 							width={SYMBOL_CARD_W * 0.86}
 							scale={badgePop.current}

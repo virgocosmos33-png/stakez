@@ -111,29 +111,81 @@ void main() {
 		bgGradeU.uEmber = ember;
 	};
 
+	const LENS_FOCUS_FRAGMENT = `
+precision highp float;
+in vec2 vTextureCoord;
+out vec4 finalColor;
+uniform sampler2D uTexture;
+uniform vec4 uInputSize;
+uniform float uFocus;
+vec4 lensTap(vec2 uv, vec2 o) {
+	vec2 ca = o * 0.08;
+	return vec4(
+		texture(uTexture, uv + o + ca).r,
+		texture(uTexture, uv + o).g,
+		texture(uTexture, uv + o - ca).b,
+		texture(uTexture, uv + o).a
+	);
+}
+void main() {
+	vec2 uv = vTextureCoord;
+	if (uFocus < 0.004) {
+		finalColor = texture(uTexture, uv);
+		return;
+	}
+	// Thin-lens CoC through a 6-blade iris. Disc + longitudinal CA, not a Gaussian.
+	float coc = uFocus * uFocus * 12.0;
+	vec2 px = uInputSize.zw * coc;
+	vec4 acc = texture(uTexture, uv) * 0.28;
+	float wsum = 0.28;
+	for (int i = 0; i < 6; i++) {
+		float a = (float(i) + 0.5) / 6.0 * 6.2831853;
+		float hex = 1.0 / max(abs(cos(a)), abs(cos(a - 1.0471976)));
+		hex = mix(1.0, hex, 0.28);
+		vec2 o = vec2(cos(a), sin(a)) * hex * px;
+		acc += lensTap(uv, o) * 0.12;
+		wsum += 0.12;
+	}
+	finalColor = acc / max(wsum, 0.001);
+}
+`;
+
 	/** tungsten / kerosene — a bit warmer than the raw PNG, retro against the BW plate */
 	const LAMP_WARM = 0xffe2b8;
 	const LAMP_GLOW_WARM = 0xffb24d;
+
+	const lampFocus = Filter.from({
+		gl: { vertex: FILTER_VERTEX, fragment: LENS_FOCUS_FRAGMENT, name: 'saloon-lamp-lens' },
+		resources: {
+			lensUniforms: {
+				uFocus: { value: 0, type: 'f32' },
+			},
+		},
+	});
+	lampFocus.padding = 36;
+	const lampFocusU = (
+		lampFocus.resources as Record<string, { uniforms: { uFocus: number } }>
+	).lensUniforms.uniforms;
 </script>
 
 <script lang="ts">
 	/**
-	 * Live saloon room: plate + the LEFT hanging lamp. A click swaps the lit
-	 * lantern for the unlit PNG until the next spin.
+	 * Live saloon room: plate + the LEFT hanging lamp. A click kills the
+	 * light and kicks a damped spherical pendulum; the mesh recedes and
+	 * the globe goes soft as it comes toward the lens.
 	 */
 	import { onMount } from 'svelte';
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { SALOON_LAMPS } from '../game/saloonLamps';
-	import { saloonLamp } from '../game/saloonLamp.svelte';
+	import { flushLamp, resetLamp, saloonLamp, stepLamp } from '../game/saloonLamp.svelte';
 	import { LAMP_GLOBE } from '../game/saloonLampSmash';
+	import { STEP_DT, STEP_MAX } from '../game/saloonLampPhysics';
 	import { getContext } from '../game/context';
 	import SuperFire from './SuperFire.svelte';
+	import SaloonLampMesh from './SaloonLampMesh.svelte';
 
 	const context = getContext();
-
-	const IDLE_PERIOD_MS = 4000;
-	const IDLE_AMP_L = (4.4 * Math.PI) / 180;
 
 	const L = SALOON_LAMPS.L;
 	const FLAME = { x: LAMP_GLOBE.x, y: LAMP_GLOBE.y };
@@ -163,50 +215,42 @@ void main() {
 	const showLamp = $derived(context.stateGame.atmosphere === 'base');
 	const showFire = $derived(context.stateGame.atmosphere === 'super');
 
-	let swayOrigin = $state(performance.now());
-	let rotL = $state(0);
-	/** Shot: light is already out, but the globe still rides the sway until
-	 *  the next pass through hanging-straight, then it parks. */
-	let settling = $state(false);
-	let prevRot = 0;
+	const punchAmt = $derived(saloonLamp.punch);
+	const lampScale = $derived(Math.min(1.1, Math.max(0.88, 1 - punchAmt * 0.04)));
+	const nearLens = $derived(Math.max(0, -punchAmt));
+	const lampFilters = [lampFocus];
 
 	$effect(() => {
-		if (!context.stateXstateDerived.isIdle() && saloonLamp.smashed) {
-			saloonLamp.smashed = false;
-			settling = false;
-		}
+		lampFocusU.uFocus = nearLens;
+		lampFocus.padding = 8 + Math.ceil(nearLens * nearLens * 36);
 	});
 
 	$effect(() => {
-		if (saloonLamp.smashed) settling = true;
-		else settling = false;
+		if (!context.stateXstateDerived.isIdle() || context.stateGame.atmosphere !== 'base') {
+			resetLamp();
+		}
 	});
 
 	onMount(() => {
 		let raf = 0;
+		let last = performance.now();
+		let acc = 0;
 		const tick = (now: number) => {
-			if (context.stateGame.atmosphere !== 'base') {
-				if (rotL !== 0) rotL = 0;
-				raf = requestAnimationFrame(tick);
-				return;
-			}
-			const phase = ((now - swayOrigin) / IDLE_PERIOD_MS) * Math.PI * 2;
-			const idle = Math.sin(phase) * IDLE_AMP_L;
-			if (!saloonLamp.smashed) {
-				if (Math.abs(idle - rotL) > 0.0004) rotL = idle;
-				prevRot = idle;
-			} else if (settling) {
-				const crossed = prevRot !== 0 && idle * prevRot <= 0;
-				if (crossed || Math.abs(idle) < 0.0015) {
-					if (rotL !== 0) rotL = 0;
-					prevRot = 0;
-					settling = false;
-				} else {
-					if (Math.abs(idle - rotL) > 0.0004) rotL = idle;
-					prevRot = idle;
+			let dt = (now - last) / 1000;
+			last = now;
+			if (dt > 0.05) dt = 0.05;
+			if (context.stateGame.atmosphere === 'base') {
+				acc += dt;
+				let steps = 0;
+				while (acc >= STEP_DT && steps < STEP_MAX) {
+					stepLamp(STEP_DT);
+					acc -= STEP_DT;
+					steps += 1;
 				}
-			} else if (rotL !== 0) {
-				rotL = 0;
+				if (steps === STEP_MAX) acc = 0;
+				if (steps > 0) flushLamp();
+			} else if (acc !== 0) {
+				acc = 0;
 			}
 			raf = requestAnimationFrame(tick);
 		};
@@ -229,7 +273,13 @@ void main() {
 			/>
 		</Container>
 		{#if showLamp}
-			<Container x={L.x} y={L.y} rotation={rotL}>
+			<Container
+				x={L.x + punchAmt * 14}
+				y={L.y + punchAmt * 5}
+				rotation={saloonLamp.theta}
+				scale={{ x: lampScale, y: lampScale * (1 - punchAmt * 0.02) }}
+				filters={lampFilters}
+			>
 				<Sprite
 					key="saloonLampGlow"
 					x={FLAME.x}
@@ -237,30 +287,12 @@ void main() {
 					anchor={0.5}
 					width={980}
 					height={1100}
-					alpha={saloonLamp.smashed ? 0 : 0.4}
+					alpha={saloonLamp.lit ? 0.4 * (1 - Math.max(0, punchAmt) * 0.18) : 0}
 					tint={LAMP_GLOW_WARM}
 					blendMode="add"
 					eventMode="none"
 				/>
-				<Sprite
-					key="saloonLampL"
-					x={-L.anchorX * L.width}
-					y={-L.anchorY * L.height}
-					width={L.width}
-					height={L.height}
-					anchor={0}
-					alpha={saloonLamp.smashed ? 0 : 1}
-					tint={LAMP_WARM}
-				/>
-				<Sprite
-					key="saloonLampLSmashed"
-					x={-L.anchorX * L.width}
-					y={-L.anchorY * L.height}
-					width={L.width}
-					height={L.height}
-					anchor={0}
-					alpha={saloonLamp.smashed ? 1 : 0}
-				/>
+				<SaloonLampMesh punch={punchAmt} lit={saloonLamp.lit} tint={LAMP_WARM} />
 			</Container>
 		{/if}
 		{#if showFire}

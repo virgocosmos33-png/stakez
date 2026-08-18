@@ -213,11 +213,12 @@ class OptimizationSetup:
             "freespins": round_block("freespins", wincap_rtp=0.08,
                                      test_spins=[20, 50, 100], cost=80,
                                      profile="default"),
-            # BIG BONUS rounds (2000x buy): cap fence 0.007 -> P(cap) ~ 1.4e-4,
-            # inside the worst-0.1% CVaR window (0.01 landed CVaR at 53.4k of
-            # the 50k allowance); super2000 starves the absolute 5k/10k+
-            # bands that the 3-star fences measure
-            "superspins": round_block("superspins", wincap_rtp=0.007,
+            # BIG BONUS rounds (2000x buy): cap fence 0.004 -> P(cap) ~ 8e-5,
+            # inside the worst-0.1% CVaR window (0.007 landed CVaR at 54.7k of
+            # the 50k allowance on the wild-dedupe books; 0.004 puts the cap
+            # slice at ~8k absolute for ~48.7k total); super2000 starves the
+            # absolute 5k/10k+ bands that the 3-star fences measure
+            "superspins": round_block("superspins", wincap_rtp=0.004,
                                       test_spins=[5, 10, 20], cost=2000,
                                       max_m2m=60, profile="super2000"),
         }

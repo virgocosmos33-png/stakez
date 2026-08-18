@@ -2,7 +2,8 @@
 	/**
 	 * Desktop HUD, locked to the staircase:
 	 *   WAYS + MULTI hang from the TOP OF THE SCREEN in the sky above the
-	 *   short right reels.
+	 *   short right reels. MULTI stays on the chains in base (shows x1
+	 *   until a feature ticks it).
 	 *   WIN hangs from the BOTTOM LIP of that same right-hand timber.
 	 *   WIN + FREE SPINS are the same pair as WAYS + MULTI: same width, same
 	 *   gap, same centre. FREE SPINS sits under MULTI.
@@ -21,7 +22,7 @@
 	import { HANG_PAIR_GAP, hangPairXs, isSpecialBarVertical } from '../game/specialBarLayout';
 	import { stateShake } from '../game/stateShake.svelte';
 	import { getCellLeft, getReelYOffset } from '../game/utils';
-	import { formatWays } from '../game/waysFormat';
+	import { formatWays, formatWinMult } from '../game/waysFormat';
 
 	const context = getContext();
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
@@ -56,6 +57,7 @@
 		},
 	});
 	const winValue = $derived(bookEventAmountToCurrencyString(stateBet.winBookEventAmount));
+	const heldLabels: string[] = [];
 
 	const readout = $derived.by(() => {
 		if (!isSpecialBarVertical()) return null;
@@ -81,7 +83,7 @@
 
 		const hangSlots = [
 			{ label: 'WAYS', value: formatWays(ways) },
-			{ label: 'MULTI', value: `${winMult}×` },
+			{ label: 'MULTI', value: formatWinMult(winMult) },
 		];
 		const pocketBot = toY(shortTop) - 6;
 		const hangY = Math.min(screenTop + 40 + blockH * 0.5, pocketBot - blockH * 0.45);
@@ -140,6 +142,7 @@
 			parts="chains"
 			gap={readout.hang.gap}
 			chainFromY={readout.hang.chainFromY}
+			heldLabels={heldLabels}
 		/>
 		<HudReadout
 			x={readout.win.x}
@@ -175,6 +178,7 @@
 			parts="plate"
 			gap={readout.hang.gap}
 			chainFromY={readout.hang.chainFromY}
+			heldLabels={heldLabels}
 		/>
 		<HudReadout
 			x={readout.win.x}
@@ -210,6 +214,7 @@
 			parts="boxes"
 			gap={readout.hang.gap}
 			chainFromY={readout.hang.chainFromY}
+			heldLabels={heldLabels}
 		/>
 		<HudReadout
 			x={readout.win.x}

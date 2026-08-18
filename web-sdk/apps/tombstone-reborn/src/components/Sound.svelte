@@ -21,9 +21,9 @@
 	import { getContext } from '../game/context';
 	import {
 		isBonusBgm,
-		pauseBonusBgm,
 		playBonusBgm,
 		preloadBonusBgm,
+		restoreBaseMusic,
 		stopBonusBgm,
 		syncBonusBgmVolume,
 	} from '../game/bonusBgm';
@@ -50,8 +50,7 @@
 			playBonusBgm(name);
 			return;
 		}
-		pauseBonusBgm();
-		sound.players.music.play({ name });
+		restoreBaseMusic();
 	};
 
 	context.eventEmitter.subscribeOnMount({

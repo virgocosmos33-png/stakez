@@ -17,7 +17,7 @@ import {
 	MAX_ROWS,
 } from './constants';
 import { eventEmitter } from './eventEmitter';
-import { currentModeMusic, stopBonusBgm } from './bonusBgm';
+import { currentModeMusic, restoreBaseMusic } from './bonusBgm';
 import { presentBonusEntry } from './bonusEntry';
 import { syncAtmosphere } from './atmosphere.svelte';
 import type { Bet, BookEventOfType } from './typesBookEvent';
@@ -38,10 +38,10 @@ export const playBet = async (bet: Bet) => {
 	// base spin and on a resumed round — see game/bonusEntry.ts.
 	await presentBonusEntry(bet);
 	await playBookEvents(bet.state);
-	if (stateGame.gameType === 'basegame' && currentModeMusic() !== 'bgm_main') {
-		stopBonusBgm();
-		eventEmitter.broadcast({ type: 'soundMusic', name: 'bgm_main' });
-	}
+	// One book is one bet. When it finishes the bonus is over — even if a
+	// 10-spin book never emitted freeSpinEnd, or a bought single-spin left
+	// Tombstone Showdown / Desert Standoff looping.
+	if (currentModeMusic() !== 'bgm_main') restoreBaseMusic();
 	eventEmitter.broadcast({ type: 'stopButtonEnable' });
 };
 

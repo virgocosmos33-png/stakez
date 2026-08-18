@@ -82,7 +82,7 @@
 	{template}
 />
 
-<!-- NUDGE WAYS: lands on the top of reel 2, slams down, ways 2 → 4 → 8 → 16 -->
+<!-- NUDGE WAYS: lands on row 1 — foot in the cell, NUDGE plaque on the board, then slams down -->
 <Story
 	name="nudgeWays"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('nudge_ways') })}
@@ -96,7 +96,7 @@
 	{template}
 />
 
-<!-- NUDGE WAYS mid land: row 3 already shows 3/4 of the column, then one step down -->
+<!-- NUDGE WAYS mid land: row 3 shows the lower shaft only (no plaque), then one step down -->
 <Story
 	name="nudgeWaysRow3"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('nudge_ways_row3') })}

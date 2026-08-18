@@ -24,9 +24,10 @@
 
 <script lang="ts">
 	/**
-	 * One full-reel NUDGE column per reel. The same tall card is always
-	 * drawn; a mask from the top of the pocket shows the landed rows, then
-	 * grows down a notch at a time. Two nudges each keep their own totem.
+	 * One full-reel NUDGE column per reel. The same tall card always slides:
+	 * the reel window shows the landed foot, and the NUDGE header seats on
+	 * the board lip. A growing mask would pin the header in the first cell.
+	 * Two nudges each keep their own totem.
 	 */
 	import { Texture } from 'pixi.js';
 	import { Tween } from 'svelte/motion';
@@ -47,11 +48,13 @@
 		fireQuadSize,
 		type RingUniforms,
 	} from './LinkedCellFire.svelte';
+	import { formatWaysMult } from '../game/waysFormat';
 	import MultBadge from './MultBadge.svelte';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const BADGE_RATIO = 199 / 512;
-	const HEADER_PAD = 12;
+	/** NUDGE plaque share of fx_nudge_column.png (header px / image h). */
+	const HEADER_FRAC = 200 / 2360;
 	const COL_BOX_X = 0.58;
 	const COL_BOX_Y = 0.72;
 
@@ -97,13 +100,17 @@
 	const layoutOf = (reel: number) => {
 		const pocket = getReelPocket(reel);
 		const fullH = Math.max(1, pocket.bottom - pocket.top);
-		const totemTop = -HEADER_PAD;
+		const headerH = fullH * (HEADER_FRAC / (1 - HEADER_FRAC));
+		const spriteH = headerH + fullH;
+		const totemTop = -headerH;
 		const totemBot = fullH + badgeH / 2;
 		const totemH = Math.max(1, totemBot - totemTop);
 		return {
 			cx: (pocket.left + pocket.right) / 2,
 			colTop: pocket.top,
 			fullH,
+			headerH,
+			spriteH,
 			cardH: getCardHeight(reel),
 			rows: getReelRows(reel),
 			fireY: (totemTop + totemBot) / 2,
@@ -112,12 +119,17 @@
 		};
 	};
 
-	const maskHOf = (reel: number, revealRow: number) => {
+	/** Bottom of the landed stack, relative to the reel lip. */
+	const revealBotOf = (reel: number, revealRow: number) => {
 		const layout = layoutOf(reel);
 		const row = Math.min(layout.rows, Math.max(1, revealRow));
 		const bottom = getCellCenterY(reel, row) + layout.cardH / 2;
 		return Math.min(layout.fullH, Math.max(layout.cardH * 0.5, bottom - layout.colTop));
 	};
+
+	/** 0 when seated; negative while the foot is still high in the reel. */
+	const slideYOf = (reel: number, revealRow: number) =>
+		revealBotOf(reel, revealRow) - layoutOf(reel).fullH;
 
 	const coverReel = (reel: number) => {
 		context.stateGame.nudgeCoverReel = reel;
@@ -348,21 +360,43 @@
 	<BoardSpace yOffset={fallOut.current}>
 		{#each totems as totem (totem.reel)}
 			{@const layout = layoutOf(totem.reel)}
-			{@const maskH = maskHOf(totem.reel, totem.revealRow.current)}
+			{@const slideY = slideYOf(totem.reel, totem.revealRow.current)}
+			{@const revealBot = revealBotOf(totem.reel, totem.revealRow.current)}
+			{@const showHeader = totem.startRow === 1 || slideY > -layout.headerH * 0.35}
 			<Container x={layout.cx} y={layout.colTop}>
+				{#if showHeader}
+					<Container>
+						<Rectangle
+							isMask
+							y={-layout.headerH}
+							anchor={{ x: 0.5, y: 0 }}
+							width={colW}
+							height={layout.headerH}
+							backgroundColor={0xffffff}
+						/>
+						<Sprite
+							key={FEATURE_ART.nudgeColumn}
+							y={-layout.headerH}
+							anchor={{ x: 0.5, y: 0 }}
+							width={colW}
+							height={layout.spriteH}
+						/>
+					</Container>
+				{/if}
 				<Container>
 					<Rectangle
 						isMask
 						anchor={{ x: 0.5, y: 0 }}
 						width={colW}
-						height={maskH}
+						height={layout.fullH}
 						backgroundColor={0xffffff}
 					/>
 					<Sprite
 						key={FEATURE_ART.nudgeColumn}
+						y={slideY - layout.headerH}
 						anchor={{ x: 0.5, y: 0 }}
 						width={colW}
-						height={layout.fullH}
+						height={layout.spriteH}
 					/>
 				</Container>
 				{#if totem.ignite.current > 0.01}
@@ -376,8 +410,8 @@
 					</Container>
 				{/if}
 				<MultBadge
-					label={`x${totem.ways}`}
-					y={maskH + badgeH * 0.15}
+					label={formatWaysMult(totem.ways)}
+					y={revealBot + badgeH * 0.15}
 					width={SYMBOL_CARD_W * 0.86}
 					scale={totem.badgePop.current}
 				/>

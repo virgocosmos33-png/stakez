@@ -57,7 +57,7 @@ export const WHITE_ROOM_SPECIALS: SpecialSymbol[] = [
 	{
 		key: 'nudge',
 		name: 'Nudge Ways',
-		desc: 'Drops only on the 2nd or 3rd reel with 2 to 9 ways (extremely weighted toward 2). If it does not already fill the reel it nudges DOWN, doubling its ways and adding +1 to the WIN multiplier on every step. A full-reel drop keeps the initial ways with no doubling and no WIN tick.',
+		desc: 'Drops only on the 2nd or 3rd reel with 2 to 9 ways (extremely weighted toward 2). If it does not already fill the reel it nudges DOWN, turning every cell it covers into a WILD carrying the stack\u2019s ways value, doubling that value and adding +1 to the WIN multiplier on every step. Covered cells add together on their reel, like all cells carrying extra ways. A full-reel drop keeps the initial ways on every covered cell with no doubling and no WIN tick.',
 	},
 	{
 		key: 'shooter',
@@ -89,7 +89,7 @@ export const WHITE_ROOM_INFO_SECTIONS: InfoSection[] = [
 		bullets: [
 			'SPLIT — one symbol type on the board gains 2 to 7 extra ways, the WIN multiplier goes up by +1, then the card becomes a wild. If a NUDGE stack is already standing, the split also hits it and doubles its ways.',
 			'GUNSMOKE — every remaining copy of one symbol type becomes the revolver WILD (+1 WIN multi per shot), then the card becomes a wild. It cannot shoot a NUDGE stack or any row the nudge already swallowed.',
-			'NUDGE WAYS — fires first. Lands on the 2nd or 3rd reel and replaces every symbol from that cell down, doubling ways and adding +1 WIN multi on every step. A full-reel drop keeps the initial ways. Nothing is left below the totem for GUNSMOKE to shoot. A later SPLIT can land on that stack and double it again.',
+			'NUDGE WAYS — fires first. Lands on the 2nd or 3rd reel and replaces every symbol from that cell down with WILDs, each carrying the stack\u2019s ways value; that value doubles (+1 WIN multi) on every step, and the covered cells add together on the reel. A full-reel drop keeps the initial ways. Nothing is left below the totem for GUNSMOKE to shoot. A later SPLIT can land on that stack and double it again.',
 		],
 	},
 	{

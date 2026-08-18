@@ -2,9 +2,9 @@
  * Small / big bonus beds. Long loops stay as their own mp3s — they are not
  * packed into the SFX sprite (that atlas is for stings, not full songs).
  *
- *   bonusgame 1 bgm.mp3 → bgm_bonus_small  (freespins / bonus_small)
- *   bonusgame 2 bgm.mp3 → bgm_bonus_super  (superspins / bonus_super)
- *   ember.mp3           → layered under bgm_bonus_super only
+ *   Tombstone Showdown → bgm_bonus_small  (freespins / bonus_small)
+ *   Desert Standoff    → bgm_bonus_super  (superspins / bonus_super)
+ *   ember.mp3          → layered under bgm_bonus_super only
  */
 import { Howl } from 'howler';
 
@@ -29,6 +29,9 @@ const EMBER_VOL = 0.62;
 
 const howls = new Map<BonusBgmName, Howl>();
 let active: BonusBgmName | null = null;
+/** Which bed a celebration should return to. Cleared when the bonus ends so
+ * a win plate cannot bring Tombstone Showdown / Desert Standoff back. */
+let desired: BonusBgmName | null = null;
 let playId: number | null = null;
 let emberHowl: Howl | null = null;
 let emberPlayId: number | null = null;
@@ -100,9 +103,19 @@ export const isBonusBgm = (name: string): name is BonusBgmName =>
 export const musicForBonusTier = (tier: BonusEntryTier): BonusBgmName =>
 	tier === 'superspins' || tier === 'bonus_super' ? BONUS_BGM_SUPER : BONUS_BGM_SMALL;
 
-export const currentModeMusic = (): MusicName => active ?? 'bgm_main';
+export const currentModeMusic = (): MusicName => desired ?? active ?? 'bgm_main';
+
+const playBaseMusic = () => {
+	const music = sound.players?.music;
+	if (!music) return;
+	// The sprite player no-ops play() when it still thinks bgm_main is
+	// running. After a bonus we paused it — stop first so play is a new start.
+	music.stop({ name: 'bgm_main' });
+	music.play({ name: 'bgm_main' });
+};
 
 export const playBonusBgm = (name: BonusBgmName) => {
+	desired = name;
 	if (active === name && playId != null && bed(name).playing(playId)) {
 		applyVolume(bed(name));
 		if (name === BONUS_BGM_SUPER) playEmber();
@@ -141,7 +154,12 @@ export const pauseBonusBgm = () => {
 };
 
 export const resumeBonusBgm = () => {
-	if (!active) return;
+	const name = desired ?? active;
+	if (!name) return;
+	if (!active) {
+		playBonusBgm(name);
+		return;
+	}
 	const howl = bed(active);
 	applyVolume(howl);
 	if (playId != null) {
@@ -153,10 +171,17 @@ export const resumeBonusBgm = () => {
 };
 
 export const stopBonusBgm = () => {
-	if (active) bed(active).stop();
+	for (const howl of howls.values()) howl.stop();
 	active = null;
+	desired = null;
 	playId = null;
 	stopEmber();
+};
+
+/** Hard end: bonus + ember off, base bed starts from the top. */
+export const restoreBaseMusic = () => {
+	stopBonusBgm();
+	playBaseMusic();
 };
 
 export const syncBonusBgmVolume = () => {
@@ -172,9 +197,9 @@ export const pauseModeBeds = () => {
 
 /** Pick the bed back up after a celebration plate. */
 export const resumeModeBeds = () => {
-	if (active) {
+	if (desired) {
 		resumeBonusBgm();
 		return;
 	}
-	sound.players?.music.play({ name: 'bgm_main' });
+	restoreBaseMusic();
 };

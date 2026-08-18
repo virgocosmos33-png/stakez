@@ -1,28 +1,13 @@
-<script lang="ts" module>
-	import { ColorMatrixFilter } from 'pixi.js';
-
-	import {
-		LANE_DOOR_GRADE_BRIGHTNESS,
-		LANE_DOOR_GRADE_SATURATE,
-	} from '../game/laneDoor';
-
-	const WOOD_GRADE = new ColorMatrixFilter();
-	WOOD_GRADE.saturate(LANE_DOOR_GRADE_SATURATE);
-	WOOD_GRADE.brightness(LANE_DOOR_GRADE_BRIGHTNESS, true);
-	const WOOD_GRADE_FILTERS = [WOOD_GRADE];
-</script>
-
 <script lang="ts">
 	/**
 	 * The boarded cover over the LAST-REEL LANE.
 	 *
-	 * One box: the last-reel board slot. Left edge on the cell, full pitch
-	 * cover so the timber never shows as a grey strip. Closed face fills it.
-	 * Open plays the swing, then holds. Next locked reveal slams shut.
-	 * zIndex stays above the sliding gold card so a remount cannot cover
-	 * the hinge post.
+	 * Closed face fills the last-reel slot. Open hinges that same door
+	 * OUTWARD on the right post (toward the camera) so the lane shows
+	 * through — not a second door pushed into the hole. Next locked
+	 * reveal swings it shut. zIndex stays above the sliding gold card.
 	 */
-	import * as PIXI from 'pixi.js';
+	import type { Texture } from 'pixi.js';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { BaseSprite, Container } from 'pixi-svelte';
@@ -32,13 +17,12 @@
 	import { getContext } from '../game/context';
 	import { CELL_PITCH_X } from '../game/constants';
 	import { getCellLeft, getReelWindow } from '../game/utils';
-	import { fxDur, fxWait } from '../game/fxTiming';
+	import { fxDur } from '../game/fxTiming';
 	import {
-		LANE_DOOR_ASSET,
+		LANE_DOOR_CLOSED_ASSET,
+		LANE_DOOR_CLOSED_SMALL_ASSET,
 		LANE_DOOR_CLOSE_MS,
-		LANE_DOOR_CLOSE_SLAM,
 		LANE_DOOR_COVER_SCALE_X,
-		LANE_DOOR_FRAME_COUNT,
 		LANE_DOOR_OPEN_MS,
 		LANE_DOOR_SHIFT_Y,
 		LANE_DOOR_Z,
@@ -50,6 +34,8 @@
 	const LAST = context.stateGame.board.length - 1;
 	const COVER_W = CELL_PITCH_X * LANE_DOOR_COVER_SCALE_X;
 	const DOOR_CREAK = '/assets/audio/sfx_door_creak.mp3';
+	/** Leftover leaf width when the door has swung out (edge of the normal door). */
+	const OPEN_SLIVER = 0.14;
 
 	const slot = $derived.by(() => {
 		const window = getReelWindow(LAST);
@@ -58,64 +44,51 @@
 			y: (window.top + window.bottom) / 2,
 		};
 	});
-	/** 0 = closed face, 1 = last swing frame. Stays at 1 while the lane is open. */
+	/** 0 = shut, 1 = swung out. Stays at 1 while the lane is open. */
 	const swing = new Tween(context.stateGame.lidOpen ? 1 : 0, { duration: 0 });
-	let pose = $state(context.stateGame.lidOpen ? LANE_DOOR_FRAME_COUNT - 1 : 0);
 	let wasOpen = context.stateGame.lidOpen;
-	let slamGen = 0;
-
-	const slamShut = async (gen: number) => {
-		const last = LANE_DOOR_CLOSE_SLAM.length - 1;
-		const stepMs = LANE_DOOR_CLOSE_MS / LANE_DOOR_CLOSE_SLAM.length;
-		for (let i = 0; i < LANE_DOOR_CLOSE_SLAM.length; i += 1) {
-			if (gen !== slamGen) return;
-			pose = LANE_DOOR_CLOSE_SLAM[i];
-			if (i < last) {
-				const ms = i === last - 1 ? stepMs * 0.55 : stepMs;
-				await fxWait(ms);
-			}
-		}
-		if (gen === slamGen) void swing.set(0, { duration: 0 });
-	};
-
-	$effect(() => {
-		if (!context.stateGame.lidOpen) return;
-		pose = Math.min(
-			LANE_DOOR_FRAME_COUNT - 1,
-			Math.floor(swing.current * (LANE_DOOR_FRAME_COUNT - 0.001)),
-		);
-	});
 
 	$effect(() => {
 		const open = context.stateGame.lidOpen;
 		if (open === wasOpen) return;
 		wasOpen = open;
-		slamGen += 1;
 		if (open) {
 			playExternalOnce(DOOR_CREAK);
 			void swing.set(1, { duration: fxDur(LANE_DOOR_OPEN_MS), easing: cubicOut });
 		} else {
-			void slamShut(slamGen);
+			void swing.set(0, { duration: fxDur(LANE_DOOR_CLOSE_MS) });
 		}
 	});
 
-	const frames = $derived(
-		(context.stateApp.loadedAssets?.[LANE_DOOR_ASSET] as PIXI.Texture[] | undefined) ?? [],
+	const closedKey = $derived(
+		context.stateGame.atmosphere === 'small'
+			? LANE_DOOR_CLOSED_SMALL_ASSET
+			: LANE_DOOR_CLOSED_ASSET,
 	);
-	const texture = $derived(frames[pose]);
+	const closedTex = $derived(
+		context.stateApp.loadedAssets?.[closedKey] as Texture | undefined,
+	);
 	const doorH = $derived(
-		texture ? COVER_W * (texture.height / texture.width) : 0,
+		closedTex ? COVER_W * (closedTex.height / closedTex.width) : 0,
 	);
+	const hingeX = $derived(slot.x + COVER_W);
+	const t = $derived(swing.current);
+	const closedSx = $derived(1 - t * (1 - OPEN_SLIVER));
+	const toward = $derived(Math.sin(t * Math.PI) * 0.07);
 </script>
 
-{#if texture}
+{#if closedTex}
 	<Container zIndex={LANE_DOOR_Z} eventMode="none">
 		<BoardSpace>
-			<Container filters={WOOD_GRADE_FILTERS} eventMode="none">
+			<Container
+				x={hingeX}
+				y={slot.y + LANE_DOOR_SHIFT_Y}
+				scale={{ x: closedSx, y: 1 + toward }}
+				eventMode="none"
+			>
 				<BaseSprite
-					{texture}
-					x={slot.x}
-					y={slot.y + LANE_DOOR_SHIFT_Y}
+					texture={closedTex}
+					x={-COVER_W}
 					anchor={{ x: 0, y: 0.5 }}
 					width={COVER_W}
 					height={doorH}

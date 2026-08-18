@@ -50,9 +50,11 @@
 	} from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { fxNum, fxColors, fxStr } from '../game/fx.generated';
-	import { trAmountFamily, trAmountTint } from '../game/typography';
+	import { trAmountFamily } from '../game/typography';
+	import { formatWaysMult } from '../game/waysFormat';
 	import { drawGraveChainLink } from '../game/graveyardFx';
 	import BoardSpace from './BoardSpace.svelte';
+	import RedGlowMark from './RedGlowMark.svelte';
 
 	const context = getContext();
 
@@ -83,7 +85,6 @@
 	const COL_FLUOR = SEAL_COLORS[2] ?? 0xf4f1ec;
 	const COL_PLAQUE = SEAL_COLORS[3] ?? 0x2a2826;
 	const COL_BLOOD = SEAL_COLORS[4] ?? 0x6b2a28;
-	const COL_MULT = SEAL_COLORS[5] ?? trAmountTint();
 	const MODE = fxStr('cellSeal', 'mode', 'observationPane');
 	const FEATURE_LABEL = fxStr('cellSeal', 'label', 'Cell Seal');
 	const AMOUNT_FAMILY = trAmountFamily();
@@ -607,16 +608,9 @@
 				{#if showChar}
 					<Graphics draw={(g) => drawBadge(g, s)} />
 					<Container x={s.cx} y={badgeY} scale={popScale} alpha={t}>
-						<!-- ASCII "x" — clinical bitmap font has no U+00D7 × glyph (silent drop → bare "4"). -->
-						<BitmapText
-							text={`x${s.ways}`}
-							anchor={0.5}
-							style={{
-								fontFamily: AMOUNT_FAMILY,
-								fontSize: Math.round(30 * BADGE_SCALE),
-								fill: COL_MULT,
-								letterSpacing: 1,
-							}}
+						<RedGlowMark
+							label={formatWaysMult(s.ways)}
+							fontSize={Math.round(30 * BADGE_SCALE)}
 						/>
 					</Container>
 					<!-- Feature name OFF by default — never float arcade yellow on art.

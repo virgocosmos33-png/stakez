@@ -1,1 +1,24 @@
-<!-- Storybook iframe head. Do not load leftover scripts here. -->
+<!-- Storybook iframe head. Black and flush; overflow stays free so the pane scrolls. -->
+<style>
+	html,
+	body,
+	#storybook-root {
+		margin: 0;
+		padding: 0;
+		background: #000;
+	}
+
+	.sb-show-main,
+	.sb-show-main.sb-main-padded,
+	.sb-show-main.sb-main-fullscreen,
+	.sb-show-main.sb-main-centered {
+		margin: 0 !important;
+		padding: 0 !important;
+		background: #000 !important;
+	}
+
+	#storybook-root canvas {
+		display: block;
+		vertical-align: top;
+	}
+</style>

@@ -13,7 +13,7 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
+	import { Container, Graphics, Rectangle, Sprite } from 'pixi-svelte';
 	import { playExternalOnce } from 'utils-sound';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
@@ -28,7 +28,8 @@
 	} from '../game/constants';
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
-	import { trValueStyle } from '../game/typography';
+	import { formatWaysMult } from '../game/waysFormat';
+	import RedGlowMark from './RedGlowMark.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import BoardSpace from './BoardSpace.svelte';
 
@@ -406,18 +407,13 @@
 			{@render knifeStrike()}
 		{/if}
 		{#if cell.count >= COUNT_LABEL_MIN}
-			<Text
+			<RedGlowMark
 				x={CARD_W / 2 - COUNT_PAD}
 				y={CARD_H / 2 - COUNT_PAD}
 				anchor={{ x: 1, y: 1 }}
-				text={`${cell.count}x`}
+				label={formatWaysMult(cell.count)}
+				fontSize={22}
 				alpha={cell.fresh ? splitProgress.current : 1}
-				style={trValueStyle({
-					fontSize: 22,
-					fill: 0xffffff,
-					align: 'right',
-					stroke: { color: 0x000000, width: 3, join: 'round' },
-				})}
 			/>
 		{/if}
 	</Container>

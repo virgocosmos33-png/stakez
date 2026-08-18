@@ -20,6 +20,7 @@ import { eventEmitter } from './eventEmitter';
 import { musicForBonusTier } from './bonusBgm';
 import { bonusEntryTierOf } from './bonusEntryArt';
 import { atmosphereFromMode, syncAtmosphere } from './atmosphere.svelte';
+import { stateXstateDerived } from './stateXstate';
 import type { Bet } from './typesBookEvent';
 
 /**
@@ -36,11 +37,18 @@ export const presentBonusEntry = async (bet: Bet) => {
 	if (tier === null) return;
 	syncAtmosphere(atmosphereFromMode(tier) ?? 'small');
 
+	eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier(tier) });
+
 	// A RESUMED round is already in flight — the player saw the banner when they
 	// bought it, and its first book event is the snapshot that rebuilds state, so
 	// announcing the buy again here would be a second entry for one purchase.
+	// The bed still has to start: they left mid-round with no music otherwise.
 	if (bet.state[0]?.type === 'createBonusSnapshot') return;
 
-	eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier(tier) });
+	// Feature stories stamp bonus_small / bonus_super so the room grades, but
+	// Storybook Action stays idle. The plate is a purchase — only a live buy
+	// (or BONUS_ENTRY/banner, which stands the machine in STATE_BET) owes it.
+	if (stateXstateDerived.isIdle()) return;
+
 	await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
 };

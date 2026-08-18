@@ -45,6 +45,12 @@
 
 {@render props.children()}
 
+<!-- 0×0 absolute box: never adds document-flow height (no white strip) and
+	does not lock the iframe overflow, so the pane stays scrollable. -->
+<div
+	class="chrome"
+	style="position:absolute;top:0;left:0;width:0;height:0;overflow:visible;z-index:999;"
+>
 <div class="wrap">
 	<button
 		class="action"
@@ -61,14 +67,25 @@
 	</button>
 	<span class="message">ⓘ {actionState.message}</span>
 </div>
+</div>
 
 <style lang="scss">
-	.wrap {
+	.chrome {
 		position: absolute;
 		top: 0;
+		left: 0;
+		width: 0;
+		height: 0;
+		overflow: visible;
 		z-index: 999;
+	}
+
+	.wrap {
 		display: flex;
 		flex-direction: row;
+		margin: 8px 0 0 8px;
+		background: transparent;
+		white-space: nowrap;
 	}
 
 	.action {

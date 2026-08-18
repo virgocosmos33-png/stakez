@@ -200,9 +200,10 @@ export default {
 	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
-		// v13 = full-bleed premiums (figure to all edges, no paper gap), used raw
-		// (no code grade/tint) with faint baked rank bg tint + monochrome lows
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v13.json', import.meta.url).href,
+		// v18 = hand-painted set (tools/pack_v18_symbols.py): painterly premium
+		// busts with one accent glow per rank (h1 purple .. h5 amber) + painted
+		// object emblems for the lows. Full-bleed, used raw (no code grade/tint).
+		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v18.json', import.meta.url).href,
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
@@ -293,15 +294,8 @@ export default {
 		src: new URL('../../assets/sprites/fx/win_celeb_holes.json', import.meta.url).href,
 		preload: true,
 	},
-	// Rising fire sparks, black plate keyed to alpha (tools/make_ember_rise.py).
-	// Loops over the super-bonus room with the ember bed.
-	emberRise: {
-		type: 'sprite',
-		src: new URL('../../assets/sprites/fx/ember_rise.webm', import.meta.url).href,
-		preload: true,
-	},
-	// Studio smoke, black plate keyed to luma-alpha (tools/make_room_smoke.py).
-	// Loops over the super-bonus room under the rising sparks.
+	// Super-bonus room smoke: studio plate, black keyed. Played as a dual
+	// decoder in SeamlessVideoLoop so the seam never lands on screen.
 	roomSmoke: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/room_smoke.webm', import.meta.url).href,
@@ -1113,8 +1107,24 @@ export default {
 		src: new URL('../../assets/sprites/tombstone/lane_lid_lock.webp', import.meta.url).href,
 		preload: true,
 	},
-	// LAST-REEL LANE door swing (tools/make_lane_door_atlas.py) — replaces the
-	// static boarded cover when SUPER scatter / DIG UP opens the grave lane.
+	// LAST-REEL LANE door stills (tools/install_lane_doors.py). Closed covers
+	// the slot; open is the swung leaf used when the grave lane unlocks.
+	laneDoorClosed: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/lane_door_closed.png', import.meta.url).href,
+		preload: true,
+	},
+	laneDoorClosedSmall: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/lane_door_closed_small.png', import.meta.url).href,
+		preload: true,
+	},
+	laneDoorOpenSuper: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/lane_door_open_super.png', import.meta.url).href,
+		preload: true,
+	},
+	// Kept for the old swing atlas; LaneLidLock no longer plays it.
 	laneDoor: {
 		type: 'spriteSheet',
 		src: new URL('../../assets/sprites/fx/lane_door.json', import.meta.url).href,

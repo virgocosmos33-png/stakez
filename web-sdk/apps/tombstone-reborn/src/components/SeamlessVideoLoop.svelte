@@ -47,7 +47,9 @@
 		if (!a || !assetTex) return;
 
 		const arm = (v: HTMLVideoElement) => {
-			v.loop = true;
+			// Native loop snaps to 0 and flashes an empty frame. We wrap
+			// the hidden copy ourselves so the visible one never seeks.
+			v.loop = false;
 			v.muted = true;
 			v.playsInline = true;
 			v.preload = 'auto';
@@ -61,7 +63,7 @@
 		const bSource = new VideoSource({
 			resource: b,
 			autoPlay: false,
-			loop: true,
+			loop: false,
 			muted: true,
 			playsinline: true,
 		});

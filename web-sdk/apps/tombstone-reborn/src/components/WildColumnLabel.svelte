@@ -21,9 +21,11 @@
 </script>
 
 <script lang="ts">
-	import { Container, Graphics, Text } from 'pixi-svelte';
+	import { Container, Text } from 'pixi-svelte';
 
-	import { trLabelStyle, trValueStyle } from '../game/typography';
+	import { trLabelStyle } from '../game/typography';
+	import { formatWaysMult } from '../game/waysFormat';
+	import RedGlowMark from './RedGlowMark.svelte';
 
 	type Props = {
 		x: number;
@@ -39,14 +41,6 @@
 	const props: Props = $props();
 
 	const p = $derived(Math.min(Math.max(props.progress, 0), 1));
-
-	/** dark lozenge so the number stays legible over the wild portrait */
-	const drawPlate = (g: import('pixi.js').Graphics) => {
-		g.roundRect(-PLATE_W / 2, -PLATE_H / 2, PLATE_W, PLATE_H, PLATE_H / 2);
-		g.fill({ color: 0x05070a, alpha: 0.82 });
-		g.roundRect(-PLATE_W / 2, -PLATE_H / 2, PLATE_W, PLATE_H, PLATE_H / 2);
-		g.stroke({ color: 0xdfe6ea, width: 1.5, alpha: 0.55 });
-	};
 </script>
 
 {#if p > 0.001}
@@ -68,17 +62,12 @@
 				letterSpacing: 1,
 			})}
 		/>
-		<Container y={SYMBOL_SIZE * 0.16}>
-			<Graphics draw={drawPlate} />
-			<Text
-				anchor={0.5}
-				text={`${props.ways}x`}
-				style={trValueStyle({
-					fontSize: WAYS_FONT,
-					fill: 0xffffff,
-					stroke: { color: 0x000000, width: 4 },
-				})}
-			/>
-		</Container>
+		<RedGlowMark
+			y={SYMBOL_SIZE * 0.16}
+			label={formatWaysMult(props.ways)}
+			width={PLATE_W}
+			height={PLATE_H}
+			fontSize={WAYS_FONT}
+		/>
 	</Container>
 {/if}

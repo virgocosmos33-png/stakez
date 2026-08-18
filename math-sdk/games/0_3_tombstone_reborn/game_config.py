@@ -182,7 +182,9 @@ class GameConfig(Config):
                 "L5": 16, "L4": 14, "L3": 13, "L2": 12, "L1": 11,
                 "H5": 9, "H4": 7, "H3": 6, "H2": 5, "H1": 4, "W": 3,
             },
-            "cell_cap": 99,
+            # Per-cell ways ceiling. Must admit the top advertised last-reel
+            # premium (x100) so the 1/100 premium roll is never clipped.
+            "cell_cap": 100,
         }
         self.gunsmoke_config = {
             "source_weights": {
@@ -192,8 +194,10 @@ class GameConfig(Config):
         }
         # NUDGE WAYS: reels 1 and 2 only (the two 4-high columns). Initial ways
         # 2-9, extremely weighted toward 2. Lands on a row and nudges DOWN,
-        # doubling the stack's ways each step — or drops as a full reel and
-        # keeps the initial ways with no doubling.
+        # doubling the stack's PER-CELL ways each step — every covered cell is
+        # a WILD stamped with the current value, and cells on a reel add
+        # together (so the reel contributes height x value ways). A full-reel
+        # drop keeps the initial ways on every cell with no doubling.
         self.nudge_ways_config = {
             "reels": (1, 2),
             "initial_ways_weights": {

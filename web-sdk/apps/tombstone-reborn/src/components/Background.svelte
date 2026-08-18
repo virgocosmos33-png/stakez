@@ -41,17 +41,11 @@
 
 	const sceneVideoReady = $derived(videoTextureOf('sceneBgAnim') !== undefined);
 	const atmosphere = $derived(context.stateGame.atmosphere);
-	const emberReady = $derived(videoTextureOf('emberRise') !== undefined);
 	const smokeReady = $derived(videoTextureOf('roomSmoke') !== undefined);
 	const FX_ART = { width: 1280, height: 720 };
 
 	$effect(() => {
 		playLoop('sceneBgAnim');
-	});
-
-	$effect(() => {
-		if (atmosphere !== 'super') return;
-		playLoop('emberRise');
 	});
 
 	// Snap grade to the atmosphere target. Do not tick uTime every frame —
@@ -74,15 +68,12 @@
 	{/if}
 	<AtmosphereFx />
 	{#if atmosphere === 'super' && smokeReady}
-		<SeamlessVideoLoop assetKey="roomSmoke" {...coverProps(FX_ART)} alpha={0.62} zIndex={0} />
-	{/if}
-	{#if atmosphere === 'super' && emberReady}
-		<Sprite
-			key="emberRise"
+		<SeamlessVideoLoop
+			assetKey="roomSmoke"
 			{...coverProps(FX_ART)}
-			blendMode="add"
-			alpha={0.82}
-			zIndex={1}
+			alpha={0.55}
+			blendMode="screen"
+			zIndex={0}
 		/>
 	{/if}
 </FadeContainer>

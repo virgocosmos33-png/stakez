@@ -34,7 +34,7 @@ export const FEATURE_ART = {
 	riderFrame: 'fxRiderFrame',
 	/** oak-and-iron nameplate the nudge/bounty multiplier is struck on */
 	multPlaque: 'fxMultPlaque',
-	/** full-reel NUDGE WAYS totem — clipped from the top as it walks down */
+	/** full-reel NUDGE WAYS totem — slides down; header seats on the board */
 	nudgeColumn: 'fxNudgeColumn',
 } as const;
 

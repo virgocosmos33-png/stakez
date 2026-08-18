@@ -28,7 +28,7 @@
 	import { COLUMN_ROW_OFFSET } from '../game/chassisArt';
 	import { hangPairXs, isSpecialBarVertical } from '../game/specialBarLayout';
 	import { stateShake } from '../game/stateShake.svelte';
-	import { formatWays } from '../game/waysFormat';
+	import { formatWays, formatWinMult } from '../game/waysFormat';
 
 	const context = getContext();
 
@@ -42,6 +42,7 @@
 	let spinsCurrent = $state(0);
 	let spinsTotal = $state(0);
 	let winMult = $state(1);
+	const heldLabels: string[] = [];
 
 	context.eventEmitter.subscribeOnMount({
 		waysCounterUpdate: (e) => {
@@ -77,7 +78,7 @@
 		const winValue = bookEventAmountToCurrencyString(stateBet.winBookEventAmount);
 		const slots = [
 			{ label: 'WAYS', value: waysValue },
-			{ label: 'MULTI', value: `${winMult}×` },
+			{ label: 'MULTI', value: formatWinMult(winMult) },
 			{ label: 'WIN', value: winValue },
 		];
 
@@ -119,6 +120,7 @@
 			wellW,
 			slots,
 			spins,
+			chainFromY: plateBottom,
 		};
 	});
 </script>
@@ -135,6 +137,8 @@
 					axis="x"
 					hang
 					parts="chains"
+					chainFromY={layout.chainFromY}
+					heldLabels={heldLabels}
 				/>
 			</Container>
 			<Container zIndex={1}>
@@ -146,6 +150,8 @@
 					axis="x"
 					hang
 					parts="plate"
+					chainFromY={layout.chainFromY}
+					heldLabels={heldLabels}
 				/>
 			</Container>
 			<Container zIndex={2}>
@@ -157,6 +163,8 @@
 					axis="x"
 					hang
 					parts="boxes"
+					chainFromY={layout.chainFromY}
+					heldLabels={heldLabels}
 				/>
 			</Container>
 		</Container>
