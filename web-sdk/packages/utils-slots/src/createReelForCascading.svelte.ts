@@ -108,9 +108,13 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 		readyToSpin: () => {},
 		spinOptions: () => ({}) as CascadingReelSpinOptions,
 	});
-	const basePaddingSize = () => reelLength * reelState.spinOptions().reelPaddingMultiplierNormal;
+	// One reel-step, not this reel's symbol count. Accumulating `length ×
+	// multiplier` and then dividing by a short last reel (diamond / lane
+	// boards) used to inflate that column's hang. Equal-height boards keep
+	// the same cadence: delay = reelFallInDelay × (paddingSize - 1).
+	const basePaddingSize = () => reelState.spinOptions().reelPaddingMultiplierNormal;
 	const anticipatedPaddingSize = () =>
-		reelLength * reelState.spinOptions().reelPaddingMultiplierAnticipated;
+		reelState.spinOptions().reelPaddingMultiplierAnticipated;
 
 	// internal states
 	let targetSymbols = reelOptions.initialSymbols;
@@ -241,7 +245,7 @@ export function createReelForCascading<TRawSymbol extends object, TSymbolState e
 	};
 
 	const fallIn = async () => {
-		const fallInDelayMultiplier = paddingSize / reelLength - 1;
+		const fallInDelayMultiplier = paddingSize - 1;
 		const waitToStartFallingIn = async () =>
 			await waitForTimeout(reelState.spinOptions().reelFallInDelay * fallInDelayMultiplier);
 

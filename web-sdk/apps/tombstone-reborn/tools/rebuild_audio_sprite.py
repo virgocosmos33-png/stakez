@@ -114,6 +114,9 @@ RETIRED_CUES = (
     "sfx_madams_eye",  # renamed to sfx_tombstone_toll
     "sfx_mirror_break",
     "sfx_xways_split",
+    "sfx_anticipation",
+    "sfx_anticipation_start",
+    "sfx_bigwin_coinloop",
     "sfx_claw_split",  # split volleys use sfx_bullet_wood + optional ricochet
     "sfx_cell_seal_h3_loop",  # the last-3s visual loop is silent
     "bgm_winlevel_big",
@@ -159,10 +162,23 @@ CUE_FILTERS = {
     # thunder should hit hard alongside the lightning burst
     "sfx_thunder": "loudnorm=I=-10:TP=-0.3:LRA=6",
     # bullet hits stack under the board shake — sit above the -16 bed
-    "sfx_bullet_wood": "loudnorm=I=-11:TP=-0.5:LRA=7",
-    "sfx_bullet_ricochet": "loudnorm=I=-13:TP=-0.8:LRA=8",
+    # ElevenLabs pads these to a fixed window; trim the empty tail first.
+    "sfx_bullet_wood": f"{TRIM_EDGES},loudnorm=I=-11:TP=-0.5:LRA=7",
+    "sfx_bullet_ricochet": f"{TRIM_EDGES},loudnorm=I=-13:TP=-0.8:LRA=8",
     # click-to-shoot .44 magnum: a raw downloaded one-shot, punchy above the bed
-    "sfx_gunshot": "loudnorm=I=-11:TP=-0.5:LRA=7",
+    "sfx_gunshot": f"{TRIM_EDGES},loudnorm=I=-11:TP=-0.5:LRA=7",
+    "sfx_reel_nudge": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
+    "sfx_btn_general": f"{TRIM_EDGES},loudnorm=I=-14:TP=-1:LRA=7",
+    "sfx_btn_spin": f"{TRIM_EDGES},loudnorm=I=-14:TP=-1:LRA=7",
+    "sfx_ui_click": f"{TRIM_EDGES},loudnorm=I=-14:TP=-1:LRA=7",
+    "sfx_ui_click_soft": f"{TRIM_EDGES},loudnorm=I=-16:TP=-1.5:LRA=7",
+    "sfx_ui_click_heavy": f"{TRIM_EDGES},loudnorm=I=-13:TP=-0.8:LRA=7",
+    "sfx_reel_stop_1": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
+    "sfx_reel_stop_2": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
+    "sfx_reel_stop_3": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
+    "sfx_reel_stop_4": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
+    "sfx_reel_stop_5": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
+    "sfx_symbols_landing": f"{TRIM_EDGES},loudnorm=I=-12:TP=-0.6:LRA=7",
     # the seam tearing is the headline moment of a split
     "sfx_split_seam_tear": "loudnorm=I=-11:TP=-0.5:LRA=7",
     # the shovel has to land like it stuck in something solid

@@ -333,13 +333,10 @@ CUES: dict[str, dict] = {
         ],
     },
     "sfx_win_ways": {
-        "duration_ms": 1700,
+        "duration_ms": 400,
         "layers": [
-            L("wood_plank_thud", 0, -1, trim_ms=1100),
-            L("brass_stab", 50, -7),
-            L("revolver_echo_distant", 80, -6, trim_ms=900),
-            L("thunder_rumble_deep", 0, -12, trim_ms=1700),
-            L("chain_drag", 120, -11, trim_ms=700),
+            L("wood_plank_thud", 0, -1, trim_ms=400),
+            L("brass_stab", 40, -8, trim_ms=350),
         ],
     },
     "sfx_winlevel_standard": {

@@ -5,7 +5,7 @@
 	import { App, Container, Sprite } from 'pixi-svelte';
 	import { stateModal, stateMeta, stateUrlDerived } from 'state-shared';
 
-	import { UI, UiGameName } from 'components-ui-pixi';
+	import { UI } from 'components-ui-pixi';
 	import { GameVersion, Modals, ReplayPanel, setGameInfo } from 'components-ui-html';
 
 	import { getContext } from '../game/context';
@@ -63,22 +63,26 @@
 		return t === 'portrait' || t === 'tablet';
 	});
 
-	/** Mobile/portrait: centered just above the reel frame. */
+	/** Mobile/portrait: centered high in the band above the reel frame. */
 	const aboveReelsLogo = $derived.by(() => {
 		const board = context.stateGameDerived.boardLayout();
+		const main = context.stateLayoutDerived.mainLayout();
+		const canvas = context.stateLayoutDerived.canvasSizes();
 		const frameTop = board.visualTop + stateShake.y;
+		const screenTop = (0 - canvas.height / 2) / main.scale + main.height / 2;
 		const gap = 10;
-		const topPad = 28;
-		// Fit the wide wordmark into the band above the frame.
+		const topPad = 4;
 		const maxH = Math.max(48, frameTop - gap - topPad);
 		const widthBySpace = maxH / LOGO_ASPECT;
 		const widthByBoard = (board.visualRight - board.visualLeft) * 0.78;
 		const width = Math.min(widthBySpace, widthByBoard);
 		const height = width * LOGO_ASPECT;
+		// Pin the top of the wordmark near the screen; don't cover the timber.
+		const yTop = screenTop + topPad + height;
+		const yBoard = frameTop - gap;
 		return {
 			x: board.x + stateShake.x,
-			// anchor y=1 → bottom edge sits `gap` above the frame top
-			y: frameTop - gap,
+			y: Math.min(yTop, yBoard),
 			width,
 			height,
 		};
@@ -153,30 +157,37 @@
 		<!-- BoardFrame REMOVED: diamond board (4-3-2-3-4) renders with no frame
 			behind the symbols. -->
 
-		<!-- Mobile/portrait: brand logo centered above the reel frame (logo_v3). -->
-		{#if logoStacked}
-			<MainContainer>
-				{@const L = aboveReelsLogo}
-				<Container x={L.x} y={L.y}>
-					<Sprite
-						key="mirrorLogo"
-						anchor={{ x: 0.5, y: 1 }}
-						width={L.width}
-						height={L.height}
-					/>
-				</Container>
-			</MainContainer>
-		{/if}
-
-		<!-- Chains (z 0) under the timber (z 1), boxes (z 2) in front.
-			Same MainContainer so zIndex actually sorts them. -->
+		<!-- Chains under the wordmark, boxes in front. Same MainContainer so
+			zIndex actually sorts them against the logo. -->
 		<MainContainer>
-			<SpecialBar />
-			<BoardPlate />
+			<Container sortableChildren>
+				<Container zIndex={0}>
+					<SpecialBar layer="chains" />
+				</Container>
+				{#if logoStacked}
+					{@const L = aboveReelsLogo}
+					<Container zIndex={1} x={L.x} y={L.y}>
+						<Sprite
+							key="mirrorLogo"
+							anchor={{ x: 0.5, y: 1 }}
+							width={L.width}
+							height={L.height}
+						/>
+					</Container>
+				{/if}
+				<Container zIndex={2}>
+					<SpecialBar layer="hud" />
+				</Container>
+			</Container>
+			<BoardPlate layer="back" />
 		</MainContainer>
 
+		<!-- The baked timber ring rides ABOVE the reels (z 3): cards dropping
+			through a window that outgrows the authored ring pass BEHIND the
+			planks instead of painting over them. -->
 		<MainContainer>
 			<Board />
+			<BoardPlate layer="ring" />
 			<Anticipations />
 		</MainContainer>
 
@@ -208,7 +219,7 @@
 		<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
 		<FeatureBurst />
 
-		<!-- SPLIT / SUPERSPLIT: knife slash, then N panes (up to 4). -->
+		<!-- SPLIT / SUPERSPLIT: 3D knife stab+slice per seam, then N panes (up to 4). -->
 		<SplitPanes />
 
 		<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD. -->
@@ -254,9 +265,7 @@
 			<FrameMorphHud />
 
 			<UI>
-				{#snippet gameName()}
-					<UiGameName name="TOMBSTONE REBORN" />
-				{/snippet}
+				{#snippet gameName()}{/snippet}
 				{#snippet logo()}
 					{#if !logoStacked}
 						{@const C = cornerLogo}
@@ -275,11 +284,9 @@
 			<Win />
 			<Transition />
 
-			<!-- Bought-bonus announcement: DEAD MAN'S HAND (bonus_small) /
-				OPEN GRAVE (bonus_super), awaited by playBet at round start so
-				the enhanced spin waits for it. Mounted LAST in this container so
-				it covers the HUD as well — it is a takeover, and the player has
-				already committed the buy, so nothing under it is actionable. -->
+			<!-- Bonus-entry banner. Awaited by freeSpinTrigger AFTER the
+				trigger spin resolves (scatters + wins). Mounted last so it
+				covers the HUD — a takeover, nothing under it is actionable. -->
 			<BonusEntry />
 		</Container>
 	{/if}

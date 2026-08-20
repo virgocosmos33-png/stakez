@@ -8,6 +8,11 @@
 	 * Per-cell iron slot borders sit behind the cards. The baked ring is
 	 * authored geometry (holds still if a reel grows). The container follows
 	 * boardLayout scale/pivot so the timber stays locked to the cards.
+	 *
+	 * Rendered TWICE from Game.svelte: layer="back" (slot borders + chains,
+	 * under the symbols) and layer="ring" (the baked plank ring, ABOVE the
+	 * board) — so cards dropping through a window that outgrows the authored
+	 * ring pass BEHIND the timber instead of painting over it.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 
@@ -15,6 +20,10 @@
 	import { CELL_PITCH_X, SYMBOL_SIZE, NUM_ROWS, MAX_ROWS } from '../game/constants';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
 	import ReelChains from './ReelChains.svelte';
+
+	type Props = { layer?: 'back' | 'ring' };
+	const props: Props = $props();
+	const layer = $derived(props.layer ?? 'back');
 
 	const context = getContext();
 	const frameKey = $derived(
@@ -63,9 +72,6 @@
 
 	const slots = $derived.by(() =>
 		columns.flatMap((col, reel) => {
-			// Last reel is the door lid — the iron slot under it is the grey
-			// strip that shows through every seam in the swing.
-			if (reel === columns.length - 1) return [];
 			const rows = getReelRows(reel);
 			if (rows <= 0) return [];
 			const pitch = (col.bottom - col.top) / rows;
@@ -81,25 +87,33 @@
 	const layout = $derived(context.stateGameDerived.boardLayout());
 </script>
 
-<Container zIndex={1} x={layout.x} y={layout.y} pivot={layout.pivot} scale={layout.scale}>
-	{#each slots as slot (slot.key)}
+<Container
+	zIndex={layer === 'ring' ? 3 : 1}
+	x={layout.x}
+	y={layout.y}
+	pivot={layout.pivot}
+	scale={layout.scale}
+>
+	{#if layer === 'back'}
+		{#each slots as slot (slot.key)}
+			<Sprite
+				key="boardSlotFrame"
+				x={slot.cx}
+				y={slot.cy}
+				anchor={0.5}
+				width={CELL_PITCH_X}
+				height={slot.h}
+			/>
+		{/each}
+
+		<ReelChains />
+	{:else}
 		<Sprite
-			key="boardSlotFrame"
-			x={slot.cx}
-			y={slot.cy}
-			anchor={0.5}
-			width={CELL_PITCH_X}
-			height={slot.h}
+			key={frameKey}
+			x={frameBox.x}
+			y={frameBox.y}
+			width={frameBox.w}
+			height={frameBox.h}
 		/>
-	{/each}
-
-	<ReelChains />
-
-	<Sprite
-		key={frameKey}
-		x={frameBox.x}
-		y={frameBox.y}
-		width={frameBox.w}
-		height={frameBox.h}
-	/>
+	{/if}
 </Container>

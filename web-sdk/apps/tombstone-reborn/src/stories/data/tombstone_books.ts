@@ -4,6 +4,12 @@
 // winInfo/setWin -> finalWin.
 import showcase from '../../showcase.generated.json';
 import { FEATURE_DEMO_BOOKS } from './feature_demo_books';
+import type { DemoBook } from './feature_demo_books';
+// REAL max-win books curated from the simulated library
+// (math-sdk/games/0_3_tombstone_reborn/make_maxwin_story_books.py).
+import maxwinGenerated from './maxwin_books.generated.json';
+
+const MAXWIN_BOOKS = maxwinGenerated as DemoBook[];
 
 export type ShowcaseBook = {
 	label: string;
@@ -15,6 +21,15 @@ export type ShowcaseBook = {
 const books = showcase as unknown as ShowcaseBook[];
 
 export const bookByLabel = (label: string) => {
+	const maxwin = MAXWIN_BOOKS.find((book) => book.label === label);
+	if (maxwin) {
+		return {
+			id: 950 + MAXWIN_BOOKS.indexOf(maxwin),
+			payoutMultiplier: maxwin.payoutX,
+			events: maxwin.events,
+			mode: maxwin.mode,
+		};
+	}
 	const demo = FEATURE_DEMO_BOOKS.find((book) => book.label === label);
 	if (demo) {
 		return {

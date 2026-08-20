@@ -36,7 +36,7 @@ import random
 import tempfile
 
 from fontTools.ttLib import TTFont
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.dirname(HERE)
@@ -58,7 +58,8 @@ DIGITS = "0123456789"
 # Branded gold body, hot at the top and sinking into deep brass.
 GOLD_TOP = (238, 206, 132)
 GOLD_BOTTOM = (150, 108, 40)
-IRON_RIM = (22, 17, 13)
+# Solid black outline — amounts sit on busy plates with no dark well behind them.
+IRON_RIM = (0, 0, 0)
 EMBER_FLECK = (176, 92, 38)
 
 CHAR_IDS = (
@@ -126,7 +127,8 @@ def render_glyph(
 	"""Branded glyph: gold body, iron rim, burnt ember flecks."""
 	s = SUPER
 	big = font.font_variant(size=font.size * s)
-	pad = 12 * s
+	stroke_px = 10 * s
+	pad = 8 * s + stroke_px
 	band_top, band_bottom = band
 	band_h = max(band_bottom - band_top, 1)
 	bbox = big.getbbox(char)
@@ -134,18 +136,24 @@ def render_glyph(
 		bbox = (0, band_top, 6 * s, band_bottom)
 	width = max(bbox[2] - bbox[0], 6 * s) + pad * 2
 
-	mask = Image.new("L", (width, band_h + pad * 2), 0)
-	ImageDraw.Draw(mask).text((pad - bbox[0], pad - band_top), char, font=big, fill=255)
+	origin = (pad - bbox[0], pad - band_top)
+	size = (width, band_h + pad * 2)
+	mask = Image.new("L", size, 0)
+	ImageDraw.Draw(mask).text(origin, char, font=big, fill=255)
 	if mask.getbbox() is None:
 		return Image.new("RGBA", (max(width // s, 6), cell_h), (0, 0, 0, 0))
 
-	body = Image.new("RGBA", mask.size, (0, 0, 0, 0))
-	body.paste(gold_gradient(mask.size), (0, 0), mask)
+	body = Image.new("RGBA", size, (0, 0, 0, 0))
+	body.paste(gold_gradient(size), (0, 0), mask)
 
-	# Iron rim, thick enough to hold the glyph against a bright hero plate.
-	rim_mask = mask.filter(ImageFilter.MaxFilter(3 * s + 1))
-	rim = Image.new("RGBA", mask.size, (*IRON_RIM, 255))
-	layered = Image.new("RGBA", mask.size, (0, 0, 0, 0))
+	# Black stroke via FreeType, not MaxFilter — a 45px max-window is minutes
+	# of bake for this atlas.
+	rim_mask = Image.new("L", size, 0)
+	ImageDraw.Draw(rim_mask).text(
+		origin, char, font=big, fill=255, stroke_width=stroke_px, stroke_fill=255
+	)
+	rim = Image.new("RGBA", size, (*IRON_RIM, 255))
+	layered = Image.new("RGBA", size, (0, 0, 0, 0))
 	layered.paste(rim, (0, 0), rim_mask)
 	layered.alpha_composite(body)
 

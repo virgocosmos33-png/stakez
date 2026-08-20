@@ -20,6 +20,12 @@ export type RawSymbol = {
 	// has its own face (MEMORY / DOUBT / REGRET / REVELATION / OBLIVION), the
 	// same 1..5 the scatter stop sounds already use.
 	scatterIndex?: number;
+	// Which per-level premium face (h#_small / h#_super) this symbol wears —
+	// STAMPED at deal time by the reveal handler, never read live from the
+	// room atmosphere. A symbol keeps the face it was born with, so a settled
+	// board never face-swaps mid-presentation (scatter hit, bonus banner);
+	// the new deck arrives with the next reveal's drop. Unset = base faces.
+	level?: 'base' | 'small' | 'super';
 };
 export type BetMode = keyof typeof config.betModes;
 export type GameType = keyof typeof config.paddingReels;

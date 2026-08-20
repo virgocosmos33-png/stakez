@@ -1,10 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
-	import { stateUi } from 'state-shared';
-
 	import UIDefault from './UIDefault.svelte';
-	import UIReplay from './UIReplay.svelte';
 
 	type Props = {
 		gameName: Snippet;
@@ -12,16 +9,12 @@
 	};
 
 	const props: Props = $props();
-
-	const UI_COMPONENT_MAP = {
-		default: UIDefault,
-		replay: UIReplay,
-	};
-
-	const UIComponent = $derived(UI_COMPONENT_MAP[stateUi.config.mode]);
 </script>
 
-<UIComponent>
+<!-- Replay used to swap UIReplay (hardcoded WIN/BET stacks). That chrome
+	does not match LayoutDesktop / LayoutPortrait, so Stake event replay
+	looked broken. Live play and replay share this HUD. -->
+<UIDefault>
 	{#snippet gameName()}
 		{@render props.gameName()}
 	{/snippet}
@@ -29,4 +22,4 @@
 	{#snippet logo()}
 		{@render props.logo()}
 	{/snippet}
-</UIComponent>
+</UIDefault>

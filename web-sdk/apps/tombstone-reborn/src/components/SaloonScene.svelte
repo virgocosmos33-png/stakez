@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { Filter } from 'pixi.js';
+	import { BlurFilter, Filter } from 'pixi.js';
 
 	import { SCENE_ART as SCENE_ART_SRC } from '../game/saloonLamps';
 	import { createGradeFilter, gradeUniformsOf } from './AtmosphereFx.svelte';
@@ -43,7 +43,7 @@ void main() {
 	vec2 focus = vec2(0.50, 0.52);
 	float coc = smoothstep(0.28, 0.92, length((uv - focus) * vec2(1.05, 1.2)));
 	coc = max(coc, smoothstep(0.16, 0.0, uv.y) * 0.35);
-	coc = mix(0.0637, 0.7004, coc);
+	coc = mix(0.045, 0.48, coc);
 	vec2 px = uInputSize.zw * uRadius * coc;
 	vec4 acc = texture(uTexture, uv) * 0.36;
 	acc += texture(uTexture, uv + vec2(1.0, 0.0) * px) * 0.16;
@@ -81,11 +81,11 @@ void main() {
 		gl: { vertex: FILTER_VERTEX, fragment: FIELD_BLUR_FRAGMENT, name: 'saloon-bg-field-blur' },
 		resources: {
 			fieldUniforms: {
-				uRadius: { value: 4.08, type: 'f32' },
+				uRadius: { value: 2.7, type: 'f32' },
 			},
 		},
 	});
-	fieldBlurFilter.padding = 12;
+	fieldBlurFilter.padding = 10;
 
 	const grainFilter = Filter.from({
 		gl: { vertex: FILTER_VERTEX, fragment: GRAIN_FRAGMENT, name: 'saloon-bg-grain' },
@@ -100,7 +100,11 @@ void main() {
 		grainFilter.resources as Record<string, { uniforms: { uTime: number; uAmount: number } }>
 	).grainUniforms.uniforms;
 
-	export const BG_PLATE_FILTERS = [bgGrade, fieldBlurFilter, grainFilter];
+	// Same plate stack as before — Gaussian + field blur — just dialed down.
+	const bgSeeBlur = new BlurFilter({ strength: 2.5, quality: 3 });
+	bgSeeBlur.padding = 16;
+
+	export const BG_PLATE_FILTERS = [bgGrade, fieldBlurFilter, grainFilter, bgSeeBlur];
 	export const tickBgGrain = (seconds: number) => {
 		grainUniforms.uTime = seconds;
 	};
@@ -175,6 +179,8 @@ void main() {
 	 * the globe goes soft as it comes toward the lens.
 	 */
 	import { onMount } from 'svelte';
+	import { Tween } from 'svelte/motion';
+	import { cubicInOut } from 'svelte/easing';
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { SALOON_LAMPS } from '../game/saloonLamps';
@@ -212,6 +218,33 @@ void main() {
 				? 'saloonPlateSmall'
 				: 'saloonPlate',
 	);
+
+	// CROSSFADE the room plate instead of hard-cutting it. The atmosphere only
+	// flips behind the bonus banner's dark veil now, but the veil is not fully
+	// opaque — a hard cut still reads as a blink through it. The old plate
+	// stays underneath while the new one fades in over it.
+	let shownPlate = $state(
+		context.stateGame.atmosphere === 'super'
+			? 'saloonPlateSuper'
+			: context.stateGame.atmosphere === 'small'
+				? 'saloonPlateSmall'
+				: 'saloonPlate',
+	);
+	let fadingPlate = $state<string | null>(null);
+	const plateFade = new Tween(1);
+
+	$effect(() => {
+		const next = plateKey;
+		if (next === shownPlate || next === fadingPlate) return;
+		fadingPlate = next;
+		plateFade.set(0, { duration: 0 });
+		plateFade.set(1, { duration: 700, easing: cubicInOut }).then(() => {
+			// A second flip mid-fade supersedes this one — only commit our own.
+			if (fadingPlate !== next) return;
+			shownPlate = next;
+			fadingPlate = null;
+		});
+	});
 	const showLamp = $derived(context.stateGame.atmosphere === 'base');
 	const showFire = $derived(context.stateGame.atmosphere === 'super');
 
@@ -264,13 +297,24 @@ void main() {
 	{#if hasRoom}
 		<Container filters={BG_PLATE_FILTERS}>
 			<Sprite
-				key={plateKey}
+				key={shownPlate}
 				x={SCENE_ART.width / 2}
 				y={SCENE_ART.height / 2}
 				width={SCENE_ART.width}
 				height={SCENE_ART.height}
 				anchor={0.5}
 			/>
+			{#if fadingPlate !== null}
+				<Sprite
+					key={fadingPlate}
+					x={SCENE_ART.width / 2}
+					y={SCENE_ART.height / 2}
+					width={SCENE_ART.width}
+					height={SCENE_ART.height}
+					anchor={0.5}
+					alpha={plateFade.current}
+				/>
+			{/if}
 		</Container>
 		{#if showLamp}
 			<Container

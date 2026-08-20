@@ -1,12 +1,12 @@
 /**
- * Big-win celebration scenes. Each hero plate has its own one-shot track
- * (wincelebrationsaudios/scene 1..6). The plate holds until that track ends,
- * then the next scene starts — unless the player skips.
+ * Big-win celebration scenes. Each hero plate has its own looping bed
+ * (scene 1 / 2 / 4 / 6 / 7 / 8). The plate holds for the clip, then the
+ * next scene starts — unless the player skips. Music loops until then.
  *
  * These stay as standalone mp3s, same as the bonus beds. They are too long
- * for the SFX sprite, and they must play once (not loop) so "end" is real.
+ * for the SFX sprite.
  */
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
 
 import { stateSoundDerived } from 'state-shared';
 
@@ -24,39 +24,35 @@ export const CELEB_SCENE_NAMES = [
 export type CelebSceneName = (typeof CELEB_SCENE_NAMES)[number];
 
 const SRC: Record<CelebSceneName, string> = {
-	bgm_celeb_1: '/assets/audio/bgm_celeb_1.mp3',
-	bgm_celeb_2: '/assets/audio/bgm_celeb_2.mp3',
-	bgm_celeb_3: '/assets/audio/bgm_celeb_3.mp3',
-	bgm_celeb_4: '/assets/audio/bgm_celeb_4.mp3',
-	bgm_celeb_5: '/assets/audio/bgm_celeb_5.mp3',
-	bgm_celeb_6: '/assets/audio/bgm_celeb_6.mp3',
+	bgm_celeb_1: '/assets/audio/bgm_celeb_1.mp3?v=tr20',
+	bgm_celeb_2: '/assets/audio/bgm_celeb_2.mp3?v=tr20',
+	bgm_celeb_3: '/assets/audio/bgm_celeb_3.mp3?v=tr20',
+	bgm_celeb_4: '/assets/audio/bgm_celeb_4.mp3?v=tr20',
+	bgm_celeb_5: '/assets/audio/bgm_celeb_5.mp3?v=tr20',
+	bgm_celeb_6: '/assets/audio/bgm_celeb_6.mp3?v=tr20',
 };
 
-/** Probed lengths of scene 1..6. Count-up pacing and the Howl end-guard use these. */
+/** Probed one-shot lengths. Scenes loop, so plate dwell uses the clip, not these. */
 export const CELEB_SCENE_MS: Record<CelebSceneName, number> = {
-	bgm_celeb_1: 20402,
-	bgm_celeb_2: 8673,
-	bgm_celeb_3: 8699,
-	bgm_celeb_4: 17345,
-	bgm_celeb_5: 8699,
-	bgm_celeb_6: 28369,
+	bgm_celeb_1: 30067,
+	bgm_celeb_2: 23353,
+	bgm_celeb_3: 11102,
+	bgm_celeb_4: 7915,
+	bgm_celeb_5: 19722,
+	bgm_celeb_6: 18834,
 };
-
-const AUDIO_END_GUARD_MS = 200;
 
 const howls = new Map<CelebSceneName, Howl>();
 let active: CelebSceneName | null = null;
-let playGen = 0;
-let endTimer: ReturnType<typeof setTimeout> | null = null;
 
 const track = (name: CelebSceneName) => {
 	const existing = howls.get(name);
 	if (existing) return existing;
 	const howl = new Howl({
 		src: [SRC[name]],
-		loop: false,
+		loop: true,
 		preload: true,
-		html5: true,
+		html5: false,
 	});
 	howls.set(name, howl);
 	return howl;
@@ -64,12 +60,6 @@ const track = (name: CelebSceneName) => {
 
 const applyVolume = (howl: Howl) => {
 	howl.volume(stateSoundDerived.volumeMusic());
-};
-
-const clearEndTimer = () => {
-	if (endTimer === null) return;
-	clearTimeout(endTimer);
-	endTimer = null;
 };
 
 export const isCelebSceneBgm = (name: string): name is CelebSceneName =>
@@ -82,36 +72,22 @@ export const preloadCelebSceneBgm = () => {
 	for (const name of CELEB_SCENE_NAMES) track(name);
 };
 
-export const playCelebSceneBgm = (name: CelebSceneName, onEnd?: () => void) => {
+export const playCelebSceneBgm = (name: CelebSceneName) => {
 	stopCelebSceneBgm();
 	pauseModeBeds();
 
 	const howl = track(name);
-	const gen = ++playGen;
-	const finish = () => {
-		if (gen !== playGen) return;
-		clearEndTimer();
-		howl.off('end', finish);
-		onEnd?.();
-	};
-
 	applyVolume(howl);
-	howl.off('end');
-	howl.once('end', finish);
-	endTimer = setTimeout(finish, CELEB_SCENE_MS[name] + AUDIO_END_GUARD_MS);
+	if (Howler.ctx && Howler.ctx.state !== 'running') void Howler.ctx.resume();
+	howl.seek(0);
 	howl.play();
 	active = name;
 };
 
 export const stopCelebSceneBgm = () => {
-	playGen += 1;
-	clearEndTimer();
 	if (!active) return;
 	const howl = howls.get(active);
-	if (howl) {
-		howl.off('end');
-		howl.stop();
-	}
+	if (howl) howl.stop();
 	active = null;
 };
 

@@ -34,11 +34,10 @@
 		background: var(--mono-bg, #10161d);
 		border: 1px solid var(--mono-hairline, #2a3542);
 		text-align: left;
-		// desktop strip default; mobile wraps override via :global
-		flex: 0 0 auto;
-		width: 168px;
-		min-width: 140px;
-		max-width: 200px;
+		flex: 1 1 auto;
+		width: 100%;
+		min-width: 0;
+		max-width: none;
 		gap: 0.5rem;
 
 		transition:

@@ -124,6 +124,10 @@ export type MultiplierSymbol = {
 export const stateGame = $state({
 	board,
 	gameType: 'basegame' as GameType,
+	/** True from playBet start until the book finishes (base + bonus spins).
+	 *  Storybook keeps xstate idle during Action, so idle+!spinning is not
+	 *  enough to know the board is waiting on the player. */
+	roundLive: false,
 	atmosphere: 'base' as Atmosphere,
 	// TOMBSTONE REBORN: the special bar's revealed cards this spin (one entry per
 	// non-empty bar cell). Set by the specialBar book event, cleared on reveal.
@@ -275,7 +279,7 @@ const boardLayout = () => {
 	const available = Math.max(1, floorY - BOARD_TOP_MARGIN);
 	const liveH = Math.max(1, contentBot - contentTop);
 	const liveW = BOARD_SIZES.width + BOARD_FRAME_OUTER * 2;
-	const plaqueCol = 48;
+	const plaqueCol = barVertical ? 0 : 48;
 	const scaleH = available / liveH;
 	const scaleW = Math.max(0.2, (main.width - plaqueCol) / liveW);
 	const scale = Math.min(scaleH, scaleW);

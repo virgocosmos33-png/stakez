@@ -15,6 +15,23 @@
 	let initialised = $state(false);
 
 	const initialiseApplication = async () => {
+		// Game art is authored ABOVE display size (board frame ~1.4x, symbol
+		// cards ~1.5x) so sprites are always minified. Plain bilinear
+		// minification undersamples — it blends only 4 texels per output pixel
+		// regardless of how much detail is being squeezed — which reads as
+		// pixelated/crunchy edges on the timber frame and symbol linework.
+		// Mipmaps give proper trilinear minification (what commercial slots
+		// ship). Must be set before Assets.load creates any TextureSource.
+		PIXI.TextureSource.defaultOptions.autoGenerateMipmaps = true;
+		// …but NOT for filter/effect render textures: those re-render every
+		// frame and pixi never regenerates their mip chain, so keep the pool
+		// on plain level-0 sampling (also what pixi's docs recommend).
+		PIXI.TexturePool.textureOptions.autoGenerateMipmaps = false;
+		PIXI.TexturePool.textureOptions.mipLevelCount = 1;
+		// Anisotropic filtering: extra probes when a texture is scaled, sharper
+		// result than plain (tri)linear at no meaningful GPU cost on 2D scenes.
+		PIXI.TextureStyle.defaultOptions.maxAnisotropy = 16;
+
 		PIXI.Assets.reset();
 
 		await preloadFont();
@@ -33,7 +50,15 @@
 			// the stable, universally-supported path for the game.
 			preference: 'webgl',
 			powerPreference: 'high-performance',
-			resolution: devicePixelRatio.current,
+			// Supersample low-DPI displays: on Windows desktops dPR is often
+			// 1–1.5, which forces game art (authored ~1.5–2x display size) deep
+			// into minification where trilinear mips look mushy and raw
+			// bilinear looks crunchy. Rendering the backing store at >=2x puts
+			// texture sampling near 1:1 (crisp), and the browser compositor
+			// downscales the canvas to CSS size with high quality — the same
+			// thing a genuine 2x hidpi screen does. True hidpi phones
+			// (dPR 2–3) keep their native ratio.
+			resolution: Math.min(Math.max(devicePixelRatio.current ?? 1, 2), 3),
 			resizeTo: window,
 		});
 

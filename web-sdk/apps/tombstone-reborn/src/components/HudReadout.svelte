@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * WAYS / MULTI / WIN / FREE SPINS as stacked timber boxes. A labeled
-	 * wood pallet sits on top of each box; the black well only shows the
+	 * wood pallet sits on top of each box; the well only shows the
 	 * number. Desktop sits this to the right of the board; narrow layouts
 	 * sit it under the board.
 	 */
@@ -12,7 +12,6 @@
 	import { hudColor } from '../game/hud.generated';
 	import { multiHang, multiHangPose, syncMultiHang } from '../game/multiHang';
 	import { fitFontSize, trValueStyle } from '../game/typography';
-	import RedGlowMark from './RedGlowMark.svelte';
 
 	export type HudReadoutSlot = { label: string; value: string; w?: number };
 
@@ -232,7 +231,7 @@
 </script>
 
 {#snippet blockFace(b: (typeof metrics.blocks)[number], ox: number, oy: number)}
-	{#if (parts === 'all' || parts === 'plate') && b.label !== 'MULTI'}
+	{#if parts === 'all' || parts === 'plate'}
 		<Rectangle
 			x={ox}
 			y={oy}
@@ -263,43 +262,26 @@
 			height={b.pallet.h}
 			eventMode="none"
 		/>
-		{#if b.label === 'MULTI'}
-			<RedGlowMark
-				x={ox}
-				y={oy}
-				label={b.value}
-				width={b.w * (PLATE.x1 - PLATE.x0) * 0.9}
-				height={b.h * (PLATE.y1 - PLATE.y0) * 0.72}
-				fontSize={fitFontSize(b.value, {
+		<Text
+			x={ox}
+			y={oy}
+			anchor={0.5}
+			text={b.value}
+			eventMode="none"
+			style={trValueStyle({
+				fill: VALUE_COLOR,
+				fontSize: fitFontSize(b.value, {
 					role: 'value',
 					base: b.valueSize,
-					maxWidth: b.w * (PLATE.x1 - PLATE.x0) * 0.72,
+					maxWidth: b.w * (PLATE.x1 - PLATE.x0) * 0.88,
 					min: 9,
 					letterSpacing: VALUE_TRACKING,
-				})}
-			/>
-		{:else}
-			<Text
-				x={ox}
-				y={oy}
-				anchor={0.5}
-				text={b.value}
-				eventMode="none"
-				style={trValueStyle({
-					fill: VALUE_COLOR,
-					fontSize: fitFontSize(b.value, {
-						role: 'value',
-						base: b.valueSize,
-						maxWidth: b.w * (PLATE.x1 - PLATE.x0) * 0.88,
-						min: 9,
-						letterSpacing: VALUE_TRACKING,
-					}),
-					letterSpacing: VALUE_TRACKING,
-					stroke: INK_STROKE,
-					dropShadow: INK_SHADOW,
-				})}
-			/>
-		{/if}
+				}),
+				letterSpacing: VALUE_TRACKING,
+				stroke: INK_STROKE,
+				dropShadow: INK_SHADOW,
+			})}
+		/>
 	{/if}
 {/snippet}
 

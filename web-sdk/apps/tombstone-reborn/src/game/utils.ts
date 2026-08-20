@@ -33,16 +33,22 @@ export const { getEmptyBoard } = createGetEmptyPaddedBoard({
 export const { playBookEvent, playBookEvents } = createPlayBookUtils({ bookEventHandlerMap });
 export const playBet = async (bet: Bet) => {
 	stateBet.winBookEventAmount = 0;
-	syncAtmosphere();
-	// A bought bonus announces itself before its single enhanced spin. No-op on a
-	// base spin and on a resumed round — see game/bonusEntry.ts.
-	await presentBonusEntry(bet);
-	await playBookEvents(bet.state);
-	// One book is one bet. When it finishes the bonus is over — even if a
-	// 10-spin book never emitted freeSpinEnd, or a bought single-spin left
-	// Tombstone Showdown / Desert Standoff looping.
-	if (currentModeMusic() !== 'bgm_main') restoreBaseMusic();
-	eventEmitter.broadcast({ type: 'stopButtonEnable' });
+	stateGame.roundLive = true;
+	try {
+		// A bought 10-spin book still OPENS on a basegame trigger (scatters, then
+		// wins, then freeSpinTrigger). Stay on the base room until that banner
+		// grades it. Resume mid-round is the one exception — presentBonusEntry.
+		if (bet.state[0]?.type !== 'createBonusSnapshot') syncAtmosphere('base');
+		await presentBonusEntry(bet);
+		await playBookEvents(bet.state);
+		// One book is one bet. When it finishes the bonus is over — even if a
+		// 10-spin book never emitted freeSpinEnd, or a bought single-spin left
+		// Tombstone Showdown / Desert Standoff looping.
+		if (currentModeMusic() !== 'bgm_main') restoreBaseMusic();
+		eventEmitter.broadcast({ type: 'stopButtonEnable' });
+	} finally {
+		stateGame.roundLive = false;
+	}
 };
 
 // resume bet
@@ -177,6 +183,26 @@ export const getReelPocket = (reelIndex: number) => {
 	};
 };
 
+// v25 atlas ships per-level premium faces: h1.webp is the base-game card,
+// h1_small.webp / h1_super.webp (plus _blur smears) the bonus variants. The
+// level rides ON THE SYMBOL (rawSymbol.level, stamped by the reveal handler
+// at deal time) rather than being read live from stateGame.atmosphere — a
+// live read face-swapped the whole settled board the instant the atmosphere
+// shifted (scatter hit, bonus banner), which looked like a glitch. Spine
+// states (win/land) keep the base face: mm_symbols is one texture.
+const LEVEL_FACE_RE = /^(h[1-5])(_blur)?(\.webp)$/;
+
+const levelFace = <T extends { type: string; assetKey: string }>(
+	info: T,
+	level: RawSymbol['level'],
+): T => {
+	if (!level || level === 'base' || info.type !== 'sprite') return info;
+	const match = LEVEL_FACE_RE.exec(info.assetKey);
+	if (!match) return info;
+	const [, sym, blur, ext] = match;
+	return { ...info, assetKey: `${sym}_${level}${blur ?? ''}${ext}` };
+};
+
 export const getSymbolInfo = ({
 	rawSymbol,
 	state,
@@ -189,5 +215,15 @@ export const getSymbolInfo = ({
 	// scatter (S) is the cracked BONUS tombstone straight from SYMBOL_INFO_MAP.
 	if (rawSymbol.name === 'W' && rawSymbol.expanding) return WILD_EXPAND_INFO[state];
 	if (rawSymbol.name === 'W' && rawSymbol.nudged) return NUDGE_WILD_INFO[state];
-	return SYMBOL_INFO_MAP[rawSymbol.name][state];
+	const level = rawSymbol.level;
+	const map = SYMBOL_INFO_MAP[rawSymbol.name];
+	const info = map[state];
+	// Land (and any other spine state) is the BASE-game skeleton — one
+	// texture, no small/super variant. Playing that on a bonus deal then
+	// flipping to the leveled sprite is the mid-spin face-swap. Keep the
+	// leveled card for the whole drop.
+	if (level && level !== 'base' && info?.type === 'spine') {
+		return levelFace(map.static, level);
+	}
+	return levelFace(info, level);
 };

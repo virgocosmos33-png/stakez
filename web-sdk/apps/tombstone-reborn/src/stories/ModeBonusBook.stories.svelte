@@ -56,7 +56,7 @@
 	{template}
 />
 
-<!-- SMALL BONUS: gunslinger connects 4 reels — a readable 48x BOUNTY -->
+<!-- SMALL BONUS: gunslinger connects 4 reels — a readable 48x LAST AMEN -->
 <Story
 	name="smallBonusWin"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('small_bonus_win') })}
@@ -112,9 +112,18 @@
 	{template}
 />
 
-<!-- MAX WIN: the 99,999x spin — the Gunslinger finally smiles -->
+<!-- MAX WIN: a real simulated bought-SUPER spin — nudges, gunsmoke, splits,
+     then SUPERSPLIT stack the ways to the 99,999x cap -->
 <Story
 	name="maxWin"
-	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('max_win') })}
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('max_win_super_spin') })}
+	{template}
+/>
+
+<!-- MAX WIN ROUND: a real simulated BIG BONUS round — the sticky WIN multi
+     climbs across 10 spins and the round finishes on the cap -->
+<Story
+	name="maxWinBonusRound"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('max_win_super_round') })}
 	{template}
 />

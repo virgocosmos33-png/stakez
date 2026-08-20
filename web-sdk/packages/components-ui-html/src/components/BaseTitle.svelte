@@ -22,7 +22,8 @@
 		font-weight: 700;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
-		font-size: 1.4rem;
+		font-size: clamp(1.05rem, 2.6vw + 0.7rem, 1.4rem);
+		line-height: 1.2;
 		color: var(--mono-fg, #ffffff);
 	}
 </style>

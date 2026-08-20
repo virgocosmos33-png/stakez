@@ -6,6 +6,8 @@
 	type Props = {
 		type: 'column' | 'row';
 		noScroll?: boolean;
+		/** Take leftover space in a fit popup so copy scrolls, chrome stays. */
+		grow?: boolean;
 		children: Snippet<[{ element: Element }]>;
 	};
 
@@ -19,6 +21,7 @@
 	class="content {props.type}"
 	class:scrollX={!props.noScroll && props.type === 'row'}
 	class:scrollY={!props.noScroll && props.type === 'column'}
+	class:grow={props.grow}
 >
 	{@render props.children({ element })}
 </div>
@@ -40,6 +43,12 @@
 			flex-direction: row;
 			justify-content: center;
 			max-width: 100%;
+		}
+
+		&.grow {
+			flex: 1 1 auto;
+			min-height: 0;
+			width: 100%;
 		}
 	}
 </style>

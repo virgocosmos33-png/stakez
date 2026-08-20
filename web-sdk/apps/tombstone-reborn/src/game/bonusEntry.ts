@@ -1,18 +1,11 @@
 /**
- * BONUS-ENTRY TRIGGER — the one place that decides a banner is owed.
+ * Resume-only bonus bed. The banner itself is NOT shown here.
  *
- * `playBet` awaits this before it plays a single book event, which makes round
- * start the trigger: the banner announces the bought mode and the reels cannot
- * spin until it hands off. That is the whole reason the five overlays deleted
- * before this one were dead code — they declared events nothing broadcast and
- * were mounted nowhere, so no trigger existed at all.
- *
- * Why round start rather than a book event: the math emits nothing that marks a
- * bought round (a bonus book is an ordinary `reveal` with a livelier board), so
- * the only truth is the bet mode the player paid for, which is
- * `stateBet.activeBetModeKey` — set by ModalBuyBonusConfirm on confirm, and reset
- * to BASE by ButtonBetProvider / AutoSpinsStartButton / the space-hold guard the
- * moment the player takes a normal spin.
+ * Bought 10-spin books start with a basegame trigger (scatters drop, wins
+ * resolve, then `freeSpinTrigger`). The banner and the room grade wait for
+ * that event — see bookEventHandlerMap.freeSpinTrigger. This helper only
+ * restarts the bonus bed when the player is coming back mid-round, because
+ * they already saw the banner when they bought.
  */
 import { stateBet } from 'state-shared';
 
@@ -20,35 +13,14 @@ import { eventEmitter } from './eventEmitter';
 import { musicForBonusTier } from './bonusBgm';
 import { bonusEntryTierOf } from './bonusEntryArt';
 import { atmosphereFromMode, syncAtmosphere } from './atmosphere.svelte';
-import { stateXstateDerived } from './stateXstate';
 import type { Bet } from './typesBookEvent';
 
-/**
- * Show the bonus-entry banner if this round is a bought bonus, and resolve when
- * it hands off to the spin.
- *
- * NON-BLOCKING BY CONSTRUCTION: `broadcastAsync` resolves immediately when no
- * BonusEntry is subscribed (loading screen still up, or a story that never
- * mounts Game), and BonusEntry itself resolves immediately if its hero plate did
- * not load. A base spin returns before touching the bus at all.
- */
 export const presentBonusEntry = async (bet: Bet) => {
+	if (bet.state[0]?.type !== 'createBonusSnapshot') return;
+
 	const tier = bonusEntryTierOf(stateBet.activeBetModeKey);
 	if (tier === null) return;
+
 	syncAtmosphere(atmosphereFromMode(tier) ?? 'small');
-
 	eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier(tier) });
-
-	// A RESUMED round is already in flight — the player saw the banner when they
-	// bought it, and its first book event is the snapshot that rebuilds state, so
-	// announcing the buy again here would be a second entry for one purchase.
-	// The bed still has to start: they left mid-round with no music otherwise.
-	if (bet.state[0]?.type === 'createBonusSnapshot') return;
-
-	// Feature stories stamp bonus_small / bonus_super so the room grades, but
-	// Storybook Action stays idle. The plate is a purchase — only a live buy
-	// (or BONUS_ENTRY/banner, which stands the machine in STATE_BET) owes it.
-	if (stateXstateDerived.isIdle()) return;
-
-	await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
 };

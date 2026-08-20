@@ -10,11 +10,8 @@
 
 <script lang="ts">
 	/**
-	 * Narrow-layout WAYS / WIN fallback — the same stacked nameplates SpecialBar
-	 * draws on the right, laid in a row under the board when the special bar
-	 * is flat. The vertical decision is shared (game/specialBarLayout.ts) so
-	 * exactly one place shows them. When the side rail stands, this component
-	 * renders nothing.
+	 * Portrait-only WAYS / WIN fallback — under the board when the special
+	 * bar is flat. Tablet aliases to desktop, so this stays empty there.
 	 */
 	import { MainContainer } from 'components-layout';
 	import { Container } from 'pixi-svelte';

@@ -1,8 +1,6 @@
 import type { Preview } from '@storybook/svelte';
 import { INITIAL_VIEWPORTS } from 'storybook/viewport';
 
-import './preview.css';
-
 const preview: Preview = {
 	parameters: {
 		layout: 'fullscreen',

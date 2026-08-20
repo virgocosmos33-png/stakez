@@ -4,8 +4,8 @@
 	// COMPONENTS/FeatureFx exercises feature presentations in isolation, driven
 	// straight through the event emitter (no book, no spin) so the beat is reliable
 	// to film and easy to eyeball:
-	//   knife split — 2 / 3 / 4 panes after a knife hit; 6+ is one symbol plus
-	//                 a corner count. 4+ throws cluster (tiny gap) then a breath.
+	//   knife split — 3D stab then slice; one blood play per seam (2 panes = 1
+	//                 cut, 3 panes = 2 cuts). 6+ is one symbol plus a corner count.
 	//   shovel dig break — the digUp spade drives in and the cell cracks open in a
 	//                       burst of dirt and smoke at the point of impact.
 	//   gunsmoke wounds — bullet + smoke + glass dent + hole; irregular
@@ -135,7 +135,7 @@
 	</StoryGameTemplate>
 {/snippet}
 
-<!-- knife slash, then 2 / 3 / 4 panes; 6+ is one symbol plus a corner count -->
+<!-- 3D stab+slice: 2 panes = 1 blood, 3 = 2 bloods; 6+ is one symbol plus a count -->
 <Story
 	name="knife split (2 3 4 7)"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: knifeSplit })}

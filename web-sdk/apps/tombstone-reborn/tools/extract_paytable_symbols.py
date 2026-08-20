@@ -1,8 +1,8 @@
 """Crop pay-table PNGs for the HTML info menu.
 
 ModalPayTable loads `assets/paytable/<key>.png` for every pay row and special.
-Paying faces come out of the v13 atlas; feature cards are copied from the
-board sprites already in static/assets/sprites/mirror/.
+Paying faces come out of the current symbolsStatic atlas (v25); feature cards
+are copied from the board sprites already in static/assets/sprites/mirror/.
 
 Run:  python tools/extract_paytable_symbols.py
 """
@@ -11,19 +11,22 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-STATIC = os.path.normpath(os.path.join(HERE, "..", "static", "assets"))
+APP = os.path.normpath(os.path.join(HERE, ".."))
+STATIC = os.path.join(APP, "static", "assets")
+SRC = os.path.join(APP, "assets-src", "assets")
 ATLAS_DIR = os.path.join(STATIC, "sprites", "symbolsStatic")
 MIRROR = os.path.join(STATIC, "sprites", "mirror")
-TOMBSTONE = os.path.join(STATIC, "sprites", "tombstone")
-OUT_DIR = os.path.join(STATIC, "paytable")
+OUT_DIRS = (
+	os.path.join(STATIC, "paytable"),
+	os.path.join(SRC, "paytable"),
+)
 
-ATLAS_JSON = "symbolsStatic.v13.json"
-ATLAS_IMAGE = "symbolsStatic.v13.webp"
+ATLAS_JSON = "symbolsStatic.v25.json"
+ATLAS_IMAGE = "symbolsStatic.v25.webp"
 
 WANTED = {
 	"h1.webp": "h1",
@@ -36,31 +39,29 @@ WANTED = {
 	"l3.webp": "l3",
 	"l4.webp": "l4",
 	"l5.webp": "l5",
-	"w.png": "w",
-	"s.png": "s",
 }
 
 FEATURE_COPIES = {
+	"w": os.path.join(MIRROR, "wr_wild.png"),
+	"s": os.path.join(MIRROR, "tr_scatter.png"),
+	"su": os.path.join(MIRROR, "tr_scatter_super.png"),
 	"split": os.path.join(MIRROR, "tr_sp.png"),
 	"gunsmoke": os.path.join(MIRROR, "tr_gs.png"),
-	"tombstone": os.path.join(MIRROR, "tr_ts.png"),
 	"nudge": os.path.join(MIRROR, "tr_nw.png"),
 	"shooter": os.path.join(MIRROR, "tr_sh.png"),
 	"supersplit": os.path.join(MIRROR, "tr_ss.png"),
-	"w": os.path.join(MIRROR, "wr_wild.png"),
-	"s": os.path.join(MIRROR, "tr_scatter.png"),
-	"bounty": os.path.join(TOMBSTONE, "lane_gold_bounty.webp"),
 }
 
 
-def write_png(src: str, dest_name: str) -> None:
-	img = Image.open(src).convert("RGBA")
-	img.save(os.path.join(OUT_DIR, f"{dest_name}.png"))
-	print(f"wrote {dest_name}.png ({img.size[0]}x{img.size[1]}) from {os.path.basename(src)}")
+def write_png(img: Image.Image, dest_name: str) -> None:
+	for out_dir in OUT_DIRS:
+		os.makedirs(out_dir, exist_ok=True)
+		path = os.path.join(out_dir, f"{dest_name}.png")
+		img.save(path)
+	print(f"wrote {dest_name}.png ({img.size[0]}x{img.size[1]})")
 
 
 if __name__ == "__main__":
-	os.makedirs(OUT_DIR, exist_ok=True)
 	with open(os.path.join(ATLAS_DIR, ATLAS_JSON), encoding="utf-8") as handle:
 		atlas = json.load(handle)
 	sheet = Image.open(os.path.join(ATLAS_DIR, ATLAS_IMAGE)).convert("RGBA")
@@ -72,13 +73,12 @@ if __name__ == "__main__":
 			continue
 		r = entry["frame"]
 		crop = sheet.crop((r["x"], r["y"], r["x"] + r["w"], r["y"] + r["h"]))
-		crop.save(os.path.join(OUT_DIR, f"{out_name}.png"))
-		print(f"wrote {out_name}.png ({r['w']}x{r['h']}) from atlas")
+		write_png(crop, out_name)
 
 	for out_name, src in FEATURE_COPIES.items():
 		if not os.path.isfile(src):
 			print(f"! missing feature art {src}")
 			continue
-		write_png(src, out_name)
+		write_png(Image.open(src).convert("RGBA"), out_name)
 
-	print(f"done -> {OUT_DIR}")
+	print(f"done -> {OUT_DIRS[0]}")

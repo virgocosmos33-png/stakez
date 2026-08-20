@@ -18,6 +18,20 @@ export const WIN_CELEB_HOLE_COUNT = 9;
 export const WIN_SCATTER_ASSET = 'winScatter';
 export const WIN_FRAME_ASSET = 'winFrame';
 
+/** Generated broken-wood frames for A/B on the win takeover. */
+export type WinFrameId = 'carpentry' | 'saloon' | 'casket' | 'hook';
+export type WinFrameHole = { x0: number; y0: number; x1: number; y1: number };
+export const WIN_FRAME_OPTIONS: Record<
+	WinFrameId,
+	{ key: string; hole: WinFrameHole }
+> = {
+	carpentry: { key: 'winFrameCarpentry', hole: { x0: 0.149, y0: 0.117, x1: 0.853, y1: 0.841 } },
+	saloon: { key: 'winFrameSaloon', hole: { x0: 0.135, y0: 0.131, x1: 0.85, y1: 0.85 } },
+	casket: { key: 'winFrameCasket', hole: { x0: 0.133, y0: 0.096, x1: 0.865, y1: 0.827 } },
+	hook: { key: 'winFrameHook', hole: { x0: 0.113, y0: 0.139, x1: 0.897, y1: 0.864 } },
+};
+export const winFramePick: { id: WinFrameId } = { id: 'carpentry' };
+
 /** Big soft light shapes (512px cells) — god-rays, lantern glow, bell rings. */
 export const WIN_LIGHT = {
 	rayFan: 0,
@@ -85,7 +99,7 @@ export const WIN_PALETTE = {
  * Per-tier escalation. Every lever grows monotonically so a bigger win is
  * physically bigger on screen, not merely faster: more god-rays, denser dust,
  * larger starburst pops, harder entry kick. `bellTolls` is the max-win-only
- * expanding bronze ring that gives BOOT HILL its tolling gravitas.
+ * expanding bronze ring that gives BACK FROM HELL & BACK TO HELL & BACK its tolling gravitas.
  */
 export type WinTierIntensity = {
 	/** god-ray shafts behind the frame */
@@ -119,9 +133,23 @@ export const WIN_TIER_INTENSITY: Record<number, WinTierIntensity> = {
 export const winTierIntensity = (tier: number): WinTierIntensity =>
 	WIN_TIER_INTENSITY[tier] ?? WIN_TIER_INTENSITY[2];
 
-/** Hero plate asset key for a tier slug (see winCelebrationMap). */
+/** Hero plate still (first-frame poster) for a tier slug. */
 export const winTierPlateKey = (slug: string) =>
 	`winTier${slug.charAt(0).toUpperCase()}${slug.slice(1)}`;
+
+/** Hero plate video for a tier slug. WinCelebration prefers this when loaded. */
+export const winTierPlateAnimKey = (slug: string) => `${winTierPlateKey(slug)}Anim`;
+
+export const WIN_TIER_SLUGS = [
+	'bounty',
+	'showdown',
+	'highnoon',
+	'laststand',
+	'bloodmoney',
+	'boothill',
+] as const;
+
+export const WIN_TIER_ANIM_KEYS = WIN_TIER_SLUGS.map(winTierPlateAnimKey);
 
 /** Stable pseudo-random in 0..1 — layout seeds, never gameplay. */
 export const winRand = (seed: number) => {

@@ -66,25 +66,47 @@ def _label_card(wild: Image.Image, box, title: str, subtitle: str, ink=(240, 214
     return canvas.filter(ImageFilter.SMOOTH)
 
 
-def bake(wild: Image.Image, art_path: str | None, fallback_title: str, fallback_sub: str, cover_banner: str | None = None):
+def _font(size: int) -> ImageFont.FreeTypeFont | ImageFont.ImageFont:
+    try:
+        return ImageFont.truetype("arialbd.ttf", size)
+    except OSError:
+        return ImageFont.load_default()
+
+
+def stamp_band(art: Image.Image, text: str, y0: float, y1: float) -> Image.Image:
+    """Paint a thin word band and stamp gold caps. Does not wipe half the card."""
+    out = art.convert("RGBA")
+    draw = ImageDraw.Draw(out)
+    w, h = out.size
+    top, bot = int(h * y0), int(h * y1)
+    draw.rectangle((int(w * 0.08), top, int(w * 0.92), bot), fill=(22, 18, 14, 230))
+    draw.text(
+        (w / 2, (top + bot) / 2),
+        text,
+        fill=(240, 214, 150, 255),
+        font=_font(max(22, (bot - top) * 2 // 3)),
+        anchor="mm",
+    )
+    return out
+
+
+def bake(
+    wild: Image.Image,
+    art_path: str | None,
+    fallback_title: str,
+    fallback_sub: str,
+    cover_banner: str | None = None,
+    band: tuple[float, float] | None = None,
+):
     alpha = wild.getchannel("A")
     box = alpha.getbbox()
     x0, y0, x1, y1 = box
     if art_path:
-        art = Image.open(art_path).convert("RGB")
-        # None = leave the plaque alone. "" = paint out the word band with no
-        # replacement stamp (MARK used to get burnt in here).
-        if cover_banner is not None:
-            draw = ImageDraw.Draw(art)
-            w, h = art.size
-            draw.rectangle((0, int(h * 0.48), w, h), fill=(22, 18, 14))
-            if cover_banner:
-                try:
-                    font = ImageFont.truetype("arialbd.ttf", max(28, h // 9))
-                except OSError:
-                    font = ImageFont.load_default()
-                draw.text((w / 2, h * 0.72), cover_banner, fill=(240, 214, 150), font=font, anchor="mm")
-        art = art.resize((x1 - x0, y1 - y0), Image.LANCZOS)
+        art = Image.open(art_path).convert("RGBA")
+        if cover_banner:
+            y0b, y1b = band if band else (0.78, 0.94)
+            art = stamp_band(art, cover_banner, y0b, y1b)
+        art = art.convert("RGB").resize((x1 - x0, y1 - y0), Image.LANCZOS)
         canvas = Image.new("RGB", wild.size, (0, 0, 0))
         canvas.paste(art, (x0, y0))
         out = canvas.convert("RGBA")
@@ -112,12 +134,22 @@ def main():
         ("tr_gs.png", _first(os.path.join(APP, "assets-src", "sprites", "mirror", "tr_feat_gunsmoke.png")), "GUNSMOKE", "", None),
         ("tr_ts.png", _first(os.path.join(APP, "assets-src", "sprites", "mirror", "tr_feat_tombstone.png")), "TOMBSTONE", "", None),
         ("tr_nw.png", _first(os.path.join(APP, "assets-src", "sprites", "mirror", "tr_feat_nudge.png")), "NUDGE", "WAYS", None),
-        # crossed-gun gold card, word band painted out — no MARK stamp
-        ("tr_sh.png", _plaque("lane_gold_supersplit.webp"), "MARK", "SHOOT", ""),
-        ("tr_ss.png", _plaque("lane_gold_supersplit.webp"), "SUPER", "SPLIT", None),
+        # MARK = shooter, crossed-gun plaque. SUPERSPLIT = the knife SPLIT card.
+        ("tr_sh.png", _plaque("lane_gold_supersplit.webp"), "MARK", "SHOOT", "MARK"),
+        (
+            "tr_ss.png",
+            _first(
+                os.path.join(APP, "static", "assets", "sprites", "mirror", "tr_sp.png"),
+                os.path.join(APP, "assets-src", "sprites", "mirror", "tr_sp.png"),
+            ),
+            "SUPER SPLIT",
+            "",
+            "SUPER SPLIT",
+        ),
     ]
     for filename, src, title, sub, banner in specs:
-        write(bake(wild, src, title, sub, cover_banner=banner), filename)
+        band = (0.40, 0.62) if filename == "tr_ss.png" else None
+        write(bake(wild, src, title, sub, cover_banner=banner, band=band), filename)
 
 
 if __name__ == "__main__":

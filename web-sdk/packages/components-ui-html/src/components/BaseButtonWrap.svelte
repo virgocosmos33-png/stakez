@@ -30,4 +30,10 @@
 		width: 100%;
 		max-width: 250px;
 	}
+
+	@media (max-width: 480px) {
+		.max-width {
+			max-width: 100%;
+		}
+	}
 </style>

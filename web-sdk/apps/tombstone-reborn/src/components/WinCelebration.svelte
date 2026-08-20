@@ -2,10 +2,10 @@
 	/**
 	 * Tombstone Reborn big-win takeover.
 	 *
-	 * Each tier shows a dark western hero plate inside a weathered timber and
+	 * Each tier plays a muted western clip inside a weathered timber and
 	 * branded-iron frame, lit by god-rays, drifting grave dust and rising gold
 	 * embers, and punched on entry by a gold starburst with radiating spark
-	 * streaks. BOOT HILL (max win) adds slow expanding bell rings.
+	 * streaks. BACK FROM HELL & BACK TO HELL & BACK (max win) adds slow expanding bell rings.
 	 *
 	 * What this replaced: the ladder used to play Madam Mirror's `celebT2..celebT7`
 	 * media — photographic "White Room" footage of a straitjacketed woman in a
@@ -24,15 +24,16 @@
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import { Rectangle as HitRectangle, type Texture } from 'pixi.js';
+	import { Rectangle as HitRectangle, type Texture, type VideoSource } from 'pixi.js';
 	import { BaseSprite, Container, Rectangle, Sprite, BitmapText } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { getTiersPassed } from '../game/winCelebrationMap';
+	import { celebPlateDurationMs, getTiersPassed } from '../game/winCelebrationMap';
 	import { waysLabel } from '../game/waysFormat';
+	import { playExternalOnce } from 'utils-sound';
 	import { resumeModeBeds } from '../game/bonusBgm';
 	import {
 		isCelebSceneBgm,
@@ -46,13 +47,16 @@
 		WIN_CELEB_HOLE_COUNT,
 		WIN_CELEB_LIGHT_ASSET,
 		WIN_CELEB_VFX_ASSET,
-		WIN_FRAME_ASSET,
+		WIN_FRAME_OPTIONS,
+		winFramePick,
 		WIN_LIGHT,
 		WIN_PALETTE,
 		WIN_VFX,
 		WIN_VFX_CELL,
+		WIN_TIER_ANIM_KEYS,
 		winRand,
 		winTierIntensity,
+		winTierPlateAnimKey,
 		winTierPlateKey,
 	} from '../game/winCelebrationArt';
 
@@ -69,23 +73,26 @@
 
 	// ------------------------------------------------------------------
 	// staged counter: the amount starts slow, then speeds up until the
-	// shot line. Shots walk the last % to this plate's max, hold 1s, then
-	// the next plate starts. Music rides along — it does not own the cut.
+	// shot line. Shots walk the last % to this plate's max, then the plate
+	// holds until its clip finishes (scene bed loops). Skip still cuts early.
 	// ------------------------------------------------------------------
 	const finalMult = $derived(props.finalAmount / 100);
 	const tiers = $derived(getTiersPassed(props.finalAmount));
 	const hasMax = $derived(tiers[tiers.length - 1]?.alias === 'max');
 
-	const HOLD_AFTER_MAX_MS = 1000;
+	const HOLD_AFTER_COUNT_MS = 800;
 	const easeInCubic = (f: number) => f * f * f;
 	const easeInQuart = (f: number) => f * f * f * f;
 	const SEGMENT_STYLE = [
-		{ ease: easeInCubic, duration: 1800 },
-		{ ease: easeInCubic, duration: 2000 },
-		{ ease: easeInQuart, duration: 2200 },
-		{ ease: easeInQuart, duration: 2400 },
-		{ ease: easeInQuart, duration: 2600 },
+		{ ease: easeInCubic },
+		{ ease: easeInCubic },
+		{ ease: easeInQuart },
+		{ ease: easeInQuart },
+		{ ease: easeInQuart },
 	];
+
+	const plateDwellMs = (index: number) =>
+		celebPlateDurationMs(tiers[index]?.sound.bgm ?? '');
 
 	type Segment = { from: number; to: number; duration: number; ease: (f: number) => number };
 	const segments = $derived.by(() => {
@@ -96,7 +103,7 @@
 			return {
 				from: index === 0 ? 0 : tierData.minMultiplier,
 				to: next ? Math.min(next.minMultiplier, finalMult) : finalMult,
-				duration: style.duration,
+				duration: Math.max(1800, plateDwellMs(index) - HOLD_AFTER_COUNT_MS),
 				ease: style.ease,
 			} satisfies Segment;
 		});
@@ -108,9 +115,11 @@
 	let finished = $state(false);
 	let waitContinue = $state(false);
 	let displayedIndex = $state(0);
-	// the BOOT HILL scene recounts from 0: slow, then faster, until shots
+	// the BACK FROM HELL & BACK TO HELL & BACK scene recounts from 0: slow, then faster, until shots
 	let maxRecountStart = $state<number | null>(null);
-	const MAX_RECOUNT_DURATION = 3200;
+	const MAX_RECOUNT_DURATION = $derived(
+		Math.max(3200, plateDwellMs(Math.max(tiers.length - 1, 0)) - HOLD_AFTER_COUNT_MS),
+	);
 	const fastFaster = (f: number) => f * f * f;
 
 	// ------------------------------------------------------------------
@@ -129,15 +138,17 @@
 	const amountKickY = new Tween(0);
 	let fadeToken = 0;
 
-	// Each plate finishes its own count with gunshots. Later plates start
-	// earlier and fire more; BOOT HILL is a ragged volley.
+	// Each plate finishes its own count with gunshots. `left` is the fraction
+	// of COUNT TIME reserved for the volley (not of the amount) so shots
+	// start early instead of dumping at the end of an ease-in. Scene length
+	// stays plateDwellMs — the volley just owns more of it.
 	const SHOT_SCENES = [
-		{ left: 0.1, shots: 2, jitter: false },
-		{ left: 0.15, shots: 3, jitter: false },
-		{ left: 0.2, shots: 4, jitter: false },
-		{ left: 0.3, shots: 6, jitter: false },
-		{ left: 0.35, shots: 6, jitter: false },
-		{ left: 0.4, shots: 12, jitter: true, shotsMin: 10, shotsMax: 15 },
+		{ left: 0.62, shots: 6, jitter: false },
+		{ left: 0.64, shots: 8, jitter: false },
+		{ left: 0.66, shots: 10, jitter: false },
+		{ left: 0.68, shots: 12, jitter: false },
+		{ left: 0.7, shots: 14, jitter: false },
+		{ left: 0.72, shots: 16, jitter: true, shotsMin: 14, shotsMax: 18 },
 	] as const;
 	type AmountHit = {
 		id: number;
@@ -213,9 +224,9 @@
 		};
 		hole.life.set(1, { duration: 90, easing: cubicOut });
 		void flash.life.set(0, { duration: 220, easing: cubicOut });
-		const kept = amountHits.filter((hit) => hit.kind === 'hole' || hit.life.current > 0.02);
-		const holes = kept.filter((hit) => hit.kind === 'hole');
-		amountHits = [...(holes.length > 10 ? holes.slice(holes.length - 10) : holes), flash, hole];
+		const holes = amountHits.filter((hit) => hit.kind === 'hole');
+		const liveFlash = amountHits.filter((hit) => hit.kind === 'flash' && hit.life.current > 0.02);
+		amountHits = [...holes, ...liveFlash, flash, hole];
 
 		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_gunshot' });
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
@@ -265,7 +276,7 @@
 	};
 
 	// One evolving score cut into contiguous stage slices (bgm_celeb_1..6 =
-	// BOUNTY..BOOT HILL). Music alone carries the celebration — do NOT layer
+	// LAST AMEN..BACK FROM HELL & BACK TO HELL & BACK). Music alone carries the celebration — do NOT layer
 	// the sfx_celeb_* whooshes/hits/slams on top (they drown the bed).
 	const stageCue = (target: number): MusicName => {
 		const tier = tiers[target]?.tier ?? 2;
@@ -289,7 +300,6 @@
 		'sfx_celeb_buildup',
 		'sfx_celeb_hit',
 		'sfx_celeb_maxslam',
-		'sfx_bigwin_coinloop',
 	];
 
 	const silenceOldCelebrationAudio = () => {
@@ -304,10 +314,13 @@
 
 	let sceneGen = 0;
 
+	const SCENE_CUT_SFX = '/assets/audio/sfx_celeb_scene_cut.mp3';
+
 	const playStageMusic = (target: number) => {
 		silenceOldCelebrationAudio();
 		const cue = stageCue(target);
 		sceneGen += 1;
+		playExternalOnce(SCENE_CUT_SFX);
 		if (!isCelebSceneBgm(cue)) return;
 		playCelebSceneBgm(cue);
 	};
@@ -328,7 +341,7 @@
 			pop.set(0, { duration: 900, easing: cubicOut });
 			// slow Ken-Burns push for the tier's dwell
 			zoom.set(1, { duration: 0 });
-			zoom.set(intensity.push, { duration: 8000, easing: cubicOut });
+			zoom.set(intensity.push, { duration: plateDwellMs(target), easing: cubicOut });
 			await reelAlpha.set(1, { duration: 90 });
 		})();
 	};
@@ -341,6 +354,10 @@
 		segIndex = index;
 		segStart = now;
 		showTier(index);
+	};
+
+	const parkUntilPlateEnd = (now: number, index: number, sceneStart: number) => {
+		holdUntil = Math.max(now + 250, sceneStart + plateDwellMs(index));
 	};
 
 	const leaveSegment = (now: number) => {
@@ -356,7 +373,7 @@
 
 	const finishCounting = () => {
 		if (hasMax) {
-			// the BOOT HILL tab appears and the amount rolls again from zero
+			// the BACK FROM HELL & BACK TO HELL & BACK tab appears and the amount rolls again from zero
 			clearShots();
 			amountHits = [];
 			holdUntil = null;
@@ -434,7 +451,7 @@
 		playStageMusic(0);
 		pop.set(1, { duration: 0 });
 		pop.set(0, { duration: 900, easing: cubicOut });
-		zoom.set(intensity.push, { duration: 8000, easing: cubicOut });
+		zoom.set(intensity.push, { duration: plateDwellMs(0), easing: cubicOut });
 		let raf = 0;
 		const start = performance.now();
 		let lastVfx = 0;
@@ -457,16 +474,15 @@
 						drainShots(now);
 						if (!shotPlan) {
 							countMult = finalMult;
-							holdUntil = now + HOLD_AFTER_MAX_MS;
+							parkUntilPlateEnd(now, tiers.length - 1, maxRecountStart ?? now);
 						}
 					} else {
 						const f = Math.min((now - maxRecountStart) / MAX_RECOUNT_DURATION, 1);
 						const eased = finalMult * fastFaster(f);
-						const shotLine = finalMult * (1 - plan.left);
-						if (eased >= shotLine) {
+						if (f >= 1 - plan.left) {
 							shotsArmed = true;
 							armShotVolley(
-								Math.max(countMult, shotLine),
+								Math.max(countMult, eased),
 								finalMult,
 								MAX_RECOUNT_DURATION * plan.left,
 								plan,
@@ -486,16 +502,15 @@
 						drainShots(now);
 						if (!shotPlan) {
 							countMult = segment.to;
-							holdUntil = now + HOLD_AFTER_MAX_MS;
+							parkUntilPlateEnd(now, segIndex, segStart);
 						}
 					} else {
 						const f = Math.min((now - segStart) / segment.duration, 1);
 						const eased = segment.from + span * segment.ease(f);
-						const shotLine = segment.from + span * (1 - plan.left);
-						if (span > 0.01 && eased >= shotLine) {
+						if (span > 0.01 && f >= 1 - plan.left) {
 							shotsArmed = true;
 							armShotVolley(
-								Math.max(countMult, shotLine),
+								Math.max(countMult, eased),
 								segment.to,
 								segment.duration * plan.left,
 								plan,
@@ -505,7 +520,7 @@
 							countMult = eased;
 							if (f >= 1) {
 								countMult = segment.to;
-								holdUntil = now + HOLD_AFTER_MAX_MS;
+								parkUntilPlateEnd(now, segIndex, segStart);
 							}
 						}
 					}
@@ -518,6 +533,7 @@
 			cancelAnimationFrame(raf);
 			sceneGen += 1;
 			stopCelebSceneBgm();
+			pauseCelebVideos();
 			resumeModeBeds();
 		};
 	});
@@ -526,9 +542,48 @@
 	// tier + art
 	// ------------------------------------------------------------------
 	const celebration = $derived(tiers[displayedIndex] ?? tiers[0]);
-	const title = $derived(celebration?.title ?? 'BOUNTY');
+	const title = $derived(celebration?.title ?? 'LAST AMEN');
 	const intensity = $derived(winTierIntensity(celebration?.tier ?? 2));
-	const plateKey = $derived(winTierPlateKey(celebration?.slug || 'bounty'));
+	const stillKey = $derived(winTierPlateKey(celebration?.slug || 'bounty'));
+	const animKey = $derived(winTierPlateAnimKey(celebration?.slug || 'bounty'));
+	const videoTexture = $derived(
+		context.stateApp.loadedAssets?.[animKey] as Texture | undefined,
+	);
+	const plateKey = $derived(videoTexture ? animKey : stillKey);
+
+	const videoOf = (key: string): HTMLVideoElement | undefined => {
+		const tex = context.stateApp.loadedAssets?.[key] as Texture | undefined;
+		return (tex?.source as VideoSource | undefined)?.resource as HTMLVideoElement | undefined;
+	};
+
+	const pauseCelebVideos = (except?: string) => {
+		for (const key of WIN_TIER_ANIM_KEYS) {
+			if (key === except) continue;
+			const video = videoOf(key);
+			if (!video) continue;
+			video.muted = true;
+			if (!video.paused) video.pause();
+		}
+	};
+
+	let lastPlayedKey = '';
+	$effect(() => {
+		const key = animKey;
+		const video = videoOf(key);
+		pauseCelebVideos(key);
+		if (!video) return;
+		video.loop = false;
+		video.muted = true;
+		if (lastPlayedKey !== key) {
+			lastPlayedKey = key;
+			try {
+				video.currentTime = 0;
+			} catch {
+				/* seek can throw before metadata */
+			}
+		}
+		if (video.paused && !video.ended) video.play().catch(() => {});
+	});
 
 	const lightTextures = $derived(
 		(context.stateApp.loadedAssets?.[WIN_CELEB_LIGHT_ASSET] as Texture[] | undefined) ?? [],
@@ -550,11 +605,11 @@
 	const boardW = $derived(context.stateGameDerived.boardLayout().width);
 	const frameW = $derived(boardW * 1.02);
 	const frameH = $derived(frameW * (9 / 16));
-	// win_frame.png is the 1280x720 plate plus a uniform 74px timber/iron band,
-	// so the frame scales with the plate and its window stays aligned.
-	const FRAME_PAD_FRAC = 74 / 1280;
-	const frameOuterW = $derived(frameW * (1 + FRAME_PAD_FRAC * 2));
-	const frameOuterH = $derived(frameH + frameW * FRAME_PAD_FRAC * 2);
+	const frameOpt = $derived(WIN_FRAME_OPTIONS[winFramePick.id]);
+	const frameHoleW = $derived(frameOpt.hole.x1 - frameOpt.hole.x0);
+	const frameHoleH = $derived(frameOpt.hole.y1 - frameOpt.hole.y0);
+	const frameOuterW = $derived(frameW / frameHoleW);
+	const frameOuterH = $derived(frameH / frameHoleH);
 
 	/** CSS object-fit: cover — fill the window, crop overflow (never letterbox). */
 	const plateCover = $derived.by(() => {
@@ -598,8 +653,7 @@
 
 	// title / amount chrome: constant geometry, so these Rectangles are drawn
 	// once per layout change and not during the count-up
-	const titlePlateW = $derived(frameW * 0.66);
-	const titlePlateH = $derived(SYMBOL_SIZE * 0.74);
+	const titlePlateW = $derived(frameW * 0.96);
 	const amountPlateW = $derived(frameW * 0.82);
 	const amountPlateH = $derived(SYMBOL_SIZE * 1.18);
 	const titleY = $derived(frameOuterH / 2 + SYMBOL_SIZE * 0.44);
@@ -648,7 +702,7 @@
 		/>
 	{/if}
 
-	<!-- BOOT HILL bell tolls: slow bronze rings rolling out of the graveyard -->
+	<!-- BACK FROM HELL & BACK TO HELL & BACK bell tolls: slow bronze rings rolling out of the graveyard -->
 	{#if intensity.bellTolls > 0 && light(WIN_LIGHT.ringSoft)}
 		{#each [0, 1, 2] as ring (ring)}
 			{@const phase = (time * intensity.bellTolls + ring / 3) % 1}
@@ -745,7 +799,7 @@
 		</Container>
 
 		<!-- weathered timber + branded-iron frame, over the panel edges -->
-		<Sprite key={WIN_FRAME_ASSET} anchor={0.5} width={frameOuterW} height={frameOuterH} />
+		<Sprite key={frameOpt.key} anchor={0.5} width={frameOuterW} height={frameOuterH} />
 	</Container>
 
 	<!-- entry punch: gold starburst + radiating spark streaks over the frame -->
@@ -811,48 +865,11 @@
 		{/each}
 	{/if}
 
-	<!-- tier title: branded iron plate, revolver emblems flanking.
-	     LIT, NOT LINED: the plate used to carry a 2px gold border, which read as a
-	     stray vector outline on top of the art. A warm bloom behind it separates it
-	     from the dark instead — same treatment as the amount plate and the CONTINUE
-	     gate below, and the same reason win_frame.png lost its inlay hairline. -->
+	<!-- tier title: gold western text only, no plate -->
 	<Container y={titleY} scale={slam.current} alpha={reelAlpha.current}>
-		{#if light(WIN_LIGHT.glowWarm)}
-			<BaseSprite
-				texture={light(WIN_LIGHT.glowWarm)}
-				anchor={0.5}
-				width={titlePlateW * 1.35}
-				height={titlePlateH * 3.4}
-				blendMode="add"
-				alpha={0.34 * lantern}
-			/>
-		{/if}
-		<Rectangle
-			anchor={0.5}
-			width={titlePlateW}
-			height={titlePlateH}
-			borderRadius={4}
-			backgroundColor={WIN_PALETTE.iron}
-			backgroundAlpha={0.9}
-		/>
-		{#if vfx(WIN_VFX.revolverEmblem)}
-			{#each [-1, 1] as side (side)}
-				{@const emblem = (titlePlateH * 1.6) / WIN_VFX_CELL}
-				<!-- negative x scale mirrors the revolver so the pair face outward;
-				     scale is used instead of width/height because the two props
-				     fight each other on a PIXI.Sprite -->
-				<BaseSprite
-					texture={vfx(WIN_VFX.revolverEmblem)}
-					anchor={0.5}
-					x={side * titlePlateW * 0.6}
-					scale={{ x: side * emblem, y: emblem }}
-					alpha={0.85}
-				/>
-			{/each}
-		{/if}
 		<ResponsiveBitmapText
 			anchor={0.5}
-			maxWidth={titlePlateW * 0.88}
+			maxWidth={titlePlateW * 0.96}
 			text={title}
 			tint={AMOUNT_TINT}
 			style={{
@@ -865,7 +882,7 @@
 		/>
 	</Container>
 
-	<!-- amount: dark iron plate keeps gold numerals readable over any plate -->
+	<!-- amount: gold numerals + baked black stroke, no dark well -->
 	<Container y={amountY} x={amountKickX.current} scale={amountPunch.current}>
 		{#if light(WIN_LIGHT.glowWarm)}
 			<BaseSprite
@@ -877,14 +894,6 @@
 				alpha={0.4 * lantern}
 			/>
 		{/if}
-		<Rectangle
-			anchor={0.5}
-			width={amountPlateW}
-			height={amountPlateH}
-			borderRadius={5}
-			backgroundColor={WIN_PALETTE.dark}
-			backgroundAlpha={0.82}
-		/>
 		<Container y={amountKickY.current} scale={amountPulse * slam.current}>
 			<ResponsiveBitmapText
 				anchor={0.5}
@@ -920,7 +929,7 @@
 		</Container>
 	{/if}
 
-	<!-- BOOT HILL gate: CONTINUE plate + Space/stopButtonClick (see skip()).
+	<!-- BACK FROM HELL & BACK TO HELL & BACK gate: CONTINUE plate + Space/stopButtonClick (see skip()).
 	     Explicit hitArea so the plate still receives Storybook taps. -->
 	{#if waitContinue}
 		{@const pillW = SYMBOL_SIZE * 2.6}

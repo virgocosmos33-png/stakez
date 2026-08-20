@@ -36,7 +36,7 @@
 
 {#if stateModal.modal?.name === 'buyBonusConfirm'}
 	<Popup zIndex={zIndex.dialog} onclose={() => (stateModal.modal = { name: 'buyBonus' })}>
-		<BaseContent maxWidth="500px">
+		<BaseContent maxWidth="500px" fit>
 			<BaseTitle>
 				{stateBonusDerived.selectedBetModeData().text.title}
 			</BaseTitle>
@@ -47,8 +47,8 @@
 					alt={stateBonusDerived.selectedBetModeData().text.title}
 				/>
 			{/if}
-			<BaseScrollable type="column">
-				{stateBonusDerived.selectedBetModeData().text.dialog}
+			<BaseScrollable type="column" grow>
+				<p class="dialog-copy">{stateBonusDerived.selectedBetModeData().text.dialog}</p>
 			</BaseScrollable>
 			<BaseButtonWrap type="max-width">
 				<Button
@@ -73,8 +73,33 @@
 	.dialog-image {
 		width: 100%;
 		height: auto;
+		max-height: min(36vh, 22rem);
 		display: block;
+		object-fit: contain;
 		border-radius: 8px;
+		flex: 0 1 auto;
+	}
+
+	@media (max-height: 720px) {
+		.dialog-image {
+			max-height: min(28vh, 16rem);
+		}
+	}
+
+	@media (max-height: 560px) {
+		.dialog-image {
+			max-height: min(22vh, 9.5rem);
+		}
+	}
+
+	.dialog-copy {
+		margin: 0;
+		width: 100%;
+		max-width: 36rem;
+		text-align: center;
+		font-size: clamp(0.82rem, 0.4vw + 0.75rem, 0.95rem);
+		line-height: 1.45;
+		color: var(--mono-fg, #ffffff);
 	}
 
 	.confirm-label {

@@ -75,7 +75,6 @@
 	let totems = $state<Totem[]>([]);
 	const fallOut = new Tween(0);
 	let fireLast = 0;
-	let fireLoopOn = false;
 
 	const colW = SYMBOL_CARD_W;
 	const badgeH = colW * 0.86 * BADGE_RATIO;
@@ -216,20 +215,13 @@
 
 	const igniteFire = async (totem: Totem) => {
 		if (totem.ignite.current > 0.01 || totem.ignite.target === 1) return;
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fire_ignite' });
-		if (!fireLoopOn) {
-			fireLoopOn = true;
-			context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_fire_loop' });
-		}
+		// Visual only. The fire bed is a hiss/crackle loop and reads as
+		// white-noise glitch on the nudge-ways book.
 		await totem.ignite.set(1, { duration: fxDur(240), easing: cubicIn });
 		shakeBoard({ intensity: 11, duration: fxDur(140) });
 	};
 
 	const douseFire = () => {
-		if (fireLoopOn) {
-			context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_fire_loop' });
-			fireLoopOn = false;
-		}
 		fireLast = 0;
 		for (const totem of totems) {
 			totem.ignite.set(0, { duration: 0 });
@@ -290,11 +282,6 @@
 			if (tickWin && added > 0) {
 				running = Math.min(endMult, running + 1);
 				context.eventEmitter.broadcast({ type: 'winMultUpdate', value: running });
-				context.eventEmitter.broadcast({
-					type: 'soundOnce',
-					name: 'sfx_multiplier_up',
-					forcePlay: true,
-				});
 			}
 			shakeBoard({ intensity: 8, duration: fxDur(140) });
 			await fxWait(90);

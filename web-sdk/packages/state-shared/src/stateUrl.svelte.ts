@@ -23,11 +23,20 @@ export type Key =
 
 const getUrlSearchParam = (key: Key) => page.url.searchParams.get(key) as string;
 
+// Local mock RGS (tools/mock_rgs.py). The fetcher always hits https://${rgsUrl}/...,
+// so an empty rgs_url becomes https:///wallet/authenticate — Chrome then tries
+// the host "wallet" and dies with ERR_NAME_NOT_RESOLVED. On localhost we default
+// to the mock so opening the app without query params still authenticates.
+const isLocalHost = () => {
+	const host = page.url.hostname;
+	return host === 'localhost' || host === '127.0.0.1';
+};
+
 // params for play
 const lang = () =>
 	getUrlSearchParam('lang') === 'br' ? 'pt' : (getUrlSearchParam('lang') as Language) || 'en';
-const sessionID = () => getUrlSearchParam('sessionID') || '';
-const rgsUrl = () => getUrlSearchParam('rgs_url') || '';
+const sessionID = () => getUrlSearchParam('sessionID') || (isLocalHost() ? 'dev' : '');
+const rgsUrl = () => getUrlSearchParam('rgs_url') || (isLocalHost() ? 'localhost:7777' : '');
 const social = () => getUrlSearchParam('social') === 'true';
 
 // params for replay

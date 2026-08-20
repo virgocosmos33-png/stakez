@@ -20,6 +20,10 @@
 
 	import { getContext } from '../game/context';
 	import {
+		preloadBaseAmbient,
+		setBaseAmbientWanted,
+	} from '../game/baseAmbientSfx';
+	import {
 		isBonusBgm,
 		playBonusBgm,
 		preloadBonusBgm,
@@ -36,6 +40,7 @@
 	} from '../game/celebSceneBgm';
 
 	const WAYS_WIN_SFX = '/assets/audio/sfx_win_ways.mp3';
+	const CELEB_SCENE_CUT_SFX = '/assets/audio/sfx_celeb_scene_cut.mp3';
 
 	const context = getContext();
 
@@ -88,9 +93,19 @@
 
 	onMount(() => {
 		preloadExternal(WAYS_WIN_SFX);
+		preloadExternal(CELEB_SCENE_CUT_SFX);
 		preloadCelebSceneBgm();
 		preloadBonusBgm();
+		preloadBaseAmbient();
 		sound.players.music.play({ name: 'bgm_main' });
+	});
+
+	$effect(() => {
+		const inBase =
+			context.stateGame.gameType === 'basegame' &&
+			context.stateGame.atmosphere === 'base' &&
+			!context.stateLayout.showLoadingScreen;
+		setBaseAmbientWanted(inBase);
 	});
 
 	$effect(() => {

@@ -13,8 +13,6 @@ export const forceStorySpeed = (turbo = false) => {
 export const playStory = (label: string, opts?: { turbo?: boolean }) => async () => {
 	forceStorySpeed(!!opts?.turbo);
 	const data = bookByLabel(label);
-	// Grades the room (small / super). Does not mean a buy — presentBonusEntry
-	// skips the Dead Man's Hand / Open Grave plate while the machine is idle.
 	stateBet.activeBetModeKey = data.mode ?? 'base';
 	console.log(`Running the "${label}" showcase book (${data.payoutMultiplier}x)`);
 	await playBet({ ...data, state: data.events } as never);

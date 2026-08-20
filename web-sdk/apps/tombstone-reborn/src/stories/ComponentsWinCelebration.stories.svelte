@@ -4,7 +4,7 @@
 	// Stake Engine mandatory book: COMPONENTS/WinCelebration exercises every win
 	// presentation in isolation — the small "YOU WON" count-up plate, each big
 	// hero-plate tier, and the staged rollup that climbs through all tiers.
-	// These are OUR western tiers (BOUNTY → BOOT HILL), not another game's.
+	// These are OUR hunt tiers (LAST AMEN → BACK FROM HELL & BACK TO HELL & BACK), not another game's.
 	const { Story } = defineMeta({
 		title: 'COMPONENTS/WinCelebration',
 	});
@@ -22,6 +22,7 @@
 	import Game from '../components/Game.svelte';
 	import { setContext } from '../game/context';
 	import { presentWinCelebration } from '../game/bookEventHandlerMap';
+	import { winFramePick, type WinFrameId } from '../game/winCelebrationArt';
 	import { forceStorySpeed } from './playStory';
 
 	setContext();
@@ -34,8 +35,9 @@
 	// amount is a book amount; tier = amount / 100 as a multiple of bet. This runs
 	// the SAME live presentation setWin runs (tier art + coins + sound bed +
 	// staged rollup), so what a story shows is exactly what a real win shows.
-	const celebrate = (amount: number, ways: number) => async () => {
+	const celebrate = (amount: number, ways: number, frame?: WinFrameId) => async () => {
 		forceStorySpeed(false);
+		if (frame) winFramePick.id = frame;
 		console.log(`Presenting a ${amount / 100}x win (${ways} ways)`);
 		await presentWinCelebration(amount, ways);
 	};
@@ -61,51 +63,72 @@
 	{template}
 />
 
-<!-- Scene 1 — BOUNTY (25x+) -->
+<!-- Scene 1 — LAST AMEN (25x+) -->
 <Story
-	name="Scene 1 BOUNTY"
+	name="Scene 1 LAST AMEN"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3000, 48) })}
 	{template}
 />
 
-<!-- Scene 2 — SHOWDOWN (50x+) -->
 <Story
-	name="Scene 2 SHOWDOWN"
+	name="Frame A carpentry"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3000, 48, 'carpentry') })}
+	{template}
+/>
+<Story
+	name="Frame B saloon"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3000, 48, 'saloon') })}
+	{template}
+/>
+<Story
+	name="Frame C casket"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3000, 48, 'casket') })}
+	{template}
+/>
+<Story
+	name="Frame D meat hook"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3000, 48, 'hook') })}
+	{template}
+/>
+
+<!-- Scene 2 — DUST TRAIL (50x+) -->
+<Story
+	name="Scene 2 DUST TRAIL"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(7500, 96) })}
 	{template}
 />
 
-<!-- Scene 3 — HIGH NOON (100x+) -->
+<!-- Scene 3 — HANG THE PIG (100x+) -->
 <Story
-	name="Scene 3 HIGH NOON"
+	name="Scene 3 HANG THE PIG"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(25000, 268) })}
 	{template}
 />
 
-<!-- Scene 4 — LAST STAND (500x+) -->
+<!-- Scene 4 — THE LAST WORDS (500x+) -->
 <Story
-	name="Scene 4 LAST STAND"
+	name="Scene 4 THE LAST WORDS"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(100000, 512) })}
 	{template}
 />
 
-<!-- Scene 5 — BLOOD MONEY (2,500x+) -->
+<!-- Scene 5 — HAUL THE DEAD (2,500x+) -->
 <Story
-	name="Scene 5 BLOOD MONEY"
+	name="Scene 5 HAUL THE DEAD"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(500000, 4096) })}
 	{template}
 />
 
-<!-- Scene 6 — BOOT HILL / MAX WIN (30,000x+) -->
+<!-- Scene 6 — BACK FROM HELL & BACK TO HELL & BACK / MAX WIN (30,000x+) -->
 <Story
-	name="Scene 6 BOOT HILL (MAX)"
+	name="Scene 6 BACK FROM HELL & BACK TO HELL & BACK (MAX)"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3_000_000, 46656) })}
 	{template}
 />
 
 <!-- win tiers staged rollup: the MAX amount climbs through every tier in one
-	presentation (getTiersPassed). Each plate holds 1s after its max, then the
-	next starts, unless skipped. -->
+	presentation (getTiersPassed). Each plate stays until its clip finishes,
+	then the next starts, unless skipped. -->
 <Story
 	name="win tiers staged rollup"
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: celebrate(3_000_000, 46656) })}

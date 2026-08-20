@@ -5,22 +5,33 @@
  *   Tombstone Showdown → bgm_bonus_small  (freespins / bonus_small)
  *   Desert Standoff    → bgm_bonus_super  (superspins / bonus_super)
  *   ember.mp3          → layered under bgm_bonus_super only
+ *   bonus wait screen  → bgm_bonus_wait_small  (banner, PRESS ANYWHERE)
+ *   super bonus wait   → bgm_bonus_wait_super  (super banner wait)
  */
 import { Howl } from 'howler';
 
 import { stateSoundDerived } from 'state-shared';
 
+import { setBaseAmbientCelebHold } from './baseAmbientSfx';
 import type { BonusEntryTier } from './bonusEntryArt';
 import { sound, type MusicName } from './sound';
 
 export const BONUS_BGM_SMALL = 'bgm_bonus_small' as const;
 export const BONUS_BGM_SUPER = 'bgm_bonus_super' as const;
+export const BONUS_WAIT_SMALL = 'bgm_bonus_wait_small' as const;
+export const BONUS_WAIT_SUPER = 'bgm_bonus_wait_super' as const;
 
 export type BonusBgmName = typeof BONUS_BGM_SMALL | typeof BONUS_BGM_SUPER;
+export type BonusWaitName = typeof BONUS_WAIT_SMALL | typeof BONUS_WAIT_SUPER;
 
 const SRC: Record<BonusBgmName, string> = {
 	bgm_bonus_small: '/assets/audio/bgm_bonus_small.mp3',
 	bgm_bonus_super: '/assets/audio/bgm_bonus_super.mp3',
+};
+
+const WAIT_SRC: Record<BonusWaitName, string> = {
+	bgm_bonus_wait_small: '/assets/audio/bgm_bonus_wait_small.mp3?v=tr20',
+	bgm_bonus_wait_super: '/assets/audio/bgm_bonus_wait_super.mp3?v=tr20',
 };
 
 const EMBER_SRC = '/assets/audio/bgm_super_ember.mp3';
@@ -28,7 +39,9 @@ const EMBER_SRC = '/assets/audio/bgm_super_ember.mp3';
 const EMBER_VOL = 0.62;
 
 const howls = new Map<BonusBgmName, Howl>();
+const waitHowls = new Map<BonusWaitName, Howl>();
 let active: BonusBgmName | null = null;
+let waitActive: BonusWaitName | null = null;
 /** Which bed a celebration should return to. Cleared when the bonus ends so
  * a win plate cannot bring Tombstone Showdown / Desert Standoff back. */
 let desired: BonusBgmName | null = null;
@@ -58,6 +71,19 @@ const emberBed = () => {
 		html5: true,
 	});
 	return emberHowl;
+};
+
+const waitBed = (name: BonusWaitName) => {
+	const existing = waitHowls.get(name);
+	if (existing) return existing;
+	const howl = new Howl({
+		src: [WAIT_SRC[name]],
+		loop: true,
+		preload: true,
+		html5: true,
+	});
+	waitHowls.set(name, howl);
+	return howl;
 };
 
 const applyVolume = (howl: Howl) => {
@@ -95,6 +121,35 @@ export const preloadBonusBgm = () => {
 	bed(BONUS_BGM_SMALL);
 	bed(BONUS_BGM_SUPER);
 	emberBed();
+	waitBed(BONUS_WAIT_SMALL);
+	waitBed(BONUS_WAIT_SUPER);
+};
+
+export const waitMusicForBonusTier = (tier: BonusEntryTier): BonusWaitName =>
+	tier === 'superspins' || tier === 'bonus_super' ? BONUS_WAIT_SUPER : BONUS_WAIT_SMALL;
+
+export const playBonusWait = (tier: BonusEntryTier) => {
+	const name = waitMusicForBonusTier(tier);
+	setBaseAmbientCelebHold(true);
+	pauseBonusBgm();
+	sound.players?.music.pause();
+	if (waitActive && waitActive !== name) waitBed(waitActive).stop();
+	const howl = waitBed(name);
+	howl.volume(stateSoundDerived.volumeMusic());
+	if (waitActive === name && howl.playing()) return;
+	howl.seek(0);
+	howl.play();
+	waitActive = name;
+};
+
+export const stopBonusWait = () => {
+	for (const howl of waitHowls.values()) howl.stop();
+	waitActive = null;
+	setBaseAmbientCelebHold(false);
+};
+
+export const syncBonusWaitVolume = () => {
+	if (waitActive) waitBed(waitActive).volume(stateSoundDerived.volumeMusic());
 };
 
 export const isBonusBgm = (name: string): name is BonusBgmName =>
@@ -115,6 +170,7 @@ const playBaseMusic = () => {
 };
 
 export const playBonusBgm = (name: BonusBgmName) => {
+	stopBonusWait();
 	desired = name;
 	if (active === name && playId != null && bed(name).playing(playId)) {
 		applyVolume(bed(name));
@@ -171,6 +227,7 @@ export const resumeBonusBgm = () => {
 };
 
 export const stopBonusBgm = () => {
+	stopBonusWait();
 	for (const howl of howls.values()) howl.stop();
 	active = null;
 	desired = null;
@@ -187,16 +244,19 @@ export const restoreBaseMusic = () => {
 export const syncBonusBgmVolume = () => {
 	if (active) applyVolume(bed(active));
 	applyEmberVolume();
+	syncBonusWaitVolume();
 };
 
 /** Silence the looping bed (base or bonus) without losing its place. */
 export const pauseModeBeds = () => {
+	setBaseAmbientCelebHold(true);
 	pauseBonusBgm();
 	sound.players?.music.pause();
 };
 
 /** Pick the bed back up after a celebration plate. */
 export const resumeModeBeds = () => {
+	setBaseAmbientCelebHold(false);
 	if (desired) {
 		resumeBonusBgm();
 		return;

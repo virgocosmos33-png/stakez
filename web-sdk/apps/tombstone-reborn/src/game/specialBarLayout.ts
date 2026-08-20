@@ -9,7 +9,6 @@
  * rail ever stops standing upright, WAYS/WIN move under the board, and vice-versa.
  */
 import { SYMBOL_SIZE, SYMBOL_CARD_W, BOARD_PLATE_PAD } from './constants';
-import { stateLayoutDerived } from './stateLayout';
 
 /** plaques sit inside the wood field, clear of the iron rivet band */
 export const PLAQUE_WIDTH_FRACTION = 0.7;
@@ -48,11 +47,8 @@ export const hangPairXs = (cx: number, wellW: number) => {
 };
 
 /**
- * Desktop / landscape: WAYS+MULTI hang on the skull wall, WIN on the bar.
- * FREE SPINS sits in the last-reel empty frame, not under WIN.
- * Portrait / tablet: FrameMorphHud shows WAYS/MULTI/WIN under the board.
+ * WAYS+MULTI hang above the short right reels, WIN on that timber lip,
+ * on every layout. Portrait used to dump the boxes under the board
+ * (FrameMorphHud); that path is unused now.
  */
-export const isSpecialBarVertical = (_board?: BoardBox): boolean => {
-	const { width, height } = stateLayoutDerived.canvasSizes();
-	return width / Math.max(height, 1) >= 1.15;
-};
+export const isSpecialBarVertical = (_board?: BoardBox): boolean => true;

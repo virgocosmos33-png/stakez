@@ -1,18 +1,21 @@
 import { SECOND } from 'constants-shared/time';
 
-import { CELEB_SCENE_MS, celebSceneDurationMs } from './celebSceneBgm';
 import type { MusicName, SoundEffectName } from './sound';
+
+/** Probed length of each hero-plate clip (all six masters are 10s). */
+export const CELEB_VIDEO_MS = 10_000;
+
+/** Scene beds loop, so a plate holds for the clip — skip still cuts early. */
+export const celebPlateDurationMs = (_bgm?: string) => CELEB_VIDEO_MS;
 
 // Tier thresholds are bet multiples (book amount / 100 = multiplier of bet).
 // At a $0.20 bet: 25x = $5, 50x = $10, 100x = $20, 500x = $100, 2500x = $500,
-// and the 30000x wincap is BOOT HILL / MAX WIN.
+// and the 30000x wincap is BACK FROM HELL & BACK TO HELL & BACK / MAX WIN.
 //
-// Titles are the outlaw's payoff arc, escalating from collecting a price on a
-// head to being buried rich in the graveyard:
-//   BOUNTY → SHOWDOWN → HIGH NOON → LAST STAND → BLOOD MONEY → BOOT HILL.
+// Titles are Silas hunting the other premiums, one plate per clip:
+//   LAST AMEN → DUST TRAIL → HANG THE PIG → THE LAST WORDS → HAUL THE DEAD → BACK FROM HELL & BACK TO HELL & BACK.
 //
-// These replace the Madam Mirror asylum-intake titles that were still shipping
-// (INTAKE → RESTRAINT → STRUGGLE → BREAKOUT → SCRATCH → WHITEOUT). Titles are
+// These replace the generic western ladder (BOUNTY → BOOT HILL). Titles are
 // A-Z + space only so they render in the bitmap face without missing glyphs.
 // Scatters keep their own words; celebrations do not reuse them.
 export type WinCelebrationData = {
@@ -39,66 +42,66 @@ export const winCelebrationTiers: WinCelebrationData[] = [
 		presentDuration: 1 * SECOND,
 		sound: { sfx: 'sfx_win_ways', bgm: undefined },
 	},
-	// Big tiers: each plate counts to its max, holds 1s, then the next
-	// plate starts (unless the player skips). Scene tracks ride along.
+	// Big tiers: each plate stays until its clip (and scene track) finish,
+	// then the next plate starts (unless the player skips).
 	{
 		tier: 2,
 		alias: 'big',
 		type: 'big',
-		title: 'BOUNTY',
+		title: 'LAST AMEN',
 		slug: 'bounty',
 		minMultiplier: 25,
-		presentDuration: CELEB_SCENE_MS.bgm_celeb_1,
+		presentDuration: celebPlateDurationMs('bgm_celeb_1'),
 		sound: { sfx: undefined, bgm: 'bgm_celeb_1' },
 	},
 	{
 		tier: 3,
 		alias: 'superwin',
 		type: 'big',
-		title: 'SHOWDOWN',
+		title: 'DUST TRAIL',
 		slug: 'showdown',
 		minMultiplier: 50,
-		presentDuration: CELEB_SCENE_MS.bgm_celeb_2,
+		presentDuration: celebPlateDurationMs('bgm_celeb_2'),
 		sound: { sfx: undefined, bgm: 'bgm_celeb_2' },
 	},
 	{
 		tier: 4,
 		alias: 'mega',
 		type: 'big',
-		title: 'HIGH NOON',
+		title: 'HANG THE PIG',
 		slug: 'highnoon',
 		minMultiplier: 100,
-		presentDuration: CELEB_SCENE_MS.bgm_celeb_3,
+		presentDuration: celebPlateDurationMs('bgm_celeb_3'),
 		sound: { sfx: undefined, bgm: 'bgm_celeb_3' },
 	},
 	{
 		tier: 5,
 		alias: 'epic',
 		type: 'big',
-		title: 'LAST STAND',
+		title: 'THE LAST WORDS',
 		slug: 'laststand',
 		minMultiplier: 500,
-		presentDuration: CELEB_SCENE_MS.bgm_celeb_4,
+		presentDuration: celebPlateDurationMs('bgm_celeb_4'),
 		sound: { sfx: undefined, bgm: 'bgm_celeb_4' },
 	},
 	{
 		tier: 6,
 		alias: 'epic',
 		type: 'big',
-		title: 'BLOOD MONEY',
+		title: 'HAUL THE DEAD',
 		slug: 'bloodmoney',
 		minMultiplier: 2500,
-		presentDuration: CELEB_SCENE_MS.bgm_celeb_5,
+		presentDuration: celebPlateDurationMs('bgm_celeb_5'),
 		sound: { sfx: undefined, bgm: 'bgm_celeb_5' },
 	},
 	{
 		tier: 7,
 		alias: 'max',
 		type: 'big',
-		title: 'BOOT HILL',
+		title: 'BACK FROM HELL & BACK TO HELL & BACK',
 		slug: 'boothill',
 		minMultiplier: 30000,
-		presentDuration: CELEB_SCENE_MS.bgm_celeb_6,
+		presentDuration: celebPlateDurationMs('bgm_celeb_6'),
 		sound: { sfx: undefined, bgm: 'bgm_celeb_6' },
 	},
 ];
@@ -114,8 +117,8 @@ export const getWinCelebration = (bookAmount: number): WinCelebrationData => {
 	return result;
 };
 
-// every big-win tier this amount climbs through; each plate counts to its
-// max, holds 1s, then the next plate starts
+// every big-win tier this amount climbs through; each plate stays until
+// its clip finishes, then the next plate starts
 export const getTiersPassed = (bookAmount: number): WinCelebrationData[] => {
 	const multiplier = bookAmountToMultiplier(bookAmount);
 	return winCelebrationTiers.filter(
@@ -125,7 +128,4 @@ export const getTiersPassed = (bookAmount: number): WinCelebrationData[] => {
 
 /** Wall-clock of every scene this amount will play, for the winUpdate safety net. */
 export const celebrationRollupMs = (bookAmount: number) =>
-	getTiersPassed(bookAmount).reduce(
-		(sum, tierData) => sum + celebSceneDurationMs(tierData.sound.bgm ?? ''),
-		0,
-	);
+	getTiersPassed(bookAmount).reduce((sum, tierData) => sum + tierData.presentDuration, 0);

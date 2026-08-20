@@ -4,7 +4,6 @@
  */
 import { Tween } from 'svelte/motion';
 import { cubicInOut } from 'svelte/easing';
-import { stateBet } from 'state-shared';
 
 import { stateGame } from './stateGame.svelte';
 
@@ -36,9 +35,12 @@ export const atmosphereFromMode = (modeKey?: string | null): Atmosphere | null =
 };
 
 export const atmosphereFromState = (): Atmosphere => {
-	const fromMode = atmosphereFromMode(stateBet.activeBetModeKey);
-	if (fromMode === 'super' || stateGame.laneSuper) return 'super';
-	if (fromMode === 'small' || stateGame.gameType === 'freegame') return 'small';
+	// Bet mode is NOT a visual signal. A bought BIG BONUS still plays its
+	// trigger spin on the base room — scatters land, wins resolve, then the
+	// banner grades the room. Reading activeBetModeKey here flipped the
+	// background the instant the buy was confirmed.
+	if (stateGame.laneSuper) return 'super';
+	if (stateGame.gameType === 'freegame') return 'small';
 	return 'base';
 };
 

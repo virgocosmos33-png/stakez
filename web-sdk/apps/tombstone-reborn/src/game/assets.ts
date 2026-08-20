@@ -200,10 +200,11 @@ export default {
 	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
-		// v18 = hand-painted set (tools/pack_v18_symbols.py): painterly premium
-		// busts with one accent glow per rank (h1 purple .. h5 amber) + painted
-		// object emblems for the lows. Full-bleed, used raw (no code grade/tint).
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v18.json', import.meta.url).href,
+		// v25 = three-level premiums (tools/pack_v25_symbols.py): the Aug-16 v13
+		// deck with h1..h5 regenerated per game level. h#.webp is the base-game
+		// face; h#_small / h#_super swap in via getSymbolInfo() when
+		// stateGame.atmosphere changes. Lows stay the v13 charcoal letters.
+		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v25.json', import.meta.url).href,
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
@@ -256,26 +257,39 @@ export default {
 		src: new URL('../../assets/sprites/scene/saloon_lamp_glow.png', import.meta.url).href,
 		preload: true,
 	},
-	// WIN CELEBRATION hero plates, one per big tier — dark western / graveyard
-	// scenes generated on Layer AI (FLUX.1 [dev]) and graded by
-	// tools/make_win_celebration_art.py.
+	// WIN CELEBRATION hero plates. Stills are first-frame posters; *Anim is the
+	// 10s western clip that plays inside the frame. Order is Silas's hunt:
+	//   LAST AMEN           priest duel
+	//   DUST TRAIL          walking away on the horizon
+	//   HANG THE PIG        butcher in the shop
+	//   THE LAST WORDS      confront the woman
+	//   HAUL THE DEAD       driving the cart in the storm
+	//   BACK FROM HELL & BACK TO HELL & BACK  shoveling mud into the grave
 	//
-	// These REPLACE celebT2..celebT7 (+ celebT*Anim), which were photographic
-	// Madam Mirror "White Room" footage of a straitjacketed woman in a padded
-	// asylum cell — tier 7 was a literal white-out. Those files no longer ship;
-	// do not re-register them, there is deliberately no fallback to them.
+	// Files live only in static/assets/sprites/celeb/ — do not copy the mp4s
+	// into an app-root assets/ folder or Vite will base64-inline ~15 MB.
 	winTierBounty: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bounty.webp', import.meta.url).href },
 	winTierShowdown: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_showdown.webp', import.meta.url).href },
 	winTierHighnoon: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_highnoon.webp', import.meta.url).href },
 	winTierLaststand: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_laststand.webp', import.meta.url).href },
 	winTierBloodmoney: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bloodmoney.webp', import.meta.url).href },
 	winTierBoothill: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_boothill.webp', import.meta.url).href },
+	winTierBountyAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bounty.mp4', import.meta.url).href },
+	winTierShowdownAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_showdown.mp4', import.meta.url).href },
+	winTierHighnoonAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_highnoon.mp4', import.meta.url).href },
+	winTierLaststandAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_laststand.mp4', import.meta.url).href },
+	winTierBloodmoneyAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bloodmoney.mp4', import.meta.url).href },
+	winTierBoothillAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_boothill.mp4', import.meta.url).href },
 	// Weathered timber + branded-iron frame with a punched-through window, in
 	// place of the old thin amber CCTV-monitor bezel. Carries NO thin outline: the
 	// gold inlay hairline it used to bake around the window read as a stray vector
 	// outline once minified onto the panel, so the takeover's edge is now the warm
 	// window spill plus the runtime god-rays. Do not re-add a stroke here.
 	winFrame: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_frame.png', import.meta.url).href },
+	winFrameCarpentry: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_frame_opt_carpentry.png', import.meta.url).href },
+	winFrameSaloon: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_frame_opt_saloon.png', import.meta.url).href },
+	winFrameCasket: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_frame_opt_casket.png', import.meta.url).href },
+	winFrameHook: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_frame_opt_hook.png', import.meta.url).href },
 	// Celebration light shapes (god-rays, lantern glow, bell rings) and particles
 	// (starburst pops, spark streaks, dust plumes, gunsmoke, embers).
 	// Frame order contract: src/game/winCelebrationArt.ts.
@@ -538,16 +552,36 @@ export default {
 		src: new URL('../../assets/sprites/mirror/wr_scatter_blur.png', import.meta.url).href,
 		preload: true,
 	},
-	// SPLIT: transparent Bowie + horizontal ember slash (tools/make_split_knife.py).
-	// The knife flies right→left; the slash is the cut it leaves. Panes snap on impact.
+	// SPLIT: 3D Bowie poses (embed / stab / slice) + blood flipbook. Baked by
+	// tools/make_split_cut_fx.py. One knife+blood play per seam (1→2 = 1, 1→3 = 2).
 	splitKnife: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_split_knife.png', import.meta.url).href,
 		preload: true,
 	},
+	splitKnifeStab: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/tr_split_knife_stab.png', import.meta.url).href,
+		preload: true,
+	},
+	splitKnifeSlice: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/tr_split_knife_slice.png', import.meta.url).href,
+		preload: true,
+	},
 	splitSlash: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_split_slash.png', import.meta.url).href,
+		preload: true,
+	},
+	splitBlood: {
+		type: 'spriteSheet',
+		src: new URL('../../assets/sprites/fx/split_blood.json', import.meta.url).href,
+		preload: true,
+	},
+	splitBloodGash: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_blood_gash.png', import.meta.url).href,
 		preload: true,
 	},
 	// GUNSMOKE: prop_19 revolver on the landed GS card. It wheel-spins

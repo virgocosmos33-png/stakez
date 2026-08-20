@@ -10,7 +10,7 @@
  * The names are the mechanic, not decoration. The small buy wakes the six-card
  * special bar — a dealt hand — and the super buy additionally cracks open the
  * sealed grave cell on the last reel. Both read as siblings to the win ladder
- * (BOUNTY / SHOWDOWN / HIGH NOON / LAST STAND / BLOOD MONEY / BOOT HILL) and
+ * (LAST AMEN / DUST TRAIL / HANG THE PIG / THE LAST WORDS / HAUL THE DEAD / BACK FROM HELL & BACK TO HELL & BACK) and
  * neither implies a run of free spins, which this game does not have.
  *
  * ART REUSE, deliberately: the plates and both frames are baked by
@@ -38,10 +38,10 @@ export const BONUS_ENTRY_SUPER_ASSET = 'bonusEntrySuper';
 export const BONUS_FRAME_SMALL_ASSET = 'bonusFrameSmall';
 export const BONUS_FRAME_SUPER_ASSET = 'bonusFrameSuper';
 
-/** Bet mode keys that open a banner. Matches betModeMeta.ts exactly.
- * The two ROUND modes (freespins / superspins) are also banner tiers: bought
- * rounds banner at round start via presentBonusEntry, and NATURAL triggers
- * reuse the same tiers from the freeSpinTrigger book event handler. */
+/** Bet mode keys that open a banner. The two ROUND modes (freespins /
+ * superspins) banner from freeSpinTrigger after the trigger spin resolves —
+ * bought and natural use the same beat. Single-spin buys keep these keys
+ * so resume / music helpers can still map a tier. */
 export const BONUS_ENTRY_MODES = [
 	'bonus_small',
 	'bonus_super',
@@ -85,7 +85,8 @@ export type BonusEntryArt = {
 	rings: number;
 	/** muzzle flares raking in from the sides on entry — SUPER only */
 	flares: number;
-	/** how long the banner holds before it hands off, in ms (pre-turbo) */
+	/** Ken-Burns / entrance length in ms. The banner itself waits for a
+	 * press (or a 5-minute auto-start) — this is not a hand-off timer. */
 	holdMs: number;
 };
 

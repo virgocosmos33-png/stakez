@@ -23,7 +23,8 @@
 
 	const idle = $derived(context.stateXstateDerived.isIdle());
 	const spinning = $derived(context.stateGameDerived.reelsSpinning());
-	const canShoot = $derived(idle && !spinning);
+	const roundLive = $derived(context.stateGame.roundLive);
+	const canShoot = $derived(idle && !spinning && !roundLive);
 	const board = $derived(context.stateGameDerived.boardLayout());
 
 	/** the shooter has a six-shooter: 6 rounds, then dry until the next spin. */
@@ -83,7 +84,7 @@
 	};
 
 	const shoot = (event: PIXI.FederatedPointerEvent) => {
-		if (shotsFired >= SHOTS_PER_ROUND) return;
+		if (!canShoot || shotsFired >= SHOTS_PER_ROUND) return;
 		const local = localOf(event);
 		flashAt = { x: local.x, y: local.y };
 

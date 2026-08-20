@@ -5,9 +5,9 @@
 	 * SOUND HOOKS. This component owns no audio — these two events are the hooks
 	 * the audio agent attaches to (see the header comment for the requested keys).
 	 *
-	 * `bonusEntryShow` is broadcast with broadcastAsync and AWAITED by playBet, so
-	 * the bought round cannot spin until the banner resolves. `bonusEntryHandoff`
-	 * fires on the frame the banner starts letting go of the screen.
+	 * `bonusEntryShow` is broadcast with broadcastAsync and AWAITED by
+	 * freeSpinTrigger — after the trigger spin's scatters and wins have
+	 * already resolved. `bonusEntryHandoff` fires as the banner lets go.
 	 */
 	export type EmitterEventBonusEntry =
 		| { type: 'bonusEntryShow'; tier: BonusEntryTier }
@@ -18,21 +18,19 @@
 	/**
 	 * TOMBSTONE REBORN bonus-entry banner.
 	 *
-	 * Announces which of the two real buy modes the player just bought, then hands
-	 * off to the single enhanced spin they paid for:
+	 * Announces the bonus AFTER the trigger spin has fully resolved (scatters
+	 * landed, any wins paid). Bought and natural use the same beat:
 	 *
-	 *   bonus_small   80x   DEAD MAN'S HAND   the six-card special bar is awake
-	 *   bonus_super 1000x   OPEN GRAVE        the bar plus the sealed grave lane
+	 *   freespins     THE WAKE      10 spins, special bar awake
+	 *   superspins    THE RECKONING 10 spins, grave lane open
 	 *
-	 * Triggered from game/bonusEntry.ts, which playBet awaits at round start — the
-	 * five overlays deleted before this one were dead precisely because nothing
-	 * mounted them and nothing ever broadcast their events.
+	 * Fired from freeSpinTrigger. The room grades behind this veil; the first
+	 * freegame reveal after hand-off drops the bonus deck.
 	 *
-	 * NEVER TRAPS THE PLAYER. Four independent ways out, in order of likelihood:
-	 * tap or Space (the shared `stopButtonClick` bus), the auto hand-off once the
-	 * tier's hold elapses, the safety timeout, and — if the hero plate failed to
-	 * load — an immediate resolve without mounting anything. Under turbo every
-	 * duration is shortened by fxDur, same as every other feature.
+	 * Wait screen: the banner stays up until PRESS ANYWHERE / Space / stop,
+	 * or a 5-minute safety auto-start if nobody taps. Entrance tweens still
+	 * follow turbo via fxDur; the wait itself does not. A missing hero plate
+	 * resolves immediately so a bought round cannot wedge.
 	 *
 	 * SOUND, one sting per tier plus the hand-off accent:
 	 *   sfx_bonus_entry_small    DEAD MAN'S HAND entry: cards riffled and slapped
@@ -60,7 +58,7 @@
 	import { getContext } from '../game/context';
 	import type { SoundEffectName } from '../game/sound';
 	import { SYMBOL_SIZE } from '../game/constants';
-	import { betModeMeta } from '../game/betModeMeta';
+	import { atmosphereFromMode, syncAtmosphere } from '../game/atmosphere.svelte';
 	import { fxDur } from '../game/fxTiming';
 	import {
 		WIN_CELEB_LIGHT_ASSET,
@@ -71,10 +69,9 @@
 		winRand,
 	} from '../game/winCelebrationArt';
 	import { BONUS_ENTRY_ART, BONUS_PALETTE } from '../game/bonusEntryArt';
+	import { playBonusWait, stopBonusWait } from '../game/bonusBgm';
 	import {
-		TR_INK_GOLD,
 		TR_INK_IRON,
-		estimateTextWidth,
 		fitFontSize,
 		trAccentStyle,
 		trHeroTitleStyle,
@@ -92,16 +89,32 @@
 		superspins: 'sfx_bonus_entry_super',
 	};
 
+	/** Banner stays until a press, or this long — then the round auto-starts. */
+	const BANNER_WAIT_MAX_MS = 5 * 60 * 1000;
+
 	let tier = $state<BonusEntryTier | null>(null);
 	let oncomplete = $state(() => {});
 	let handedOff = false;
 
 	const art = $derived(tier ? BONUS_ENTRY_ART[tier] : null);
 
+	/** Grade the room to the tier's atmosphere. Called once the dark veil is
+	 * fully up, so the background crossfade happens BEHIND the banner instead
+	 * of in the player's face — this banner is now the ONLY place the room
+	 * flips on a bonus entry (bought, natural or the small→super upgrade). */
+	const gradeRoom = (forTier: BonusEntryTier) => {
+		syncAtmosphere(atmosphereFromMode(forTier) ?? 'small');
+	};
+
 	/** Resolve the awaited `bonusEntryShow` exactly once and unmount. */
 	const finish = () => {
 		if (tier === null || handedOff) return;
 		handedOff = true;
+		// A tap can skip the banner before the veil-cover timer fires; the round
+		// is entered either way, so make sure the room is graded before we let
+		// go of the screen. syncAtmosphere no-ops when already there.
+		gradeRoom(tier);
+		stopBonusWait();
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bonus_handoff' });
 		context.eventEmitter.broadcast({ type: 'bonusEntryHandoff', tier });
 		oncomplete();
@@ -127,25 +140,31 @@
 			}
 			tier = emitterEvent.tier;
 			// After the plate check, so a skipped banner stays silent rather than
-			// announcing a takeover the player never sees.
+			// announcing a takeover the player never sees. Wait bed loops until
+			// PRESS ANYWHERE / auto hand-off, then the bonus score starts.
+			playBonusWait(emitterEvent.tier);
 			context.eventEmitter.broadcast({
 				type: 'soundOnce',
 				name: ENTRY_SFX[emitterEvent.tier],
 			});
-			// Belt and braces over the component's own auto hand-off, in case a
-			// frame loop or tween never settles.
+			// Flip the room's atmosphere once the veil has fully covered the
+			// screen (its fade-in is fxDur(220)): the old→new background
+			// crossfade plays out hidden behind the dark overlay, and the reels
+			// underneath keep the faces they were dealt — the new deck only
+			// arrives with the first reveal after the banner hands off.
+			const cover = window.setTimeout(() => gradeRoom(emitterEvent.tier), fxDur(240));
 			const safety = window.setTimeout(() => {
-				console.warn('[BonusEntry] banner did not hand off in time — forcing resolve');
+				console.warn('[BonusEntry] banner wait elapsed — auto starting');
 				finish();
-			}, fxDur(BONUS_ENTRY_ART[emitterEvent.tier].holdMs) + 6000);
+			}, BANNER_WAIT_MAX_MS);
 			try {
 				await waitForResolve((resolve) => (oncomplete = resolve));
 			} finally {
+				window.clearTimeout(cover);
 				window.clearTimeout(safety);
 			}
 		},
-		// Same bus as TapToSkip / HUD stop / the win takeover: tap or Space hands
-		// off immediately instead of waiting out the hold.
+		// PRESS ANYWHERE / Space / HUD stop — the only way out before 5 minutes.
 		stopButtonClick: () => finish(),
 	});
 
@@ -162,16 +181,12 @@
 	const veil = new Tween(0);
 
 	let time = $state(0);
-	let holdDone = $state(false);
 
 	$effect(() => {
 		const current = art;
-		if (current === null) {
-			holdDone = false;
-			return;
-		}
-		// Entrance. SUPER slams harder and holds longer; both are shortened by the
-		// active turbo tier so a turbo player is not stuck watching a banner.
+		if (current === null) return;
+		// Entrance only. The banner then waits for a press (or the 5-minute
+		// auto-start). Turbo still shortens the slam, not the wait.
 		const isSuper = current.rings > 0;
 		veil.set(0, { duration: 0 });
 		veil.set(1, { duration: fxDur(220) });
@@ -181,18 +196,6 @@
 		slam.set(1, { duration: fxDur(isSuper ? 640 : 440), easing: backOut });
 		zoom.set(1, { duration: 0 });
 		zoom.set(current.push, { duration: fxDur(current.holdMs + 1500), easing: cubicOut });
-
-		const id = window.setTimeout(() => (holdDone = true), fxDur(current.holdMs));
-		return () => window.clearTimeout(id);
-	});
-
-	// Auto hand-off: fade the banner out over the veil, then resolve. Runs in its
-	// own effect so a tap during the fade still short-circuits through finish().
-	$effect(() => {
-		if (!holdDone || tier === null) return;
-		veil.set(0, { duration: fxDur(260), easing: cubicOut });
-		const id = window.setTimeout(() => finish(), fxDur(280));
-		return () => window.clearTimeout(id);
 	});
 
 	$effect(() => {
@@ -287,22 +290,12 @@
 			letterSpacing: 1,
 		}),
 	);
-	/** The price the player just paid, straight off the bet mode — never a copy. */
-	const costLabel = $derived(
-		tier ? `${betModeMeta[tier].costMultiplier.toLocaleString('en-US')}× BET` : '',
-	);
-	const costSize = $derived(SYMBOL_SIZE * 0.22);
-	const costPlateW = $derived(
-		estimateTextWidth(costLabel, { role: 'label', fontSize: costSize, letterSpacing: 2 }) +
-			SYMBOL_SIZE * 0.42,
-	);
+	const pressSize = $derived(SYMBOL_SIZE * 0.17);
 </script>
 
 {#if art !== null && tier !== null}
-	<!-- Deep enough that the HUD cannot read through it. A lighter veil left the
-		info marquee's "REVOLVER - SUBSTITUTED FOR ALL" line legible directly behind
-		the cost pill, which read as double-exposed text rather than atmosphere; the
-		graveyard behind still shows as silhouette and light, just not as copy. -->
+	<!-- Deep enough that the HUD cannot read through it. The graveyard behind
+		still shows as silhouette and light, just not as copy. -->
 	<CanvasSizeRectangle
 		backgroundColor={0x07060a}
 		backgroundAlpha={(art.rings > 0 ? 0.96 : 0.94) * veil.current}
@@ -546,30 +539,9 @@
 					/>
 				</Container>
 
-				<!-- what it cost, read straight off the bet mode -->
-				<Container y={titleY + titlePlateH * 1.52}>
-					<Rectangle
-						anchor={0.5}
-						width={costPlateW}
-						height={costSize * 1.9}
-						borderRadius={costSize}
-						backgroundColor={BONUS_PALETTE.dark}
-						backgroundAlpha={0.86}
-						borderColor={BONUS_PALETTE.gold}
-						borderWidth={2}
-						borderAlpha={0.7}
-					/>
-					<Text
-						anchor={0.5}
-						text={costLabel}
-						eventMode="none"
-						style={trLabelStyle({ fontSize: costSize, fill: TR_INK_GOLD, letterSpacing: 2 })}
-					/>
-				</Container>
-
-				<!-- how to get out early. The auto hand-off runs regardless. -->
+				<!-- stays up until this is pressed, or 5 minutes elapse -->
 				<Container
-					y={titleY + titlePlateH * 2.2}
+					y={titleY + titlePlateH * 1.52}
 					alpha={0.66 + 0.2 * Math.sin(time * 3.2)}
 				>
 					<Text
@@ -577,7 +549,7 @@
 						text="PRESS ANYWHERE"
 						eventMode="none"
 						style={trLabelStyle({
-							fontSize: costSize * 0.78,
+							fontSize: pressSize,
 							fill: BONUS_PALETTE.goldPale,
 							letterSpacing: 3,
 						})}

@@ -109,3 +109,11 @@
 	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('natural_trigger') })}
 	{template}
 />
+
+<!-- MAX WIN from a single base spin: a real simulated cap book — two nudge
+     stacks, splits, then SUPERSPLIT compound the ways until 99,999x -->
+<Story
+	name="maxWin"
+	args={templateArgs({ skipLoadingScreen: true, data: {}, action: play('max_win_base') })}
+	{template}
+/>

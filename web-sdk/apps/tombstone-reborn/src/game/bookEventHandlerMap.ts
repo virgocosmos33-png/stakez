@@ -15,7 +15,7 @@ import { musicForBonusTier, restoreBaseMusic, resumeModeBeds, stopBonusBgm } fro
 import { getWinCelebration } from './winCelebrationMap';
 import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
-import { atmosphereFromMode, syncAtmosphere } from './atmosphere.svelte';
+import { syncAtmosphere } from './atmosphere.svelte';
 import { shakeBoard } from './stateShake.svelte';
 import { isMegaWin } from './winConnection';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
@@ -69,7 +69,6 @@ const winLevelSoundsPlay = ({ winLevelData }: { winLevelData: WinSoundsData }) =
 };
 
 const winLevelSoundsStop = () => {
-	eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_bigwin_coinloop' });
 	resumeModeBeds();
 	eventEmitter.broadcastAsync({ type: 'uiShow' });
 };
@@ -402,8 +401,24 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		if (bookEvent.gameType === 'freegame') {
 			syncAtmosphere(stateGame.laneSuper ? 'super' : 'small');
 		} else {
-			syncAtmosphere(atmosphereFromMode(stateBet.activeBetModeKey) ?? 'base');
+			// Trigger spin of a bought or natural bonus is still a basegame
+			// reveal. Do not grade from the bet mode — that painted the fire
+			// room and swapped faces the moment the buy confirmed.
+			syncAtmosphere('base');
 		}
+		// Stamp the deck from THIS reveal's game, not the room atmosphere.
+		// Atmosphere can still be fading behind the banner; reading it here
+		// marked the first bonus spin as base, so the cards dropped as the
+		// base face and swapped when they landed.
+		const deckLevel =
+			bookEvent.gameType === 'freegame'
+				? stateGame.laneSuper
+					? 'super'
+					: 'small'
+				: 'base';
+		bookEvent.board.forEach((reel) => {
+			reel.forEach((symbol) => (symbol.level = deckLevel));
+		});
 		stateGame.lidOpen = stateGame.laneSuper;
 		stateGame.laneCardSwap = 0;
 		stateGame.slotWinPositions = [];
@@ -845,31 +860,30 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 	// ------------------------------------------------------------------
 	freeSpinTrigger: async (bookEvent: BookEventOfType<'freeSpinTrigger'>) => {
 		const tier = bookEvent.positions.length >= 4 ? 'superspins' : 'freespins';
-		syncAtmosphere(tier === 'superspins' ? 'super' : 'small');
+		// NO atmosphere flip here — the room grades behind the BonusEntry
+		// banner's dark veil (see BonusEntry.svelte), so the background
+		// crossfade is hidden and the settled trigger board keeps its faces.
 
-		// celebrate the scatters that did it
+		// celebrate the scatters that did it — still on the BASE room. Bought
+		// and natural use the same beat: scatters land, this spin's wins have
+		// already resolved (they are earlier book events), then the banner.
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
 		shakeBoard({ intensity: 5, duration: fxDur(220) });
 		await animateSymbols({ positions: filterVisibleCells(bookEvent.positions) });
 
-		// the BIG BONUS keeps the grave lane dug up for the whole round —
-		// the reveal handler drops laneSuper again when base game resumes
-		if (tier === 'superspins') {
-			stateGame.laneSuper = true;
-			stateGame.lidOpen = true;
-		}
-
+		// Banner covers (wait bed loops on PRESS ANYWHERE), then grades the
+		// room behind its veil. Bonus score starts after the banner hands off.
+		await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
 		eventEmitter.broadcast({
 			type: 'soundMusic',
 			name: musicForBonusTier(tier === 'superspins' ? 'superspins' : 'freespins'),
 		});
 
-		// announce the round. A BOUGHT round already showed this exact banner
-		// at round start (presentBonusEntry awaits it before the first reveal),
-		// so only NATURAL triggers banner here.
-		const buyKey = stateBet.activeBetModeKey?.toLowerCase();
-		if (buyKey !== 'freespins' && buyKey !== 'superspins') {
-			await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier });
+		// the BIG BONUS keeps the grave lane dug up for the whole round —
+		// set AFTER the banner so the trigger board never jumps to fire.
+		if (tier === 'superspins') {
+			stateGame.laneSuper = true;
+			stateGame.lidOpen = true;
 		}
 		eventEmitter.broadcast({ type: 'freeSpinCounterShow' });
 		eventEmitter.broadcast({
@@ -903,16 +917,17 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
 		await animateSymbols({ positions: filterVisibleCells([bookEvent.position]) });
 
-		// the boarded lane cover breaks away (LaneLidLock) and STAYS off
+		// the boarded lane cover breaks away (LaneLidLock) and STAYS off.
+		// The room's fire grade waits for the banner below — it flips behind
+		// the BonusEntry veil like every other entry.
 		shakeBoard({ intensity: 8, duration: fxDur(300) });
 		stateGame.laneSuper = true;
 		stateGame.lidOpen = true;
-		syncAtmosphere('super');
 		await fxWait(LANE_DOOR_OPEN_MS);
 
 		// the upgrade IS an entry into the big bonus — full takeover banner
-		eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier('superspins') });
 		await eventEmitter.broadcastAsync({ type: 'bonusEntryShow', tier: 'superspins' });
+		eventEmitter.broadcast({ type: 'soundMusic', name: musicForBonusTier('superspins') });
 
 		eventEmitter.broadcast({
 			type: 'freeSpinCounterUpdate',

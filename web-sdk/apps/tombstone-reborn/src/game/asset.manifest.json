@@ -472,8 +472,7 @@
         "sfx_winlevel_small",
         "sfx_winlevel_nice",
         "sfx_winlevel_standard",
-        "sfx_winlevel_substantial",
-        "sfx_bigwin_coinloop"
+        "sfx_winlevel_substantial"
       ],
       "themeSpecific": [
         "sfx_tombstone_toll",

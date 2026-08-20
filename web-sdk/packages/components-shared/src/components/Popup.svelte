@@ -115,6 +115,7 @@
 	.content-layer {
 		position: relative;
 		z-index: var(--zIndex);
+		box-sizing: border-box;
 		width: 100%;
 		height: 100%;
 		min-height: 0;
@@ -124,28 +125,43 @@
 		align-items: center;
 		justify-content: center;
 		pointer-events: none;
+		padding: max(3.4rem, env(safe-area-inset-top, 0px) + 2.6rem)
+			max(0.75rem, env(safe-area-inset-right, 0px)) max(0.75rem, env(safe-area-inset-bottom, 0px))
+			max(0.75rem, env(safe-area-inset-left, 0px));
 
 		:global(> *) {
 			pointer-events: auto;
+			max-width: 100%;
+			max-height: 100%;
 		}
 	}
 
 	.close-button-wrap {
 		position: absolute;
-		top: 0;
-		right: 0;
+		top: max(0.15rem, env(safe-area-inset-top, 0px));
+		right: max(0.15rem, env(safe-area-inset-right, 0px));
 		z-index: var(--zIndex);
 	}
 
 	.close-button {
 		cursor: pointer;
 		color: white;
-		font-size: 3rem;
+		font-size: 2.25rem;
 		font-weight: 900;
 		background-color: transparent;
 		border-color: transparent;
 		line-height: 0px; /* to remove the button style influence */
-		width: 3rem;
-		height: 3rem;
+		width: 2.75rem;
+		height: 2.75rem;
+		min-width: 44px;
+		min-height: 44px;
+	}
+
+	@media (min-width: 768px) {
+		.close-button {
+			font-size: 3rem;
+			width: 3rem;
+			height: 3rem;
+		}
 	}
 </style>
