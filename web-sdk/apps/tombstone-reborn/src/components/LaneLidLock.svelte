@@ -12,7 +12,7 @@
 	import { cubicOut } from 'svelte/easing';
 	import { BaseSprite, Container } from 'pixi-svelte';
 
-	import { playExternalOnce } from 'utils-sound';
+	import { playExternalOnce, preloadExternal } from 'utils-sound';
 
 	import { getContext } from '../game/context';
 	import { CELL_PITCH_X } from '../game/constants';
@@ -33,7 +33,8 @@
 
 	const LAST = context.stateGame.board.length - 1;
 	const COVER_W = CELL_PITCH_X * LANE_DOOR_COVER_SCALE_X;
-	const DOOR_CREAK = '/assets/audio/sfx_door_creak.mp3';
+	const DOOR_OPEN_SFX = '/assets/audio/sfx_door_creak.mp3';
+	const DOOR_CLOSE_SFX = '/assets/audio/sfx_door_close.mp3';
 	/** Leftover leaf width when the door has swung out (edge of the normal door). */
 	const OPEN_SLIVER = 0.14;
 
@@ -48,15 +49,21 @@
 	const swing = new Tween(context.stateGame.lidOpen ? 1 : 0, { duration: 0 });
 	let wasOpen = context.stateGame.lidOpen;
 
+	preloadExternal(DOOR_OPEN_SFX);
+	preloadExternal(DOOR_CLOSE_SFX);
+
 	$effect(() => {
 		const open = context.stateGame.lidOpen;
 		if (open === wasOpen) return;
 		wasOpen = open;
 		if (open) {
-			playExternalOnce(DOOR_CREAK);
-			void swing.set(1, { duration: fxDur(LANE_DOOR_OPEN_MS), easing: cubicOut });
+			const ms = fxDur(LANE_DOOR_OPEN_MS);
+			playExternalOnce(DOOR_OPEN_SFX, { durationMs: ms });
+			void swing.set(1, { duration: ms, easing: cubicOut });
 		} else {
-			void swing.set(0, { duration: fxDur(LANE_DOOR_CLOSE_MS) });
+			const ms = fxDur(LANE_DOOR_CLOSE_MS);
+			playExternalOnce(DOOR_CLOSE_SFX, { durationMs: ms });
+			void swing.set(0, { duration: ms });
 		}
 	});
 

@@ -52,12 +52,7 @@
 		return base;
 	};
 
-	const chainKey = () => {
-		const atmo = context.stateGame.atmosphere;
-		if (atmo === 'super') return 'hudChainSuper';
-		if (atmo === 'small') return 'hudChainSmall';
-		return 'hudChain';
-	};
+	const chainKey = () => 'hudChain';
 
 	type Props = {
 		slots: HudReadoutSlot[];

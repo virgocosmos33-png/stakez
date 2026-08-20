@@ -8,6 +8,8 @@
 				type: 'wildFlipShow';
 				cells: { reel: number; row: number; from: SymbolName }[];
 				shoot?: boolean;
+				/** Card is the result of a gunshot — reveal sting, not explode. */
+				afterShot?: boolean;
 		  }
 		| { type: 'wildFlipHide' };
 </script>
@@ -17,7 +19,7 @@
 	import { cubicInOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, Graphics, Rectangle } from 'pixi-svelte';
-	import { playExternalOnce } from 'utils-sound';
+	import { playThemedOnce } from '../game/sfxTheme';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { filterVisibleCells } from '../game/boardCells';
@@ -31,7 +33,6 @@
 	import BoardSpace from './BoardSpace.svelte';
 
 	const FLIP_MS = 420;
-	const SHOT_SFX = '/assets/audio/sfx_shot.mp3';
 
 	const context = getContext();
 
@@ -39,7 +40,7 @@
 
 	let cells = $state<Cell[]>([]);
 	let show = $state(false);
-	let shoot = $state(false);
+	let afterShot = $state(false);
 	const flip = new Tween(0);
 	const fallOut = new Tween(0);
 	let popped = false;
@@ -63,6 +64,7 @@
 	const run = async (
 		incoming: { reel: number; row: number; from: SymbolName }[],
 		asShot: boolean,
+		fromShot: boolean,
 	) => {
 		const visible = filterVisibleCells(incoming);
 		if (!visible.length) return;
@@ -74,14 +76,14 @@
 			i,
 		}));
 		popped = false;
-		shoot = asShot;
+		afterShot = fromShot;
 		flip.set(0, { duration: 0 });
 		fallOut.set(0, { duration: 0 });
 		show = true;
 		if (asShot) {
-			playExternalOnce(SHOT_SFX);
+			playThemedOnce('sfx_gunshot');
 			shakeBoard({ intensity: Math.min(7 + cells.length, 14), duration: fxDur(160) });
-		} else {
+		} else if (!fromShot) {
 			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_ember_whoosh' });
 		}
 		await flip.set(1, { duration: fxDur(FLIP_MS), easing: cubicInOut });
@@ -91,14 +93,14 @@
 	const clear = () => {
 		show = false;
 		cells = [];
-		shoot = false;
+		afterShot = false;
 		flip.set(0, { duration: 0 });
 		fallOut.set(0, { duration: 0 });
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		wildFlipShow: async ({ cells: incoming, shoot: asShot }) => {
-			await run(incoming, !!asShot);
+		wildFlipShow: async ({ cells: incoming, shoot: asShot, afterShot: fromShot }) => {
+			await run(incoming, !!asShot, !!asShot || !!fromShot);
 		},
 		wildFlipHide: () => clear(),
 		featureFxFallOut: async () => {
@@ -108,10 +110,13 @@
 	});
 
 	$effect(() => {
-		if (!show || popped || shoot) return;
+		if (!show || popped) return;
 		if (placed.some((cell) => flip.current >= 0.5)) {
 			popped = true;
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
+			context.eventEmitter.broadcast({
+				type: 'soundOnce',
+				name: afterShot ? 'sfx_shot_reveal' : 'sfx_wild_explode',
+			});
 		}
 	});
 

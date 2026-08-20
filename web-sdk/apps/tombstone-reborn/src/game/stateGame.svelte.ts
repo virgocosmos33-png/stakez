@@ -56,7 +56,7 @@ const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	} else if (rawSymbol.name === 'W') {
 		eventEmitter.broadcast({
 			type: 'soundOnce',
-			name: 'sfx_multiplier_landing',
+			name: 'sfx_wild_land',
 		});
 	}
 };

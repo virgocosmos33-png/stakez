@@ -16,7 +16,8 @@
 
 	import { stateSoundDerived } from 'state-shared';
 
-	import { playExternalOnce, preloadExternal } from 'utils-sound';
+	import { preloadExternal } from 'utils-sound';
+	import { fadeThemed, playThemedLoop, playThemedOnce, preloadThemedSfx, stopThemed } from '../game/sfxTheme';
 
 	import { getContext } from '../game/context';
 	import {
@@ -62,19 +63,23 @@
 		// Bought / scatter bonus rounds switch beds in freeSpinTrigger and
 		// presentBonusEntry. The lobby / base spin stays on bgm_main.
 		soundBetMode: () => playModeMusic('bgm_main'),
-		soundPressGeneral: () => sound.players.once.play({ name: 'sfx_btn_general' }),
-		soundPressBet: () => sound.players.once.play({ name: 'sfx_btn_spin' }),
+		soundPressGeneral: () => {
+			if (!playThemedOnce('sfx_btn_general')) sound.players.once.play({ name: 'sfx_btn_general' });
+		},
+		soundPressBet: () => {
+			if (!playThemedOnce('sfx_btn_spin')) sound.players.once.play({ name: 'sfx_btn_spin' });
+		},
 		// scatterCounter
 		soundScatterCounterIncrease: () => (context.stateGame.scatterCounter = context.stateGame.scatterCounter + 1), // prettier-ignore
 		soundScatterCounterClear: () => (context.stateGame.scatterCounter = 0),
 		// game
 		soundMusic: ({ name }) => playModeMusic(name),
-		soundLoop: ({ name }) => sound.players.loop.play({ name }),
+		soundLoop: ({ name }) => {
+			if (playThemedLoop(name)) return;
+			sound.players.loop.play({ name });
+		},
 		soundOnce: ({ name, forcePlay }) => {
-			if (name === 'sfx_win_ways') {
-				playExternalOnce(WAYS_WIN_SFX);
-				return;
-			}
+			if (playThemedOnce(name, { forcePlay })) return;
 			sound.players.once.play({ name, forcePlay });
 		},
 		soundStop: ({ name }) => {
@@ -86,14 +91,19 @@
 				stopBonusBgm();
 				return;
 			}
+			if (stopThemed(name)) return;
 			sound.stop({ name });
 		},
-		soundFade: async ({ name, duration, from, to }) => await sound.fade({ name, duration, from, to }), // prettier-ignore
+		soundFade: async ({ name, duration, from, to }) => {
+			if (fadeThemed(name, from, to, duration)) return;
+			await sound.fade({ name, duration, from, to });
+		},
 	});
 
 	onMount(() => {
 		preloadExternal(WAYS_WIN_SFX);
 		preloadExternal(CELEB_SCENE_CUT_SFX);
+		preloadThemedSfx();
 		preloadCelebSceneBgm();
 		preloadBonusBgm();
 		preloadBaseAmbient();

@@ -41,7 +41,7 @@
 			const instant = stateBet.isSuperTurbo;
 			const tier = (ms: number) => (instant ? 0 : fxDur(ms));
 			kind = event.kind;
-			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+			context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lane_card' });
 			swap.set(0, { duration: 0 });
 			await swap.set(1, { duration: tier(320), easing: cubicOut });
 			await fxWait(tier(520));

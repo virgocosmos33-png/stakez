@@ -25,9 +25,8 @@
 	const strike = () => {
 		if (!armed) return;
 		strikeLamp();
-		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_gunshot' });
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot' });
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_bullet_ricochet' });
+		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_lamp_smash' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_lamp_smash' });
 	};
 </script>
 

@@ -228,8 +228,8 @@
 		const liveFlash = amountHits.filter((hit) => hit.kind === 'flash' && hit.life.current > 0.02);
 		amountHits = [...holes, ...liveFlash, flash, hole];
 
-		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_gunshot' });
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
+		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_celeb_stamp' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_stamp', forcePlay: true });
 	};
 
 	const armShotVolley = (

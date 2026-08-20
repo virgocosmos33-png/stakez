@@ -74,7 +74,7 @@
 					const isFinalVolley = volley === COLUMN_VOLLEYS - 1;
 					eventEmitter.broadcast({
 						type: 'soundOnce',
-						name: isFinalVolley ? 'sfx_bullet_ricochet' : 'sfx_bullet_wood',
+						name: isFinalVolley ? 'sfx_split_bite' : 'sfx_split_hit',
 						forcePlay: true,
 					});
 				}

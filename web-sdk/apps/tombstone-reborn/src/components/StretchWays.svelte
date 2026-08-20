@@ -43,8 +43,9 @@
 		const instant = stateBet.isSuperTurbo;
 		const tier = (ms: number) => (instant ? 0 : fxDur(ms));
 
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_landing' });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_ways_stretch' });
 		await badge.pop.set(1, { duration: tier(280), easing: backOut });
+		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_multiplier_up', forcePlay: true });
 		await badge.climb.set(1, { duration: tier(520), easing: cubicOut });
 		shakeBoard({ intensity: 4, duration: tier(140) });
 	};

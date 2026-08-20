@@ -11,10 +11,10 @@
 	import { Tween } from 'svelte/motion';
 	import { quadIn } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Rectangle, Sprite } from 'pixi-svelte';
+	import { Container, Rectangle, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_CARD_W } from '../game/constants';
+	import { BOARD_HIT_Z, SYMBOL_CARD_W } from '../game/constants';
 	import { GUNSMOKE_HOLE_KEYS } from '../game/gunsmokeSpin';
 	import BulletHit from './BulletHit.svelte';
 	import MuzzleSmoke from './MuzzleSmoke.svelte';
@@ -124,6 +124,8 @@
 	};
 </script>
 
+<!-- Stage z: small/super timber remounts append at z 0 and would hide holes. -->
+<Container zIndex={BOARD_HIT_Z}>
 <MainContainer>
 	{#each hits as hit (hit.id)}
 		<BulletHit x={hit.x} y={hit.y} size={hit.size} rotation={hit.rotation} spriteKey={hit.key} />
@@ -171,3 +173,4 @@
 		/>
 	{/if}
 </MainContainer>
+</Container>
