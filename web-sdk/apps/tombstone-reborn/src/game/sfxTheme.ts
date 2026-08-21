@@ -21,7 +21,9 @@ export const THEMED_SFX: Partial<Record<SoundEffectName, ThemedSfx>> = {
 	sfx_split: { src: file('sfx_split'), durationMs: 450 },
 	sfx_split_hit: { src: file('sfx_split_hit'), durationMs: 180 },
 	sfx_split_bite: { src: file('sfx_split_bite'), durationMs: 220 },
-	sfx_split_thunk: { src: file('sfx_split_thunk'), durationMs: 180 },
+	sfx_split_thunk: { src: file('sfx_split_thunk'), durationMs: 1463 },
+	sfx_split_blood: { src: file('sfx_split_blood'), durationMs: 450 },
+	sfx_split_drag: { src: file('sfx_split_drag'), durationMs: 1437 },
 	sfx_split_seam_tear: { src: file('sfx_split_seam_tear'), durationMs: 130 },
 
 	// Restored sprite .44 (not the thin A-Z muzzle). Occasional ricochet is

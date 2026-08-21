@@ -219,7 +219,7 @@
 		<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
 		<FeatureBurst />
 
-		<!-- SPLIT / SUPERSPLIT: 3D knife stab+slice per seam, then N panes (up to 4). -->
+		<!-- SPLIT / SUPERSPLIT: fast stab to ~90° → 0.5s hold → cut-drag, then N panes. -->
 		<SplitPanes />
 
 		<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD. -->

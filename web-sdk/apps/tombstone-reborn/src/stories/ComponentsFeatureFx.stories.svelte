@@ -4,8 +4,8 @@
 	// COMPONENTS/FeatureFx exercises feature presentations in isolation, driven
 	// straight through the event emitter (no book, no spin) so the beat is reliable
 	// to film and easy to eyeball:
-	//   knife split — 3D stab then slice; one blood play per seam (2 panes = 1
-	//                 cut, 3 panes = 2 cuts). 6+ is one symbol plus a corner count.
+	//   knife split — fast stab to ~90°, 0.5s hold, cut-drag (wound opens).
+	//                 2 panes = 1 cut, 3 panes = 2 cuts. 6+ is one symbol plus a count.
 	//   shovel dig break — the digUp spade drives in and the cell cracks open in a
 	//                       burst of dirt and smoke at the point of impact.
 	//   gunsmoke wounds — bullet + smoke + glass dent + hole; irregular

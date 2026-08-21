@@ -68,6 +68,8 @@ export type SoundEffectName =
 	| 'sfx_split_hit'
 	| 'sfx_split_bite'
 	| 'sfx_split_thunk'
+	| 'sfx_split_blood'
+	| 'sfx_split_drag'
 	| 'sfx_ways_stretch'
 	| 'sfx_split_seam_tear'
 	// fire on linked cells / reel edges: ignite one-shot, sustained burn bed,

@@ -200,11 +200,10 @@ export default {
 	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
-		// v25 = three-level premiums (tools/pack_v25_symbols.py): the Aug-16 v13
-		// deck with h1..h5 regenerated per game level. h#.webp is the base-game
-		// face; h#_small / h#_super swap in via getSymbolInfo() when
-		// stateGame.atmosphere changes. Lows stay the v13 charcoal letters.
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v25.json', import.meta.url).href,
+		// Pre-painterly main deck (8a9832d3). Current git main HEAD is v18
+		// (the colored painterly set). The user rejected that as the old
+		// colored cards and asked for what main was using — that is v13.
+		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v13.json', import.meta.url).href,
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
@@ -266,20 +265,16 @@ export default {
 	//   HAUL THE DEAD       driving the cart in the storm
 	//   BACK FROM HELL & BACK TO HELL & BACK  shoveling mud into the grave
 	//
-	// Files live only in static/assets/sprites/celeb/ — do not copy the mp4s
-	// into an app-root assets/ folder or Vite will base64-inline ~15 MB.
+	// Stills stay on the boot path. The 10s clips live only under
+	// static/assets/sprites/celeb/ and load when a plate actually plays
+	// (WinCelebration). Do not `new URL` those mp4s — Vite inlines them
+	// and Storybook sits on Loading while Pixi decodes ~15 MB of video.
 	winTierBounty: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bounty.webp', import.meta.url).href },
 	winTierShowdown: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_showdown.webp', import.meta.url).href },
 	winTierHighnoon: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_highnoon.webp', import.meta.url).href },
 	winTierLaststand: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_laststand.webp', import.meta.url).href },
 	winTierBloodmoney: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bloodmoney.webp', import.meta.url).href },
 	winTierBoothill: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_boothill.webp', import.meta.url).href },
-	winTierBountyAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bounty.mp4', import.meta.url).href },
-	winTierShowdownAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_showdown.mp4', import.meta.url).href },
-	winTierHighnoonAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_highnoon.mp4', import.meta.url).href },
-	winTierLaststandAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_laststand.mp4', import.meta.url).href },
-	winTierBloodmoneyAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_bloodmoney.mp4', import.meta.url).href },
-	winTierBoothillAnim: { type: 'sprite', src: new URL('../../assets/sprites/celeb/win_tier_boothill.mp4', import.meta.url).href },
 	// Weathered timber + branded-iron frame with a punched-through window, in
 	// place of the old thin amber CCTV-monitor bezel. Carries NO thin outline: the
 	// gold inlay hairline it used to bake around the window read as a stray vector
@@ -310,10 +305,12 @@ export default {
 	},
 	// Super-bonus room smoke: studio plate, black keyed. Played as a dual
 	// decoder in SeamlessVideoLoop so the seam never lands on screen.
+	// Static URL + lazy: a preload webm hangs the boot loader the same way
+	// the celeb mp4s did. Background already waits on `smokeReady`.
 	roomSmoke: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/fx/room_smoke.webm', import.meta.url).href,
-		preload: true,
+		src: '/assets/sprites/fx/room_smoke.webm',
+		lazy: true,
 	},
 	// BONUS-ENTRY BANNER hero plates, one per real buy mode — DEAD MAN'S HAND for
 	// bonus_small (80x, the six-card special bar awake) and OPEN GRAVE for
@@ -552,8 +549,106 @@ export default {
 		src: new URL('../../assets/sprites/mirror/wr_scatter_blur.png', import.meta.url).href,
 		preload: true,
 	},
-	// SPLIT: 3D Bowie poses (embed / stab / slice) + blood flipbook. Baked by
-	// tools/make_split_cut_fx.py. One knife+blood play per seam (1→2 = 1, 1→3 = 2).
+	// SPLIT: live stab is knifesplit2.png (ornate Bowie), lightly desat so
+	// it sits on the dusty board without going grey. Color source:
+	// assets-raw/fx/knifesplit2_color.png. Slide into the wound (tip hides
+	// behind the gash) → thunk → drag out. Fist still lives on disk as
+	// split_hand_knife.png.
+	splitHandKnife: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/knifesplit2.png', import.meta.url).href,
+		preload: true,
+	},
+	splitCutScratch: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_cut_scratch.png', import.meta.url).href,
+		preload: true,
+	},
+	splitCutSmear: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_cut_smear.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_1.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_2.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_3.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_4.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip5: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_5.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip6: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_6.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip7: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_7.png', import.meta.url).href,
+		preload: true,
+	},
+	splitDrip8: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_drip_8.png', import.meta.url).href,
+		preload: true,
+	},
+	splitSplash1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_splash_1.png', import.meta.url).href,
+		preload: true,
+	},
+	splitSplash2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_splash_2.png', import.meta.url).href,
+		preload: true,
+	},
+	splitSplash3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_splash_3.png', import.meta.url).href,
+		preload: true,
+	},
+	splitSplash4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_splash_4.png', import.meta.url).href,
+		preload: true,
+	},
+	splitSplash5: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_splash_5.png', import.meta.url).href,
+		preload: true,
+	},
+	splitBurst1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_burst_1.png', import.meta.url).href,
+		preload: true,
+	},
+	splitBurst2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_burst_2.png', import.meta.url).href,
+		preload: true,
+	},
+	splitBurst3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/split_burst_3.png', import.meta.url).href,
+		preload: true,
+	},
 	splitKnife: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/tr_split_knife.png', import.meta.url).href,

@@ -28,6 +28,16 @@
         "name": "sfx_split_seam_tear",
         "duration_ms": 180,
         "prompt": "A painted card seam tearing open as knives start, dry canvas and paper rip with a tiny grit puff, no metal clash, no gunshot."
+      },
+      {
+        "name": "sfx_split_blood",
+        "duration_ms": 450,
+        "prompt": "Wet blood gush from a knife stab wound: thick viscous blood spurting then dripping, wet organic splat and drip tails, close mic, no voices, no gunshot, no metal clash."
+      },
+      {
+        "name": "sfx_split_drag",
+        "duration_ms": 280,
+        "prompt": "A steel knife dragging sideways through a wound to open a cut: wet flesh tear, blade scraping, accelerating rip, no gunshot, no voices, no explosion."
       }
     ],
     "guns": [
