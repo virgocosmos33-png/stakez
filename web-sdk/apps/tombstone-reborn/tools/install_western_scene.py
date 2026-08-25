@@ -1,11 +1,10 @@
-"""Install the ready-made backgroundSPINE western scene as a Spine 4.1.23 pack.
+"""Install the full TR2 Spine Background scene (every attachment).
 
-Source: C:/Users/Emex33/Documents/fire frame vfx/backgroundSPINE/spine-scene
-Runtime: spine-pixi-v8 (4.1). A 3.8 skeleton loads as a still pose.
+Source: https://github.com/brandnitions-dev/TR2-Spine-Background-scene
+Local clone: <repo>/_tr2_spine_scene/spine-scene  (or fire-frame fallback)
 
-Game chrome (MAIN_FRAME / plaques / hang chains) is stripped — BoardPlate
-already draws those. Barrel glow is split onto `barrel_on` so base can
-leave the lantern dark.
+Spine 3.8.75 -> 4.1.23. Idle stays idle. Barrel glow is `barrel_on`
+so base can leave the lantern dark.
 
 Run: python tools/install_western_scene.py
 """
@@ -18,9 +17,13 @@ from pathlib import Path
 from PIL import Image
 
 APP = Path(__file__).resolve().parents[1]
-SRC = Path(r"C:\Users\Emex33\Documents\fire frame vfx\backgroundSPINE\spine-scene")
+REPO = APP.parents[2]
+CLONE = REPO / "_tr2_spine_scene" / "spine-scene"
+FALLBACK = Path(r"C:\Users\Emex33\Documents\fire frame vfx\backgroundSPINE\spine-scene")
+SRC = CLONE if (CLONE / "skeleton.json").exists() else FALLBACK
 SRC_JSON = SRC / "skeleton.json"
 SRC_IMAGES = SRC / "images"
+SRC_FX = SRC.parent / "fx"
 NAME = "western_scene"
 SPINE_VERSION = "4.1.23"
 PAD = 2
@@ -28,10 +31,14 @@ OUT_DIRS = (
 	APP / "assets" / "spines" / NAME,
 	APP / "static" / "assets" / "spines" / NAME,
 )
-
-
-def is_chrome(name: str) -> bool:
-	return name == "MAIN_FRAME" or name.startswith("Layer_") or name.startswith("chain_bolt")
+BG_OUT = (
+	APP / "assets" / "sprites" / "scene" / "western_scene_ready_bg.png",
+	APP / "static" / "assets" / "sprites" / "scene" / "western_scene_ready_bg.png",
+)
+FX_OUT = (
+	APP / "assets" / "sprites" / "scene" / "western_scene_fx",
+	APP / "static" / "assets" / "sprites" / "scene" / "western_scene_fx",
+)
 
 
 def convert_keys(node) -> None:
@@ -47,46 +54,23 @@ def convert_keys(node) -> None:
 		convert_keys(value)
 
 
-def kept_bones(data: dict, slot_bones: set[str]) -> list[dict]:
-	by_name = {bone["name"]: bone for bone in data["bones"]}
-	keep: set[str] = set(slot_bones)
-	keep.add("root")
-	changed = True
-	while changed:
-		changed = False
-		for name in list(keep):
-			parent = by_name.get(name, {}).get("parent")
-			if parent and parent not in keep:
-				keep.add(parent)
-				changed = True
-	return [bone for bone in data["bones"] if bone["name"] in keep]
-
-
 def convert(src: dict) -> dict:
 	data = json.loads(json.dumps(src))
 	skel = data["skeleton"]
 	skel["spine"] = SPINE_VERSION
 	skel["images"] = "./"
-	skel["hash"] = "western-scene"
-
-	slots = [slot for slot in data["slots"] if not is_chrome(slot["name"])]
-	data["slots"] = slots
-	slot_bones = {slot["bone"] for slot in slots}
-	data["bones"] = kept_bones(data, slot_bones)
+	skel["hash"] = "western-scene-full"
 
 	default = data["skins"]["default"]
-	attachments = {name: att for name, att in default.items() if not is_chrome(name)}
-	data["skins"] = [{"name": "default", "attachments": attachments}]
+	data["skins"] = [{"name": "default", "attachments": default}]
 
 	convert_keys(data["animations"])
 	idle = data["animations"].setdefault("idle", {})
-	slot_anims = idle.get("slots") or {}
+	slot_anims = idle.setdefault("slots", {})
 	barrel = slot_anims.pop("lantern_dim_light", None)
-	idle["slots"] = {name: track for name, track in slot_anims.items() if not is_chrome(name)}
-	idle["bones"] = {
-		name: track for name, track in (idle.get("bones") or {}).items() if not is_chrome(name)
-	}
-	data["animations"]["barrel_on"] = {"slots": {"lantern_dim_light": barrel}} if barrel else {"slots": {}}
+	data["animations"]["barrel_on"] = (
+		{"slots": {"lantern_dim_light": barrel}} if barrel else {"slots": {}}
+	)
 
 	for slot in data["slots"]:
 		if slot["name"] == "lantern_dim_light":
@@ -97,34 +81,23 @@ def convert(src: dict) -> dict:
 
 def pack(names: list[str]) -> tuple[Image.Image, dict[str, tuple[int, int, int, int]]]:
 	rects: list[tuple[str, int, int, Image.Image]] = []
+	missing: list[str] = []
 	for name in names:
 		path = SRC_IMAGES / f"{name}.png"
 		if not path.exists():
-			raise SystemExit(f"missing {path}")
+			missing.append(name)
+			continue
 		img = Image.open(path).convert("RGBA")
 		rects.append((name, img.width, img.height, img))
+	if missing:
+		raise SystemExit(f"missing images: {', '.join(missing)}")
 	rects.sort(key=lambda item: (-item[2], -item[1]))
 
-	page_w = 2048
-	x = PAD
-	y = PAD
-	row_h = 0
-	placed: dict[str, tuple[int, int, int, int]] = {}
-	for name, w, h, _img in rects:
-		if x + w + PAD > page_w:
-			x = PAD
-			y += row_h + PAD
-			row_h = 0
-		placed[name] = (x, y, w, h)
-		x += w + PAD
-		row_h = max(row_h, h)
-	page_h = y + row_h + PAD
-	if page_h > 4096:
-		page_w = 4096
+	def layout(page_w: int) -> tuple[dict[str, tuple[int, int, int, int]], int]:
 		x = PAD
 		y = PAD
 		row_h = 0
-		placed = {}
+		placed: dict[str, tuple[int, int, int, int]] = {}
 		for name, w, h, _img in rects:
 			if x + w + PAD > page_w:
 				x = PAD
@@ -133,7 +106,13 @@ def pack(names: list[str]) -> tuple[Image.Image, dict[str, tuple[int, int, int, 
 			placed[name] = (x, y, w, h)
 			x += w + PAD
 			row_h = max(row_h, h)
-		page_h = y + row_h + PAD
+		return placed, y + row_h + PAD
+
+	page_w = 2048
+	placed, page_h = layout(page_w)
+	if page_h > 4096:
+		page_w = 4096
+		placed, page_h = layout(page_w)
 
 	atlas = Image.new("RGBA", (page_w, page_h), (0, 0, 0, 0))
 	by_name = {name: img for name, _w, _h, img in rects}
@@ -166,6 +145,7 @@ def attachment_names(data: dict) -> list[str]:
 
 def write_out(data: dict, atlas: Image.Image, text: str) -> None:
 	payload = json.dumps(data, separators=(",", ":"))
+	bg = SRC_IMAGES / "background.png"
 	for dest in OUT_DIRS:
 		if dest.exists():
 			shutil.rmtree(dest)
@@ -173,6 +153,30 @@ def write_out(data: dict, atlas: Image.Image, text: str) -> None:
 		(dest / f"{NAME}.json").write_text(payload, encoding="utf-8")
 		(dest / f"{NAME}.atlas").write_text(text, encoding="utf-8")
 		atlas.save(dest / f"{NAME}.png", "PNG")
+		images_dir = dest / "images"
+		images_dir.mkdir(exist_ok=True)
+		for src in SRC_IMAGES.glob("*.png"):
+			shutil.copy2(src, images_dir / src.name)
+		if SRC_FX.exists():
+			fx_dir = dest / "fx"
+			fx_dir.mkdir(exist_ok=True)
+			for src in SRC_FX.glob("*.png"):
+				shutil.copy2(src, fx_dir / src.name)
+		for extra in ("lamp_state.json", "placement.json", "sign_state.json"):
+			src = SRC.parent / extra
+			if src.exists():
+				shutil.copy2(src, dest / extra)
+	if bg.exists():
+		for dest in BG_OUT:
+			dest.parent.mkdir(parents=True, exist_ok=True)
+			shutil.copy2(bg, dest)
+	if SRC_FX.exists():
+		for dest in FX_OUT:
+			if dest.exists():
+				shutil.rmtree(dest)
+			dest.mkdir(parents=True, exist_ok=True)
+			for src in SRC_FX.glob("*.png"):
+				shutil.copy2(src, dest / src.name)
 
 
 def main() -> None:
@@ -182,9 +186,12 @@ def main() -> None:
 	data = convert(src)
 	names = attachment_names(data)
 	atlas, placed = pack(names)
+	if set(placed) != set(names):
+		raise SystemExit(f"pack missed {sorted(set(names) - set(placed))}")
 	text = atlas_text(atlas.width, atlas.height, placed)
 	write_out(data, atlas, text)
-	print(f"ok {NAME} {atlas.size} attachments={len(names)}")
+	print(f"ok {NAME} from {SRC}")
+	print(f"  atlas {atlas.size} attachments={len(names)}")
 	print(f"  clips: {', '.join(data['animations'])}")
 	print(f"  slots: {len(data['slots'])}  bones: {len(data['bones'])}")
 	for dest in OUT_DIRS:

@@ -54,3 +54,6 @@ web-sdk/apps/ways/static/assets/sprites/mirror/logo_backup.png
 
 # mock RGS local cache (books + self-signed TLS certs)
 tools/mock_rgs_cache/
+
+# cloned TR2 Spine Background scene (source of truth stays on GitHub)
+_tr2_spine_scene/

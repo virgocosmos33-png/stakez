@@ -207,7 +207,8 @@ export default {
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
-	// Ready-made backgroundSPINE street plate (images/background.png).
+	// TR2 Spine Background scene plate (repo images/background.png).
+	// https://github.com/brandnitions-dev/TR2-Spine-Background-scene
 	westernSceneBg: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/western_scene_ready_bg.png', import.meta.url).href,
@@ -288,8 +289,8 @@ export default {
 		src: new URL('../../assets/sprites/scene/street_mist.png', import.meta.url).href,
 		preload: true,
 	},
-	// Ready-made backgroundSPINE western room. Atlas PNG is also the plate
-	// crop. Spine loads from public paths so the atlas can fetch the PNG.
+	// Full TR2 western room (every attachment). Public paths so the atlas
+	// can fetch western_scene.png as a real sibling.
 	westernSceneAtlas: {
 		type: 'sprite',
 		src: new URL('../../assets/spines/western_scene/western_scene.png', import.meta.url).href,
@@ -302,6 +303,23 @@ export default {
 			skeleton: '/assets/spines/western_scene/western_scene.json',
 			scale: 1,
 		},
+		preload: true,
+	},
+	westernSceneSmoke: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/western_scene_fx/smoke-element.png', import.meta.url)
+			.href,
+		preload: true,
+	},
+	westernSceneFire: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-element.png', import.meta.url)
+			.href,
+		preload: true,
+	},
+	westernSceneFireHot: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-hot.png', import.meta.url).href,
 		preload: true,
 	},
 	// PSD hanging lanterns. Spine 4.1 idle: hang bone at the chain nail, pendulum + oil flicker.
