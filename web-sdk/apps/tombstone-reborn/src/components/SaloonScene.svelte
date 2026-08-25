@@ -138,18 +138,16 @@ void main() {
 	/**
 	 * Live western room from TR2-Spine-Background-scene.
 	 * Street plate always paints. Full Spine idle sits on top when loaded.
-	 * PSD hanging-lamp stills only if that skeleton is missing.
+	 * Hanging lamps always paint so a silent Spine miss cannot leave the beam bare.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { isWesternSceneSkeleton } from '../game/westernScene';
 	import HangingLamps from './HangingLamps.svelte';
 	import WesternSceneFx from './WesternSceneFx.svelte';
 	import WesternSceneSpine from './WesternSceneSpine.svelte';
 
 	const context = getContext();
-	const hasScene = $derived(isWesternSceneSkeleton(context.stateApp.loadedAssets?.westernScene));
 
 	const fit = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -184,7 +182,5 @@ void main() {
 	{/if}
 	<WesternSceneFx />
 	<WesternSceneSpine />
-	{#if !hasScene}
-		<HangingLamps />
-	{/if}
+	<HangingLamps />
 </Container>

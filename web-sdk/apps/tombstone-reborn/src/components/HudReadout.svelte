@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * WAYS / MULTI / WIN / FREE SPINS drawn from PSD layer pixels at PSD
-	 * seats (scene cover-fit). Box + pallet stack like the PSD. Numbers
-	 * sit in the well only — they do not cover the wood label.
-	 * WIN / FREE SPINS wells are the box PNG opening below the pallet.
+	 * WAYS / MULTI / WIN / FREE SPINS wood + numbers at PSD seats.
+	 * Hang chains stay on the western Spine scene — this component does
+	 * not paint a second set.
 	 */
 	import { Container, Rectangle, Sprite, Text } from 'pixi-svelte';
 
@@ -76,22 +75,24 @@
 			height={p.pallet.h}
 			eventMode="none"
 		/>
+		{@const valueSize = fitFontSize(p.value, {
+			role: 'value',
+			base: Math.max(11, Math.floor(p.well.h * 0.52)),
+			maxWidth: p.well.w * 0.86,
+			min: 9,
+			letterSpacing: VALUE_TRACKING,
+		})}
 		<Text
 			x={p.well.x + ox + p.well.w * 0.5}
 			y={p.well.y + oy + p.well.h * 0.5}
-			anchor={0.5}
+			anchor={{ x: 0.5, y: 0.5 }}
 			text={p.value}
 			eventMode="none"
 			style={trValueStyle({
 				fill: VALUE_COLOR,
-				fontSize: fitFontSize(p.value, {
-					role: 'value',
-					base: Math.max(11, Math.floor(p.well.h * 0.42)),
-					maxWidth: p.well.w * 0.88,
-					min: 9,
-					letterSpacing: VALUE_TRACKING,
-				}),
+				fontSize: valueSize,
 				letterSpacing: VALUE_TRACKING,
+				lineHeight: valueSize,
 				stroke: INK_STROKE,
 				dropShadow: INK_SHADOW,
 			})}
@@ -105,33 +106,9 @@
 		{#if !hang?.hide}
 			{#if hang}
 				<Container x={hang.sway} y={0} rotation={hang.swing} eventMode="none">
-					{#if parts === 'all' || parts === 'chains'}
-						{#each p.chains as seg (`${p.label}-${seg.id}`)}
-							<Sprite
-								key={seg.key}
-								x={seg.x}
-								y={seg.y}
-								width={seg.w}
-								height={seg.h}
-								eventMode="none"
-							/>
-						{/each}
-					{/if}
 					{@render plaqueFace(p, 0, 0)}
 				</Container>
 			{:else}
-				{#if parts === 'all' || parts === 'chains'}
-					{#each p.chains as seg (`${p.label}-${seg.id}`)}
-						<Sprite
-							key={seg.key}
-							x={seg.x}
-							y={seg.y}
-							width={seg.w}
-							height={seg.h}
-							eventMode="none"
-						/>
-					{/each}
-				{/if}
 				{@render plaqueFace(p, 0, 0)}
 			{/if}
 		{/if}

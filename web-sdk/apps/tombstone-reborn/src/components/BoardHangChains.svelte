@@ -1,8 +1,8 @@
 <script lang="ts">
 	/**
 	 * One PSD chain island per hanger, in scene cover-fit (same as the plate).
-	 * Base uses extracted chains-upframe pixels. Small/super keep their atmosphere skins
-	 * at the same seats.
+	 * Base uses extracted hang chains. Small/super keep their atmosphere skins
+	 * at the same seats — Spine hangers stay hidden so this is the only set.
 	 */
 	import { Sprite } from 'pixi-svelte';
 

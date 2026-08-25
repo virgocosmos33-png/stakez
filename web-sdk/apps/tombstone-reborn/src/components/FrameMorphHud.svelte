@@ -22,6 +22,7 @@
 	import HudReadout from './HudReadout.svelte';
 	import { getContext } from '../game/context';
 	import config from '../game/config';
+	import { isBonusAtmosphere } from '../game/atmosphere.svelte';
 	import { plaqueGeom, type HudPlaqueGeom } from '../game/hudPlaqueSeats';
 	import { isSpecialBarVertical } from '../game/specialBarLayout';
 	import { formatWays, formatWinMult } from '../game/waysFormat';
@@ -29,7 +30,6 @@
 	const context = getContext();
 	const BASE_WAYS = config.numRows.reduce((total, rows) => total * rows, 1);
 	let ways = $state(BASE_WAYS);
-	let spinsShow = $state(false);
 	let spinsCurrent = $state(0);
 	let spinsTotal = $state(0);
 	let winMult = $state(1);
@@ -42,11 +42,9 @@
 		waysCounterHide: () => {
 			ways = BASE_WAYS;
 		},
-		freeSpinCounterShow: () => {
-			spinsShow = true;
-		},
 		freeSpinCounterHide: () => {
-			spinsShow = false;
+			spinsCurrent = 0;
+			spinsTotal = 0;
 		},
 		freeSpinCounterUpdate: (e) => {
 			if (e.current !== undefined) spinsCurrent = e.current;
@@ -67,10 +65,10 @@
 			{ label: 'MULTI', value: formatWinMult(winMult) },
 			{ label: 'WIN', value: bookEventAmountToCurrencyString(stateBet.winBookEventAmount) },
 		];
-		if (spinsShow) {
+		if (isBonusAtmosphere(atmo)) {
 			rows.push({
 				label: 'FREE SPINS',
-				value: `${spinsTotal - spinsCurrent}/${spinsTotal}`,
+				value: spinsTotal > 0 ? `${spinsTotal - spinsCurrent}/${spinsTotal}` : '',
 			});
 		}
 		return rows
@@ -81,9 +79,6 @@
 
 {#if plaques}
 	<MainContainer>
-		<Container zIndex={0}>
-			<HudReadout plaques={plaques} parts="chains" heldLabels={heldLabels} />
-		</Container>
 		<Container zIndex={1}>
 			<HudReadout plaques={plaques} parts="plate" heldLabels={heldLabels} />
 		</Container>

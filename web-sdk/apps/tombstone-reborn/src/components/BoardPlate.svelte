@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
-	 * BASE timber is the PSD FRAME layer, seated in scene cover-fit like the
-	 * plate (same transform as SaloonScene / lamps). Cards live in the hole.
-	 * Hang chains are the PSD islands (board hangers). Atmosphere small/super keep their
-	 * own timber skins at the same FRAME seat.
+	 * One timber ring: the PSD FRAME layer, seated in scene cover-fit like
+	 * the plate (same transform as SaloonScene / lamps). Cards live in the
+	 * hole. Hang chains stay on the western Spine scene — this plate does
+	 * not draw a second set.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 
@@ -12,20 +12,13 @@
 	import { FRAME_SEATS } from '../game/frameSeats.generated';
 	import { sceneToMain } from '../game/saloonLamps';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
-	import BoardHangChains from './BoardHangChains.svelte';
 
 	type Props = { layer?: 'back' | 'ring' };
 	const props: Props = $props();
 	const layer = $derived(props.layer ?? 'back');
 
 	const context = getContext();
-	const frameKey = $derived(
-		context.stateGame.atmosphere === 'super'
-			? 'boardFrameSuper'
-			: context.stateGame.atmosphere === 'small'
-				? 'boardFrameSmall'
-				: 'boardFrame',
-	);
+	const frameKey = 'boardFrame';
 
 	type Column = { left: number; right: number; top: number; bottom: number };
 
@@ -73,7 +66,6 @@
 </script>
 
 {#if layer === 'back'}
-	<BoardHangChains />
 	<Container
 		zIndex={0}
 		x={layout.x}

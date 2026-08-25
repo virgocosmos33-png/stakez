@@ -9,6 +9,9 @@ import { stateGame } from './stateGame.svelte';
 
 export type Atmosphere = 'base' | 'small' | 'super';
 
+/** Room is in a bonus. Free-spins plaque, street smoke, barrel lamp. */
+export const isBonusAtmosphere = (atmo: Atmosphere) => atmo !== 'base';
+
 const TARGETS: Record<
 	Atmosphere,
 	{ sat: number; warm: number; ember: number; smoke: number; fire: number }

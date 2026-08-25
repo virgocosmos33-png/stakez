@@ -116,10 +116,42 @@ def inner_pocket(img: Image.Image, bbox1: tuple[int, int, int, int]):
 		y0, y1 = int(ys.min()), int(ys.max()) + 1
 		kind = "transparent-hole"
 	else:
-		pad_x = max(1, int(round(w * 0.12)))
-		pad_y = max(1, int(round(h * 0.18)))
-		x0, y0, x1, y1 = pad_x, pad_y, w - pad_x, h - pad_y
-		kind = "no-hole-inset"
+		# U-frame: open top connects the interior to the edge, so flood-fill
+		# sees no hole. Walk the center column for the floor plank, then take
+		# the median inner post edges on the open rows.
+		opaque = a > ALPHA
+		mid = w // 2
+		open_x0: list[int] = []
+		open_x1: list[int] = []
+		open_y: list[int] = []
+		floor_y: int | None = None
+		for y in range(h):
+			if opaque[y, mid]:
+				if open_y and floor_y is None:
+					floor_y = y
+				continue
+			li = mid
+			while li > 0 and not opaque[y, li]:
+				li -= 1
+			ri = mid
+			while ri < w - 1 and not opaque[y, ri]:
+				ri += 1
+			if opaque[y, li] and opaque[y, ri] and ri - li > w * 0.2:
+				open_y.append(y)
+				open_x0.append(li)
+				open_x1.append(ri)
+		if open_y and floor_y is not None:
+			pad = max(2, int(round(w * 0.02)))
+			x0 = int(np.median(open_x0)) + pad
+			x1 = int(np.median(open_x1)) - pad
+			y0 = open_y[0]
+			y1 = max(y0 + 8, floor_y - pad)
+			kind = "u-channel"
+		else:
+			pad_x = max(1, int(round(w * 0.12)))
+			pad_y = max(1, int(round(h * 0.18)))
+			x0, y0, x1, y1 = pad_x, pad_y, w - pad_x, h - pad_y
+			kind = "no-hole-inset"
 	return {
 		"kind": kind,
 		"local": [x0, y0, x1, y1],

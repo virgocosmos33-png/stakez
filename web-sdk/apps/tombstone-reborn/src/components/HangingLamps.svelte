@@ -1,24 +1,18 @@
 <script lang="ts">
 	/**
-	 * Both PSD hanging lanterns, always mounted inside SaloonScene's cover-fit.
-	 * PSD stills paint first (never gated). Spine idle draws on top only when
-	 * loadedAssets holds real SkeletonData — a truthy-but-unusable spine key
-	 * used to hide stills and leave the beam bare.
+	 * Visible street lanterns. Stills always paint so the beam is never bare.
+	 * Swing + oil light are the ready scene `idle` clip. Do not freeze
+	 * stills when a lamp skeleton duck-types true.
 	 */
 	import { onMount } from 'svelte';
 	import { Texture } from 'pixi.js';
-	import { BaseSprite, Container, Sprite, SpineProvider, SpineTrack } from 'pixi-svelte';
+	import { BaseSprite, Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
 	import { FRAME_SEATS } from '../game/frameSeats.generated';
 	import { HANGING_LAMPS } from '../game/hangingLamps.generated';
-	import {
-		LAMP_BODY,
-		ensureHangingLampSkeletons,
-		isLampSkeleton,
-		lampBodyTexture,
-		loadHangingLampSources,
-	} from '../game/ensureHangingLamps';
+	import { LAMP_BODY, lampBodyTexture } from '../game/ensureHangingLamps';
+	import { westernIdleLampLight, westernIdleLampRotation } from '../game/westernScene';
 
 	const context = getContext();
 	const seatL = FRAME_SEATS.lamps.L;
@@ -26,30 +20,10 @@
 	const stillSizeL = { w: seatL.right - seatL.left, h: seatL.bottom - seatL.top };
 	const stillSizeR = { w: seatR.right - seatR.left, h: seatR.bottom - seatR.top };
 
-	const injectSkeletons = () => {
-		const cur = context.stateApp.loadedAssets;
-		if (!cur?.hangingLampsAtlas) return;
-		if (isLampSkeleton(cur.hangingLampL) && isLampSkeleton(cur.hangingLampR)) return;
-		void loadHangingLampSources()
-			.then((src) => {
-				const latest = context.stateApp.loadedAssets;
-				if (!latest?.hangingLampsAtlas) return;
-				if (isLampSkeleton(latest.hangingLampL) && isLampSkeleton(latest.hangingLampR)) return;
-				context.stateApp.loadedAssets = ensureHangingLampSkeletons(latest, src);
-			})
-			.catch((err) => {
-				console.error('[HangingLamps] skeleton bootstrap failed', err);
-			});
-	};
-
-	$effect.pre(() => {
-		injectSkeletons();
-	});
-
-	const hasSpineL = $derived(isLampSkeleton(context.stateApp.loadedAssets?.['hangingLampL']));
-	const hasSpineR = $derived(isLampSkeleton(context.stateApp.loadedAssets?.['hangingLampR']));
 	const hasPsdL = $derived(Boolean(context.stateApp.loadedAssets?.['hangingLampStillL']));
 	const hasPsdR = $derived(Boolean(context.stateApp.loadedAssets?.['hangingLampStillR']));
+	const hasLightL = $derived(Boolean(context.stateApp.loadedAssets?.['hangingLampLightL']));
+	const hasLightR = $derived(Boolean(context.stateApp.loadedAssets?.['hangingLampLightR']));
 	const atlasTex = $derived(
 		context.stateApp.loadedAssets?.['hangingLampsAtlas'] as Texture | undefined,
 	);
@@ -68,19 +42,14 @@
 		return () => cancelAnimationFrame(raf);
 	});
 
-	const period = HANGING_LAMPS.period;
-	const swingL = $derived(((13 * Math.PI) / 180) * Math.cos((swingT * Math.PI * 2) / period));
-	const swingR = $derived(((-16 * Math.PI) / 180) * Math.cos((swingT * Math.PI * 2) / period));
+	const swingL = $derived(westernIdleLampRotation('L', swingT));
+	const swingR = $derived(westernIdleLampRotation('R', swingT));
+	const lightL = $derived(westernIdleLampLight('L', swingT));
+	const lightR = $derived(westernIdleLampLight('R', swingT));
 </script>
 
 <Container zIndex={20} eventMode="none" sortableChildren>
-	<Container
-		x={HANGING_LAMPS.L.x}
-		y={HANGING_LAMPS.L.y}
-		rotation={hasSpineL ? 0 : swingL}
-		zIndex={0}
-		eventMode="none"
-	>
+	<Container x={HANGING_LAMPS.L.x} y={HANGING_LAMPS.L.y} rotation={swingL} zIndex={0} eventMode="none">
 		{#if hasPsdL}
 			<Sprite
 				key="hangingLampStillL"
@@ -96,14 +65,19 @@
 				height={LAMP_BODY.L.h}
 			/>
 		{/if}
+		{#if hasLightL}
+			<Sprite
+				key="hangingLampLightL"
+				anchor={{ x: 0.5, y: 0 }}
+				width={stillSizeL.w}
+				height={stillSizeL.h}
+				alpha={lightL.a}
+				tint={0xffffff}
+				blendMode="add"
+			/>
+		{/if}
 	</Container>
-	<Container
-		x={HANGING_LAMPS.R.x}
-		y={HANGING_LAMPS.R.y}
-		rotation={hasSpineR ? 0 : swingR}
-		zIndex={0}
-		eventMode="none"
-	>
+	<Container x={HANGING_LAMPS.R.x} y={HANGING_LAMPS.R.y} rotation={swingR} zIndex={0} eventMode="none">
 		{#if hasPsdR}
 			<Sprite
 				key="hangingLampStillR"
@@ -119,15 +93,16 @@
 				height={LAMP_BODY.R.h}
 			/>
 		{/if}
+		{#if hasLightR}
+			<Sprite
+				key="hangingLampLightR"
+				anchor={{ x: 0.5, y: 0 }}
+				width={stillSizeR.w}
+				height={stillSizeR.h}
+				alpha={lightR.a}
+				tint={0xffffff}
+				blendMode="add"
+			/>
+		{/if}
 	</Container>
-	{#if hasSpineL}
-		<SpineProvider key="hangingLampL" x={HANGING_LAMPS.L.x} y={HANGING_LAMPS.L.y} anchor={0} zIndex={1}>
-			<SpineTrack trackIndex={0} animationName="idle" loop={true} />
-		</SpineProvider>
-	{/if}
-	{#if hasSpineR}
-		<SpineProvider key="hangingLampR" x={HANGING_LAMPS.R.x} y={HANGING_LAMPS.R.y} anchor={0} zIndex={1}>
-			<SpineTrack trackIndex={0} animationName="idle" loop={true} />
-		</SpineProvider>
-	{/if}
 </Container>

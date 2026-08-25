@@ -47,7 +47,7 @@ export const FRAME_SEATS = {
 		ways: {
 			box: { left: 1760, top: 302, right: 2062, bottom: 470 },
 			pallet: { left: 1764, top: 282, right: 2050, bottom: 348 },
-			well: { left: 1796, top: 340, right: 2026, bottom: 440 },
+			well: { left: 1837, top: 350, right: 1974, bottom: 403 },
 			chains: [
 				{ id: "ways-0", key: "plaqueChainWays0", left: 1786, top: 186, right: 1818, bottom: 322 },
 				{ id: "ways-1", key: "plaqueChainWays1", left: 1786, top: 426, right: 1818, bottom: 598 },
@@ -58,7 +58,7 @@ export const FRAME_SEATS = {
 		multi: {
 			box: { left: 1470, top: 302, right: 1772, bottom: 470 },
 			pallet: { left: 1468, top: 282, right: 1760, bottom: 346 },
-			well: { left: 1506, top: 338, right: 1736, bottom: 440 },
+			well: { left: 1547, top: 348, right: 1684, bottom: 403 },
 			chains: [
 				{ id: "multi-0", key: "plaqueChainMulti0", left: 1500, top: 182, right: 1532, bottom: 320 },
 				{ id: "multi-1", key: "plaqueChainMulti1", left: 1700, top: 186, right: 1732, bottom: 318 },

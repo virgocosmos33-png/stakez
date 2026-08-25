@@ -283,6 +283,22 @@ export default {
 		src: new URL('../../assets/sprites/scene/hanging_lamp_still_r.png', import.meta.url).href,
 		preload: true,
 	},
+	hangingLampLightL: {
+		type: 'sprite',
+		src: new URL(
+			'../../assets/spines/western_scene/images/left_hanging_lamp_light.png',
+			import.meta.url,
+		).href,
+		preload: true,
+	},
+	hangingLampLightR: {
+		type: 'sprite',
+		src: new URL(
+			'../../assets/spines/western_scene/images/right_hanging_lamp_light.png',
+			import.meta.url,
+		).href,
+		preload: true,
+	},
 	// Low street mist: soft bone-white band, plate-only z (under lamps / timber).
 	streetMist: {
 		type: 'sprite',
@@ -313,13 +329,14 @@ export default {
 	},
 	westernSceneFire: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-element.png', import.meta.url)
+		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-lick.png', import.meta.url)
 			.href,
 		preload: true,
 	},
 	westernSceneFireHot: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-hot.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-lick-hot.png', import.meta.url)
+			.href,
 		preload: true,
 	},
 	// PSD hanging lanterns. Spine 4.1 idle: hang bone at the chain nail, pendulum + oil flicker.

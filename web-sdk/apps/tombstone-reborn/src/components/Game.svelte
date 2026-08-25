@@ -156,13 +156,10 @@
 		<!-- BoardFrame REMOVED: diamond board (4-3-2-3-4) renders with no frame
 			behind the symbols. -->
 
-		<!-- Chains under the wordmark, boxes in front. Same MainContainer so
-			zIndex actually sorts them against the logo. -->
+		<!-- Plaque numbers / wood in front of the wordmark. Hang chains stay
+			on the western Spine scene so they are not drawn twice. -->
 		<MainContainer>
 			<Container sortableChildren zIndex={2}>
-				<Container zIndex={0}>
-					<SpecialBar layer="chains" />
-				</Container>
 				{#if logoStacked}
 					{@const L = aboveReelsLogo}
 					<Container zIndex={1} x={L.x} y={L.y}>
