@@ -13,6 +13,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "static" / "assets"
 DST = ROOT / "assets"
+# Videos stay in static/ and are requested as /assets/... . Copying them
+# into assets/ lets Vite `new URL` inline them and stall Storybook.
+SKIP_SUFFIXES = {".mp4", ".webm"}
 
 
 def main() -> None:
@@ -22,6 +25,9 @@ def main() -> None:
     skipped = 0
     for src in SRC.rglob("*"):
         if not src.is_file():
+            continue
+        if src.suffix.lower() in SKIP_SUFFIXES:
+            skipped += 1
             continue
         rel = src.relative_to(SRC)
         dst = DST / rel

@@ -140,6 +140,10 @@ export const winTierPlateKey = (slug: string) =>
 /** Hero plate video for a tier slug. WinCelebration prefers this when loaded. */
 export const winTierPlateAnimKey = (slug: string) => `${winTierPlateKey(slug)}Anim`;
 
+/** Public static path — not a Vite `new URL`, so the mp4 is never inlined. */
+export const winTierPlateAnimSrc = (slug: string) =>
+	`/assets/sprites/celeb/win_tier_${slug}.mp4`;
+
 export const WIN_TIER_SLUGS = [
 	'bounty',
 	'showdown',

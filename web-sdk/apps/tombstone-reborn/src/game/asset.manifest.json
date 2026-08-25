@@ -196,8 +196,8 @@
       "anim": "mirror/bg_freespin_anim.mp4"
     },
     "scene": {
-      "still": "scene/scene_bg_v2.webp",
-      "note": "Base-game saloon still (1679x937) from basemodebgimagetomsbstonereborn.png. Cover-fit in Background.svelte / LoadingScreen.svelte."
+      "still": "scene/western_scene2.webp",
+      "note": "Ready-made backgroundSPINE western scene (spines/western_scene) is the live room. Barrel lamp on in bonus, off in base. Cover-fit in SaloonScene.svelte."
     }
   },
   "character": {

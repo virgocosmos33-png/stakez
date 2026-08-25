@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import { Tween } from 'svelte/motion';
 
-import { stateBet, stateUi } from 'state-shared';
+import { stateBet } from 'state-shared';
 import { createEnhanceBoard, createReelForCascading, stateSlots } from 'utils-slots';
 import { createGetWinLevelDataByWinLevelAlias } from 'utils-shared/winLevel';
 
@@ -22,22 +22,11 @@ import {
 	INITIAL_SYMBOL_STATE,
 	SCATTER_LAND_SOUND_MAP,
 } from './constants';
-import { COLUMN_ROW_OFFSET } from './chassisArt';
-import { isSpecialBarVertical } from './specialBarLayout';
+import { boardContentBox } from './boardFrameBox';
+import { FRAME_SEATS } from './frameSeats.generated';
 import { getReelRows, getReelYOffset } from './utils';
+import { sceneToMain } from './saloonLamps';
 
-/** Must match FrameMorphHud rail height + plate clearance. */
-const HUD_RAIL_H = 56;
-const HUD_PLATE_CLEAR = 14;
-/** Desktop: air between the tall timber and the HUD. WIN hangs in the short-reel step, not below the whole board. */
-const HUD_WIN_HANG = 28;
-const HUD_CLEAR_PX = 12;
-/** Extra main-space pad under the published HUD top — spin cluster + Storybook chrome. */
-const HUD_EXTRA_CLEAR = 8;
-/** When the HUD has not published yet, assume this much main-space is the control bar. */
-const HUD_FALLBACK_MAIN = 120;
-/** Breathing room above the timber (Storybook action toast + logo). */
-const BOARD_TOP_MARGIN = 20;
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	if (rawSymbol.name === 'S' || rawSymbol.name === 'SU') {
 		eventEmitter.broadcast({ type: 'soundScatterCounterIncrease' });
@@ -238,19 +227,22 @@ export const stateGame = $state({
 
 const boardLayout = () => {
 	const main = stateLayoutDerived.mainLayout();
-	// centres the seven columns of CARDS, not the box they live in — see
-	// COLUMN_ROW_OFFSET
-	const x = main.width * 0.5 - COLUMN_ROW_OFFSET;
-
-	// The under-board WAYS/WIN cluster (FrameMorphHud) only renders when the
-	// special bar is laid FLAT (narrow/portrait). When the bar stands vertical
-	// (desktop/landscape) nothing sits under the board, so reserving a rail's
-	// worth of space there just pins the board against the top edge — only
-	// reserve it when the cluster is actually shown.
-	const barVertical = isSpecialBarVertical({ x, width: BOARD_SIZES.width });
-
+	const canvas = stateLayoutDerived.canvasSizes();
 	const pivotX = BOARD_SIZES.width / 2;
 	const pivotY = BOARD_SIZES.height / 2;
+	const box = boardContentBox();
+	const seat = FRAME_SEATS.pocket;
+	const tl = sceneToMain(seat.left, seat.top, canvas, main);
+	const br = sceneToMain(seat.right, seat.bottom, canvas, main);
+	const tw = Math.max(1, br.x - tl.x);
+	const th = Math.max(1, br.y - tl.y);
+	// Letterbox the authored windows INTO the FRAME hole. Cover (max) overflowed
+	// under the planks — cards must stay in the opening, not on opaque wood.
+	const scale = Math.min(tw / box.w, th / box.h);
+	const ox = (tw - box.w * scale) / 2;
+	const oy = (th - box.h * scale) / 2;
+	const x = tl.x + ox - (box.x - pivotX) * scale;
+	const y = tl.y + oy - (box.y - pivotY) * scale;
 
 	let contentTop = pivotY;
 	let contentBot = pivotY;
@@ -263,49 +255,16 @@ const boardLayout = () => {
 	contentTop -= BOARD_FRAME_OUTER;
 	contentBot += BOARD_FRAME_OUTER;
 
-	// floorY = the lowest line the timber may reach, in main-space y.
-	const hudTopScreen = stateUi.hudBarTopScreenY;
-	let floorY = main.height - HUD_FALLBACK_MAIN;
-	if (hudTopScreen > 0) {
-		const canvasH = stateLayoutDerived.canvasSizes().height;
-		const hudTopMain =
-			main.height / 2 + (hudTopScreen - HUD_CLEAR_PX - canvasH / 2) / main.scale;
-		const reserve = (barVertical ? HUD_WIN_HANG : HUD_RAIL_H + HUD_PLATE_CLEAR) + HUD_EXTRA_CLEAR;
-		floorY = hudTopMain - reserve;
-	}
-
-	// Grow to fill the safe band — past authored size if the window has room.
-	// Width leaves a strip on the right for the WAYS/MULTI/WIN plaques.
-	const available = Math.max(1, floorY - BOARD_TOP_MARGIN);
-	const liveH = Math.max(1, contentBot - contentTop);
-	const liveW = BOARD_SIZES.width + BOARD_FRAME_OUTER * 2;
-	const plaqueCol = barVertical ? 0 : 48;
-	const scaleH = available / liveH;
-	const scaleW = Math.max(0.2, (main.width - plaqueCol) / liveW);
-	const scale = Math.min(scaleH, scaleW);
-
-	// Centre the LIVE timber in the safe band (not the authored 4-row box).
-	const yMin = BOARD_TOP_MARGIN - (contentTop - pivotY) * scale;
-	const yMax = floorY - (contentBot - pivotY) * scale;
-	// Sit on the HUD floor so leftover height is above the timber, not a gap under it.
-	let y = yMax;
-	y = Math.min(Math.max(y, yMin), yMax);
-
-	const visualTop = y + (contentTop - pivotY) * scale;
-	const visualBottom = y + (contentBot - pivotY) * scale;
-	const visualLeft = x - pivotX * scale;
-	const visualRight = x + (BOARD_SIZES.width - pivotX) * scale;
-
 	return {
 		x,
 		y,
 		scale,
 		anchor: { x: 0.5, y: 0.5 },
 		pivot: { x: pivotX, y: pivotY },
-		visualTop,
-		visualBottom,
-		visualLeft,
-		visualRight,
+		visualTop: y + (contentTop - pivotY) * scale,
+		visualBottom: y + (contentBot - pivotY) * scale,
+		visualLeft: x - pivotX * scale,
+		visualRight: x + (BOARD_SIZES.width - pivotX) * scale,
 		...BOARD_SIZES,
 	};
 };

@@ -8,6 +8,8 @@ import { main } from 'config-storybook';
 // packages/components-ui-html/src/fonts) load in Storybook instead of 403ing.
 const config: StorybookConfig = {
 	...main,
+	// App static/ (hanging_lamps atlas + PNG siblings), not the config-package path.
+	staticDirs: ['../static'],
 	viteFinal: async (cfg) => {
 		const root = searchForWorkspaceRoot(process.cwd());
 		cfg.server = cfg.server ?? {};

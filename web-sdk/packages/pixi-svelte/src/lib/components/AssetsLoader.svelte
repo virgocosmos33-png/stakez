@@ -12,9 +12,12 @@
 	const context = getContextApp();
 
 	let preLoaded = $state(false);
+	let preloadStarted = $state(false);
+	let postStarted = $state(false);
 	let lazyStarted = $state(false);
 
 	const VIDEO_LOAD_MS = 8_000;
+	const ASSET_LOAD_MS = 20_000;
 
 	const assetNameList = $derived(
 		context.stateApp.assets
@@ -52,28 +55,51 @@
 		}
 	};
 
+	const srcIdOf = (key: string) => {
+		const { type, src } = context.stateApp.assets![key];
+		return type === 'spine'
+			? Object.values(src)
+					.filter((item) => typeof item === 'string')
+					.join('|')
+			: String(src);
+	};
+
+	const loadOne = async (key: string) => {
+		const { type, src } = context.stateApp.assets![key];
+		const loadSrc =
+			type === 'spine' ? Object.values(src).filter((item) => typeof item === 'string') : src;
+		const loadPromise = PIXI.Assets.load<RawAsset>(loadSrc, onProgress);
+		const srcUrl = typeof src === 'string' ? src : '';
+		const isVideo = /\.(webm|mp4|mov)(\?|#|$)/i.test(srcUrl);
+		const timeoutMs = isVideo ? VIDEO_LOAD_MS : ASSET_LOAD_MS;
+		return Promise.race([
+			loadPromise,
+			new Promise<never>((_, reject) => {
+				setTimeout(() => {
+					reject(new Error(`Asset "${key}" timed out after ${timeoutMs}ms`));
+				}, timeoutMs);
+			}),
+		]);
+	};
+
 	const loadAssets = async (nameList: string[]) => {
+		const srcToKeys = new Map<string, string[]>();
+		for (const key of nameList) {
+			const id = srcIdOf(key);
+			const list = srcToKeys.get(id);
+			if (list) list.push(key);
+			else srcToKeys.set(id, [key]);
+		}
+
 		const loadedAssetsArray = await Promise.all(
-			nameList.map(async (key) => {
+			[...srcToKeys.values()].map(async (keys) => {
+				const lead = keys[0];
 				try {
-					const { type, src } = context.stateApp.assets![key];
-					const loadSrc =
-						type === 'spine' ? Object.values(src).filter((item) => typeof item === 'string') : src;
-					const loadPromise = PIXI.Assets.load<RawAsset>(loadSrc, onProgress);
-					const srcUrl = typeof src === 'string' ? src : '';
-					const isVideo = /\.(webm|mp4|mov)(\?|#|$)/i.test(srcUrl);
-					const rawAsset = isVideo
-						? await Promise.race([
-								loadPromise,
-								new Promise<never>((_, reject) => {
-									setTimeout(() => {
-										reject(new Error(`Asset "${key}" timed out after ${VIDEO_LOAD_MS}ms`));
-									}, VIDEO_LOAD_MS);
-								}),
-							])
-						: await loadPromise;
-					const processed = getProcessed({ key, rawAsset, type, src });
-					return processed;
+					const rawAsset = await loadOne(lead);
+					return keys.reduce((acc, key) => {
+						const { type, src } = context.stateApp.assets![key];
+						return { ...acc, ...getProcessed({ key, rawAsset, type, src }) };
+					}, {} as LoadedAssets);
 				} catch (error) {
 					console.error(error);
 				}
@@ -90,31 +116,31 @@
 	};
 
 	$effect(() => {
-		if (!preLoaded) {
-			(async () => {
-				if (preAssetNameList.length > 0) {
-					const preLoadedAssets = await loadAssets(preAssetNameList);
-					if (preLoadedAssets) context.stateApp.loadedAssets = preLoadedAssets;
-				}
-				preLoaded = true;
-			})();
-		}
+		if (preloadStarted) return;
+		preloadStarted = true;
+		(async () => {
+			if (preAssetNameList.length > 0) {
+				const preLoadedAssets = await loadAssets(preAssetNameList);
+				if (preLoadedAssets) context.stateApp.loadedAssets = preLoadedAssets;
+			}
+			preLoaded = true;
+		})();
 	});
 
 	$effect(() => {
-		if (!context.stateApp.loaded && preLoaded) {
-			(async () => {
-				if (assetNameList.length > 0) {
-					const postLoadedAssets = await loadAssets(assetNameList);
-					if (postLoadedAssets)
-						context.stateApp.loadedAssets = {
-							...context.stateApp.loadedAssets,
-							...postLoadedAssets,
-						};
-				}
-				context.stateApp.loaded = true;
-			})();
-		}
+		if (postStarted || !preLoaded || context.stateApp.loaded) return;
+		postStarted = true;
+		(async () => {
+			if (assetNameList.length > 0) {
+				const postLoadedAssets = await loadAssets(assetNameList);
+				if (postLoadedAssets)
+					context.stateApp.loadedAssets = {
+						...context.stateApp.loadedAssets,
+						...postLoadedAssets,
+					};
+			}
+			context.stateApp.loaded = true;
+		})();
 	});
 
 	$effect(() => {

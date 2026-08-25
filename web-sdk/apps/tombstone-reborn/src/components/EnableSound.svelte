@@ -11,7 +11,11 @@
 	onMount(() => {
 		const loadedAudio = $state.snapshot(
 			context.stateApp.loadedAssets['sound'],
-		) as LoadedAudio<SoundName>;
+		) as LoadedAudio<SoundName> | undefined;
+		if (!loadedAudio?.src) {
+			console.warn('EnableSound: sound sprite missing, skipping Howler');
+			return;
+		}
 		const { destroy } = sound.load(loadedAudio);
 
 		return () => {

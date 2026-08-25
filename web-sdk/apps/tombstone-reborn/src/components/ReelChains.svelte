@@ -34,14 +34,14 @@
 		thick: number;
 		alpha: number;
 	}[] = [
-		{ r0: 0, row0: 0, r1: 2, row1: 0, thick: 0.95, alpha: 0.9 }, // pink
-		{ r0: 1, row0: 0, r1: 2, row1: 3, thick: 1, alpha: 1 }, // red
-		{ r0: 2, row0: 0, r1: 1, row1: 3, thick: 1, alpha: 1 }, // white
-		{ r0: 0, row0: 1, r1: 5, row1: 0, thick: 0.95, alpha: 0.8 }, // brown
-		{ r0: 0, row0: 1, r1: 4, row1: 1, thick: 0.9, alpha: 0.75 }, // purple
-		{ r0: 0, row0: 2, r1: 4, row1: 0, thick: 0.95, alpha: 0.85 }, // green
-		{ r0: 3, row0: 0, r1: 3, row1: 1, thick: 1, alpha: 1 }, // orange
-		{ r0: 4, row0: 0, r1: 4, row1: 1, thick: 1, alpha: 1 }, // gold
+		{ r0: 0, row0: 0, r1: 2, row1: 0, thick: 0.95, alpha: 0.55 }, // pink
+		{ r0: 1, row0: 0, r1: 2, row1: 3, thick: 1, alpha: 0.6 }, // red
+		{ r0: 2, row0: 0, r1: 1, row1: 3, thick: 1, alpha: 0.6 }, // white
+		{ r0: 0, row0: 1, r1: 5, row1: 0, thick: 0.95, alpha: 0.45 }, // brown
+		{ r0: 0, row0: 1, r1: 4, row1: 1, thick: 0.9, alpha: 0.4 }, // purple
+		{ r0: 0, row0: 2, r1: 4, row1: 0, thick: 0.95, alpha: 0.5 }, // green
+		{ r0: 3, row0: 0, r1: 3, row1: 1, thick: 1, alpha: 0.55 }, // orange
+		{ r0: 4, row0: 0, r1: 4, row1: 1, thick: 1, alpha: 0.55 }, // gold
 	];
 
 	const context = getContext();
@@ -95,7 +95,7 @@
 	const laid = $derived.by(() => {
 		const key = chainKey();
 		const aspect = chainAspect;
-		const baseW = Math.max(12, Math.min(CELL_PITCH_X * 0.16, 20));
+		const baseW = Math.max(7, Math.min(CELL_PITCH_X * 0.09, 11));
 
 		/** Overshoot past both cell centres so the run reaches the timber;
 		 * the pocket mask cuts it exactly at the wood edge. */

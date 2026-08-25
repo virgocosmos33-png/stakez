@@ -5,6 +5,7 @@
 	import BaseScrollable from './BaseScrollable.svelte';
 
 	type Props = {
+		maxListLength?: number;
 		betAmount: Snippet;
 		bonusCardsActivate: Snippet;
 		bonusCardsBuy: Snippet;

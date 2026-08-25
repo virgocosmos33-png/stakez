@@ -58,7 +58,11 @@ def find_src(kind: str) -> str:
 
 
 def key_black(src: str) -> Image.Image:
-    rgb = np.asarray(Image.open(src).convert("RGB")).astype(np.float32)
+    src_im = Image.open(src)
+    if src_im.mode == "RGBA":
+        # Already cut. Never key or erode — that eats the links.
+        return src_im.convert("RGBA")
+    rgb = np.asarray(src_im.convert("RGB")).astype(np.float32)
     lum = 0.2126 * rgb[..., 0] + 0.7152 * rgb[..., 1] + 0.0722 * rgb[..., 2]
     # keep dark iron; only the empty pad dies
     alpha = np.clip((lum - 8.0) / 18.0, 0.0, 1.0)

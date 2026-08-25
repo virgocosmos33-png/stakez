@@ -26,8 +26,11 @@
 	});
 
 	$effect(() => {
-		if (!layoutContext.stateLayout.showLoadingScreen) {
+		if (appContext.stateApp.loaded && !layoutContext.stateLayout.showLoadingScreen) {
 			actionState.message = "Click action to start";
+		} else if (!appContext.stateApp.loaded && appContext.stateApp.pixiApplication) {
+			const n = Math.round(appContext.stateApp.loadingProgress);
+			actionState.message = n > 0 ? `Loading assets… ${n}%` : 'Loading assets…';
 		}
 	});
 

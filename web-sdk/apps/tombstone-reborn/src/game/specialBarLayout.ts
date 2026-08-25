@@ -1,9 +1,7 @@
 /**
  * Shared geometry so two components agree on ONE truth:
- *   - SpecialBar.svelte draws WAYS / MULTI above the short reels and WIN on
- *     the timber lip. FREE SPINS hangs immediately to the right of WIN.
- *   - FrameMorphHud.svelte shows WAYS / MULTI / WIN under the board when the
- *     side rail is flat. FREE SPINS still sits beside WIN.
+ *   - Live plaques are FRAME_SEATS.plaques (PSD box + pallet) via sceneToMain.
+ *   - isSpecialBarVertical decides SpecialBar vs FrameMorphHud — both use those seats.
  *
  * Keeping the vertical decision here stops the two from drifting — if the left
  * rail ever stops standing upright, WAYS/WIN move under the board, and vice-versa.

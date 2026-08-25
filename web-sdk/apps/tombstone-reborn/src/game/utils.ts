@@ -183,19 +183,16 @@ export const getReelPocket = (reelIndex: number) => {
 	};
 };
 
-// v25 atlas ships per-level premium faces: h1.webp is the base-game card,
-// h1_small.webp / h1_super.webp (plus _blur smears) the bonus variants. The
-// level rides ON THE SYMBOL (rawSymbol.level, stamped by the reveal handler
-// at deal time) rather than being read live from stateGame.atmosphere — a
-// live read face-swapped the whole settled board the instant the atmosphere
-// shifted (scatter hit, bonus banner), which looked like a glitch. Spine
-// states (win/land) keep the base face: mm_symbols is one texture.
+// v18 (main) has base faces only. Do not rewrite to h1_small / h1_super
+// until a v25 atlas is actually on disk.
+const ATLAS_HAS_LEVEL_FACES = false;
 const LEVEL_FACE_RE = /^(h[1-5])(_blur)?(\.webp)$/;
 
 const levelFace = <T extends { type: string; assetKey: string }>(
 	info: T,
 	level: RawSymbol['level'],
 ): T => {
+	if (!ATLAS_HAS_LEVEL_FACES) return info;
 	if (!level || level === 'base' || info.type !== 'sprite') return info;
 	const match = LEVEL_FACE_RE.exec(info.assetKey);
 	if (!match) return info;

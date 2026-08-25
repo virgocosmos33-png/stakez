@@ -27,10 +27,8 @@
 	const AMOUNT_TINT = trAmountTint();
 	const CAPTION_TINT = 0xc8c4bc;
 
-	// EXACT reference:
-	//   normal → WAYS / WIN (+ crystal ball in panel art)
-	//   bonus  → FREE SPINS / WAYS / WIN (+ crystal ball)
-	// One gold side panel flush to the reel frame — never separate floating plates.
+	// Parked gold rail — not mounted. Live WAYS / MULTI / WIN / FREE SPINS
+	// are SpecialBar plaques from the PSD (box + pallet at PSD seats).
 	let spinsShow = $state(false);
 	const rail = $derived(getSideRailLayout({ freeSpins: spinsShow }));
 

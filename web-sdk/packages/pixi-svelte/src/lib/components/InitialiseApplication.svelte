@@ -35,8 +35,11 @@
 		PIXI.Assets.reset();
 
 		await preloadFont();
-		context.stateApp.pixiApplication = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();
-		await context.stateApp.pixiApplication.init({
+		// Keep the Application on a local so App.svelte's onMount reset() cannot
+		// null context.stateApp.pixiApplication mid-init and leave Storybook on
+		// a black "Initialising..." canvas.
+		const app = new PIXI.Application<PIXI.Renderer<HTMLCanvasElement>>();
+		await app.init({
 			autoDensity: true,
 			backgroundAlpha: 0,
 			hello: true,
@@ -62,11 +65,12 @@
 			resizeTo: window,
 		});
 
-		wrap.appendChild(context.stateApp.pixiApplication.canvas);
+		wrap.appendChild(app.canvas);
 
 		// to prevent that you can't scroll the page with touch on the canvas. https://github.com/pixijs/pixijs/issues/4824
-		context.stateApp.pixiApplication.renderer.events.autoPreventDefault = false;
-		context.stateApp.pixiApplication.renderer.canvas.style.touchAction = 'auto';
+		app.renderer.events.autoPreventDefault = false;
+		app.renderer.canvas.style.touchAction = 'auto';
+		context.stateApp.pixiApplication = app;
 	};
 
 	onMount(async () => {

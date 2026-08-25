@@ -11,8 +11,8 @@
 
 	const context = getContext();
 
-	// ONE ambient SCENE. Base and bonus both use the saloon — this game has no
-	// White Room free-spin painting. Drop a seamless loop at
+	// ONE ambient SCENE: ready-made backgroundSPINE western room.
+	// Barrel lamp is off in base and on in bonus. Drop a seamless loop at
 	// static/assets/sprites/scene/scene_bg.mp4 and register it as `sceneBgAnim`
 	// to replace the still room with video.
 	const videoTextureOf = (key: string) =>
@@ -40,8 +40,8 @@
 	};
 
 	const sceneVideoReady = $derived(videoTextureOf('sceneBgAnim') !== undefined);
-	const atmosphere = $derived(context.stateGame.atmosphere);
 	const smokeReady = $derived(videoTextureOf('roomSmoke') !== undefined);
+	const atmosphere = $derived(context.stateGame.atmosphere);
 	const FX_ART = { width: 1280, height: 720 };
 
 	$effect(() => {
@@ -51,8 +51,7 @@
 	// Snap grade to the atmosphere target. Do not tick uTime every frame —
 	// that used to keep the full-screen blur stack dirty for no visual gain.
 	$effect(() => {
-		const sat = atmosphere === 'base' ? 0 : 1;
-		tickBgGrade(0, sat, 0, 0);
+		tickBgGrade(0, 1, 0, 0);
 	});
 </script>
 

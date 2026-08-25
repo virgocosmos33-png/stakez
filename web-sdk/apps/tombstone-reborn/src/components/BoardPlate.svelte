@@ -1,25 +1,18 @@
 <script lang="ts">
 	/**
-	 * Weathered western reel frame — ONE baked transparent PNG, laid from the
-	 * plank sheet piece by piece (tools/make_board_frame_image.py). Pre-shaped
-	 * to the authored staircase. The inside is transparent so the saloon shows
-	 * through while the reels spin.
-	 *
-	 * Per-cell iron slot borders sit behind the cards. The baked ring is
-	 * authored geometry (holds still if a reel grows). The container follows
-	 * boardLayout scale/pivot so the timber stays locked to the cards.
-	 *
-	 * Rendered TWICE from Game.svelte: layer="back" (slot borders + chains,
-	 * under the symbols) and layer="ring" (the baked plank ring, ABOVE the
-	 * board) — so cards dropping through a window that outgrows the authored
-	 * ring pass BEHIND the timber instead of painting over it.
+	 * BASE timber is the PSD FRAME layer, seated in scene cover-fit like the
+	 * plate (same transform as SaloonScene / lamps). Cards live in the hole.
+	 * Hang chains are the PSD islands (board hangers). Atmosphere small/super keep their
+	 * own timber skins at the same FRAME seat.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { CELL_PITCH_X, SYMBOL_SIZE, NUM_ROWS, MAX_ROWS } from '../game/constants';
+	import { CELL_PITCH_X } from '../game/constants';
+	import { FRAME_SEATS } from '../game/frameSeats.generated';
+	import { sceneToMain } from '../game/saloonLamps';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
-	import ReelChains from './ReelChains.svelte';
+	import BoardHangChains from './BoardHangChains.svelte';
 
 	type Props = { layer?: 'back' | 'ring' };
 	const props: Props = $props();
@@ -34,9 +27,6 @@
 				: 'boardFrame',
 	);
 
-	/** MUST match BORDER + MARGIN in tools/make_board_frame_image.py */
-	const BORDER = 30 + 60;
-
 	type Column = { left: number; right: number; top: number; bottom: number };
 
 	const columns = $derived.by(() =>
@@ -50,25 +40,6 @@
 			};
 		}),
 	);
-
-	const frameBox = (() => {
-		const tops = NUM_ROWS.map((rows, i) => {
-			if (i === NUM_ROWS.length - 1) {
-				const neighbor = NUM_ROWS[i - 1] ?? rows;
-				return ((MAX_ROWS - neighbor) / 2 + (neighbor - rows) / 2) * SYMBOL_SIZE;
-			}
-			return ((MAX_ROWS - rows) / 2) * SYMBOL_SIZE;
-		});
-		const bottoms = tops.map((top, i) => top + NUM_ROWS[i] * SYMBOL_SIZE);
-		const x = getCellLeft(0) - BORDER;
-		const y = Math.min(...tops) - BORDER;
-		return {
-			x,
-			y,
-			w: getCellLeft(NUM_ROWS.length - 1) + CELL_PITCH_X + BORDER - x,
-			h: Math.max(...bottoms) + BORDER - y,
-		};
-	})();
 
 	const slots = $derived.by(() =>
 		columns.flatMap((col, reel) => {
@@ -85,16 +56,31 @@
 	);
 
 	const layout = $derived(context.stateGameDerived.boardLayout());
+
+	const timber = $derived.by(() => {
+		const main = context.stateLayoutDerived.mainLayout();
+		const canvas = context.stateLayoutDerived.canvasSizes();
+		const seat = FRAME_SEATS.board;
+		const tl = sceneToMain(seat.left, seat.top, canvas, main);
+		const br = sceneToMain(seat.right, seat.bottom, canvas, main);
+		return {
+			x: tl.x,
+			y: tl.y,
+			w: Math.max(1, br.x - tl.x),
+			h: Math.max(1, br.y - tl.y),
+		};
+	});
 </script>
 
-<Container
-	zIndex={layer === 'ring' ? 3 : 1}
-	x={layout.x}
-	y={layout.y}
-	pivot={layout.pivot}
-	scale={layout.scale}
->
-	{#if layer === 'back'}
+{#if layer === 'back'}
+	<BoardHangChains />
+	<Container
+		zIndex={0}
+		x={layout.x}
+		y={layout.y}
+		pivot={layout.pivot}
+		scale={layout.scale}
+	>
 		{#each slots as slot (slot.key)}
 			<Sprite
 				key="boardSlotFrame"
@@ -105,15 +91,15 @@
 				height={slot.h}
 			/>
 		{/each}
-
-		<ReelChains />
-	{:else}
+	</Container>
+{:else}
+	<Container zIndex={3}>
 		<Sprite
 			key={frameKey}
-			x={frameBox.x}
-			y={frameBox.y}
-			width={frameBox.w}
-			height={frameBox.h}
+			x={timber.x}
+			y={timber.y}
+			width={timber.w}
+			height={timber.h}
 		/>
-	{/if}
-</Container>
+	</Container>
+{/if}

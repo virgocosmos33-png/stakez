@@ -207,30 +207,36 @@ export default {
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
-	// ONE full-scene backdrop that cover-scales to the viewport as a single
-	// unit. Base game: the saloon still (basemodebgimagetomsbstonereborn.png
-	// baked to scene_bg_v2.webp, 1679x937).
-	sceneBg: {
+	// Ready-made backgroundSPINE street plate (images/background.png).
+	westernSceneBg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/scene_bg_v2.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/western_scene_ready_bg.png', import.meta.url).href,
 		preload: true,
 	},
-	// Live saloon room (fire-frame lady-spine), baked by tools/bake_saloon_room.py.
-	// Plate has no lanterns; saloonLampL/R are the hanging fixtures. Must
-	// preload: SaloonScene mounts as soon as preloaded assets land.
+	// Ready-made backgroundSPINE western scene (1342x892, 2× to SCENE_ART).
+	// Live fallback plate: western_scene2.psd (2684x1784 Crystal 2x).
+	sceneBg: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/western_scene2.webp', import.meta.url).href,
+		preload: true,
+	},
+	// Same night plate for base / small / super until separate grades exist.
+	// Hanging lanterns are Spine (hangingLampL/R), not painted into this plate.
+	// Old indoor saloonLampL/R stay on disk.
+	// One file: AssetsLoader dedupes identical src so Pixi does not fetch it 4×.
 	saloonPlate: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/saloon_plate.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/western_scene2.webp', import.meta.url).href,
 		preload: true,
 	},
 	saloonPlateSmall: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/saloon_plate_small.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/western_scene2.webp', import.meta.url).href,
 		preload: true,
 	},
 	saloonPlateSuper: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/scene/saloon_plate_super.webp', import.meta.url).href,
+		src: new URL('../../assets/sprites/scene/western_scene2.webp', import.meta.url).href,
 		preload: true,
 	},
 	saloonLampL: {
@@ -254,6 +260,68 @@ export default {
 	saloonLampGlow: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/saloon_lamp_glow.png', import.meta.url).href,
+		preload: true,
+	},
+	// Atlas page in the Vite graph (bootstrap + fallback stills).
+	// Spine loads from /assets/spines/hanging_lamps/ so hanging_lamps.png is a
+	// real sibling of the atlas (Vite-hashed import.meta.url atlas 404s the PNG).
+	hangingLampsAtlas: {
+		type: 'sprite',
+		src: new URL('../../assets/spines/hanging_lamps/hanging_lamps.png', import.meta.url).href,
+		preload: true,
+	},
+	// PSD lamp layers (Crystal 2×). Always painted at the nails so a silent Spine
+	// miss cannot leave the beam bare. Spine idle draws on top when SkeletonData is real.
+	hangingLampStillL: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/hanging_lamp_still_l.png', import.meta.url).href,
+		preload: true,
+	},
+	hangingLampStillR: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/hanging_lamp_still_r.png', import.meta.url).href,
+		preload: true,
+	},
+	// Low street mist: soft bone-white band, plate-only z (under lamps / timber).
+	streetMist: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/street_mist.png', import.meta.url).href,
+		preload: true,
+	},
+	// Ready-made backgroundSPINE western room. Atlas PNG is also the plate
+	// crop. Spine loads from public paths so the atlas can fetch the PNG.
+	westernSceneAtlas: {
+		type: 'sprite',
+		src: new URL('../../assets/spines/western_scene/western_scene.png', import.meta.url).href,
+		preload: true,
+	},
+	westernScene: {
+		type: 'spine',
+		src: {
+			atlas: '/assets/spines/western_scene/western_scene.atlas',
+			skeleton: '/assets/spines/western_scene/western_scene.json',
+			scale: 1,
+		},
+		preload: true,
+	},
+	// PSD hanging lanterns. Spine 4.1 idle: hang bone at the chain nail, pendulum + oil flicker.
+	// Public static paths (not Vite-hashed) so the atlas can fetch hanging_lamps.png.
+	hangingLampL: {
+		type: 'spine',
+		src: {
+			atlas: '/assets/spines/hanging_lamps/hanging_lamps.atlas',
+			skeleton: '/assets/spines/hanging_lamps/hanging_lamp_l.json',
+			scale: 1,
+		},
+		preload: true,
+	},
+	hangingLampR: {
+		type: 'spine',
+		src: {
+			atlas: '/assets/spines/hanging_lamps/hanging_lamps.atlas',
+			skeleton: '/assets/spines/hanging_lamps/hanging_lamp_r.json',
+			scale: 1,
+		},
 		preload: true,
 	},
 	// WIN CELEBRATION hero plates. Stills are first-frame posters; *Anim is the
@@ -919,13 +987,36 @@ export default {
 		src: new URL('../../assets/sprites/board/board_wood_grey.webp', import.meta.url).href,
 		preload: true,
 	},
-	// The frame itself is ONE baked transparent PNG, pre-shaped to the authored
-	// staircase (tools/make_board_frame_image.py): grey timber ring + bevels +
-	// keylines + iron bolts + the shadow it casts inward. Placed 1:1 at the
-	// authored outer box — re-bake whenever the board shape changes.
+	// BASE timber = PSD FRAME layer pixels (western_scene2.psd), 2× LANCZOS RGB
+	// + nearest alpha. Small/super stay their own atmosphere skins.
 	boardFrame: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/board/board_frame.png', import.meta.url).href,
+		preload: true,
+	},
+	hangChain0: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/hang_chain_0.png', import.meta.url).href,
+		preload: true,
+	},
+	hangChain1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/hang_chain_1.png', import.meta.url).href,
+		preload: true,
+	},
+	hangChain2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/hang_chain_2.png', import.meta.url).href,
+		preload: true,
+	},
+	hangChain3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/hang_chain_3.png', import.meta.url).href,
+		preload: true,
+	},
+	hangChain4: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/board/hang_chain_4.png', import.meta.url).href,
 		preload: true,
 	},
 	boardFrameSmall: {
@@ -1049,8 +1140,8 @@ export default {
 		src: new URL('../../assets/sprites/tombstone/bar_readout_plaque.png', import.meta.url).href,
 		preload: true,
 	},
-	// HUD timber boxes (tools/make_hud_wood_boxes.py) — same plank/scrap sheets
-	// as the staircase (tr_frame_planks_v2 / tr_frame_scraps).
+	// HUD timber boxes — BASE = PSD layer pixels (western_scene2.psd ×2).
+	// Small/super keep atmosphere skins at the same PSD seats.
 	woodReadoutWays: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/wood_readout_ways.png', import.meta.url).href,
@@ -1184,6 +1275,57 @@ export default {
 	hudChainSuper: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/tombstone/hud_chain_super.png', import.meta.url).href,
+		preload: true,
+	},
+	// PSD plaque hang chains (one island per hanger, seated at the layer bbox).
+	plaqueChainWays0: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_ways_0.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainWays1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_ways_1.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainWays2: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_ways_2.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainWays3: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_ways_3.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainMulti0: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_multi_0.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainMulti1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_multi_1.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainWin0: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_win_0.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainWin1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_win_1.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainSpins0: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_spins_0.png', import.meta.url).href,
+		preload: true,
+	},
+	plaqueChainSpins1: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/plaque_chain_spins_1.png', import.meta.url).href,
 		preload: true,
 	},
 	barPlaqueSplit: {

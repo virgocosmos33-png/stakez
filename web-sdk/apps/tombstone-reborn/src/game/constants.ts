@@ -248,39 +248,17 @@ const meStatic = { type: 'sprite', assetKey: 'me.png', sizeRatios: { width: 1, h
 const hmIntactStatic = { type: 'sprite', assetKey: 'hm_intact.png', sizeRatios: { width: 1, height: 1 } };
 const hmCrackedStatic = { type: 'sprite', assetKey: 'hm_cracked.png', sizeRatios: { width: 1, height: 1 } };
 
-// Symbol states:
-//   static  -> the PURE static card sprite (no idle shimmer/sheen/breathe)
-//   spin    -> baked SMEAR frame (vertical motion blur, 300x480) so the
-//              falling reels streak; board mask clips at board edges
-//   land    -> '<id>_land' spine: weighty bottom-pinned squash-and-stretch
-//   win / postWin -> the same crisp card sprite. The old spine punch/wobble
-//              and looping mesh-deform ripple warped faces on connect and
-//              kept burning GPU after a few spins.
-// postWinStatic stays the crisp card sprite (the apparition pane slicing
-// needs a deterministic plain frame).
-// Spine asset keys match assets.ts (e.g. 'H1'), animations the skeleton ids.
-const spineState = (assetKey: string, animationName: string) => ({
-	type: 'spine',
-	assetKey,
-	animationName,
-	sizeRatios: { width: 1, height: 1 },
-});
-
-// smear frames bleed above/below the cell so a spinning reel reads as one
-// continuous streak (board mask clips the top/bottom board edges)
+// One v13 card for static, land, win. Land used to play the mm_symbols
+// spine (colored painterly faces) then snap to the atlas — that swap is
+// the bug. SymbolSprite already does the land squash.
 const blurState = (cardAssetKey: string) => ({
 	type: 'sprite',
 	assetKey: cardAssetKey.replace('.', '_blur.'),
 	sizeRatios: { width: 1, height: 1.6 },
 });
 
-// TOMBSTONE REBORN: land still uses the spine squash. Win / postWin stay the
-// crisp card sprite — the mesh-deform ripple on connect was warping faces and
-// looping spines were melting the frame after a few spins.
 const cardStates = (
 	card: { type: string; assetKey: string; sizeRatios: { width: number; height: number } },
-	spineKey: string,
-	id: string,
 ) => ({
 	explosion,
 	win: card,
@@ -288,7 +266,7 @@ const cardStates = (
 	postWinStatic: card,
 	static: card,
 	spin: blurState(card.assetKey),
-	land: spineState(spineKey, `${id}_land`),
+	land: card,
 });
 
 /** One face per scatter landing position, keyed the same 1..5 as the scatter
@@ -339,16 +317,16 @@ const scatterStatic = {
 };
 
 export const SYMBOL_INFO_MAP = {
-	H1: cardStates(h1Static, 'H1', 'h1'),
-	H2: cardStates(h2Static, 'H2', 'h2'),
-	H3: cardStates(h3Static, 'H3', 'h3'),
-	H4: cardStates(h4Static, 'H4', 'h4'),
-	H5: cardStates(h5Static, 'H5', 'h5'),
-	L1: cardStates(l1Static, 'L1', 'l1'),
-	L2: cardStates(l2Static, 'L2', 'l2'),
-	L3: cardStates(l3Static, 'L3', 'l3'),
-	L4: cardStates(l4Static, 'L4', 'l4'),
-	L5: cardStates(l5Static, 'L5', 'l5'),
+	H1: cardStates(h1Static),
+	H2: cardStates(h2Static),
+	H3: cardStates(h3Static),
+	H4: cardStates(h4Static),
+	H5: cardStates(h5Static),
+	L1: cardStates(l1Static),
+	L2: cardStates(l2Static),
+	L3: cardStates(l3Static),
+	L4: cardStates(l4Static),
+	L5: cardStates(l5Static),
 	// WILD is sprite-only (like HM/ME): the generated straitjacket card is shown
 	// in every state; the pulse/land squash comes from SymbolSprite, and the
 	// wild-rise / explode FX are owned by the wildReel/madamsEye handlers.

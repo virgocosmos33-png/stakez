@@ -48,7 +48,6 @@
 	import BonusEntry from './BonusEntry.svelte';
 	import RoomAtmosphere from './RoomAtmosphere.svelte';
 	import BulletHits from './BulletHits.svelte';
-	import SaloonLampHit from './SaloonLampHit.svelte';
 	import LaneLidLock from './LaneLidLock.svelte';
 	import LaneGoldCard from './LaneGoldCard.svelte';
 
@@ -160,7 +159,7 @@
 		<!-- Chains under the wordmark, boxes in front. Same MainContainer so
 			zIndex actually sorts them against the logo. -->
 		<MainContainer>
-			<Container sortableChildren>
+			<Container sortableChildren zIndex={2}>
 				<Container zIndex={0}>
 					<SpecialBar layer="chains" />
 				</Container>
@@ -204,8 +203,6 @@
 		<!-- CLICK-TO-SHOOT: left-click the idle reel area for a hole, muzzle
 			fire, and smoke. Cleared the moment a spin starts. -->
 		<BulletHits />
-		<!-- Left lantern globe: smash the glass, kill the light until next spin. -->
-		<SaloonLampHit />
 
 		<!-- Last-reel premium WAYS badge (HUD WIN multi is a separate stack). -->
 		<StretchWays />

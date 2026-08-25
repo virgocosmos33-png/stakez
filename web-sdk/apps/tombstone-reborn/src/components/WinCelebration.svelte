@@ -24,7 +24,7 @@
 	import { onMount } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import { Rectangle as HitRectangle, type Texture, type VideoSource } from 'pixi.js';
+	import { Assets as PixiAssets, Rectangle as HitRectangle, type Texture, type VideoSource } from 'pixi.js';
 	import { BaseSprite, Container, Rectangle, Sprite, BitmapText } from 'pixi-svelte';
 	import { ResponsiveBitmapText } from 'components-pixi';
 	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
@@ -57,6 +57,7 @@
 		winRand,
 		winTierIntensity,
 		winTierPlateAnimKey,
+		winTierPlateAnimSrc,
 		winTierPlateKey,
 	} from '../game/winCelebrationArt';
 
@@ -549,6 +550,29 @@
 	const videoTexture = $derived(
 		context.stateApp.loadedAssets?.[animKey] as Texture | undefined,
 	);
+
+	// One clip, when this plate is up. Boot must not Pixi-load all six.
+	$effect(() => {
+		const slug = celebration?.slug || 'bounty';
+		const key = winTierPlateAnimKey(slug);
+		if (context.stateApp.loadedAssets?.[key]) return;
+		const src = winTierPlateAnimSrc(slug);
+		let cancelled = false;
+		PixiAssets.load(src)
+			.then((raw) => {
+				if (cancelled || context.stateApp.loadedAssets?.[key]) return;
+				context.stateApp.loadedAssets = {
+					...context.stateApp.loadedAssets,
+					[key]: raw,
+				};
+			})
+			.catch((error) => {
+				console.error(`[WinCelebration] clip failed ${src}`, error);
+			});
+		return () => {
+			cancelled = true;
+		};
+	});
 	const plateKey = $derived(videoTexture ? animKey : stillKey);
 
 	const videoOf = (key: string): HTMLVideoElement | undefined => {

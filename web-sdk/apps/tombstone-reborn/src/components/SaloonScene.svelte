@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import { BlurFilter, Filter } from 'pixi.js';
+	import { Filter } from 'pixi.js';
 
 	import { SCENE_ART as SCENE_ART_SRC } from '../game/saloonLamps';
 	import { createGradeFilter, gradeUniformsOf } from './AtmosphereFx.svelte';
@@ -30,30 +30,6 @@ void main(void) {
 }
 `;
 
-	const FIELD_BLUR_FRAGMENT = `
-precision highp float;
-in vec2 vTextureCoord;
-out vec4 finalColor;
-uniform sampler2D uTexture;
-uniform vec4 uInputSize;
-uniform vec4 uOutputFrame;
-uniform float uRadius;
-void main() {
-	vec2 uv = vTextureCoord;
-	vec2 focus = vec2(0.50, 0.52);
-	float coc = smoothstep(0.28, 0.92, length((uv - focus) * vec2(1.05, 1.2)));
-	coc = max(coc, smoothstep(0.16, 0.0, uv.y) * 0.35);
-	coc = mix(0.045, 0.48, coc);
-	vec2 px = uInputSize.zw * uRadius * coc;
-	vec4 acc = texture(uTexture, uv) * 0.36;
-	acc += texture(uTexture, uv + vec2(1.0, 0.0) * px) * 0.16;
-	acc += texture(uTexture, uv + vec2(-1.0, 0.0) * px) * 0.16;
-	acc += texture(uTexture, uv + vec2(0.0, 1.0) * px) * 0.16;
-	acc += texture(uTexture, uv + vec2(0.0, -1.0) * px) * 0.16;
-	finalColor = acc;
-}
-`;
-
 	const GRAIN_FRAGMENT = `
 precision highp float;
 in vec2 vTextureCoord;
@@ -71,21 +47,11 @@ float hash12(vec2 p) {
 void main() {
 	vec4 color = texture(uTexture, vTextureCoord);
 	float frame = floor(uTime * 24.0);
-	vec2 cell = floor(vTextureCoord * vec2(1679.0, 937.0));
+	vec2 cell = floor(vTextureCoord * vec2(1342.0, 892.0));
 	float n = hash12(vec2(hash12(cell + 0.13), frame));
 	finalColor = vec4(mix(color.rgb, vec3(n), uAmount), color.a);
 }
 `;
-
-	const fieldBlurFilter = Filter.from({
-		gl: { vertex: FILTER_VERTEX, fragment: FIELD_BLUR_FRAGMENT, name: 'saloon-bg-field-blur' },
-		resources: {
-			fieldUniforms: {
-				uRadius: { value: 2.7, type: 'f32' },
-			},
-		},
-	});
-	fieldBlurFilter.padding = 10;
 
 	const grainFilter = Filter.from({
 		gl: { vertex: FILTER_VERTEX, fragment: GRAIN_FRAGMENT, name: 'saloon-bg-grain' },
@@ -100,11 +66,7 @@ void main() {
 		grainFilter.resources as Record<string, { uniforms: { uTime: number; uAmount: number } }>
 	).grainUniforms.uniforms;
 
-	// Same plate stack as before — Gaussian + field blur — just dialed down.
-	const bgSeeBlur = new BlurFilter({ strength: 2.5, quality: 3 });
-	bgSeeBlur.padding = 16;
-
-	export const BG_PLATE_FILTERS = [bgGrade, fieldBlurFilter, grainFilter, bgSeeBlur];
+	export const BG_PLATE_FILTERS = [bgGrade, grainFilter];
 	export const tickBgGrain = (seconds: number) => {
 		grainUniforms.uTime = seconds;
 	};
@@ -174,27 +136,16 @@ void main() {
 
 <script lang="ts">
 	/**
-	 * Live saloon room: plate + the LEFT hanging lamp. A click kills the
-	 * light and kicks a damped spherical pendulum; the mesh recedes and
-	 * the globe goes soft as it comes toward the lens.
+	 * Live western room. Ready-scene street + lamps always paint.
+	 * Spine idle draws on top when the loader has a real skeleton.
 	 */
-	import { onMount } from 'svelte';
-	import { Tween } from 'svelte/motion';
-	import { cubicInOut } from 'svelte/easing';
 	import { Container, Sprite } from 'pixi-svelte';
 
-	import { SALOON_LAMPS } from '../game/saloonLamps';
-	import { flushLamp, resetLamp, saloonLamp, stepLamp } from '../game/saloonLamp.svelte';
-	import { LAMP_GLOBE } from '../game/saloonLampSmash';
-	import { STEP_DT, STEP_MAX } from '../game/saloonLampPhysics';
 	import { getContext } from '../game/context';
-	import SuperFire from './SuperFire.svelte';
-	import SaloonLampMesh from './SaloonLampMesh.svelte';
+	import HangingLamps from './HangingLamps.svelte';
+	import WesternSceneSpine from './WesternSceneSpine.svelte';
 
 	const context = getContext();
-
-	const L = SALOON_LAMPS.L;
-	const FLAME = { x: LAMP_GLOBE.x, y: LAMP_GLOBE.y };
 
 	const fit = $derived.by(() => {
 		const canvas = context.stateLayoutDerived.canvasSizes();
@@ -207,151 +158,26 @@ void main() {
 		};
 	});
 
-	const hasRoom = $derived(
-		Boolean(context.stateApp.loadedAssets?.['saloonPlate']) &&
-			Boolean(context.stateApp.loadedAssets?.['saloonLampL']),
-	);
 	const plateKey = $derived(
-		context.stateGame.atmosphere === 'super'
-			? 'saloonPlateSuper'
-			: context.stateGame.atmosphere === 'small'
-				? 'saloonPlateSmall'
-				: 'saloonPlate',
+		context.stateApp.loadedAssets?.westernSceneBg
+			? 'westernSceneBg'
+			: context.stateApp.loadedAssets?.saloonPlate
+				? 'saloonPlate'
+				: null,
 	);
-
-	// CROSSFADE the room plate instead of hard-cutting it. The atmosphere only
-	// flips behind the bonus banner's dark veil now, but the veil is not fully
-	// opaque — a hard cut still reads as a blink through it. The old plate
-	// stays underneath while the new one fades in over it.
-	let shownPlate = $state(
-		context.stateGame.atmosphere === 'super'
-			? 'saloonPlateSuper'
-			: context.stateGame.atmosphere === 'small'
-				? 'saloonPlateSmall'
-				: 'saloonPlate',
-	);
-	let fadingPlate = $state<string | null>(null);
-	const plateFade = new Tween(1);
-
-	$effect(() => {
-		const next = plateKey;
-		if (next === shownPlate || next === fadingPlate) return;
-		fadingPlate = next;
-		plateFade.set(0, { duration: 0 });
-		plateFade.set(1, { duration: 700, easing: cubicInOut }).then(() => {
-			// A second flip mid-fade supersedes this one — only commit our own.
-			if (fadingPlate !== next) return;
-			shownPlate = next;
-			fadingPlate = null;
-		});
-	});
-	const showLamp = $derived(context.stateGame.atmosphere === 'base');
-	const showFire = $derived(context.stateGame.atmosphere === 'super');
-
-	const punchAmt = $derived(saloonLamp.punch);
-	const lampScale = $derived(Math.min(1.1, Math.max(0.88, 1 - punchAmt * 0.04)));
-	const nearLens = $derived(Math.max(0, -punchAmt));
-	const lampFilters = [lampFocus];
-
-	$effect(() => {
-		lampFocusU.uFocus = nearLens;
-		lampFocus.padding = 8 + Math.ceil(nearLens * nearLens * 36);
-	});
-
-	$effect(() => {
-		if (!context.stateXstateDerived.isIdle() || context.stateGame.atmosphere !== 'base') {
-			resetLamp();
-		}
-	});
-
-	onMount(() => {
-		let raf = 0;
-		let last = performance.now();
-		let acc = 0;
-		const tick = (now: number) => {
-			let dt = (now - last) / 1000;
-			last = now;
-			if (dt > 0.05) dt = 0.05;
-			if (context.stateGame.atmosphere === 'base') {
-				acc += dt;
-				let steps = 0;
-				while (acc >= STEP_DT && steps < STEP_MAX) {
-					stepLamp(STEP_DT);
-					acc -= STEP_DT;
-					steps += 1;
-				}
-				if (steps === STEP_MAX) acc = 0;
-				if (steps > 0) flushLamp();
-			} else if (acc !== 0) {
-				acc = 0;
-			}
-			raf = requestAnimationFrame(tick);
-		};
-		raf = requestAnimationFrame(tick);
-		return () => cancelAnimationFrame(raf);
-	});
-
 </script>
 
-<Container x={fit.x} y={fit.y} scale={fit.scale} pivot={fit.pivot}>
-	{#if hasRoom}
-		<Container filters={BG_PLATE_FILTERS}>
-			<Sprite
-				key={shownPlate}
-				x={SCENE_ART.width / 2}
-				y={SCENE_ART.height / 2}
-				width={SCENE_ART.width}
-				height={SCENE_ART.height}
-				anchor={0.5}
-			/>
-			{#if fadingPlate !== null}
-				<Sprite
-					key={fadingPlate}
-					x={SCENE_ART.width / 2}
-					y={SCENE_ART.height / 2}
-					width={SCENE_ART.width}
-					height={SCENE_ART.height}
-					anchor={0.5}
-					alpha={plateFade.current}
-				/>
-			{/if}
-		</Container>
-		{#if showLamp}
-			<Container
-				x={L.x + punchAmt * 14}
-				y={L.y + punchAmt * 5}
-				rotation={saloonLamp.theta}
-				scale={{ x: lampScale, y: lampScale * (1 - punchAmt * 0.02) }}
-				filters={lampFilters}
-			>
-				<Sprite
-					key="saloonLampGlow"
-					x={FLAME.x}
-					y={FLAME.y + 80}
-					anchor={0.5}
-					width={980}
-					height={1100}
-					alpha={saloonLamp.lit ? 0.4 * (1 - Math.max(0, punchAmt) * 0.18) : 0}
-					tint={LAMP_GLOW_WARM}
-					blendMode="add"
-					eventMode="none"
-				/>
-				<SaloonLampMesh punch={punchAmt} lit={saloonLamp.lit} tint={LAMP_WARM} />
-			</Container>
-		{/if}
-		{#if showFire}
-			<SuperFire />
-		{/if}
-	{:else}
-		<Container filters={BG_PLATE_FILTERS}>
-			<Sprite
-				key="sceneBg"
-				x={SCENE_ART.width / 2}
-				y={SCENE_ART.height / 2}
-				width={SCENE_ART.width}
-				height={SCENE_ART.height}
-				anchor={0.5}
-			/>
-		</Container>
+<Container x={fit.x} y={fit.y} scale={fit.scale} pivot={fit.pivot} sortableChildren>
+	{#if plateKey}
+		<Sprite
+			key={plateKey}
+			x={0}
+			y={0}
+			width={SCENE_ART.width}
+			height={SCENE_ART.height}
+			zIndex={0}
+		/>
 	{/if}
+	<WesternSceneSpine />
+	<HangingLamps />
 </Container>

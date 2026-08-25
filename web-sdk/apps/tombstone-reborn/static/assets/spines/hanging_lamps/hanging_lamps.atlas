@@ -1,0 +1,16 @@
+hanging_lamps.png
+size:950,564
+filter:Linear,Linear
+scale:1
+lamp_l
+bounds:2,2,124,464
+light_l
+bounds:128,2,124,464
+glow_l
+bounds:254,2,220,560
+lamp_r
+bounds:476,2,124,464
+light_r
+bounds:602,2,124,464
+glow_r
+bounds:728,2,220,560
