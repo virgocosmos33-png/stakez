@@ -143,7 +143,9 @@ void main() {
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import BarrelLampGlow from './BarrelLampGlow.svelte';
 	import HangingLamps from './HangingLamps.svelte';
+	import WesternRedFilter from './WesternRedFilter.svelte';
 	import WesternSceneFx from './WesternSceneFx.svelte';
 	import WesternSceneSpine from './WesternSceneSpine.svelte';
 
@@ -180,7 +182,9 @@ void main() {
 			zIndex={0}
 		/>
 	{/if}
+	<WesternRedFilter />
 	<WesternSceneFx />
 	<WesternSceneSpine />
+	<BarrelLampGlow />
 	<HangingLamps />
 </Container>

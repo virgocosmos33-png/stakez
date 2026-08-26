@@ -1,17 +1,15 @@
 /**
- * Scene-space seats from the PSD the user actually edited.
- * Source: C:\Users\Emex33\Desktop\western_scene2.psd
+ * Scene-space seats from backgroundSPINE/spine-scene MAIN_FRAME.
  * Canvas 1342×892 (1×), scaled ×2 into SCENE_ART 2684×1784.
  * Plaques = extracted layer pixels (box + pallet). Lamps stay Spine — nails only.
  */
 export const FRAME_SEATS = {
-	source: "C:\\Users\\Emex33\\Desktop\\western_scene2.psd",
+	source: "C:\\Users\\Emex33\\Documents\\fire frame vfx\\backgroundSPINE\\spine-scene",
 	psd: { width: 1342, height: 892 },
 	scale: 2,
-	board: { left: 614, top: 272, right: 2070, bottom: 1500 },
-	/** Largest interior alpha island of board_frame.png (MAIN FRAME 2×).
-	 *  Old pocket {620,376,1966,1424} started 130px inside the left plank. */
-	pocket: { left: 750, top: 376, right: 1966, bottom: 1390 },
+	board: { left: 620, top: 272, right: 2070, bottom: 1496 },
+	/** Interior hole of MAIN_FRAME at 2×. */
+	pocket: { left: 750, top: 374, right: 1966, bottom: 1392 },
 	/** Stepped hole bands in SCENE_ART (one connected island, not 6 separate windows). */
 	holeColumns: [
 		{ id: 'r0', rows: 3, left: 750, top: 504, right: 956, bottom: 1256 },

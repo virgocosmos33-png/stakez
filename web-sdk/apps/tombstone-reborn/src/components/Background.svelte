@@ -7,7 +7,6 @@
 	import { getContext } from '../game/context';
 	import SaloonScene, { BG_PLATE_FILTERS, SCENE_ART, tickBgGrade } from './SaloonScene.svelte';
 	import AtmosphereFx from './AtmosphereFx.svelte';
-	import SeamlessVideoLoop from './SeamlessVideoLoop.svelte';
 
 	const context = getContext();
 
@@ -40,9 +39,6 @@
 	};
 
 	const sceneVideoReady = $derived(videoTextureOf('sceneBgAnim') !== undefined);
-	const smokeReady = $derived(videoTextureOf('roomSmoke') !== undefined);
-	const atmosphere = $derived(context.stateGame.atmosphere);
-	const FX_ART = { width: 1280, height: 720 };
 
 	$effect(() => {
 		playLoop('sceneBgAnim');
@@ -66,13 +62,4 @@
 		<SaloonScene />
 	{/if}
 	<AtmosphereFx />
-	{#if atmosphere === 'super' && smokeReady}
-		<SeamlessVideoLoop
-			assetKey="roomSmoke"
-			{...coverProps(FX_ART)}
-			alpha={0.55}
-			blendMode="screen"
-			zIndex={0}
-		/>
-	{/if}
 </FadeContainer>

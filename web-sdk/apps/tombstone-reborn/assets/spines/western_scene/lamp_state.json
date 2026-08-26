@@ -4,11 +4,19 @@
       "id": "lantern_dim",
       "slot": "lantern_dim_light",
       "label": "Barrel lamp",
-      "on": true
+      "on": true,
+      "lumen": 1.0
     }
   ],
+  "mode": "base",
+  "redFilter": {
+    "blend": "linear_burn",
+    "base_opacity": 0.45,
+    "bonus_opacity": 0.8
+  },
   "smoke": true,
   "fire": true,
   "smokeDensity": 48,
-  "smokeSpeed": 1
+  "smokeSpeed": 1,
+  "curves": true
 }

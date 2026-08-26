@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * One timber ring: the PSD FRAME layer, seated in scene cover-fit like
-	 * the plate (same transform as SaloonScene / lamps). Cards live in the
-	 * hole. Hang chains stay on the western Spine scene — this plate does
-	 * not draw a second set.
+	 * One timber ring: backgroundSPINE MAIN_FRAME, seated in scene cover-fit
+	 * like the plate. Cards live in the hole. Spine MAIN_FRAME stays hidden
+	 * so this ring is the only copy, above the reels.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 

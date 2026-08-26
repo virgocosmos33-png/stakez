@@ -207,8 +207,7 @@ export default {
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
-	// TR2 Spine Background scene plate (repo images/background.png).
-	// https://github.com/brandnitions-dev/TR2-Spine-Background-scene
+	// Street plate from backgroundSPINE/spine-scene (no red_filter baked).
 	westernSceneBg: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/western_scene_ready_bg.png', import.meta.url).href,
@@ -337,6 +336,20 @@ export default {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/western_scene_fx/fire-lick-hot.png', import.meta.url)
 			.href,
+		preload: true,
+	},
+	westernSceneRedFilter: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/scene/western_scene_fx/red_filter.png', import.meta.url)
+			.href,
+		preload: true,
+	},
+	westernSceneBarrelLight: {
+		type: 'sprite',
+		src: new URL(
+			'../../assets/spines/western_scene/images/lantern_dim_light.png',
+			import.meta.url,
+		).href,
 		preload: true,
 	},
 	// PSD hanging lanterns. Spine 4.1 idle: hang bone at the chain nail, pendulum + oil flicker.
@@ -652,14 +665,16 @@ export default {
 		src: new URL('../../assets/sprites/mirror/wr_scatter_blur.png', import.meta.url).href,
 		preload: true,
 	},
-	// SPLIT: live stab is knifesplit2.png (ornate Bowie), lightly desat so
-	// it sits on the dusty board without going grey. Color source:
-	// assets-raw/fx/knifesplit2_color.png. Slide into the wound (tip hides
-	// behind the gash) → thunk → drag out. Fist still lives on disk as
-	// split_hand_knife.png.
+	// SPLIT: user axe split.png. Tip is the left bit. Timber tint is applied
+	// in SplitPanes so the steel sits on the board frame browns.
+	splitHandAxe: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/axe_split.png', import.meta.url).href,
+		preload: true,
+	},
 	splitHandKnife: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/fx/knifesplit2.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/fx/axe_split.png', import.meta.url).href,
 		preload: true,
 	},
 	splitCutScratch: {
@@ -1022,8 +1037,7 @@ export default {
 		src: new URL('../../assets/sprites/board/board_wood_grey.webp', import.meta.url).href,
 		preload: true,
 	},
-	// BASE timber = PSD FRAME layer pixels (western_scene2.psd), 2× LANCZOS RGB
-	// + nearest alpha. Small/super stay their own atmosphere skins.
+	// BASE timber = backgroundSPINE MAIN_FRAME, 2× LANCZOS RGB + nearest alpha.
 	boardFrame: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/board/board_frame.png', import.meta.url).href,
@@ -1056,12 +1070,12 @@ export default {
 	},
 	boardFrameSmall: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/board/board_frame_small.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/board/board_frame.png', import.meta.url).href,
 		preload: true,
 	},
 	boardFrameSuper: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/board/board_frame_super.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/board/board_frame.png', import.meta.url).href,
 		preload: true,
 	},
 	boardStoneField: {

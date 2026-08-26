@@ -9,8 +9,14 @@ import { stateGame } from './stateGame.svelte';
 
 export type Atmosphere = 'base' | 'small' | 'super';
 
-/** Room is in a bonus. Free-spins plaque, street smoke, barrel lamp. */
+/** Room is in a bonus. Free-spins plaque, barrel lamp, red filter 80%. */
 export const isBonusAtmosphere = (atmo: Atmosphere) => atmo !== 'base';
+
+/** Barrel lamp follows the bonus room, including a freegame that has not graded yet. */
+export const isBarrelLampOn = () =>
+	isBonusAtmosphere(stateGame.atmosphere) ||
+	stateGame.gameType === 'freegame' ||
+	stateGame.laneSuper;
 
 const TARGETS: Record<
 	Atmosphere,

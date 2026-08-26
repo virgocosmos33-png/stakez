@@ -27,6 +27,7 @@ export const WESTERN_LAMP_SLOTS = [
 	'right_hanging_lamp',
 	'left_hanging_lamp_light',
 	'right_hanging_lamp_light',
+	'lantern_dim_light',
 ] as const;
 
 /** FREE SPINS hangers. Hidden in base so empty chains do not hang with no plaque. */
@@ -40,12 +41,57 @@ export const WESTERN_FREE_SPINS_CHAIN_SLOTS = [
 	'chain_bolt_copy_25',
 ] as const;
 
-/** Bonus-only. Density 72 / speed 1.75x from the scene viewer FX panel. */
+/** Beware / Dead Men / Tell No Tales — gone in the ready git scene. */
+export const WESTERN_SIGN_SLOTS = [
+	'signpost',
+	'sign_beware_1',
+	'sign_beware_2',
+	'sign_dead_men',
+	'sign_tell_no_tales',
+	'sign_highlight',
+] as const;
+
+/** Git street + red_filter. Plate + overlay paint these so smoke sits on the road. */
+export const WESTERN_STREET_SLOTS = [
+	'background',
+	'background_Layer_11',
+	'background_Layer_12',
+	'background_clouds',
+	'red_filter',
+] as const;
+
+/**
+ * Viewer FX panel: smoke ON, fire OFF, density 8, speed 1.00x.
+ * https://github.com/brandnitions-dev/TR2-Spine-Background-scene
+ */
 export const WESTERN_SCENE_FX = {
 	viewW: 1342,
 	viewH: 892,
-	density: 72,
-	speed: 1.75,
+	smoke: true,
+	fire: false,
+	density: 8,
+	speed: 1,
+} as const;
+
+/** red_filter.json — PNG is full strength. Spine slot blend is multiply. */
+export const WESTERN_RED_FILTER = {
+	blend: 'multiply',
+	baseOpacity: 0.45,
+	bonusOpacity: 0.8,
+} as const;
+
+/** Viewer barrel lamp Glow slider 0.40x. On in bonus only. */
+export const WESTERN_BARREL_LUMEN = 0.4;
+
+/**
+ * lantern_dim_light seat in SCENE_ART (Spine 1× Y-up → 2× Y-down).
+ * Bone lantern_dim (1308, 283) + attachment (-0.36, 66.95), 420×420.
+ */
+export const WESTERN_BARREL_GLOW = {
+	x: (1308 - 0.36) * 2,
+	y: (892 - (283 + 66.95)) * 2,
+	w: 420 * 2,
+	h: 420 * 2,
 } as const;
 
 /** `idle` rotate keys from TR2-Spine-Background-scene/spine-scene/skeleton.json. */

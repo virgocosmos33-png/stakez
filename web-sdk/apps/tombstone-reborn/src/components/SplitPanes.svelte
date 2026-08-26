@@ -29,6 +29,7 @@
 		HIGH_SYMBOLS,
 		SPLIT_KNIFE_Z,
 	} from '../game/constants';
+	import { SPLIT_AXE, SPLIT_AXE_H, SPLIT_AXE_W } from '../game/splitAxe';
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import { formatWaysMult } from '../game/waysFormat';
@@ -42,13 +43,12 @@
 	const MAX_PANES = 4;
 	const COUNT_LABEL_MIN = 6;
 	const COUNT_PAD = 8;
-	/** Ornate Bowie (1024×1536). Tip is the lower-left point of the PNG. */
-	const KNIFE_ASPECT = 1024 / 1536;
-	const KNIFE_H = CARD_H * 0.95;
-	const KNIFE_W = KNIFE_H * KNIFE_ASPECT;
-	const KNIFE_TIP = { x: 24 / 1024, y: 1526 / 1536 };
+	/** User axe split.png (1536×1024). Tip is the left bit. */
+	const KNIFE_H = SPLIT_AXE_H;
+	const KNIFE_W = SPLIT_AXE_W;
+	const KNIFE_TIP = SPLIT_AXE.tip;
 	/** PNG blade, pommel → tip. */
-	const NATIVE_BLADE = 2.132717889051712;
+	const NATIVE_BLADE = SPLIT_AXE.nativeBlade;
 	/** Approach ~122°. */
 	const KNIFE_APPROACH = 2.13 - NATIVE_BLADE;
 	/** Thunk lands almost 90° (tip down). */
@@ -57,8 +57,8 @@
 	const KNIFE_OUT = 1.92 - NATIVE_BLADE;
 	/** Tip → pommel in the displayed sprite (unrotated). */
 	const HANDLE_LOCAL = {
-		x: (958 / 1024 - KNIFE_TIP.x) * KNIFE_W,
-		y: (41 / 1536 - KNIFE_TIP.y) * KNIFE_H,
+		x: (SPLIT_AXE.knob.x - KNIFE_TIP.x) * KNIFE_W,
+		y: (SPLIT_AXE.knob.y - KNIFE_TIP.y) * KNIFE_H,
 	};
 	const rotateLocal = (rot: number) => {
 		const c = Math.cos(rot);
@@ -625,7 +625,7 @@
 					<Graphics isMask draw={cell.hole ? drawKnifeHoleMask : drawKnifeOpenMask} />
 					{#if liveStab && liveStab.key === cell.key}
 						<Sprite
-							key="splitHandKnife"
+							key="splitHandAxe"
 							x={liveStab.x}
 							y={liveStab.y}
 							anchor={KNIFE_TIP}
@@ -633,6 +633,7 @@
 							height={KNIFE_H}
 							rotation={liveStab.rot}
 							alpha={liveStab.alpha}
+							tint={SPLIT_AXE.tint}
 							eventMode="none"
 						/>
 					{/if}

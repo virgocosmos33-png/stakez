@@ -203,7 +203,7 @@ export const BOARD_TIMBER_Z = 1;
 export const BOARD_REELS_Z = 2;
 export const BOARD_HIT_Z = 11;
 export const GUNSMOKE_WOUND_Z = 11;
-/** Split overlay + hand knife. Above the lane door, under win panels. */
+/** Split overlay + thrown axe. Above the lane door, under win panels. */
 export const SPLIT_KNIFE_Z = 14;
 
 const explosion = {
