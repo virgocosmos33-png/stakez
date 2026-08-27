@@ -51,14 +51,24 @@ export const WESTERN_SIGN_SLOTS = [
 	'sign_highlight',
 ] as const;
 
-/** Git street + red_filter. Plate + overlay paint these so smoke sits on the road. */
+/** Duplicate full plate + red_filter. Sky / clouds / town stay on the skeleton
+ *  in their PSD Z order (Layer_12 → clouds → Layer_11). */
 export const WESTERN_STREET_SLOTS = [
 	'background',
-	'background_Layer_11',
-	'background_Layer_12',
-	'background_clouds',
 	'red_filter',
 ] as const;
+
+/**
+ * PSD "clouds marquee" on bone `bg`, attachment (592.5, 247), 4189×440.
+ * Idle is rotate-only, so CloudsMarquee slides the existing slots.
+ */
+export const WESTERN_CLOUD_MARQUEE = {
+	slots: ['background_clouds', 'background_clouds_2'] as const,
+	homeX: 592.5,
+	artW: 4189,
+	/** 1× px / second, right → left */
+	speed: 42,
+} as const;
 
 /**
  * Viewer FX panel: smoke ON, fire OFF, density 8, speed 1.00x.

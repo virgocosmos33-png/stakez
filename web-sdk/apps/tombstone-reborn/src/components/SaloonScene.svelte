@@ -137,8 +137,8 @@ void main() {
 <script lang="ts">
 	/**
 	 * Live western room from TR2-Spine-Background-scene.
-	 * Street plate always paints. Full Spine idle sits on top when loaded.
-	 * Hanging lamps always paint so a silent Spine miss cannot leave the beam bare.
+	 * Spine paints sky / clouds / town in PSD Z order when loaded.
+	 * Flatten plate is fallback only. Hanging lamps always paint.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 
@@ -148,6 +148,7 @@ void main() {
 	import WesternRedFilter from './WesternRedFilter.svelte';
 	import WesternSceneFx from './WesternSceneFx.svelte';
 	import WesternSceneSpine from './WesternSceneSpine.svelte';
+	import { isWesternSceneSkeleton } from '../game/westernScene';
 
 	const context = getContext();
 
@@ -162,12 +163,15 @@ void main() {
 		};
 	});
 
+	const hasScene = $derived(isWesternSceneSkeleton(context.stateApp.loadedAssets?.westernScene));
 	const plateKey = $derived(
-		context.stateApp.loadedAssets?.westernSceneBg
-			? 'westernSceneBg'
-			: context.stateApp.loadedAssets?.saloonPlate
-				? 'saloonPlate'
-				: null,
+		hasScene
+			? null
+			: context.stateApp.loadedAssets?.westernSceneBg
+				? 'westernSceneBg'
+				: context.stateApp.loadedAssets?.saloonPlate
+					? 'saloonPlate'
+					: null,
 	);
 </script>
 

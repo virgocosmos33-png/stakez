@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { backOut, quadOut } from 'svelte/easing';
-	import { Sprite } from 'pixi-svelte';
+
+	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
@@ -41,11 +42,11 @@
 	});
 </script>
 
-<Sprite
-	x={props.x}
-	y={props.y}
-	anchor={0.5}
-	key={props.symbolInfo.assetKey}
-	width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width * pulse.current}
-	height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height * pulse.current}
-/>
+<Container x={props.x} y={props.y} scale={pulse.current}>
+	<Sprite
+		anchor={0.5}
+		key={props.symbolInfo.assetKey}
+		width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
+		height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+	/>
+</Container>

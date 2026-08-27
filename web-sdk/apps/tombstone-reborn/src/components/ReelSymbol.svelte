@@ -16,7 +16,12 @@
 		getSymbolInfo,
 		getSymbolX,
 	} from '../game/utils';
-	import { isNudgeBumping, isNudgeCoveredCell, isNudgeSliding } from '../game/boardCells';
+	import {
+		isNudgeBumping,
+		isNudgeCoveredCell,
+		isNudgeSliding,
+		isWildFlipCovered,
+	} from '../game/boardCells';
 	import { SYMBOL_CARD_W } from '../game/constants';
 	import { fxDur } from '../game/fxTiming';
 	import { createGlassDentFilter } from '../game/glassDentFilter';
@@ -43,7 +48,8 @@
 	const hide = $derived(
 		(covered && !sliding) ||
 			laneShut ||
-			(props.reelSymbol.rawSymbol.name === 'NW' && !spinning && !sliding),
+			(props.reelSymbol.rawSymbol.name === 'NW' && !spinning && !sliding) ||
+			isWildFlipCovered(props.reelIndex, props.row),
 	);
 	const shoveY = $derived.by(() => {
 		const push = context.stateGame.nudgePush[props.reelIndex];

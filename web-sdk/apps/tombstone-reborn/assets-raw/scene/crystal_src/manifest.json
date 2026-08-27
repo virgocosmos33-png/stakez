@@ -1,0 +1,354 @@
+[
+  {
+    "name": "background",
+    "slug": "background",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\background.png",
+    "bbox": [
+      0,
+      0,
+      1342,
+      892
+    ],
+    "size": [
+      1342,
+      892
+    ],
+    "parent": ""
+  },
+  {
+    "name": "post_R",
+    "slug": "post_r",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\post_r.png",
+    "bbox": [
+      1209,
+      12,
+      1394,
+      769
+    ],
+    "size": [
+      185,
+      757
+    ],
+    "parent": ""
+  },
+  {
+    "name": "post_R",
+    "slug": "post_r_2",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\post_r_2.png",
+    "bbox": [
+      -54,
+      13,
+      131,
+      770
+    ],
+    "size": [
+      185,
+      757
+    ],
+    "parent": ""
+  },
+  {
+    "name": "beam",
+    "slug": "beam",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\beam.png",
+    "bbox": [
+      18,
+      35,
+      1329,
+      111
+    ],
+    "size": [
+      1311,
+      76
+    ],
+    "parent": ""
+  },
+  {
+    "name": "signpost",
+    "slug": "signpost",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\signpost.png",
+    "bbox": [
+      18,
+      390,
+      205,
+      679
+    ],
+    "size": [
+      187,
+      289
+    ],
+    "parent": "group 1"
+  },
+  {
+    "name": "wagon_wheel",
+    "slug": "wagon_wheel",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\wagon_wheel.png",
+    "bbox": [
+      131,
+      647,
+      333,
+      857
+    ],
+    "size": [
+      202,
+      210
+    ],
+    "parent": ""
+  },
+  {
+    "name": "barrel",
+    "slug": "barrel",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\barrel.png",
+    "bbox": [
+      1232,
+      589,
+      1342,
+      798
+    ],
+    "size": [
+      110,
+      209
+    ],
+    "parent": ""
+  },
+  {
+    "name": "tombstone",
+    "slug": "tombstone",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\tombstone.png",
+    "bbox": [
+      1041,
+      611,
+      1297,
+      889
+    ],
+    "size": [
+      256,
+      278
+    ],
+    "parent": "group 2"
+  },
+  {
+    "name": "right  hanging lamp",
+    "slug": "right_hanging_lamp",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\right_hanging_lamp.png",
+    "bbox": [
+      1188,
+      73,
+      1250,
+      305
+    ],
+    "size": [
+      62,
+      232
+    ],
+    "parent": ""
+  },
+  {
+    "name": "left hanging lamp",
+    "slug": "left_hanging_lamp",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\left_hanging_lamp.png",
+    "bbox": [
+      98,
+      73,
+      160,
+      305
+    ],
+    "size": [
+      62,
+      232
+    ],
+    "parent": ""
+  },
+  {
+    "name": "lantern_dim",
+    "slug": "lantern_dim",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\lantern_dim.png",
+    "bbox": [
+      1283,
+      459,
+      1342,
+      610
+    ],
+    "size": [
+      59,
+      151
+    ],
+    "parent": "static lamp"
+  },
+  {
+    "name": "rock_02",
+    "slug": "rock_02",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\rock_02.png",
+    "bbox": [
+      986,
+      810,
+      1029,
+      840
+    ],
+    "size": [
+      43,
+      30
+    ],
+    "parent": ""
+  },
+  {
+    "name": "rock",
+    "slug": "rock",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\rock.png",
+    "bbox": [
+      1012,
+      852,
+      1038,
+      867
+    ],
+    "size": [
+      26,
+      15
+    ],
+    "parent": ""
+  },
+  {
+    "name": "rock_03",
+    "slug": "rock_03",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\rock_03.png",
+    "bbox": [
+      993,
+      826,
+      1057,
+      854
+    ],
+    "size": [
+      64,
+      28
+    ],
+    "parent": ""
+  },
+  {
+    "name": "rocks",
+    "slug": "rocks",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\rocks.png",
+    "bbox": [
+      382,
+      729,
+      519,
+      775
+    ],
+    "size": [
+      137,
+      46
+    ],
+    "parent": ""
+  },
+  {
+    "name": "shrub",
+    "slug": "shrub",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\shrub.png",
+    "bbox": [
+      1029,
+      770,
+      1099,
+      834
+    ],
+    "size": [
+      70,
+      64
+    ],
+    "parent": ""
+  },
+  {
+    "name": "grass_03",
+    "slug": "grass_03",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\grass_03.png",
+    "bbox": [
+      820,
+      675,
+      1007,
+      798
+    ],
+    "size": [
+      187,
+      123
+    ],
+    "parent": ""
+  },
+  {
+    "name": "grass_02",
+    "slug": "grass_02",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\grass_02.png",
+    "bbox": [
+      1315,
+      569,
+      1342,
+      610
+    ],
+    "size": [
+      27,
+      41
+    ],
+    "parent": ""
+  },
+  {
+    "name": "rocks_02",
+    "slug": "rocks_02",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\rocks_02.png",
+    "bbox": [
+      57,
+      761,
+      160,
+      825
+    ],
+    "size": [
+      103,
+      64
+    ],
+    "parent": ""
+  },
+  {
+    "name": "grass",
+    "slug": "grass",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\grass.png",
+    "bbox": [
+      1125,
+      788,
+      1169,
+      842
+    ],
+    "size": [
+      44,
+      54
+    ],
+    "parent": ""
+  },
+  {
+    "name": "cowboy_hat",
+    "slug": "cowboy_hat",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\cowboy_hat.png",
+    "bbox": [
+      1209,
+      834,
+      1380,
+      939
+    ],
+    "size": [
+      171,
+      105
+    ],
+    "parent": ""
+  },
+  {
+    "name": "skull",
+    "slug": "skull",
+    "path": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\crystal_src\\skull.png",
+    "bbox": [
+      4,
+      674,
+      205,
+      875
+    ],
+    "size": [
+      201,
+      201
+    ],
+    "parent": ""
+  }
+]

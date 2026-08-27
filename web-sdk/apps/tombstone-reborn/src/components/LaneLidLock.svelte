@@ -8,6 +8,7 @@
 	 * reveal swings it shut. zIndex stays above the sliding gold card.
 	 */
 	import type { Texture } from 'pixi.js';
+	import { ColorMatrixFilter } from 'pixi.js';
 	import { Tween } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import { BaseSprite, Container } from 'pixi-svelte';
@@ -23,6 +24,7 @@
 		LANE_DOOR_CLOSED_SMALL_ASSET,
 		LANE_DOOR_CLOSE_MS,
 		LANE_DOOR_COVER_SCALE_X,
+		LANE_DOOR_GRADE,
 		LANE_DOOR_OPEN_MS,
 		LANE_DOOR_SHIFT_Y,
 		LANE_DOOR_Z,
@@ -67,6 +69,13 @@
 		}
 	});
 
+	const DOOR_GRADE = (() => {
+		const grade = new ColorMatrixFilter();
+		grade.saturate(LANE_DOOR_GRADE.saturate);
+		grade.brightness(LANE_DOOR_GRADE.brightness, true);
+		return [grade];
+	})();
+
 	const closedKey = $derived(
 		context.stateGame.atmosphere === 'small'
 			? LANE_DOOR_CLOSED_SMALL_ASSET
@@ -91,6 +100,7 @@
 				x={hingeX}
 				y={slot.y + LANE_DOOR_SHIFT_Y}
 				scale={{ x: closedSx, y: 1 + toward }}
+				filters={DOOR_GRADE}
 				eventMode="none"
 			>
 				<BaseSprite

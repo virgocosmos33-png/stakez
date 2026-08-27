@@ -18,7 +18,7 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicInOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Rectangle } from 'pixi-svelte';
+	import { Container, Rectangle } from 'pixi-svelte';
 	import { playThemedOnce } from '../game/sfxTheme';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
@@ -27,7 +27,6 @@
 	import { getContext } from '../game/context';
 	import { getSymbolInfo, getSymbolX, getCellCenterY } from '../game/utils';
 	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
-	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import BoardSpace from './BoardSpace.svelte';
@@ -96,6 +95,7 @@
 		afterShot = false;
 		flip.set(0, { duration: 0 });
 		fallOut.set(0, { duration: 0 });
+		context.stateGame.wildFlipCover = [];
 	};
 
 	context.eventEmitter.subscribeOnMount({
@@ -120,12 +120,6 @@
 		}
 	});
 
-	const drawBack = (g: import('pixi.js').Graphics) => {
-		const w = CELL_PITCH_X;
-		const h = SYMBOL_SIZE;
-		g.roundRect(-w / 2, -h / 2, w, h, 8);
-		g.fill({ color: TOMBSTONE_FX.dark, alpha: 1 });
-	};
 </script>
 
 <MainContainer>
@@ -141,7 +135,6 @@
 							height={SYMBOL_SIZE}
 							backgroundColor={0xffffff}
 						/>
-						<Graphics draw={drawBack} />
 						<Container scale={{ x: cell.sx, y: cell.sy }}>
 							<SymbolSprite
 								symbolInfo={getSymbolInfo({

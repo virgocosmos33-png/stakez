@@ -216,6 +216,10 @@ export const stateGame = $state({
 	nudgeCoverReel: null as number | null,
 	nudgeCoverReels: [] as number[],
 	nudgeCoverCells: [] as { reel: number; row: number }[],
+	// cells whose reel face is hidden while WildFlip is the only visible card.
+	// Same grammar as nudgeCoverCells: swap the board under a cover so the WILD
+	// never peeks before the overlay finishes the fold.
+	wildFlipCover: [] as { reel: number; row: number }[],
 	// Rows being shoved off the pocket bottom while the totem grows. `t` is
 	// 0–1; each sliding symbol travels from its seat to just below the clip.
 	nudgePush: board.map(() => ({

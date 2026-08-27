@@ -1,0 +1,175 @@
+{
+  "source": "C:\\Users\\Emex33\\Desktop\\western_scene2.psd",
+  "mtime": 1787608255.9621277,
+  "canvas": [
+    1342,
+    892
+  ],
+  "scale": 2,
+  "frame": {
+    "bbox1": [
+      307,
+      136,
+      1035,
+      750
+    ],
+    "bbox2": [
+      614,
+      272,
+      2070,
+      1500
+    ],
+    "size1": [
+      728,
+      614
+    ],
+    "size2": [
+      1456,
+      1228
+    ],
+    "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\frame_native.png",
+    "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\frame_2x.png",
+    "sha1_old_board_frame": "f35318bfb8d3",
+    "sha1_new": "4e4ca98e36a9",
+    "pocket": {
+      "kind": "transparent-hole",
+      "local": [
+        3,
+        52,
+        676,
+        576
+      ],
+      "bbox1": [
+        310,
+        188,
+        983,
+        712
+      ],
+      "opaque_frac": 0.24549208934388086
+    },
+    "pocket2": [
+      620,
+      376,
+      1966,
+      1424
+    ]
+  },
+  "chains": [
+    {
+      "id": "hang-0",
+      "bbox1": [
+        341,
+        98,
+        360,
+        227
+      ],
+      "bbox2": [
+        682,
+        196,
+        720,
+        454
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_0_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_0_2x.png",
+      "size1": [
+        19,
+        129
+      ],
+      "area": 1807,
+      "game": "assets/sprites/board/hang_chain_0.png"
+    },
+    {
+      "id": "hang-1",
+      "bbox1": [
+        447,
+        99,
+        466,
+        227
+      ],
+      "bbox2": [
+        894,
+        198,
+        932,
+        454
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_1_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_1_2x.png",
+      "size1": [
+        19,
+        128
+      ],
+      "area": 1803,
+      "game": "assets/sprites/board/hang_chain_1.png"
+    },
+    {
+      "id": "hang-2",
+      "bbox1": [
+        683,
+        98,
+        702,
+        226
+      ],
+      "bbox2": [
+        1366,
+        196,
+        1404,
+        452
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_2_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_2_2x.png",
+      "size1": [
+        19,
+        128
+      ],
+      "area": 1800,
+      "game": "assets/sprites/board/hang_chain_2.png"
+    },
+    {
+      "id": "hang-3",
+      "bbox1": [
+        895,
+        99,
+        914,
+        316
+      ],
+      "bbox2": [
+        1790,
+        198,
+        1828,
+        632
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_3_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_3_2x.png",
+      "size1": [
+        19,
+        217
+      ],
+      "area": 3088,
+      "game": "assets/sprites/board/hang_chain_3.png"
+    },
+    {
+      "id": "hang-4",
+      "bbox1": [
+        991,
+        98,
+        1010,
+        334
+      ],
+      "bbox2": [
+        1982,
+        196,
+        2020,
+        668
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_4_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_frame\\hang_chain_4_2x.png",
+      "size1": [
+        19,
+        236
+      ],
+      "area": 3363,
+      "game": "assets/sprites/board/hang_chain_4.png"
+    }
+  ],
+  "ways_multi_win_layers": []
+}

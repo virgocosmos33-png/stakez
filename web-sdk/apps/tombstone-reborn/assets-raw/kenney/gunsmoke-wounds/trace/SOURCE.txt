@@ -1,0 +1,6 @@
+Kenney CC0
+- kenney_particle-pack/PNG (Transparent)/trace/trace_01-07
+- kenney_particle-pack/PNG (Transparent)/slash/slash_01-04
+- kenney_particle-pack/PNG (Transparent)/scratch/scratch_01
+- kenney_splat-pack/PNG/Default (256px)/splat00-35
+Copied only. Library files were not moved.

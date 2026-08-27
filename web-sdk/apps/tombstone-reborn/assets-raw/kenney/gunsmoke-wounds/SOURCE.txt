@@ -1,0 +1,12 @@
+Kenney CC0 haul for Gunsmoke cell wounds + muzzle glow.
+
+Packs:
+  kenney_particle-pack / PNG (Transparent) — muzzle, scratch, scorch, dirt, slash, spark
+  kenney_splat-pack / PNG/Default (256px) — splat00-35 (recoloured to blood in bake)
+  kenney_smoke-particles / PNG/Flash — flash00-08
+  kenney_light-masks-1.0 / Transparent — circle / ring glow
+
+Do not move library files. Re-copy from:
+  C:\Users\Emex33\Documents\kenney assets\kenney assets
+Bake with:
+  python tools/bake_gunsmoke_props.py

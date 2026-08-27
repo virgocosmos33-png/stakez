@@ -19,10 +19,6 @@
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
 
-	// No runtime outline frame: every card carries its own thin portrait bezel,
-	// baked by tools/make_symbols_portrait.py into both the static atlas and the
-	// spine atlas so the border survives win/land animations. A square overlay
-	// here would cut straight across that portrait silhouette.
 </script>
 
 {#if isSprite}

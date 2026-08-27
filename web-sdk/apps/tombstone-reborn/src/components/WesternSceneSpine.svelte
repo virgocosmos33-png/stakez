@@ -4,7 +4,9 @@
 	 * C:/Users/Emex33/Documents/fire frame vfx/backgroundSPINE/spine-scene.
 	 * Skeleton root is bottom-left, Y-up. spine-pixi sets Skeleton.yDown, so
 	 * the instance sits on the plate's bottom-left and draws upward.
-	 * Track 0 = idle. Barrel glow is BarrelLampGlow, not this skeleton.
+	 * Track 0 = idle (rotate-only). Sky / clouds / town stay on this skeleton
+	 * in PSD Z order. CloudsMarquee slides the cloud slots right → left.
+	 * Barrel glow is BarrelLampGlow, not this skeleton.
 	 * Chains stay on this skeleton. Plaque wood / hanging lamps do not —
 	 * those have live HUD and HangingLamps copies.
 	 */
@@ -21,6 +23,7 @@
 		WESTERN_SIGN_SLOTS,
 		WESTERN_STREET_SLOTS,
 	} from '../game/westernScene';
+	import CloudsMarquee from './CloudsMarquee.svelte';
 	import HideSpineAttachment from './HideSpineAttachment.svelte';
 
 	const context = getContext();
@@ -42,6 +45,7 @@
 		<HideSpineAttachment slotNames={WESTERN_LAMP_SLOTS} hidden={true} />
 		<HideSpineAttachment slotNames={WESTERN_SIGN_SLOTS} hidden={true} />
 		<HideSpineAttachment slotNames={WESTERN_FREE_SPINS_CHAIN_SLOTS} hidden={!barrelOn} />
+		<CloudsMarquee />
 		<SpineTrack trackIndex={0} animationName="idle" loop={true} />
 	</SpineProvider>
 {/if}

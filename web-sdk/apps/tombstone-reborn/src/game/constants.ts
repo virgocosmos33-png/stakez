@@ -203,8 +203,12 @@ export const BOARD_TIMBER_Z = 1;
 export const BOARD_REELS_Z = 2;
 export const BOARD_HIT_Z = 11;
 export const GUNSMOKE_WOUND_Z = 11;
-/** Split overlay + thrown axe. Above the lane door, under win panels. */
-export const SPLIT_KNIFE_Z = 14;
+/** Framed split faces. Under the cell blaze so fire licks over the pocket wood. */
+export const SPLIT_CELL_Z = 13;
+/** Cell blaze. Over pocket wood / split faces, under slash and win panels. */
+export const BOARD_FIRE_Z = 15;
+/** Slash, drips, ways stamp. Above the fire, under win panels. */
+export const SPLIT_KNIFE_Z = 16;
 
 const explosion = {
 	type: 'spine',

@@ -9,26 +9,19 @@
 
 <script lang="ts">
 	import { Container } from 'pixi-svelte';
-	import { FadeContainer, WinCountUpProvider, ResponsiveBitmapText } from 'components-pixi';
+	import { FadeContainer, WinCountUpProvider } from 'components-pixi';
 	import { waitForResolveOrTimeout, waitForTimeout } from 'utils-shared/wait';
-	import { bookEventAmountToCurrencyString } from 'utils-shared/amount';
 	import { CanvasSizeRectangle, MainContainer, OnPressFullScreen } from 'components-layout';
 	import { OnMount, OnHotkey } from 'components-shared';
 
 	import WinCoins from './WinCoins.svelte';
 	import WinCelebration from './WinCelebration.svelte';
+	import WinChip from './WinChip.svelte';
 	import PressToContinue from './PressToContinue.svelte';
 	import { getContext } from '../game/context';
 	import { celebrationRollupMs, getWinCelebration } from '../game/winCelebrationMap';
-	import { waysLabel } from '../game/waysFormat';
-	import { winFontFamily, winFontSize, winFontTint } from '../game/winFont';
 
 	const context = getContext();
-
-	// Over-board win amount: config.fx.winAmountFont (panel FX tab + DramaStudioMCP).
-	const WIN_FONT_FAMILY = winFontFamily();
-	const WIN_FONT_TINT = winFontTint();
-	const WIN_FONT_SIZE = winFontSize(1);
 
 	let show = $state(false);
 	let amount = $state(0);
@@ -134,39 +127,7 @@
 							x={context.stateGameDerived.boardLayout().x}
 							y={context.stateGameDerived.boardLayout().y}
 						>
-							<!-- how many ways paid, riding above the money as it counts -->
-							{#if ways > 0}
-								<Container y={-WIN_FONT_SIZE * 0.72}>
-									<ResponsiveBitmapText
-										anchor={0.5}
-										maxWidth={context.stateLayoutDerived.canvasSizes().width /
-											context.stateLayoutDerived.mainLayout().scale}
-										text={waysLabel(ways)}
-										tint={WIN_FONT_TINT}
-										style={{
-											fontFamily: WIN_FONT_FAMILY,
-											fontSize: WIN_FONT_SIZE * 0.36,
-											align: 'center',
-											fontWeight: 'bold',
-											letterSpacing: 2,
-										}}
-									/>
-								</Container>
-							{/if}
-							<ResponsiveBitmapText
-								anchor={0.5}
-								maxWidth={context.stateLayoutDerived.canvasSizes().width /
-									context.stateLayoutDerived.mainLayout().scale}
-								text={bookEventAmountToCurrencyString(countUpAmount)}
-								tint={WIN_FONT_TINT}
-								style={{
-									fontFamily: WIN_FONT_FAMILY,
-									fontSize: WIN_FONT_SIZE,
-									align: 'center',
-									fontWeight: 'bold',
-									letterSpacing: 0,
-								}}
-							/>
+							<WinChip amount={countUpAmount} {ways} />
 						</Container>
 					</MainContainer>
 

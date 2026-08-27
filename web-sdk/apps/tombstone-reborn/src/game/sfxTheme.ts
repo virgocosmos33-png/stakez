@@ -13,12 +13,15 @@ export type ThemedSfx = {
 	durationMs: number;
 	loop?: boolean;
 	volume?: number;
+	/** false = play the file at 1x. Never chipmunk a drop-in author file. */
+	rateLock?: boolean;
 };
 
 const file = (name: string) => `/assets/audio/${name}.mp3`;
+const drop = (name: string) => `/assets/audio/${name}.mp3?v=author`;
 
 export const THEMED_SFX: Partial<Record<SoundEffectName, ThemedSfx>> = {
-	sfx_split: { src: file('sfx_split'), durationMs: 450 },
+	sfx_split: { src: drop('sfx_split'), durationMs: 8490, rateLock: false },
 	sfx_split_hit: { src: file('sfx_split_hit'), durationMs: 180 },
 	sfx_split_bite: { src: file('sfx_split_bite'), durationMs: 220 },
 	sfx_split_thunk: { src: file('sfx_split_thunk'), durationMs: 1463 },
@@ -53,8 +56,8 @@ export const THEMED_SFX: Partial<Record<SoundEffectName, ThemedSfx>> = {
 	sfx_lock_release: { src: file('sfx_lock_release'), durationMs: 180 },
 	sfx_ways_stretch: { src: file('sfx_ways_stretch'), durationMs: 280 },
 
-	sfx_fire_ignite: { src: file('sfx_fire_ignite'), durationMs: 400 },
-	sfx_fire_loop: { src: file('sfx_fire_loop'), durationMs: 6000, loop: true, volume: 0.55 },
+	sfx_fire_ignite: { src: drop('sfx_fire_ignite'), durationMs: 4101, rateLock: false },
+	sfx_fire_loop: { src: drop('sfx_fire_loop'), durationMs: 109032, rateLock: false },
 	sfx_fire_flare: { src: file('sfx_fire_flare'), durationMs: 350 },
 	sfx_fire_out: { src: file('sfx_fire_out'), durationMs: 500 },
 	sfx_reel_nudge: { src: file('sfx_reel_nudge'), durationMs: 200 },
@@ -100,7 +103,7 @@ export const playThemedOnce = (
 	const spec = THEMED_SFX[name];
 	if (!spec || spec.loop) return false;
 	playExternalOnce(spec.src, {
-		durationMs: fxDur(spec.durationMs),
+		durationMs: spec.rateLock === false ? undefined : fxDur(spec.durationMs),
 		forcePlay: options?.forcePlay,
 		volume: options?.volume ?? spec.volume,
 	});

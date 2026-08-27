@@ -200,14 +200,14 @@ export default {
 	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
-		// Pre-painterly main deck (8a9832d3). Current git main HEAD is v18
-		// (the colored painterly set). The user rejected that as the old
-		// colored cards and asked for what main was using — that is v13.
+		// Live deck is still the v13 atlas keys. Scenario vector idles are
+		// stamped in place by tools/pack_vector_idles.py (H1-H5, L1-L4 so far).
 		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v13.json', import.meta.url).href,
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
 	// Street plate from backgroundSPINE/spine-scene (no red_filter baked).
+	// Fallback only — live room uses the Spine Z stack (sky / clouds / town).
 	westernSceneBg: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/scene/western_scene_ready_bg.png', import.meta.url).href,
@@ -525,8 +525,8 @@ export default {
 		src: new URL('../../assets/sprites/mirror/counter_glass.png', import.meta.url).href,
 		preload: true,
 	},
-	// WILD card: whiskey bottle with WILD on the label, same 300x300 canvas
-	// and wr_wild alpha as every other symbol.
+	// WILD card: skull, hat, and crossed revolvers on parchment. Same 300x300
+	// canvas as every other symbol.
 	wrWild: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/wr_wild.png', import.meta.url).href,
@@ -603,8 +603,8 @@ export default {
 		src: new URL('../../assets/sprites/fx/fx_nudge_fire.png', import.meta.url).href,
 		preload: true,
 	},
-	// Full-reel NUDGE WAYS totem. One tall iron column (header + ratchet +
-	// arrow foot), clipped from the top of the reel in NudgeWays.svelte.
+	// Full-reel NUDGE WAYS totem. One tall iron column (NUDGE plaque +
+	// one vertical coffin, foot down), clipped in NudgeWays.
 	fxNudgeColumn: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/fx/fx_nudge_column.png', import.meta.url).href,
@@ -1162,6 +1162,11 @@ export default {
 	symbolOutlineFrame: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/symbol_outline_frame.png', import.meta.url).href,
+		preload: true,
+	},
+	winChipPlate: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/tombstone/win_chip_plate.png', import.meta.url).href,
 		preload: true,
 	},
 	mirrorFrame: {

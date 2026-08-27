@@ -1,0 +1,231 @@
+{
+  "id": "saloon-door-swing",
+  "title": "Saloon Door Swing",
+  "source_uuid": "",
+  "source": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\VFXPACKSHEETS\\saloon-door-swing\\saloon-door-swing-sheet.png",
+  "source_size": {
+    "w": 1536,
+    "h": 1024
+  },
+  "alpha_source": "black_key",
+  "fps": 14,
+  "blend": "normal",
+  "pivot": "bottom",
+  "island_threshold": 12,
+  "saved_count": 16,
+  "kind": "sequence",
+  "source_sheet": "door.png",
+  "peak_frame": "frame_01.png",
+  "parts": [
+    {
+      "index": 1,
+      "filename": "frame_01.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 224,
+        "h": 338
+      },
+      "area": 75712,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 2,
+      "filename": "frame_02.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 176,
+        "h": 339
+      },
+      "area": 59664,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 3,
+      "filename": "frame_03.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 179,
+        "h": 338
+      },
+      "area": 60502,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 4,
+      "filename": "frame_04.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 172,
+        "h": 340
+      },
+      "area": 58480,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 5,
+      "filename": "frame_05.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 162,
+        "h": 343
+      },
+      "area": 55566,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 6,
+      "filename": "frame_06.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 135,
+        "h": 339
+      },
+      "area": 45765,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 7,
+      "filename": "frame_07.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 150,
+        "h": 315
+      },
+      "area": 47250,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 8,
+      "filename": "frame_08.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 171,
+        "h": 315
+      },
+      "area": 53865,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 9,
+      "filename": "frame_09.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 175,
+        "h": 314
+      },
+      "area": 54950,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 10,
+      "filename": "frame_10.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 183,
+        "h": 315
+      },
+      "area": 57645,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 11,
+      "filename": "frame_11.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 185,
+        "h": 318
+      },
+      "area": 58830,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 12,
+      "filename": "frame_12.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 175,
+        "h": 335
+      },
+      "area": 58625,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 13,
+      "filename": "frame_13.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 130,
+        "h": 337
+      },
+      "area": 43810,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 14,
+      "filename": "frame_14.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 99,
+        "h": 335
+      },
+      "area": 33165,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 15,
+      "filename": "frame_15.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 78,
+        "h": 333
+      },
+      "area": 25974,
+      "width": 224,
+      "height": 343
+    },
+    {
+      "index": 16,
+      "filename": "frame_16.png",
+      "bbox": {
+        "x": 0,
+        "y": 0,
+        "w": 73,
+        "h": 330
+      },
+      "area": 24090,
+      "width": 224,
+      "height": 343
+    }
+  ],
+  "audit": "manual keep/split/merge, crumbs removed, LTR TTB sequence",
+  "speed_curve": "easeOut"
+}

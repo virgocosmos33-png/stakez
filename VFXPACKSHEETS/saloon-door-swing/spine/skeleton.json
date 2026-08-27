@@ -1,0 +1,210 @@
+{
+  "skeleton": {
+    "hash": "saloon-door-swing",
+    "spine": "3.8.75",
+    "x": 0,
+    "y": 0,
+    "width": 1536,
+    "height": 1024,
+    "images": "C:/Users/Emex33/Documents/tombstone reborn/VFXPACKSHEETS/saloon-door-swing/parts/",
+    "audio": ""
+  },
+  "bones": [
+    {
+      "name": "root"
+    },
+    {
+      "name": "fx",
+      "parent": "root",
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "slots": [
+    {
+      "name": "fx",
+      "bone": "fx",
+      "attachment": "frame_01"
+    }
+  ],
+  "skins": {
+    "default": {
+      "fx": {
+        "frame_01": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_02": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_03": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_04": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_05": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_06": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_07": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_08": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_09": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_10": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_11": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_12": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_13": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_14": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_15": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        },
+        "frame_16": {
+          "x": 0.0,
+          "y": 171.5,
+          "width": 224,
+          "height": 343
+        }
+      }
+    }
+  },
+  "animations": {
+    "play": {
+      "slots": {
+        "fx": {
+          "attachment": [
+            {
+              "time": 0.0,
+              "name": "frame_01"
+            },
+            {
+              "time": 0.0393,
+              "name": "frame_02"
+            },
+            {
+              "time": 0.0819,
+              "name": "frame_03"
+            },
+            {
+              "time": 0.1279,
+              "name": "frame_04"
+            },
+            {
+              "time": 0.1772,
+              "name": "frame_05"
+            },
+            {
+              "time": 0.2298,
+              "name": "frame_06"
+            },
+            {
+              "time": 0.2858,
+              "name": "frame_07"
+            },
+            {
+              "time": 0.3451,
+              "name": "frame_08"
+            },
+            {
+              "time": 0.4077,
+              "name": "frame_09"
+            },
+            {
+              "time": 0.4737,
+              "name": "frame_10"
+            },
+            {
+              "time": 0.543,
+              "name": "frame_11"
+            },
+            {
+              "time": 0.6156,
+              "name": "frame_12"
+            },
+            {
+              "time": 0.6916,
+              "name": "frame_13"
+            },
+            {
+              "time": 0.7709,
+              "name": "frame_14"
+            },
+            {
+              "time": 0.8535,
+              "name": "frame_15"
+            },
+            {
+              "time": 0.9395,
+              "name": "frame_16"
+            },
+            {
+              "time": 1.0288,
+              "name": "frame_16"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

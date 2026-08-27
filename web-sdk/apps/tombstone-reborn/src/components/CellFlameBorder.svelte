@@ -294,7 +294,7 @@ void main() {
 			anyBurning = burningNow;
 			context.eventEmitter.broadcast({
 				type: 'soundOnce',
-				name: burningNow ? 'sfx_fire_ignite' : 'sfx_fire_out',
+				name: burningNow ? 'sfx_fire_flare' : 'sfx_fire_out',
 			});
 		}
 	});

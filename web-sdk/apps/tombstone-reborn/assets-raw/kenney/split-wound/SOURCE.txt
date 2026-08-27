@@ -1,0 +1,7 @@
+Tombstone Reborn split-wound haul (copy only, Kenney CC0).
+
+kenney_splat-pack / PNG/Double (512px)     splat00-35
+kenney_particle-pack / PNG (Transparent)   slash 01-04, scratch 01, trace 01-07, dirt 01-03, scorch 01-03, muzzle 01-05
+kenney_smoke-particles / PNG/Flash         flash00-08
+
+Do not ship Esoteric example splats. Do not ship GPL CGE blood.

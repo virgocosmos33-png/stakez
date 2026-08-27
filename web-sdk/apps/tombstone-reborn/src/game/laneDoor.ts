@@ -13,3 +13,10 @@ export const LANE_DOOR_SHIFT_Y = -3;
 /** Lane layer above the board. The sliding gold card is under the lid. */
 export const LANE_DOOR_Z = 12;
 export const LANE_CARD_Z = 11;
+
+/**
+ * board_frame (MAIN_FRAME) is dusty charcoal: sat ~0.18, luma ~41.
+ * The Recraft leaf is hot orange (sat ~0.54). Same ColorMatrix family as
+ * locked symbols, not a full greyscale.
+ */
+export const LANE_DOOR_GRADE = { saturate: -0.58, brightness: 0.84 } as const;

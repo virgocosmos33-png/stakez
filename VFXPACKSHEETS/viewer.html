@@ -1,0 +1,1275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VFX Pack Preview</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root {
+    --bg: #070708;
+    --panel: #0e0e10;
+    --line: rgba(255, 176, 106, 0.22);
+    --ink: #ece6dc;
+    --muted: #8d867c;
+    --accent: #ffb06a;
+    --accent-dim: rgba(255, 138, 42, 0.18);
+    --danger: #ff8a7a;
+    --ok: #7dcea0;
+  }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--ink); font-family: ui-sans-serif, "Segoe UI", system-ui, sans-serif; }
+  body { display: flex; min-height: 100%; overflow: hidden; }
+  .list {
+    width: min(320px, 40vw);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    min-height: 0;
+  }
+  .list header { padding: 16px 16px 12px; border-bottom: 1px solid var(--line); }
+  .list h1 { margin: 0; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent); }
+  .list p { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.4; }
+  .items { flex: 1; min-height: 0; overflow: auto; padding: 8px; }
+  .item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: stretch;
+    gap: 4px;
+    border-radius: 10px;
+    padding: 2px;
+  }
+  .item-row.active { background: var(--accent-dim); }
+  .item {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    text-align: left;
+    appearance: none;
+    border: 1px solid transparent;
+    background: transparent;
+    color: inherit;
+    border-radius: 10px;
+    padding: 8px;
+    cursor: pointer;
+  }
+  .item-row:hover { background: rgba(255,255,255,0.04); }
+  .item-row.active .item { border-color: rgba(255, 176, 106, 0.55); }
+  .pack-del {
+    appearance: none;
+    align-self: center;
+    margin-right: 4px;
+    border: 1px solid rgba(255, 138, 122, 0.45);
+    background: rgba(255, 80, 60, 0.12);
+    color: var(--danger);
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .pack-del:hover { background: rgba(255, 80, 60, 0.22); }
+  .pack-del:disabled { opacity: 0.35; cursor: not-allowed; }
+  .item:focus-visible, button.ctrl:focus-visible, input:focus-visible, select:focus-visible, .cell:focus-visible, .pack-del:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+  select.ctrl-select {
+    appearance: none;
+    border: 1px solid rgba(255, 176, 106, 0.4);
+    background: #1a140e;
+    color: #f6d7a8;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  .thumb {
+    width: 72px; height: 56px; border-radius: 6px;
+    background: #050505;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .meta { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 3px; }
+  .meta strong { font-size: 13px; font-weight: 600; }
+  .meta span { font-size: 11px; color: var(--muted); }
+  .stage-wrap { flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 0; }
+  .toolbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); background: #0b0b0d;
+  }
+  .toolbar h2 { margin: 0; font-size: 14px; font-weight: 600; }
+  .toolbar .hint { font-size: 12px; color: var(--muted); }
+  button.ctrl {
+    appearance: none;
+    border: 1px solid rgba(255, 176, 106, 0.4);
+    background: var(--accent-dim);
+    color: #f6d7a8;
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  button.ctrl.secondary { border-color: rgba(255,255,255,0.14); background: rgba(255,255,255,0.06); color: #ddd; }
+  button.ctrl.active { background: rgba(180, 110, 40, 0.5); color: #fff; }
+  button.ctrl.danger {
+    border-color: rgba(255, 138, 122, 0.45);
+    background: rgba(255, 80, 60, 0.12);
+    color: var(--danger);
+  }
+  button.ctrl:disabled { opacity: 0.4; cursor: not-allowed; }
+  label.ctrl { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  input[type="range"] { width: 110px; accent-color: var(--accent); }
+  .stage {
+    flex: 1; min-height: 0; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    padding: 16px;
+    background: #0a0a0c;
+  }
+  canvas { display: block; width: min(100%, 960px); height: auto; max-height: 100%; border-radius: 8px; box-shadow: 0 0 0 1px rgba(255,176,106,0.16); background: #050506; }
+  #status { position: absolute; left: 20px; bottom: 18px; font-size: 12px; color: var(--ok); pointer-events: none; }
+  #status.error { color: var(--danger); }
+  #loading, #empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); font-size: 13px; background: rgba(7,7,8,0.55);
+  }
+  #loading.hidden, #empty.hidden { display: none; }
+  .strip-wrap {
+    flex-shrink: 0;
+    border-top: 1px solid var(--line);
+    background: #0b0b0d;
+    display: flex;
+    flex-direction: column;
+  }
+  .strip-bar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 8px 16px 4px;
+  }
+  .strip-bar .hint { flex: 1 1 180px; font-size: 12px; color: var(--muted); }
+  .strip {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px 16px 12px;
+    min-height: 136px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 176, 106, 0.45) #0b0b0d;
+  }
+  .cell {
+    flex: 0 0 76px;
+    width: 76px;
+    padding: 4px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    background: #050506;
+    color: inherit;
+    cursor: pointer;
+    position: relative;
+  }
+  .cell img {
+    width: 68px; height: 68px; object-fit: contain;
+    display: block; background: #050505; border-radius: 4px;
+  }
+  .cell .n { display: block; text-align: center; font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .cell .ms { display: block; text-align: center; font-size: 9px; color: var(--muted); line-height: 1.2; }
+  .cell.phase-strike .ms { color: var(--accent); }
+  .cell.phase-anticipate .ms { color: #d8c49a; }
+  .cell.phase-recover .ms { color: var(--ok); }
+  .cell.selected { background: var(--accent-dim); border-color: rgba(255, 176, 106, 0.45); }
+  .cell.playhead { border-color: var(--accent); }
+  .cell.in-loop { box-shadow: inset 0 -3px 0 var(--accent); }
+  .cell.outro { box-shadow: inset 0 -3px 0 var(--ok); }
+  .cell .tag {
+    position: absolute; top: 6px; left: 6px;
+    font-size: 9px; letter-spacing: 0.04em; text-transform: uppercase;
+    color: #1a1208; background: var(--accent); border-radius: 3px; padding: 1px 4px;
+  }
+  .cell .tag.end { background: var(--ok); color: #0b1a12; }
+  dialog {
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #121214;
+    color: var(--ink);
+    padding: 18px 18px 14px;
+    max-width: 420px;
+  }
+  dialog::backdrop { background: rgba(0,0,0,0.55); }
+  dialog p { margin: 0 0 14px; font-size: 14px; line-height: 1.45; }
+  dialog .row { display: flex; justify-content: flex-end; gap: 8px; }
+  @media (max-width: 800px) {
+    body { flex-direction: column; overflow: auto; }
+    .list { width: 100%; max-height: 28vh; border-right: 0; border-bottom: 1px solid var(--line); }
+    .items { display: flex; gap: 6px; overflow: auto; }
+    .item-row { min-width: 260px; }
+    .stage-wrap { min-height: 56vh; }
+  }
+</style>
+</head>
+<body>
+<nav class="list" aria-label="VFX packs">
+  <header>
+    <h1>VFX packs</h1>
+    <p>Select a pack to preview. Up and down switches.</p>
+  </header>
+  <div class="items" id="items" role="listbox" aria-label="Pack list"></div>
+</nav>
+<main class="stage-wrap">
+  <div class="toolbar">
+    <h2 id="title">No pack selected</h2>
+    <span class="hint" id="hint"></span>
+    <button type="button" class="ctrl" id="btnPlay">Pause</button>
+    <label class="ctrl">FPS <input type="range" id="fps" min="4" max="30" value="16"><span id="fpsVal">16</span></label>
+    <label class="ctrl">Curve
+      <select id="curve" class="ctrl-select" aria-label="Speed curve">
+        <option value="linear">linear</option>
+        <option value="easeIn">easeIn</option>
+        <option value="easeOut">easeOut</option>
+        <option value="easeInOut">easeInOut</option>
+        <option value="attack">attack</option>
+      </select>
+    </label>
+    <button type="button" class="ctrl secondary" id="btnTicks" aria-pressed="false">Ticks</button>
+    <button type="button" class="ctrl secondary" id="btnBlend">Blend: add</button>
+    <button type="button" class="ctrl secondary active" id="btnLoop">Loop</button>
+    <button type="button" class="ctrl secondary" id="btnHold" disabled>Hold</button>
+    <button type="button" class="ctrl secondary" id="btnRelease" disabled>Release</button>
+    <label class="ctrl">Frame <input type="range" id="scrub" min="0" max="0" value="0"><span id="frameVal">0</span></label>
+  </div>
+  <div class="stage">
+    <canvas id="stage" width="960" height="640"></canvas>
+    <div id="loading">Loading packs…</div>
+    <div id="empty" class="hidden">No frames in this pack.</div>
+    <div id="status">Ready</div>
+  </div>
+  <section class="strip-wrap" aria-label="Frame sequence">
+    <div class="strip-bar">
+      <span class="hint" id="stripHint">Click a frame to select. Shift selects a range. Ctrl or Cmd adds.</span>
+      <button type="button" class="ctrl" id="btnLoopRange" disabled>Loop selected</button>
+      <button type="button" class="ctrl secondary" id="btnClearLoop" disabled>Clear loop</button>
+      <button type="button" class="ctrl danger" id="btnDelete" disabled>Delete</button>
+    </div>
+    <div class="strip" id="strip" role="listbox" aria-label="Frames" aria-multiselectable="true"></div>
+  </section>
+</main>
+<dialog id="confirmDel" aria-labelledby="confirmDelText">
+  <p id="confirmDelText">Delete selected frames?</p>
+  <div class="row">
+    <button type="button" class="ctrl secondary" id="confirmDelNo">Cancel</button>
+    <button type="button" class="ctrl danger" id="confirmDelYes">Delete</button>
+  </div>
+</dialog>
+<script src="catalog.js"></script>
+<script>
+(function () {
+  const itemsEl = document.getElementById("items");
+  const titleEl = document.getElementById("title");
+  const hintEl = document.getElementById("hint");
+  const canvas = document.getElementById("stage");
+  const ctx = canvas.getContext("2d", { alpha: false });
+  const statusEl = document.getElementById("status");
+  const loadingEl = document.getElementById("loading");
+  const emptyEl = document.getElementById("empty");
+  const btnPlay = document.getElementById("btnPlay");
+  const btnBlend = document.getElementById("btnBlend");
+  const btnLoop = document.getElementById("btnLoop");
+  const btnHold = document.getElementById("btnHold");
+  const btnRelease = document.getElementById("btnRelease");
+  const btnLoopRange = document.getElementById("btnLoopRange");
+  const btnClearLoop = document.getElementById("btnClearLoop");
+  const btnDelete = document.getElementById("btnDelete");
+  const fpsInput = document.getElementById("fps");
+  const fpsVal = document.getElementById("fpsVal");
+  const curveSelect = document.getElementById("curve");
+  const btnTicks = document.getElementById("btnTicks");
+  const scrub = document.getElementById("scrub");
+  const frameVal = document.getElementById("frameVal");
+  const stripEl = document.getElementById("strip");
+  const stripHint = document.getElementById("stripHint");
+  const confirmDel = document.getElementById("confirmDel");
+  const confirmDelText = document.getElementById("confirmDelText");
+  const confirmDelYes = document.getElementById("confirmDelYes");
+  const confirmDelNo = document.getElementById("confirmDelNo");
+
+  const catalog = window.VFX_CATALOG && Array.isArray(window.VFX_CATALOG.packs)
+    ? window.VFX_CATALOG.packs
+    : [];
+
+  const CURVE_LINEAR = "linear";
+  const CURVE_EASE_IN = "easeIn";
+  const CURVE_EASE_OUT = "easeOut";
+  const CURVE_EASE_IN_OUT = "easeInOut";
+  const CURVE_ATTACK = "attack";
+  const NAMED_CURVES = [CURVE_LINEAR, CURVE_EASE_IN, CURVE_EASE_OUT, CURVE_EASE_IN_OUT, CURVE_ATTACK];
+  const PHASE_IDLE = "idle";
+  const PHASE_ANTICIPATE = "anticipate";
+  const PHASE_STRIKE = "strike";
+  const PHASE_RECOVER = "recover";
+  const SCALE_LINEAR = 1.0;
+  const SCALE_WINDUP = 1.4;
+  const SCALE_HIT = 0.55;
+  const SCALE_RECOVER = 1.25;
+  const PHASE_SCALES = {
+    idle: SCALE_LINEAR,
+    anticipate: SCALE_WINDUP,
+    strike: SCALE_HIT,
+    recover: SCALE_RECOVER
+  };
+  const HAZARD_HOOD_PHASES = {
+    "hazard-hood-pistol": ["anticipate","anticipate","anticipate","anticipate","strike","strike","recover","recover","recover"],
+    "hazard-hood-knife": ["anticipate","anticipate","anticipate","strike","strike","strike","recover","recover","recover"],
+    "hazard-hood-bomb": ["anticipate","anticipate","anticipate","anticipate","strike","strike","recover","recover","recover"],
+    "hazard-hood-toxic-smoke": ["anticipate","anticipate","anticipate","anticipate","strike","strike","recover","recover","recover"]
+  };
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function namedCurve(value) {
+    return NAMED_CURVES.indexOf(value) >= 0 ? value : CURVE_LINEAR;
+  }
+
+  function defaultAttackPhases(count, loop) {
+    if (count <= 0) return [];
+    if (loop && Number.isInteger(loop[0]) && Number.isInteger(loop[1])) {
+      const start = loop[0];
+      const end = loop[1];
+      const whole = start === 0 && end === count - 1;
+      if (!whole && start >= 0 && end >= start && end < count) {
+        const phases = [];
+        for (let i = 0; i < count; i += 1) {
+          if (i < start) phases.push(PHASE_ANTICIPATE);
+          else if (i <= end) phases.push(PHASE_STRIKE);
+          else phases.push(PHASE_RECOVER);
+        }
+        return phases;
+      }
+    }
+    if (count === 1) return [PHASE_STRIKE];
+    if (count === 2) return [PHASE_ANTICIPATE, PHASE_STRIKE];
+    const wind = Math.max(1, Math.floor(count / 3));
+    let recover = Math.max(1, Math.floor(count / 3));
+    let strike = count - wind - recover;
+    if (strike < 1) {
+      strike = 1;
+      recover = Math.max(0, count - wind - strike);
+    }
+    return Array(wind).fill(PHASE_ANTICIPATE)
+      .concat(Array(strike).fill(PHASE_STRIKE))
+      .concat(Array(recover).fill(PHASE_RECOVER));
+  }
+
+  function phasesForCurve(name, count, loop) {
+    if (count <= 0) return [];
+    if (name === CURVE_ATTACK) return defaultAttackPhases(count, loop);
+    if (name === CURVE_EASE_IN) {
+      return Array.from({ length: count }, (_, i) => i < count / 2 ? PHASE_ANTICIPATE : PHASE_STRIKE);
+    }
+    if (name === CURVE_EASE_OUT) {
+      return Array.from({ length: count }, (_, i) => i < count / 2 ? PHASE_STRIKE : PHASE_RECOVER);
+    }
+    if (name === CURVE_EASE_IN_OUT) {
+      const first = Math.max(1, Math.floor(count / 3));
+      const last = Math.max(1, Math.floor(count / 3));
+      const mid = Math.max(0, count - first - last);
+      return Array(first).fill(PHASE_ANTICIPATE)
+        .concat(Array(mid).fill(PHASE_STRIKE))
+        .concat(Array(last).fill(PHASE_RECOVER));
+    }
+    return Array(count).fill(PHASE_IDLE);
+  }
+
+  function scalesForCurve(name, count, phases) {
+    if (count <= 0) return [];
+    if (name === CURVE_EASE_IN) {
+      const last = Math.max(1, count - 1);
+      return Array.from({ length: count }, (_, i) => lerp(SCALE_WINDUP, SCALE_HIT, i / last));
+    }
+    if (name === CURVE_EASE_OUT) {
+      const last = Math.max(1, count - 1);
+      return Array.from({ length: count }, (_, i) => lerp(SCALE_HIT, SCALE_RECOVER, i / last));
+    }
+    if (name === CURVE_EASE_IN_OUT) {
+      if (count === 1) return [SCALE_LINEAR];
+      const mid = (count - 1) / 2;
+      return Array.from({ length: count }, (_, i) => {
+        if (i <= mid) return lerp(SCALE_WINDUP, SCALE_HIT, mid ? i / mid : 0);
+        return lerp(SCALE_HIT, SCALE_RECOVER, (i - mid) / ((count - 1) - mid));
+      });
+    }
+    if (name === CURVE_ATTACK) {
+      return phases.map((phase) => PHASE_SCALES[phase] || SCALE_LINEAR);
+    }
+    return Array(count).fill(SCALE_LINEAR);
+  }
+
+  function resolveTiming(meta, count, loop) {
+    const packFps = Math.max(1, Number(meta && meta.fps) || 12);
+    const name = namedCurve(meta && meta.speedCurve);
+    const explicit = meta && Array.isArray(meta.framePhases) && meta.framePhases.length === count
+      ? meta.framePhases
+      : null;
+    const phases = explicit || phasesForCurve(name, count, loop);
+    const scales = scalesForCurve(name, count, phases);
+    const durations = scales.map((scale) => Math.round((scale / packFps) * 10000) / 10000);
+    return { speedCurve: name, framePhases: phases, frameScales: scales, frameDurations: durations };
+  }
+
+  const cache = [];
+  let packIndex = 0;
+  let frame = 0;
+  let playing = true;
+  let looping = true;
+  let hold = false;
+  let releasing = false;
+  let loopStart = null;
+  let loopEnd = null;
+  let blend = "add";
+  let fps = 16;
+  let ticksOn = false;
+  let audioCtx = null;
+  let last = 0;
+  let acc = 0;
+  let selected = new Set();
+  let selectAnchor = 0;
+  let writable = false;
+  let stripDirty = true;
+
+  function setStatus(text, isError) {
+    statusEl.textContent = text;
+    statusEl.classList.toggle("error", !!isError);
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error("Could not load " + src));
+      img.src = src;
+    });
+  }
+
+  function current() {
+    return cache[packIndex] || null;
+  }
+
+  function currentMeta() {
+    return catalog[packIndex] || null;
+  }
+
+  function hasLoopRange() {
+    const pack = current();
+    const lastI = pack && pack.frames ? pack.frames.length - 1 : -1;
+    return Number.isInteger(loopStart) && Number.isInteger(loopEnd) &&
+      loopStart >= 0 && loopEnd >= loopStart && loopEnd <= lastI;
+  }
+
+  function lastIndex() {
+    const pack = current();
+    return pack && pack.frames.length ? pack.frames.length - 1 : 0;
+  }
+
+  function hasOutro() {
+    return hasLoopRange() && loopEnd < lastIndex();
+  }
+
+  function holdingNow() {
+    return hold && hasLoopRange() && looping && !releasing;
+  }
+
+  function renderList() {
+    itemsEl.innerHTML = "";
+    catalog.forEach((pack, i) => {
+      const row = document.createElement("div");
+      row.className = "item-row" + (i === packIndex ? " active" : "");
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", i === packIndex ? "true" : "false");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "item";
+      const peak = pack.peakFrame || pack.frames[0] || "";
+      btn.innerHTML =
+        '<span class="thumb">' +
+        (peak ? '<img alt="" src="' + pack.partsDir + "/" + peak + '">' : "") +
+        "</span><span class=\"meta\"><strong>" + pack.title +
+        "</strong><span>" + packMetaLine(pack) + "</span></span>";
+      btn.addEventListener("click", () => selectPack(i));
+      const del = document.createElement("button");
+      del.type = "button";
+      del.className = "pack-del";
+      del.textContent = "Del";
+      del.setAttribute("aria-label", "Delete pack " + pack.title);
+      del.disabled = !writable;
+      del.addEventListener("click", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        deletePack(i);
+      });
+      row.appendChild(btn);
+      row.appendChild(del);
+      itemsEl.appendChild(row);
+    });
+    const active = itemsEl.querySelector(".item-row.active");
+    if (active) active.scrollIntoView({ block: "nearest" });
+  }
+
+  function packKind(pack) {
+    return pack && pack.kind === "props" ? "props" : "sequence";
+  }
+
+  function packMetaLine(pack) {
+    const curve = pack.speedCurve && pack.speedCurve !== CURVE_LINEAR ? " · " + pack.speedCurve : "";
+    if (packKind(pack) === "props") {
+      return pack.frameCount + " props · step kit" + curve;
+    }
+    if (Number.isInteger(pack.loopStart) && Number.isInteger(pack.loopEnd)) {
+      return pack.frameCount + " frames · hold " + (pack.loopStart + 1) + "-" + (pack.loopEnd + 1) + curve;
+    }
+    return pack.frameCount + " frames · " + pack.fps + " fps" + curve;
+  }
+
+  function loopPair() {
+    return hasLoopRange() ? [loopStart, loopEnd] : null;
+  }
+
+  function frameDurationSec(index) {
+    const meta = currentMeta();
+    const packFps = Math.max(1, Number(meta && meta.fps) || fps || 12);
+    const durs = meta && Array.isArray(meta.frameDurations) ? meta.frameDurations : null;
+    if (durs && typeof durs[index] === "number") {
+      return durs[index] * (packFps / Math.max(1, fps));
+    }
+    return 1 / Math.max(1, fps);
+  }
+
+  function currentPhase(index) {
+    const meta = currentMeta();
+    const phases = meta && Array.isArray(meta.framePhases) ? meta.framePhases : null;
+    return phases && phases[index] ? phases[index] : PHASE_IDLE;
+  }
+
+  function playTick(phase) {
+    if (!ticksOn || !audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    const now = audioCtx.currentTime;
+    osc.frequency.value = phase === PHASE_STRIKE ? 880 : (phase === PHASE_ANTICIPATE ? 220 : 330);
+    gain.gain.setValueAtTime(phase === PHASE_STRIKE ? 0.07 : 0.035, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.045);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + 0.05);
+  }
+
+  function loadLoopFromPack(pack) {
+    if (Number.isInteger(pack.loopStart) && Number.isInteger(pack.loopEnd)) {
+      loopStart = pack.loopStart;
+      loopEnd = pack.loopEnd;
+      hold = true;
+    } else {
+      loopStart = null;
+      loopEnd = null;
+      hold = false;
+    }
+    releasing = false;
+  }
+
+  function applyPackSettings(pack) {
+    titleEl.textContent = pack.title;
+    const kind = packKind(pack);
+    hintEl.textContent = (packIndex + 1) + " / " + catalog.length + " · " +
+      (kind === "props" ? pack.frameCount + " props, step with arrows" : pack.frameCount + " frames");
+    fps = pack.fps;
+    blend = pack.blend === "normal" ? "normal" : "add";
+    fpsInput.value = String(fps);
+    fpsVal.textContent = String(fps);
+    curveSelect.value = namedCurve(pack.speedCurve);
+    btnBlend.textContent = "Blend: " + blend;
+    if (kind === "props") {
+      playing = false;
+      btnPlay.textContent = "Play";
+    } else {
+      playing = true;
+      btnPlay.textContent = "Pause";
+    }
+    syncHoldUi();
+  }
+
+  function syncHoldUi() {
+    const ranged = hasLoopRange();
+    const outro = hasOutro();
+    btnHold.disabled = !ranged;
+    btnHold.classList.toggle("active", hold && ranged);
+    btnRelease.disabled = !outro;
+    btnRelease.classList.toggle("active", releasing);
+    btnClearLoop.disabled = !ranged;
+    btnLoopRange.disabled = selected.size === 0;
+    btnDelete.disabled = selected.size === 0;
+    if (ranged) {
+      const last = lastIndex() + 1;
+      const intro = loopStart > 0 ? "1-" + loopStart + ", " : "";
+      const tail = outro ? ", then " + (loopEnd + 2) + "-" + last + " on release" : "";
+      hintEl.textContent = (packIndex + 1) + " / " + catalog.length +
+        " · " + intro + "hold " + (loopStart + 1) + "-" + (loopEnd + 1) + tail;
+    }
+  }
+
+  function syncScrub() {
+    const pack = current();
+    const count = pack && pack.frames ? pack.frames.length : 0;
+    scrub.max = String(Math.max(0, count - 1));
+    scrub.value = String(frame);
+    frameVal.textContent = count ? (frame + 1) + " / " + count : "0";
+    emptyEl.classList.toggle("hidden", count > 0);
+    syncStripPlayhead();
+  }
+
+  function renderStrip() {
+    const pack = current();
+    const meta = currentMeta();
+    stripEl.innerHTML = "";
+    if (!pack || !pack.frames.length || !meta) {
+      stripDirty = false;
+      syncHoldUi();
+      return;
+    }
+    pack.frames.forEach((img, i) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "cell";
+      btn.dataset.index = String(i);
+      btn.setAttribute("role", "option");
+      const label = document.createElement("img");
+      label.alt = "";
+      label.src = img.src;
+      const n = document.createElement("span");
+      n.className = "n";
+      n.textContent = String(i + 1);
+      const ms = document.createElement("span");
+      ms.className = "ms";
+      btn.appendChild(label);
+      btn.appendChild(n);
+      btn.appendChild(ms);
+      btn.addEventListener("click", (ev) => onCellClick(i, ev));
+      stripEl.appendChild(btn);
+    });
+    stripDirty = false;
+    syncStripPlayhead();
+    syncHoldUi();
+  }
+
+  function syncStripPlayhead() {
+    const cells = stripEl.querySelectorAll(".cell");
+    const ranged = hasLoopRange();
+    cells.forEach((cell) => {
+      const i = Number(cell.dataset.index);
+      const phase = currentPhase(i);
+      cell.classList.toggle("playhead", i === frame);
+      cell.classList.toggle("selected", selected.has(i));
+      cell.classList.toggle("in-loop", ranged && i >= loopStart && i <= loopEnd);
+      cell.classList.toggle("outro", ranged && i > loopEnd);
+      cell.classList.toggle("phase-anticipate", phase === PHASE_ANTICIPATE);
+      cell.classList.toggle("phase-strike", phase === PHASE_STRIKE);
+      cell.classList.toggle("phase-recover", phase === PHASE_RECOVER);
+      const msEl = cell.querySelector(".ms");
+      if (msEl) {
+        msEl.textContent = Math.round(frameDurationSec(i) * 1000) + "ms " + phase;
+      }
+      cell.setAttribute("aria-label", "Frame " + (i + 1) + ", " + phase + ", " + Math.round(frameDurationSec(i) * 1000) + " milliseconds");
+      cell.setAttribute("aria-selected", selected.has(i) ? "true" : "false");
+      let tag = cell.querySelector(".tag");
+      const mark = ranged && i === loopStart ? "in" : (ranged && i === loopEnd ? "out" : (ranged && i === loopEnd + 1 ? "end" : ""));
+      if (mark) {
+        if (!tag) {
+          tag = document.createElement("span");
+          tag.className = "tag";
+          cell.appendChild(tag);
+        }
+        tag.textContent = mark;
+        tag.classList.toggle("end", mark === "end");
+      } else if (tag) {
+        tag.remove();
+      }
+    });
+    const play = stripEl.querySelector(".cell.playhead");
+    if (playing && play) play.scrollIntoView({ inline: "nearest", block: "nearest" });
+  }
+
+  function onCellClick(i, ev) {
+    const pack = current();
+    if (!pack) return;
+    if (ev.shiftKey) {
+      const a = Math.min(selectAnchor, i);
+      const b = Math.max(selectAnchor, i);
+      selected = new Set();
+      for (let n = a; n <= b; n += 1) selected.add(n);
+    } else if (ev.ctrlKey || ev.metaKey) {
+      if (selected.has(i)) selected.delete(i);
+      else selected.add(i);
+      selectAnchor = i;
+    } else {
+      selected = new Set([i]);
+      selectAnchor = i;
+    }
+    frame = i;
+    playing = false;
+    btnPlay.textContent = "Play";
+    syncScrub();
+    syncHoldUi();
+  }
+
+  function selectPack(i) {
+    if (i < 0 || i >= catalog.length) return;
+    packIndex = i;
+    frame = 0;
+    acc = 0;
+    selected = new Set();
+    selectAnchor = 0;
+    loadLoopFromPack(catalog[i]);
+    applyPackSettings(catalog[i]);
+    renderList();
+    stripDirty = true;
+    renderStrip();
+    syncScrub();
+    const pack = current();
+    if (pack && pack.error) setStatus(pack.error, true);
+    else if (pack && pack.frames.length) setStatus(statusLine(pack));
+    else setStatus("Loading " + catalog[i].title);
+  }
+
+  function statusLine(pack) {
+    const n = pack.frames.length;
+    const meta = currentMeta();
+    const ms = Math.round(frameDurationSec(frame) * 1000);
+    const phase = currentPhase(frame);
+    const curve = namedCurve(meta && meta.speedCurve);
+    const timing = curve + " · " + phase + " · " + ms + "ms";
+    if (!hasLoopRange()) return n + " frames · " + timing;
+    if (releasing) return n + " frames · release to " + n + " · " + timing;
+    if (hold && looping) return n + " frames · hold " + (loopStart + 1) + "-" + (loopEnd + 1) + " · " + timing;
+    return n + " frames · full clip · " + timing;
+  }
+
+  async function loadPack(pack) {
+    const entry = {
+      pack: pack,
+      frames: [],
+      error: "",
+    };
+    try {
+      const loaded = [];
+      const bust = Date.now();
+      for (const name of pack.frames) {
+        loaded.push(await loadImage(pack.partsDir + "/" + name + "?t=" + bust));
+      }
+      entry.frames = loaded;
+    } catch (err) {
+      entry.error = err.message || "Failed to load frames";
+    }
+    return entry;
+  }
+
+  function packScale(pack) {
+    let maxW = 1;
+    let maxH = 1;
+    pack.frames.forEach((img) => {
+      maxW = Math.max(maxW, img.width);
+      maxH = Math.max(maxH, img.height);
+    });
+    return Math.min((canvas.width * 0.86) / maxW, (canvas.height * 0.80) / maxH);
+  }
+
+  function draw() {
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#050506";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const pack = current();
+    if (!pack || !pack.frames.length) return;
+    const img = pack.frames[frame];
+    if (!img) return;
+    const pivot = pack.pack.pivot === "bottom" ? "bottom" : "center";
+    ctx.globalCompositeOperation = blend === "add" ? "lighter" : "source-over";
+    const scale = packScale(pack);
+    const cx = canvas.width / 2;
+    const ground = canvas.height * 0.82;
+    const mid = canvas.height * 0.52;
+    const dx = cx - img.width * scale / 2;
+    const dy = pivot === "bottom"
+      ? ground - img.height * scale
+      : mid - img.height * scale / 2;
+    ctx.drawImage(img, dx, dy, img.width * scale, img.height * scale);
+  }
+
+  function advanceFrame() {
+    const pack = current();
+    if (!pack || !pack.frames.length) return;
+    const lastI = lastIndex();
+    if (holdingNow()) {
+      frame = frame < loopEnd ? frame + 1 : loopStart;
+    } else if (frame < lastI) {
+      frame += 1;
+    } else if (looping && !releasing) {
+      frame = 0;
+    } else {
+      playing = false;
+      releasing = false;
+      btnPlay.textContent = "Play";
+    }
+    if (frame > lastI) frame = lastI;
+    playTick(currentPhase(frame));
+    syncScrub();
+    syncHoldUi();
+    const shown = current();
+    if (shown) setStatus(statusLine(shown));
+  }
+
+  function tick(now) {
+    const dt = last ? (now - last) / 1000 : 0;
+    last = now;
+    const pack = current();
+    if (playing && pack && pack.frames.length) {
+      acc += dt;
+      let guard = 0;
+      let step = frameDurationSec(frame);
+      while (acc >= step && guard < 24) {
+        acc -= step;
+        advanceFrame();
+        step = frameDurationSec(frame);
+        guard += 1;
+      }
+    }
+    draw();
+    requestAnimationFrame(tick);
+  }
+
+  function selectedNames() {
+    const meta = currentMeta();
+    if (!meta) return [];
+    return Array.from(selected).sort((a, b) => a - b).map((i) => meta.frames[i]).filter(Boolean);
+  }
+
+  function askConfirm(message) {
+    return new Promise((resolve) => {
+      confirmDelText.textContent = message;
+      const finish = (ok) => {
+        confirmDelYes.removeEventListener("click", onYes);
+        confirmDelNo.removeEventListener("click", onNo);
+        confirmDel.close();
+        resolve(ok);
+      };
+      const onYes = () => finish(true);
+      const onNo = () => finish(false);
+      confirmDelYes.addEventListener("click", onYes);
+      confirmDelNo.addEventListener("click", onNo);
+      confirmDel.addEventListener("cancel", () => finish(false), { once: true });
+      confirmDel.showModal();
+    });
+  }
+
+  function askDelete(count, title) {
+    return askConfirm(
+      "Delete " + count + " frame(s) from " + title + "? This removes them from the pack."
+    );
+  }
+
+  function showEmptyLibrary() {
+    packIndex = 0;
+    frame = 0;
+    selected = new Set();
+    loopStart = null;
+    loopEnd = null;
+    hold = false;
+    releasing = false;
+    titleEl.textContent = "No pack selected";
+    hintEl.textContent = "";
+    stripEl.innerHTML = "";
+    emptyEl.classList.remove("hidden");
+    emptyEl.textContent = "No packs left. Ingest a sheet to add one.";
+    setStatus("Library empty");
+    renderList();
+    syncScrub();
+    syncHoldUi();
+  }
+
+  async function deletePack(i) {
+    const pack = catalog[i];
+    if (!pack) return;
+    const ok = await askConfirm(
+      "Delete pack " + pack.title + "? This removes the whole pack from the library. Raw sheets stay in raw spritesheets."
+    );
+    if (!ok) return;
+    if (writable) {
+      try {
+        const res = await fetch("/api/pack/remove", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: pack.id }),
+        });
+        const data = await res.json().catch(() => ({ error: "Could not delete pack" }));
+        if (!res.ok) throw new Error(data.error || "Could not delete pack");
+      } catch (err) {
+        setStatus(err.message || "Could not delete pack", true);
+        return;
+      }
+    } else {
+      setStatus("Preview only. Run serve_preview.py on 8791 to save pack deletes.", true);
+      return;
+    }
+    catalog.splice(i, 1);
+    cache.splice(i, 1);
+    if (!catalog.length) {
+      showEmptyLibrary();
+      return;
+    }
+    const next = Math.min(i, catalog.length - 1);
+    selectPack(next);
+    setStatus("Deleted " + pack.title);
+  }
+
+  async function applyPackUpdate(entry) {
+    const keep = Math.min(frame, Math.max(0, entry.frames.length - 1));
+    catalog[packIndex] = entry;
+    cache[packIndex] = await loadPack(entry);
+    selected = new Set();
+    selectAnchor = 0;
+    frame = keep;
+    loadLoopFromPack(entry);
+    applyPackSettings(entry);
+    renderList();
+    renderStrip();
+    syncScrub();
+    const pack = current();
+    setStatus(pack && pack.error ? pack.error : statusLine(pack || { frames: [] }), !!(pack && pack.error));
+  }
+
+  function deleteInMemory(names) {
+    const pack = current();
+    const meta = currentMeta();
+    const drop = new Set(names);
+    const keepIdx = [];
+    meta.frames.forEach((name, i) => {
+      if (!drop.has(name)) keepIdx.push(i);
+    });
+    const oldLoop = hasLoopRange() ? [loopStart, loopEnd] : null;
+    meta.frames = keepIdx.map((i) => meta.frames[i]);
+    meta.frameCount = meta.frames.length;
+    pack.frames = keepIdx.map((i) => pack.frames[i]);
+    if (oldLoop) {
+      const mappedStart = keepIdx.filter((i) => i >= oldLoop[0]).map((i) => keepIdx.indexOf(i));
+      const mappedEnd = keepIdx.filter((i) => i <= oldLoop[1]).map((i) => keepIdx.indexOf(i));
+      if (mappedStart.length && mappedEnd.length) {
+        loopStart = Math.min.apply(null, mappedStart);
+        loopEnd = Math.max.apply(null, mappedEnd);
+        meta.loopStart = loopStart;
+        meta.loopEnd = loopEnd;
+      } else {
+        loopStart = null;
+        loopEnd = null;
+        hold = false;
+        delete meta.loopStart;
+        delete meta.loopEnd;
+      }
+    }
+    if (frame >= pack.frames.length) frame = Math.max(0, pack.frames.length - 1);
+    selected = new Set();
+    renderList();
+    renderStrip();
+    syncScrub();
+  }
+
+  async function deleteSelected() {
+    const meta = currentMeta();
+    const pack = current();
+    const names = selectedNames();
+    if (!meta || !pack || !names.length) return;
+    if (names.length >= pack.frames.length) {
+      setStatus("Keep at least one frame", true);
+      return;
+    }
+    const ok = await askDelete(names.length, meta.title);
+    if (!ok) return;
+    if (writable) {
+      try {
+        const res = await fetch("/api/pack/delete", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: meta.id, frames: names }),
+        });
+        const data = await res.json().catch(() => ({ error: "Delete failed" }));
+        if (!res.ok) throw new Error(data.error || "Delete failed");
+        await applyPackUpdate(data.pack);
+        setStatus("Deleted " + names.length + " frame(s)");
+      } catch (err) {
+        setStatus(err.message || "Delete failed", true);
+      }
+      return;
+    }
+    deleteInMemory(names);
+    setStatus("Removed in this preview only. Run serve_preview.py on 8791 to save.", true);
+  }
+
+  async function persistLoop(start, end) {
+    const meta = currentMeta();
+    if (!meta) return;
+    loopStart = start;
+    loopEnd = end;
+    hold = start !== null && end !== null;
+    if (hold) {
+      meta.loopStart = start;
+      meta.loopEnd = end;
+      looping = true;
+      btnLoop.classList.add("active");
+      btnLoop.textContent = "Loop";
+    } else {
+      delete meta.loopStart;
+      delete meta.loopEnd;
+    }
+    renderList();
+    syncStripPlayhead();
+    syncHoldUi();
+    if (!writable) {
+      setStatus(hold
+        ? "Hold " + (start + 1) + "-" + (end + 1) + " in this preview only. Run serve_preview.py on 8791 to save."
+        : "Loop range cleared in this preview only.", true);
+      return;
+    }
+    try {
+      const res = await fetch("/api/pack/loop", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: meta.id, loopStart: start, loopEnd: end }),
+      });
+      const data = await res.json().catch(() => ({ error: "Could not save loop" }));
+      if (!res.ok) throw new Error(data.error || "Could not save loop");
+      catalog[packIndex] = data.pack;
+      cache[packIndex].pack = data.pack;
+      loadLoopFromPack(data.pack);
+      renderList();
+      syncStripPlayhead();
+      syncHoldUi();
+      setStatus(statusLine(cache[packIndex]));
+    } catch (err) {
+      setStatus(err.message || "Could not save loop", true);
+    }
+  }
+
+  function loopSelected() {
+    if (!selected.size) return;
+    const idxs = Array.from(selected);
+    persistLoop(Math.min.apply(null, idxs), Math.max.apply(null, idxs));
+  }
+
+  function startRelease() {
+    if (!hasOutro()) return;
+    releasing = true;
+    playing = true;
+    btnPlay.textContent = "Pause";
+    if (frame >= lastIndex()) {
+      frame = Math.min(loopEnd + 1, lastIndex());
+    }
+    syncHoldUi();
+    const pack = current();
+    if (pack) setStatus(statusLine(pack));
+  }
+
+  btnPlay.addEventListener("click", () => {
+    playing = !playing;
+    btnPlay.textContent = playing ? "Pause" : "Play";
+    const pack = current();
+    if (playing && pack && pack.frames.length && frame >= lastIndex()) {
+      frame = 0;
+      releasing = false;
+    }
+  });
+  btnBlend.addEventListener("click", () => {
+    blend = blend === "add" ? "normal" : "add";
+    btnBlend.textContent = "Blend: " + blend;
+  });
+  btnLoop.addEventListener("click", () => {
+    looping = !looping;
+    btnLoop.classList.toggle("active", looping);
+    btnLoop.textContent = looping ? "Loop" : "Once";
+    if (looping) releasing = false;
+    syncHoldUi();
+  });
+  btnHold.addEventListener("click", () => {
+    if (!hasLoopRange()) return;
+    hold = !hold;
+    if (hold) {
+      looping = true;
+      releasing = false;
+      btnLoop.classList.add("active");
+      btnLoop.textContent = "Loop";
+    }
+    syncHoldUi();
+    syncStripPlayhead();
+    const pack = current();
+    if (pack) setStatus(statusLine(pack));
+  });
+  btnRelease.addEventListener("click", startRelease);
+  btnLoopRange.addEventListener("click", loopSelected);
+  btnClearLoop.addEventListener("click", () => persistLoop(null, null));
+  btnDelete.addEventListener("click", () => { deleteSelected(); });
+  fpsInput.addEventListener("input", () => {
+    fps = Number(fpsInput.value);
+    fpsVal.textContent = String(fps);
+    syncStripPlayhead();
+    const pack = current();
+    if (pack) setStatus(statusLine(pack));
+  });
+
+  function applyCurveLocal(name) {
+    const meta = currentMeta();
+    if (!meta) return;
+    meta.speedCurve = namedCurve(name);
+    if (meta.speedCurve !== CURVE_ATTACK) {
+      delete meta.framePhases;
+    } else if (!Array.isArray(meta.framePhases)) {
+      const hood = HAZARD_HOOD_PHASES[meta.id] || (String(meta.id || "").indexOf("hazard-hood-") === 0 && meta.frames.length === 9
+        ? HAZARD_HOOD_PHASES["hazard-hood-bomb"]
+        : null);
+      if (hood) meta.framePhases = hood.slice();
+    }
+    const timing = resolveTiming(meta, meta.frames.length, loopPair());
+    meta.framePhases = timing.framePhases;
+    meta.frameScales = timing.frameScales;
+    meta.frameDurations = timing.frameDurations;
+    curveSelect.value = meta.speedCurve;
+    renderList();
+    syncStripPlayhead();
+    const pack = current();
+    if (pack) setStatus(statusLine(pack));
+  }
+
+  async function persistCurve(name) {
+    const meta = currentMeta();
+    if (!meta) return;
+    applyCurveLocal(name);
+    if (!writable) {
+      setStatus("Curve " + name + " in this preview only. Run serve_preview.py on 8791 to save.", true);
+      return;
+    }
+    try {
+      const res = await fetch("/api/pack/curve", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: meta.id,
+          speedCurve: name
+        }),
+      });
+      const data = await res.json().catch(() => ({ error: "Could not save curve" }));
+      if (!res.ok) throw new Error(data.error || "Could not save curve");
+      catalog[packIndex] = data.pack;
+      cache[packIndex].pack = data.pack;
+      curveSelect.value = namedCurve(data.pack.speedCurve);
+      renderList();
+      syncStripPlayhead();
+      syncHoldUi();
+      setStatus(statusLine(cache[packIndex]));
+    } catch (err) {
+      setStatus(err.message || "Could not save curve", true);
+    }
+  }
+
+  curveSelect.addEventListener("change", () => {
+    persistCurve(curveSelect.value);
+  });
+  btnTicks.addEventListener("click", () => {
+    ticksOn = !ticksOn;
+    btnTicks.classList.toggle("active", ticksOn);
+    btnTicks.setAttribute("aria-pressed", ticksOn ? "true" : "false");
+    if (ticksOn && !audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (Ctx) audioCtx = new Ctx();
+    }
+    if (audioCtx && audioCtx.state === "suspended") audioCtx.resume();
+  });
+  scrub.addEventListener("input", () => {
+    frame = Number(scrub.value);
+    playing = false;
+    btnPlay.textContent = "Play";
+    syncScrub();
+  });
+  document.addEventListener("keydown", (ev) => {
+    if (confirmDel.open) return;
+    if (ev.key === " ") { ev.preventDefault(); btnPlay.click(); }
+    if (ev.key === "ArrowDown" || ev.key === "j") selectPack(packIndex + 1);
+    if (ev.key === "ArrowUp" || ev.key === "k") selectPack(packIndex - 1);
+    const pack = current();
+    if (!pack || !pack.frames.length) return;
+    if (ev.key === "Delete" || ev.key === "Backspace") {
+      ev.preventDefault();
+      deleteSelected();
+      return;
+    }
+    if (ev.key === "r" || ev.key === "R") {
+      ev.preventDefault();
+      startRelease();
+      return;
+    }
+    if (ev.key === "ArrowRight") {
+      frame = Math.min(pack.frames.length - 1, frame + 1);
+      playing = false;
+      btnPlay.textContent = "Play";
+      selected = new Set([frame]);
+      selectAnchor = frame;
+      syncScrub();
+      syncHoldUi();
+    }
+    if (ev.key === "ArrowLeft") {
+      frame = Math.max(0, frame - 1);
+      playing = false;
+      btnPlay.textContent = "Play";
+      selected = new Set([frame]);
+      selectAnchor = frame;
+      syncScrub();
+      syncHoldUi();
+    }
+  });
+
+  async function probeWritable() {
+    try {
+      const res = await fetch("/api/status", { cache: "no-store" });
+      if (!res.ok) return false;
+      const data = await res.json();
+      return !!data.writable;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  async function boot() {
+    if (!catalog.length) {
+      loadingEl.classList.add("hidden");
+      emptyEl.classList.remove("hidden");
+      emptyEl.textContent = "No catalog. Run ingest_sheet.py then rebuild_catalog.py.";
+      setStatus("Catalog missing", true);
+      return;
+    }
+    writable = await probeWritable();
+    if (!writable) {
+      stripHint.textContent = "Preview only. Start serve_preview.py on 8791 to save deletes and loop ranges.";
+    }
+    renderList();
+    applyPackSettings(catalog[0]);
+    setStatus("Loading packs");
+    const loaded = await Promise.all(catalog.map(loadPack));
+    loaded.forEach((entry) => cache.push(entry));
+    loadingEl.classList.add("hidden");
+    selectPack(0);
+    if (cache.some((p) => p.error)) {
+      const failed = cache.filter((p) => p.error).length;
+      setStatus(failed + " pack(s) failed to load", true);
+    }
+  }
+
+  boot();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

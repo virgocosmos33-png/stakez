@@ -1,0 +1,144 @@
+{
+  "id": "riveted-plank-door-swing",
+  "title": "Riveted Plank Door Swing",
+  "source_uuid": "",
+  "source": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\VFXPACKSHEETS\\riveted-plank-door-swing\\riveted-plank-door-swing-sheet.png",
+  "source_size": {
+    "w": 3072,
+    "h": 2048
+  },
+  "alpha_source": "existing_alpha",
+  "fps": 16,
+  "blend": "normal",
+  "pivot": "bottom",
+  "island_threshold": 12,
+  "saved_count": 9,
+  "kind": "sequence",
+  "source_sheet": "",
+  "peak_frame": "frame_01.png",
+  "parts": [
+    {
+      "index": 1,
+      "filename": "frame_01.png",
+      "bbox": {
+        "x": 10,
+        "y": 9,
+        "w": 312,
+        "h": 323
+      },
+      "area": 400568,
+      "width": 622,
+      "height": 644
+    },
+    {
+      "index": 2,
+      "filename": "frame_02.png",
+      "bbox": {
+        "x": 380,
+        "y": 0,
+        "w": 182,
+        "h": 344
+      },
+      "area": 246884,
+      "width": 362,
+      "height": 682
+    },
+    {
+      "index": 3,
+      "filename": "frame_03.png",
+      "bbox": {
+        "x": 667,
+        "y": 0,
+        "w": 179,
+        "h": 354
+      },
+      "area": 248154,
+      "width": 354,
+      "height": 701
+    },
+    {
+      "index": 4,
+      "filename": "frame_04.png",
+      "bbox": {
+        "x": 968,
+        "y": 0,
+        "w": 168,
+        "h": 357
+      },
+      "area": 236472,
+      "width": 334,
+      "height": 708
+    },
+    {
+      "index": 5,
+      "filename": "frame_05.png",
+      "bbox": {
+        "x": 1292,
+        "y": 0,
+        "w": 164,
+        "h": 358
+      },
+      "area": 230040,
+      "width": 324,
+      "height": 710
+    },
+    {
+      "index": 6,
+      "filename": "frame_06.png",
+      "bbox": {
+        "x": 73,
+        "y": 351,
+        "w": 143,
+        "h": 362
+      },
+      "area": 205770,
+      "width": 285,
+      "height": 722
+    },
+    {
+      "index": 7,
+      "filename": "frame_07.png",
+      "bbox": {
+        "x": 442,
+        "y": 354,
+        "w": 122,
+        "h": 357
+      },
+      "area": 172304,
+      "width": 242,
+      "height": 712
+    },
+    {
+      "index": 8,
+      "filename": "frame_08.png",
+      "bbox": {
+        "x": 732,
+        "y": 361,
+        "w": 122,
+        "h": 350
+      },
+      "area": 168218,
+      "width": 241,
+      "height": 698
+    },
+    {
+      "index": 9,
+      "filename": "frame_09.png",
+      "bbox": {
+        "x": 1031,
+        "y": 366,
+        "w": 120,
+        "h": 346
+      },
+      "area": 161460,
+      "width": 234,
+      "height": 690
+    }
+  ],
+  "audit": "manual keep/split/merge, crumbs removed, LTR TTB sequence",
+  "upscale": {
+    "tool": "recraft-upscale-crisp",
+    "model": "recraft-upscale-crisp",
+    "scale": 2
+  }
+}

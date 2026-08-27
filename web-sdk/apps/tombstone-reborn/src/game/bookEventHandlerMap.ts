@@ -235,11 +235,18 @@ const applySplit = async (
 		...cells.map(({ reel, row }) => ({ reel, row })),
 		...sources,
 	];
-	await eventEmitter.broadcastAsync({
-		type: 'targetLockShow',
-		cells: lockCells,
-		tone,
-	});
+	if (tone === 'split') {
+		await eventEmitter.broadcastAsync({
+			type: 'cellFireShow',
+			cells: lockCells,
+		});
+	} else {
+		await eventEmitter.broadcastAsync({
+			type: 'targetLockShow',
+			cells: lockCells,
+			tone,
+		});
+	}
 
 	const newBoard = rawBoardCopy();
 	cells.forEach(({ reel, row, multiplier }) => {
@@ -280,7 +287,9 @@ const applySplit = async (
 	await fxHold();
 };
 
-/** Settle those cells to WILD, then flip each card so the bottle is on the back. */
+/** Hide the reel face, settle to WILD under that cover, then flip the overlay.
+ *  Settling first without a cover lets the new WILD peek (and the flip then
+ *  paints a second copy on top). Same grammar as nudge: swap under a cover. */
 const playWildFlip = async (
 	cells: { reel: number; row: number; from?: SymbolName }[],
 	opts?: { shoot?: boolean; afterShot?: boolean },
@@ -294,20 +303,26 @@ const playWildFlip = async (
 			stateGameDerived.boardRaw()[cell.reel]?.[cell.row]?.name ??
 			'L1') as SymbolName,
 	}));
-	const newBoard = rawBoardCopy();
-	faces.forEach(({ reel, row }) => {
-		if (newBoard[reel]?.[row]) {
-			newBoard[reel][row] = { ...newBoard[reel][row], name: 'W' };
-		}
-	});
-	eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
-	parkCells(faces);
-	await eventEmitter.broadcastAsync({
-		type: 'wildFlipShow',
-		cells: faces,
-		shoot: opts?.shoot,
-		afterShot: opts?.afterShot,
-	});
+	stateGame.wildFlipCover = faces.map(({ reel, row }) => ({ reel, row }));
+	await tick();
+	try {
+		const newBoard = rawBoardCopy();
+		faces.forEach(({ reel, row }) => {
+			if (newBoard[reel]?.[row]) {
+				newBoard[reel][row] = { ...newBoard[reel][row], name: 'W' };
+			}
+		});
+		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
+		parkCells(faces);
+		await eventEmitter.broadcastAsync({
+			type: 'wildFlipShow',
+			cells: faces,
+			shoot: opts?.shoot,
+			afterShot: opts?.afterShot,
+		});
+	} finally {
+		stateGame.wildFlipCover = [];
+	}
 };
 
 /** GUNSMOKE: each pistol hit stamps that cell and flips it to WILD, then the next. */
@@ -436,6 +451,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		stateGame.nudgeCoverReel = null;
 		stateGame.nudgeCoverReels = [];
 		stateGame.nudgeCoverCells = [];
+		stateGame.wildFlipCover = [];
 		stateGame.pendingNudges = nudgeWaysInReveal(bookEvent, bookEvents).map((nudgeEv) => ({
 			reel: nudgeEv.reel,
 			fullReel: nudgeEv.fullReel,

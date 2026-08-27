@@ -91,7 +91,7 @@
 				stopBonusBgm();
 				return;
 			}
-			if (stopThemed(name)) return;
+			stopThemed(name);
 			sound.stop({ name });
 		},
 		soundFade: async ({ name, duration, from, to }) => {

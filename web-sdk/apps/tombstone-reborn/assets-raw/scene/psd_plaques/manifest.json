@@ -1,0 +1,1576 @@
+{
+  "source": "C:\\Users\\Emex33\\Desktop\\western_scene2.psd",
+  "mtime": 1787616387.7099,
+  "canvas": [
+    1342,
+    892
+  ],
+  "scale": 2,
+  "plaques": {
+    "ways": {
+      "well1": [
+        898,
+        170,
+        1013,
+        220
+      ],
+      "well2": [
+        1796,
+        340,
+        2026,
+        440
+      ],
+      "pocket": {
+        "kind": "no-hole-inset",
+        "local": [
+          18,
+          15,
+          133,
+          69
+        ],
+        "bbox1": [
+          898,
+          166,
+          1013,
+          220
+        ],
+        "opaque_frac": 0.5346105329549038
+      },
+      "chains": [
+        {
+          "id": "ways-0",
+          "layer": "Layer 8 copy 5",
+          "parent": "chains upframe",
+          "bbox1": [
+            893,
+            93,
+            909,
+            161
+          ],
+          "bbox2": [
+            1786,
+            186,
+            1818,
+            322
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_0_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_0_2x.png",
+          "size1": [
+            16,
+            68
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_ways_0.png"
+        },
+        {
+          "id": "ways-1",
+          "layer": "Layer 8 copy 5",
+          "parent": "chains upframe",
+          "bbox1": [
+            893,
+            213,
+            909,
+            299
+          ],
+          "bbox2": [
+            1786,
+            426,
+            1818,
+            598
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_1_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_1_2x.png",
+          "size1": [
+            16,
+            86
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_ways_1.png"
+        },
+        {
+          "id": "ways-2",
+          "layer": "Layer 8 copy 9 + Layer 8 copy 10",
+          "parent": "chains upframe",
+          "bbox1": [
+            995,
+            214,
+            1011,
+            360
+          ],
+          "bbox2": [
+            1990,
+            428,
+            2022,
+            720
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_2_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_2_2x.png",
+          "size1": [
+            16,
+            146
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_ways_2.png"
+        },
+        {
+          "id": "ways-3",
+          "layer": "Layer 8 copy 6",
+          "parent": "chains upframe",
+          "bbox1": [
+            996,
+            93,
+            1012,
+            161
+          ],
+          "bbox2": [
+            1992,
+            186,
+            2024,
+            322
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_3_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_ways_3_2x.png",
+          "size1": [
+            16,
+            68
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_ways_3.png"
+        }
+      ],
+      "box": {
+        "layer": "Layer 4",
+        "bbox1": [
+          880,
+          151,
+          1031,
+          235
+        ],
+        "bbox2": [
+          1760,
+          302,
+          2062,
+          470
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\ways_box_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\ways_box_2x.png",
+        "size1": [
+          151,
+          84
+        ]
+      },
+      "pallet": {
+        "layer": "Layer 5",
+        "bbox1": [
+          882,
+          141,
+          1025,
+          174
+        ],
+        "bbox2": [
+          1764,
+          282,
+          2050,
+          348
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\ways_pallet_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\ways_pallet_2x.png",
+        "size1": [
+          143,
+          33
+        ]
+      }
+    },
+    "multi": {
+      "well1": [
+        753,
+        169,
+        868,
+        220
+      ],
+      "well2": [
+        1506,
+        338,
+        1736,
+        440
+      ],
+      "pocket": {
+        "kind": "no-hole-inset",
+        "local": [
+          18,
+          15,
+          133,
+          69
+        ],
+        "bbox1": [
+          753,
+          166,
+          868,
+          220
+        ],
+        "opaque_frac": 0.5346105329549038
+      },
+      "chains": [
+        {
+          "id": "multi-0",
+          "layer": "Layer 8 copy 3",
+          "parent": "chains upframe",
+          "bbox1": [
+            750,
+            91,
+            766,
+            160
+          ],
+          "bbox2": [
+            1500,
+            182,
+            1532,
+            320
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_multi_0_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_multi_0_2x.png",
+          "size1": [
+            16,
+            69
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_multi_0.png"
+        },
+        {
+          "id": "multi-1",
+          "layer": "Layer 8 copy 4",
+          "parent": "chains upframe",
+          "bbox1": [
+            850,
+            93,
+            866,
+            159
+          ],
+          "bbox2": [
+            1700,
+            186,
+            1732,
+            318
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_multi_1_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_multi_1_2x.png",
+          "size1": [
+            16,
+            66
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_multi_1.png"
+        }
+      ],
+      "box": {
+        "layer": "Layer 4 copy",
+        "bbox1": [
+          735,
+          151,
+          886,
+          235
+        ],
+        "bbox2": [
+          1470,
+          302,
+          1772,
+          470
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\multi_box_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\multi_box_2x.png",
+        "size1": [
+          151,
+          84
+        ]
+      },
+      "pallet": {
+        "layer": "Layer 6",
+        "bbox1": [
+          734,
+          141,
+          880,
+          173
+        ],
+        "bbox2": [
+          1468,
+          282,
+          1760,
+          346
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\multi_pallet_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\multi_pallet_2x.png",
+        "size1": [
+          146,
+          32
+        ]
+      }
+    },
+    "win": {
+      "well1": [
+        753,
+        662,
+        868,
+        715
+      ],
+      "well2": [
+        1506,
+        1324,
+        1736,
+        1430
+      ],
+      "pocket": {
+        "kind": "no-hole-inset",
+        "local": [
+          18,
+          15,
+          133,
+          68
+        ],
+        "bbox1": [
+          753,
+          662,
+          868,
+          715
+        ],
+        "opaque_frac": 0.537700470757201
+      },
+      "chains": [
+        {
+          "id": "win-0",
+          "layer": "Layer 8 copy 7",
+          "parent": "win frame chains",
+          "bbox1": [
+            747,
+            577,
+            763,
+            651
+          ],
+          "bbox2": [
+            1494,
+            1154,
+            1526,
+            1302
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_win_0_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_win_0_2x.png",
+          "size1": [
+            16,
+            74
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_win_0.png"
+        },
+        {
+          "id": "win-1",
+          "layer": "Layer 8 copy 8",
+          "parent": "win frame chains",
+          "bbox1": [
+            852,
+            577,
+            868,
+            651
+          ],
+          "bbox2": [
+            1704,
+            1154,
+            1736,
+            1302
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_win_1_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_win_1_2x.png",
+          "size1": [
+            16,
+            74
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_win_1.png"
+        }
+      ],
+      "box": {
+        "layer": "Layer 4 copy 2",
+        "bbox1": [
+          735,
+          647,
+          886,
+          730
+        ],
+        "bbox2": [
+          1470,
+          1294,
+          1772,
+          1460
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\win_box_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\win_box_2x.png",
+        "size1": [
+          151,
+          83
+        ]
+      },
+      "pallet": {
+        "layer": "Layer 7",
+        "bbox1": [
+          734,
+          632,
+          879,
+          661
+        ],
+        "bbox2": [
+          1468,
+          1264,
+          1758,
+          1322
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\win_pallet_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\win_pallet_2x.png",
+        "size1": [
+          145,
+          29
+        ]
+      }
+    },
+    "spins": {
+      "well1": [
+        905,
+        662,
+        1020,
+        715
+      ],
+      "well2": [
+        1810,
+        1324,
+        2040,
+        1430
+      ],
+      "pocket": {
+        "kind": "no-hole-inset",
+        "local": [
+          18,
+          15,
+          133,
+          68
+        ],
+        "bbox1": [
+          905,
+          662,
+          1020,
+          715
+        ],
+        "opaque_frac": 0.537700470757201
+      },
+      "chains": [
+        {
+          "id": "spins-0",
+          "layer": "Layer 8 copy 7",
+          "parent": "free spins frame",
+          "bbox1": [
+            896,
+            577,
+            912,
+            648
+          ],
+          "bbox2": [
+            1792,
+            1154,
+            1824,
+            1296
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_spins_0_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_spins_0_2x.png",
+          "size1": [
+            16,
+            71
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_spins_0.png"
+        },
+        {
+          "id": "spins-1",
+          "layer": "Layer 8 copy 8 + Layer 8 copy 12",
+          "parent": "free spins frame",
+          "bbox1": [
+            996,
+            515,
+            1012,
+            651
+          ],
+          "bbox2": [
+            1992,
+            1030,
+            2024,
+            1302
+          ],
+          "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_spins_1_native.png",
+          "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_spins_1_2x.png",
+          "size1": [
+            16,
+            136
+          ],
+          "game": "assets/sprites/tombstone/plaque_chain_spins_1.png"
+        }
+      ],
+      "box": {
+        "layer": "Layer 4 copy 2",
+        "bbox1": [
+          887,
+          647,
+          1038,
+          730
+        ],
+        "bbox2": [
+          1774,
+          1294,
+          2076,
+          1460
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\spins_box_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\spins_box_2x.png",
+        "size1": [
+          151,
+          83
+        ]
+      },
+      "pallet": {
+        "layer": "Layer 9",
+        "bbox1": [
+          888,
+          630,
+          1025,
+          663
+        ],
+        "bbox2": [
+          1776,
+          1260,
+          2050,
+          1326
+        ],
+        "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\spins_pallet_native.png",
+        "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\spins_pallet_2x.png",
+        "size1": [
+          137,
+          33
+        ]
+      }
+    }
+  },
+  "board_chains": [
+    {
+      "id": "board-0",
+      "layer": "Layer 8 copy 11 + Layer 8",
+      "parent": "chains upframe",
+      "bbox1": [
+        349,
+        93,
+        365,
+        244
+      ],
+      "bbox2": [
+        698,
+        186,
+        730,
+        488
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_board_0_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_board_0_2x.png",
+      "size1": [
+        16,
+        151
+      ],
+      "game": "assets/sprites/board/hang_chain_0.png"
+    },
+    {
+      "id": "board-1",
+      "layer": "Layer 8 copy",
+      "parent": "chains upframe",
+      "bbox1": [
+        453,
+        91,
+        469,
+        163
+      ],
+      "bbox2": [
+        906,
+        182,
+        938,
+        326
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_board_1_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_board_1_2x.png",
+      "size1": [
+        16,
+        72
+      ],
+      "game": "assets/sprites/board/hang_chain_1.png"
+    },
+    {
+      "id": "board-2",
+      "layer": "Layer 8 copy 2",
+      "parent": "chains upframe",
+      "bbox1": [
+        686,
+        93,
+        702,
+        163
+      ],
+      "bbox2": [
+        1372,
+        186,
+        1404,
+        326
+      ],
+      "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_board_2_native.png",
+      "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\chain_board_2_2x.png",
+      "size1": [
+        16,
+        70
+      ],
+      "game": "assets/sprites/board/hang_chain_2.png"
+    }
+  ],
+  "frame": {
+    "layer": "MAIN FRAME",
+    "bbox1": [
+      307,
+      136,
+      1035,
+      750
+    ],
+    "bbox2": [
+      614,
+      272,
+      2070,
+      1500
+    ],
+    "sha1": "c1e31f02111d",
+    "sha1_live": "c0ba6085dec4",
+    "pocket": {
+      "kind": "transparent-hole",
+      "local": [
+        3,
+        52,
+        676,
+        576
+      ],
+      "bbox1": [
+        310,
+        188,
+        983,
+        712
+      ],
+      "opaque_frac": 0.24549208934388086
+    },
+    "pocket2": [
+      620,
+      376,
+      1966,
+      1424
+    ],
+    "native": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\frame_native.png",
+    "px2": "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-raw\\scene\\psd_plaques\\frame_2x.png",
+    "size1": [
+      728,
+      614
+    ]
+  },
+  "beam": {
+    "bbox1": [
+      18,
+      53,
+      1329,
+      129
+    ],
+    "bbox2": [
+      36,
+      106,
+      2658,
+      258
+    ]
+  },
+  "lamps": {
+    "L": {
+      "hangX": 258,
+      "hangY": 146,
+      "left": 196,
+      "top": 146,
+      "right": 320,
+      "bottom": 610,
+      "bbox1": [
+        98,
+        73,
+        160,
+        305
+      ]
+    },
+    "R": {
+      "hangX": 2438,
+      "hangY": 146,
+      "left": 2376,
+      "top": 146,
+      "right": 2500,
+      "bottom": 610,
+      "bbox1": [
+        1188,
+        73,
+        1250,
+        305
+      ]
+    }
+  },
+  "layers": [
+    {
+      "name": "background redroom",
+      "parent": "",
+      "bbox": [
+        0,
+        0,
+        1342,
+        892
+      ]
+    },
+    {
+      "name": "post_R",
+      "parent": "entrance",
+      "bbox": [
+        1209,
+        39,
+        1394,
+        769
+      ]
+    },
+    {
+      "name": "post_R",
+      "parent": "entrance",
+      "bbox": [
+        -54,
+        40,
+        131,
+        770
+      ]
+    },
+    {
+      "name": "beam",
+      "parent": "entrance",
+      "bbox": [
+        18,
+        53,
+        1329,
+        129
+      ]
+    },
+    {
+      "name": "rock_02",
+      "parent": "props",
+      "bbox": [
+        986,
+        810,
+        1029,
+        840
+      ]
+    },
+    {
+      "name": "rock",
+      "parent": "props",
+      "bbox": [
+        1012,
+        852,
+        1038,
+        867
+      ]
+    },
+    {
+      "name": "rock_03",
+      "parent": "props",
+      "bbox": [
+        993,
+        826,
+        1057,
+        854
+      ]
+    },
+    {
+      "name": "rocks",
+      "parent": "props",
+      "bbox": [
+        382,
+        729,
+        519,
+        775
+      ]
+    },
+    {
+      "name": "shrub",
+      "parent": "props",
+      "bbox": [
+        1029,
+        770,
+        1099,
+        834
+      ]
+    },
+    {
+      "name": "grass_03",
+      "parent": "props",
+      "bbox": [
+        820,
+        675,
+        1007,
+        798
+      ]
+    },
+    {
+      "name": "grass_02",
+      "parent": "props",
+      "bbox": [
+        1315,
+        569,
+        1342,
+        610
+      ]
+    },
+    {
+      "name": "rocks_02",
+      "parent": "props",
+      "bbox": [
+        57,
+        761,
+        160,
+        825
+      ]
+    },
+    {
+      "name": "grass",
+      "parent": "props",
+      "bbox": [
+        1125,
+        788,
+        1169,
+        842
+      ]
+    },
+    {
+      "name": "cowboy_hat",
+      "parent": "props",
+      "bbox": [
+        954,
+        746,
+        1125,
+        851
+      ]
+    },
+    {
+      "name": "barrel",
+      "parent": "props",
+      "bbox": [
+        1232,
+        589,
+        1342,
+        798
+      ]
+    },
+    {
+      "name": "lantern_dim",
+      "parent": "props",
+      "bbox": [
+        1283,
+        459,
+        1342,
+        610
+      ]
+    },
+    {
+      "name": "wagon_wheel",
+      "parent": "props",
+      "bbox": [
+        131,
+        647,
+        333,
+        857
+      ]
+    },
+    {
+      "name": "tombstone",
+      "parent": "props",
+      "bbox": [
+        1041,
+        611,
+        1297,
+        889
+      ]
+    },
+    {
+      "name": "RED FILTER",
+      "parent": "",
+      "bbox": [
+        -322,
+        -114,
+        1363,
+        1016
+      ]
+    },
+    {
+      "name": "Layer 2",
+      "parent": "board",
+      "bbox": [
+        205,
+        201,
+        708,
+        679
+      ]
+    },
+    {
+      "name": "Layer 2 copy",
+      "parent": "board",
+      "bbox": [
+        683,
+        201,
+        1186,
+        679
+      ]
+    },
+    {
+      "name": "chain_02",
+      "parent": "board",
+      "bbox": [
+        219,
+        125,
+        263,
+        319
+      ]
+    },
+    {
+      "name": "chain_02 copy",
+      "parent": "board",
+      "bbox": [
+        1135,
+        106,
+        1169,
+        296
+      ]
+    },
+    {
+      "name": "skull",
+      "parent": "",
+      "bbox": [
+        4,
+        674,
+        205,
+        875
+      ]
+    },
+    {
+      "name": "signpost",
+      "parent": "group 1",
+      "bbox": [
+        18,
+        390,
+        205,
+        679
+      ]
+    },
+    {
+      "name": "postsign",
+      "parent": "group 1",
+      "bbox": [
+        0,
+        292,
+        305,
+        892
+      ]
+    },
+    {
+      "name": "tellnotales",
+      "parent": "group 1",
+      "bbox": [
+        47,
+        627,
+        186,
+        671
+      ]
+    },
+    {
+      "name": "deadman",
+      "parent": "group 1",
+      "bbox": [
+        49,
+        557,
+        188,
+        611
+      ]
+    },
+    {
+      "name": "beware2",
+      "parent": "group 1",
+      "bbox": [
+        55,
+        498,
+        173,
+        546
+      ]
+    },
+    {
+      "name": "beware1",
+      "parent": "group 1",
+      "bbox": [
+        47,
+        424,
+        167,
+        478
+      ]
+    },
+    {
+      "name": "right  hanging lamp",
+      "parent": "",
+      "bbox": [
+        1188,
+        73,
+        1250,
+        305
+      ]
+    },
+    {
+      "name": "left hanging lamp",
+      "parent": "",
+      "bbox": [
+        98,
+        73,
+        160,
+        305
+      ]
+    },
+    {
+      "name": "MAIN FRAME",
+      "parent": "",
+      "bbox": [
+        307,
+        136,
+        1035,
+        750
+      ]
+    },
+    {
+      "name": "Layer 4",
+      "parent": "ways frame",
+      "bbox": [
+        880,
+        151,
+        1031,
+        235
+      ]
+    },
+    {
+      "name": "Layer 5",
+      "parent": "ways frame",
+      "bbox": [
+        882,
+        141,
+        1025,
+        174
+      ]
+    },
+    {
+      "name": "Layer 4 copy",
+      "parent": "multi frame",
+      "bbox": [
+        735,
+        151,
+        886,
+        235
+      ]
+    },
+    {
+      "name": "Layer 6",
+      "parent": "multi frame",
+      "bbox": [
+        734,
+        141,
+        880,
+        173
+      ]
+    },
+    {
+      "name": "Layer 4 copy 2",
+      "parent": "win frame",
+      "bbox": [
+        735,
+        647,
+        886,
+        730
+      ]
+    },
+    {
+      "name": "Layer 7",
+      "parent": "win frame",
+      "bbox": [
+        734,
+        632,
+        879,
+        661
+      ]
+    },
+    {
+      "name": "Layer 8 copy 7",
+      "parent": "win frame chains",
+      "bbox": [
+        747,
+        577,
+        763,
+        651
+      ]
+    },
+    {
+      "name": "Layer 8 copy 8",
+      "parent": "win frame chains",
+      "bbox": [
+        852,
+        577,
+        868,
+        651
+      ]
+    },
+    {
+      "name": "Layer 8",
+      "parent": "chains upframe",
+      "bbox": [
+        350,
+        193,
+        364,
+        244
+      ]
+    },
+    {
+      "name": "Layer 8 copy",
+      "parent": "chains upframe",
+      "bbox": [
+        453,
+        91,
+        469,
+        163
+      ]
+    },
+    {
+      "name": "Layer 8 copy 2",
+      "parent": "chains upframe",
+      "bbox": [
+        686,
+        93,
+        702,
+        163
+      ]
+    },
+    {
+      "name": "Layer 8 copy 3",
+      "parent": "chains upframe",
+      "bbox": [
+        750,
+        91,
+        766,
+        160
+      ]
+    },
+    {
+      "name": "Layer 8 copy 4",
+      "parent": "chains upframe",
+      "bbox": [
+        850,
+        93,
+        866,
+        159
+      ]
+    },
+    {
+      "name": "Layer 8 copy 5",
+      "parent": "chains upframe",
+      "bbox": [
+        893,
+        93,
+        909,
+        161
+      ]
+    },
+    {
+      "name": "Layer 8 copy 5",
+      "parent": "chains upframe",
+      "bbox": [
+        893,
+        213,
+        909,
+        299
+      ]
+    },
+    {
+      "name": "Layer 8 copy 9",
+      "parent": "chains upframe",
+      "bbox": [
+        995,
+        243,
+        1011,
+        360
+      ]
+    },
+    {
+      "name": "Layer 8 copy 11",
+      "parent": "chains upframe",
+      "bbox": [
+        349,
+        93,
+        365,
+        210
+      ]
+    },
+    {
+      "name": "Layer 8 copy 10",
+      "parent": "chains upframe",
+      "bbox": [
+        996,
+        214,
+        1010,
+        261
+      ]
+    },
+    {
+      "name": "Layer 8 copy 6",
+      "parent": "chains upframe",
+      "bbox": [
+        996,
+        93,
+        1012,
+        161
+      ]
+    },
+    {
+      "name": "chain bolt",
+      "parent": "chain bolts",
+      "bbox": [
+        352,
+        95,
+        362,
+        106
+      ]
+    },
+    {
+      "name": "chain bolt copy 11",
+      "parent": "chain bolts",
+      "bbox": [
+        352,
+        235,
+        362,
+        246
+      ]
+    },
+    {
+      "name": "chain bolt copy 12",
+      "parent": "chain bolts",
+      "bbox": [
+        456,
+        152,
+        466,
+        163
+      ]
+    },
+    {
+      "name": "chain bolt copy 13",
+      "parent": "chain bolts",
+      "bbox": [
+        689,
+        152,
+        699,
+        163
+      ]
+    },
+    {
+      "name": "chain bolt copy 14",
+      "parent": "chain bolts",
+      "bbox": [
+        753,
+        152,
+        763,
+        163
+      ]
+    },
+    {
+      "name": "chain bolt copy 15",
+      "parent": "chain bolts",
+      "bbox": [
+        853,
+        152,
+        863,
+        163
+      ]
+    },
+    {
+      "name": "chain bolt copy 16",
+      "parent": "chain bolts",
+      "bbox": [
+        896,
+        152,
+        906,
+        163
+      ]
+    },
+    {
+      "name": "chain bolt copy 17",
+      "parent": "chain bolts",
+      "bbox": [
+        999,
+        152,
+        1009,
+        163
+      ]
+    },
+    {
+      "name": "chain bolt copy 18",
+      "parent": "chain bolts",
+      "bbox": [
+        896,
+        288,
+        906,
+        299
+      ]
+    },
+    {
+      "name": "chain bolt copy 19",
+      "parent": "chain bolts",
+      "bbox": [
+        998,
+        349,
+        1008,
+        360
+      ]
+    },
+    {
+      "name": "chain bolt copy",
+      "parent": "chain bolts",
+      "bbox": [
+        456,
+        93,
+        466,
+        104
+      ]
+    },
+    {
+      "name": "chain bolt copy 2",
+      "parent": "chain bolts",
+      "bbox": [
+        689,
+        95,
+        699,
+        106
+      ]
+    },
+    {
+      "name": "chain bolt copy 3",
+      "parent": "chain bolts",
+      "bbox": [
+        753,
+        93,
+        763,
+        104
+      ]
+    },
+    {
+      "name": "chain bolt copy 4",
+      "parent": "chain bolts",
+      "bbox": [
+        853,
+        95,
+        863,
+        106
+      ]
+    },
+    {
+      "name": "chain bolt copy 5",
+      "parent": "chain bolts",
+      "bbox": [
+        896,
+        95,
+        906,
+        106
+      ]
+    },
+    {
+      "name": "chain bolt copy 10",
+      "parent": "chain bolts",
+      "bbox": [
+        896,
+        216,
+        906,
+        227
+      ]
+    },
+    {
+      "name": "chain bolt copy 6",
+      "parent": "chain bolts",
+      "bbox": [
+        999,
+        95,
+        1009,
+        106
+      ]
+    },
+    {
+      "name": "chain bolt copy 9",
+      "parent": "chain bolts",
+      "bbox": [
+        999,
+        210,
+        1009,
+        221
+      ]
+    },
+    {
+      "name": "chain bolt copy 7",
+      "parent": "chain bolts",
+      "bbox": [
+        855,
+        579,
+        865,
+        590
+      ]
+    },
+    {
+      "name": "chain bolt copy 22",
+      "parent": "chain bolts",
+      "bbox": [
+        855,
+        641,
+        865,
+        652
+      ]
+    },
+    {
+      "name": "chain bolt copy 23",
+      "parent": "chain bolts",
+      "bbox": [
+        750,
+        641,
+        760,
+        652
+      ]
+    },
+    {
+      "name": "chain bolt copy 8",
+      "parent": "chain bolts",
+      "bbox": [
+        750,
+        579,
+        760,
+        590
+      ]
+    },
+    {
+      "name": "Layer 4 copy 2",
+      "parent": "free spins frame",
+      "bbox": [
+        887,
+        647,
+        1038,
+        730
+      ]
+    },
+    {
+      "name": "Layer 9",
+      "parent": "free spins frame",
+      "bbox": [
+        888,
+        630,
+        1025,
+        663
+      ]
+    },
+    {
+      "name": "Layer 8 copy 8",
+      "parent": "free spins frame",
+      "bbox": [
+        996,
+        515,
+        1012,
+        632
+      ]
+    },
+    {
+      "name": "Layer 8 copy 7",
+      "parent": "free spins frame",
+      "bbox": [
+        896,
+        577,
+        912,
+        648
+      ]
+    },
+    {
+      "name": "chain bolt copy 24",
+      "parent": "free spins frame",
+      "bbox": [
+        999,
+        518,
+        1009,
+        529
+      ]
+    },
+    {
+      "name": "chain bolt copy 25",
+      "parent": "free spins frame",
+      "bbox": [
+        899,
+        579,
+        909,
+        590
+      ]
+    },
+    {
+      "name": "chain bolt copy 20",
+      "parent": "free spins frame",
+      "bbox": [
+        899,
+        639,
+        909,
+        650
+      ]
+    },
+    {
+      "name": "chain bolt copy 21",
+      "parent": "free spins frame",
+      "bbox": [
+        998,
+        641,
+        1008,
+        652
+      ]
+    },
+    {
+      "name": "Layer 8 copy 12",
+      "parent": "free spins frame",
+      "bbox": [
+        997,
+        613,
+        1011,
+        651
+      ]
+    }
+  ],
+  "installed": [
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_readout_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_readout_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_readout_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_readout_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_pallet_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_pallet_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_pallet_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_pallet_ways.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_readout_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_readout_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_readout_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_readout_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_pallet_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_pallet_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_pallet_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_pallet_multi.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_readout_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_readout_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_readout_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_readout_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_pallet_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_pallet_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_pallet_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_pallet_win.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_readout_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_readout_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_readout_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_readout_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\sprites\\tombstone\\wood_pallet_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\static\\assets\\sprites\\tombstone\\wood_pallet_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\sprites\\tombstone\\wood_pallet_spins.png",
+    "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets-src\\assets\\sprites\\tombstone\\wood_pallet_spins.png"
+  ]
+}

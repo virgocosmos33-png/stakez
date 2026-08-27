@@ -28,6 +28,7 @@ export const playExternalOnce = (
 	const start = () => {
 		const fileMs = howl.duration() * 1000;
 		const rate = options?.durationMs && fileMs > 0 ? fileMs / options.durationMs : 1;
+		howl.loop(false);
 		howl.rate(rate);
 		howl.volume((options?.volume ?? 1) * stateSoundDerived.volumeSoundEffect());
 		if (!options?.forcePlay) howl.stop();

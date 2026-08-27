@@ -34,6 +34,10 @@ export const isNudgeCoveredReel = (reel: number): boolean =>
 export const isNudgeCoveredCell = (reel: number, row: number): boolean =>
 	stateGame.nudgeCoverCells.some((cell) => cell.reel === reel && cell.row === row);
 
+/** Cell whose reel face is hidden while WildFlip owns the card. */
+export const isWildFlipCovered = (reel: number, row: number): boolean =>
+	stateGame.wildFlipCover.some((cell) => cell.reel === reel && cell.row === row);
+
 /** Cell sliding out the pocket bottom this nudge step. */
 export const isNudgeSliding = (reel: number, row: number): boolean =>
 	stateGame.nudgePush[reel]?.rows.includes(row) ?? false;

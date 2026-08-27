@@ -1,13 +1,8 @@
-storybook<script lang="ts" module>
+<script lang="ts" module>
 	/**
-	 * LINKED CELL FIRE — every linked/wild cell gets a CONTINUOUS burning ring
-	 * that traces its card border and licks outward, card face fully readable
-	 * inside. Ported VERBATIM from the WebGL reference "noisy-ring-portrait (1).html"
-	 * (fBm-distorted rounded-rect SDF ring graded ember-red -> orange -> hot-white
-	 * core + rising embers). The ONLY change from the reference is the animation:
-	 * the reference loops forever; here the front climbs bottom->top once on entry
-	 * (~IGNITE_MS) then HOLDS fully lit until douse — the "light it, keep it lit"
-	 * behaviour asked for, instead of a repeating wipe.
+	 * LINKED CELL FIRE — js-fire-frame on each split cell (the pasted proto).
+	 * Tongues grow off the card: fat on top, thin on the sides. Climb once, HOLD.
+	 * Nudge totems still use createFireRingFilter below.
 	 *
 	 * Rendered as a Pixi v8 fragment Filter over a Texture.WHITE quad per cell —
 	 * the SAME procedural-filter technique already proven in CellFlameBorder.svelte
@@ -36,15 +31,15 @@ storybook<script lang="ts" module>
 	/** cap so a huge link can never spawn an unbounded number of sprites */
 	const MAX_CELLS = 12;
 
-	// The reference shader draws its ring at a FIXED fraction of the quad:
-	// box_half_size = vec2(0.42 * ratio, 0.65) — i.e. the ring outline sits at
-	// 42% of the quad half-width and 65% of the quad half-height. So to make the
-	// ring hug the CARD border (flames licking into the surrounding margin), the
-	// quad must be sized so the card occupies exactly that central 42% x 65%:
-	//   quad_W = card_W / 0.42,  quad_H = card_H / 0.65.
-	// Do NOT change the 0.42 / 0.65 in the shader — retune these ratios instead.
+	// Ring outline sits at this fraction of the quad so the SDF lands on the
+	// card bezel. Do NOT change these in the shader — retune the ratios here.
 	const RING_FRAC_X = 0.42;
 	const RING_FRAC_Y = 0.65;
+	// Card bezel is 16px on a 300px frame (WinSweep). In shader units the box
+	// half-height is RING_FRAC_Y, so the matching corner is 16/292 * 1.3.
+	const RING_CORNER = 0.12;
+	/** Reference HTML (1) thickness. Top keeps this; sides pinch in the shader. */
+	const RING_THICKNESS = 0.2;
 	const FIRE_W = SYMBOL_CARD_W / RING_FRAC_X;
 	const FIRE_H = SYMBOL_CARD_H / RING_FRAC_Y;
 	/** Cell-quad aspect. Tall rings (nudge column) keep this ratio and use uYScale. */
@@ -110,7 +105,7 @@ uniform float uHideBot;    // 1 = drop the bottom bar AND its rounded corners
 uniform float uBoxX;       // ring half-width as a fraction of the quad (cell = 0.42)
 uniform float uBoxY;       // ring half-height as a fraction of the quad (cell = 0.65)
 uniform float uCorner;     // rounded-rect radius in shader units (cell = 0.12)
-uniform float uThickness;  // ring thickness in shader units (cell = 0.16)
+uniform float uThickness;  // ring thickness in shader units (cell stroke)
 uniform float uLockBox;    // 1 = noise offsets distance (tall totem); 0 = cell uv-scale
 
 float rand(vec2 n) {
@@ -191,36 +186,31 @@ void main() {
     float t = 0.0003 * uTime;
 
     float atg = atan(uv.y, uv.x);
-    // (1)5 flame STYLE verbatim: NO +2.2*uv.y climbing phase — that omission is
-    // exactly what gives (1)5 its softer, even tongue-fringing all around the
-    // border instead of a strongly upward-sparking line. (+1e-4 only to keep
-    // pow() finite at the exact centre, which is masked out anyway.)
-    vec2 polar_uv = vec2(atg, t + 2.0 / pow(length(uv) + 1e-4, 0.5));
+    // Reference +2.2*uv.y climbs +Y (up in WebGL). Pixi Y is down, so flip.
+    vec2 polar_uv = vec2(atg, t - 2.2 * uv.y + 2.0 / pow(length(uv) + 1e-4, 0.5));
     polar_uv *= noise_scale;
     float noise_left = fbm(polar_uv);
     polar_uv.x = mod(polar_uv.x, noise_scale * TWO_PI);
     float noise_right = fbm(polar_uv);
-    // atan jumps at -X; blend across that seam. Wider on a tall totem so
-    // the left mid-border cannot show a hard cut.
-    float seam = mix(0.2, 0.45, uLockBox);
-    float noiseV = mix(noise_right, noise_left, smoothstep(-seam, seam, uv.x));
+    float noiseV = mix(noise_right, noise_left, smoothstep(-0.2, 0.2, uv.x));
 
-    // box VERBATIM from (1)5: vec2(.42 * u_ratio, .65), corner .12, radius .55,
-    // thickness .16, distortion (.92 + .45*noise). The quad is sized so the CARD
-    // border lands on this box, so the ring's inner edge hugs the card and
-    // flames lick outward.
     vec2 boxHalf = vec2(uBoxX * uRatio, uBoxY * uYScale);
     float corner = uCorner;
     float radius = 0.55;
     float thickness = uThickness;
-    // Cell path scales UV by noise (verbatim (1)5). On a tall totem that
-    // pull is a % of the FULL height and eats the header — lock the box
-    // and only offset distance so tongues stay, the outline does not shrink.
-    vec2 uvN = mix(uv * (0.92 + 0.45 * noiseV), uv, uLockBox);
-    float ring_shape = get_ring_shape(uvN, boxHalf, corner, radius - 0.8 * thickness, radius + 0.2 * thickness);
-    float locked = rounded_box_sdf(uv, boxHalf, corner) - (noiseV - 0.5) * thickness * 2.2;
-    float locked_inner = radius - 0.8 * thickness;
-    float locked_outer = radius + 0.2 * thickness;
+    // Reference warp: uv * (0.9 + 0.55 * noise). Full on TOP. Pinch X on
+    // the sides so the card stays a rectangle, not a puffy oval.
+    float topN = smoothstep(-boxHalf.y * 0.08, -boxHalf.y * 0.62, uv.y);
+    float sideN = smoothstep(boxHalf.x * 0.48, boxHalf.x * 0.90, abs(uv.x)) * (1.0 - topN * 0.85);
+    float warp = 0.9 + 0.55 * noiseV;
+    vec2 uvFire = vec2(uv.x * mix(warp, 1.0, sideN * 0.90), uv.y * mix(mix(1.05, warp, 0.40), warp, topN));
+    float thick = mix(thickness * 0.40, thickness, topN);
+    float ring_shape = get_ring_shape(uvFire, boxHalf, corner, radius - 0.8 * thick, radius + 0.2 * thick);
+
+    // Tall totem only: offset distance, never UV-scale the full height.
+    float locked = rounded_box_sdf(uv, boxHalf, corner) - (noiseV - 0.5) * thick * 2.2;
+    float locked_inner = radius - 0.8 * thick;
+    float locked_outer = radius + 0.2 * thick;
     float locked_w = locked_outer - locked_inner;
     float locked_ring = smoothstep(locked_inner, locked_inner + locked_w, locked + locked_inner);
     locked_ring -= smoothstep(locked_outer, locked_outer + locked_w, locked + locked_inner);
@@ -258,9 +248,8 @@ void main() {
     // brief hot flash across the whole ring the instant it fully ignites
     color += hot_core * uFlash * ring_shape * 1.6;
 
-    // scattered rising sparks near the border (reference embers), gated by mask
-    float dist_to_outline = abs(rounded_box_sdf(uvN, boxHalf, corner));
-    float ember_mask = smoothstep(0.5, 0.0, dist_to_outline) * mask;
+    float dist_to_outline = abs(rounded_box_sdf(uvFire, boxHalf, corner));
+    float ember_mask = smoothstep(mix(0.22, 0.5, topN), 0.0, dist_to_outline) * mask;
     float spark = embers(uv, 1.6 * t) * ember_mask;
     vec3 spark_color = mix(vec3(1.0, 0.5, 0.08), vec3(1.0, 0.88, 0.45), spark);
     color += spark_color * spark;
@@ -302,8 +291,8 @@ void main() {
 					uHideBot: { value: 0, type: 'f32' },
 					uBoxX: { value: RING_FRAC_X, type: 'f32' },
 					uBoxY: { value: RING_FRAC_Y, type: 'f32' },
-					uCorner: { value: 0.12, type: 'f32' },
-					uThickness: { value: 0.16, type: 'f32' },
+					uCorner: { value: RING_CORNER, type: 'f32' },
+					uThickness: { value: RING_THICKNESS, type: 'f32' },
 					uLockBox: { value: 0, type: 'f32' },
 				},
 			},
@@ -527,26 +516,32 @@ void main() {
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut, cubicInOut } from 'svelte/easing';
+	import { cubicOut, linear } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, BaseSprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
+	import { BOARD_FIRE_Z } from '../game/constants';
 	import { getSymbolX, getCellCenterY } from '../game/utils';
 	import { filterVisibleCells, isNudgeCoveredReel } from '../game/boardCells';
 	import { fxDur } from '../game/fxTiming';
+	import { playThemedOnce, stopThemed } from '../game/sfxTheme';
+	import { sound } from '../game/sound';
+	import {
+		CELL_FIRE_CLIMB_MS,
+		CELL_FIRE_H,
+		CELL_FIRE_TOP_OVERFLOW,
+		CELL_FIRE_W,
+		createCellFireFilter,
+		type CellFireUniforms,
+	} from '../game/jsFireFrameFilter';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
-	// The one-shot ignite: the fire climbs visibly bottom -> top over this long,
-	// then HOLDS fully lit (see the uProgress sweep in the shader). Kept slow
-	// enough (~1s) that the climb actually reads on screen instead of popping.
-	// Douse pulls the sweep back down over DOUSE_MS.
-	const IGNITE_MS = 1000;
+	// Bottom-to-top blaze. Shader already smoothsteps uReveal. Douse pulls it down.
+	const IGNITE_MS = CELL_FIRE_CLIMB_MS;
 	const DOUSE_MS = 260;
-	// Brief hot pop the instant the sweep completes.
-	const FLASH_MS = 180;
 
 	let cells = $state<{ reel: number; row: number }[]>([]);
 	const ignite = new Tween(0);
@@ -578,10 +573,10 @@ void main() {
 	// One ring filter per possible cell: identical shader, but each carries its
 	// own time phase so adjacent cells never animate in lockstep (no clone look).
 	const pool = Array.from({ length: MAX_CELLS }, () => {
-		const filter = createFireRingFilter();
+		const filter = createCellFireFilter();
 		return {
 			filter,
-			uniforms: (filter.resources as Record<string, { uniforms: RingUniforms }>).ringUniforms
+			uniforms: (filter.resources as Record<string, { uniforms: CellFireUniforms }>).fireUniforms
 				.uniforms,
 		};
 	});
@@ -598,45 +593,39 @@ void main() {
 	);
 
 	/**
-	 * FIRE AUDIO LIFECYCLE. ONE burn bed for the whole feature, never one per
-	 * cell. The loop player ignores a second play while running; `burning` makes a
-	 * re-show with more cells flare instead of re-triggering the bed. The bed stops
-	 * on douse AND destroy so a feature that ends early can never leave fire under
-	 * the next spin.
+	 * FIRE AUDIO. One burst + one burn bed for the whole feature, never per
+	 * cell. The burn file is a one-shot (not a loop). Stop both on douse.
 	 */
 	let burning = false;
 	let burningCells = 0;
 
-	// ignition flash pulse (armed on each fresh cellFireShow, decays over FLASH_MS)
-	let hasFlashed = false;
-	let flashStart = -1;
-
 	const startFire = (cellCount: number) => {
 		if (burning) {
-			if (cellCount > burningCells) {
-				context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fire_flare', forcePlay: true });
-			}
 			burningCells = Math.max(burningCells, cellCount);
 			return;
 		}
 		burning = true;
 		burningCells = cellCount;
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fire_ignite' });
-		context.eventEmitter.broadcast({ type: 'soundLoop', name: 'sfx_fire_loop' });
+		sound.stop({ name: 'sfx_fire_ignite' });
+		sound.stop({ name: 'sfx_fire_loop' });
+		playThemedOnce('sfx_fire_ignite', { forcePlay: true });
+		playThemedOnce('sfx_fire_loop', { forcePlay: true });
 	};
 
-	const stopFire = (withTail: boolean) => {
+	const stopFire = (_withTail: boolean) => {
 		if (!burning) return;
 		burning = false;
 		burningCells = 0;
-		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_fire_loop' });
-		if (withTail) context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_fire_out' });
+		stopThemed('sfx_fire_ignite');
+		stopThemed('sfx_fire_loop');
+		sound.stop({ name: 'sfx_fire_ignite' });
+		sound.stop({ name: 'sfx_fire_loop' });
 	};
 
 	onDestroy(() => stopFire(false));
 
 	context.eventEmitter.subscribeOnMount({
-		cellFireShow: ({ cells: incoming }) => {
+		cellFireShow: async ({ cells: incoming }) => {
 			const visible = filterVisibleCells([...incoming]);
 			if (!visible.length) return;
 			// MERGE — a later feature (gunsmoke after split) adds cells; it
@@ -651,9 +640,7 @@ void main() {
 			cells = [...cells, ...added];
 			startFire(cells.length);
 			if (ignite.current < 0.99) {
-				hasFlashed = false;
-				flashStart = -1;
-				ignite.set(1, { duration: fxDur(IGNITE_MS), easing: cubicInOut });
+				await ignite.set(1, { duration: fxDur(IGNITE_MS), easing: linear });
 			}
 		},
 		cellFireHide: async () => {
@@ -685,21 +672,13 @@ void main() {
 		let raf = 0;
 		const start = performance.now();
 		const tick = (now: number) => {
-			const ms = now - start;
+			const sec = (now - start) / 1000;
 			const progress = ignite.current;
-			if (!hasFlashed && ignite.target === 1 && progress > 0.985) {
-				hasFlashed = true;
-				flashStart = now;
-			}
-			const flash =
-				hasFlashed && flashStart >= 0 ? Math.max(0, 1 - (now - flashStart) / FLASH_MS) : 0;
-
 			const n = Math.min(cells.length, pool.length);
 			for (let i = 0; i < n; i++) {
-				pool[i].uniforms.uTime = ms + i * 3170;
+				pool[i].uniforms.uTime = sec + i * 0.37;
 				pool[i].uniforms.uIntensity = burstDim.current;
-				pool[i].uniforms.uProgress = progress;
-				pool[i].uniforms.uFlash = flash;
+				pool[i].uniforms.uReveal = progress;
 			}
 			raf = requestAnimationFrame(tick);
 		};
@@ -708,16 +687,19 @@ void main() {
 	});
 </script>
 
-<!-- zIndex 8: over the board and feature overlays (0), under CellFlameBorder (9)
-	/ CellLightning (10) and the screen panels at 20. One Texture.WHITE quad per
-	burning cell; the ring filter paints the fire and discards the rest. -->
-<Container zIndex={8}>
+<!-- Over pocket wood / split faces, under slash and win panels. -->
+<Container zIndex={BOARD_FIRE_Z}>
 	<MainContainer>
 		<BoardSpace>
 		{#if ignite.current > 0.01}
 			{#each placed as cell, i (cell.key)}
-				<Container x={cell.cx} y={cell.cy} filters={[pool[i].filter]}>
-					<BaseSprite texture={Texture.WHITE} anchor={0.5} width={FIRE_W} height={FIRE_H} />
+				<Container x={cell.cx} y={cell.cy - CELL_FIRE_TOP_OVERFLOW / 2} filters={[pool[i].filter]}>
+					<BaseSprite
+						texture={Texture.WHITE}
+						anchor={0.5}
+						width={CELL_FIRE_W}
+						height={CELL_FIRE_H + CELL_FIRE_TOP_OVERFLOW}
+					/>
 				</Container>
 			{/each}
 		{/if}
