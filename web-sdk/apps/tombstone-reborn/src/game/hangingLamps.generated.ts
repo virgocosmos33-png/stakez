@@ -1,4 +1,4 @@
-/** Hang pivots in SCENE_ART pixels (top of each chain). Desktop western_scene2.psd 1× ×2. */
+/** Hang pivots in SCENE_ART pixels (top of each chain). From western_scene bones. */
 export const HANGING_LAMPS = {
   "period": 2.4683,
   "L": {

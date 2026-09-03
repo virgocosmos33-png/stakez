@@ -10,7 +10,7 @@
 <script lang="ts">
 	import { Tween } from 'svelte/motion';
 	import { cubicIn, cubicOut } from 'svelte/easing';
-	import { Container, Rectangle, Sprite } from 'pixi-svelte';
+	import { Container, Sprite } from 'pixi-svelte';
 	import { stateBet } from 'state-shared';
 
 	import { getContext } from '../game/context';
@@ -19,6 +19,7 @@
 	import { fxDur, fxWait } from '../game/fxTiming';
 	import { LANE_CARD_Z } from '../game/laneDoor';
 	import BoardSpace from './BoardSpace.svelte';
+	import CellClipMask from './CellClipMask.svelte';
 
 	const context = getContext();
 
@@ -61,13 +62,7 @@
 	<Container zIndex={LANE_CARD_Z} eventMode="none">
 		<BoardSpace>
 			<Container x={cx} y={cy} eventMode="none">
-				<Rectangle
-					isMask
-					anchor={0.5}
-					width={SYMBOL_CARD_W}
-					height={pocketH}
-					backgroundColor={0xffffff}
-				/>
+				<CellClipMask reelIndex={LAST} />
 				<Sprite
 					key={KIND_SPRITE[kind]}
 					x={0}

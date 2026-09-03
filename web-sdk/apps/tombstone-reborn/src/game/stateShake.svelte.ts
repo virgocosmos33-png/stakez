@@ -1,7 +1,6 @@
-// Shared board-shake offset. Components that render board-anchored content
-// (board container, reels frame, apparition/shatter/liner overlays) add
-// stateShake.x/y to their container position so the whole rig kicks as one
-// camera move while the room background stays still.
+// Shared board-shake offset. Board, timber ring (BoardPlate), slot frames,
+// and board-anchored overlays add stateShake.x/y so the whole chassis kicks
+// as one move while the room background stays still.
 export const stateShake = $state({ x: 0, y: 0 });
 
 let shakeToken = 0;

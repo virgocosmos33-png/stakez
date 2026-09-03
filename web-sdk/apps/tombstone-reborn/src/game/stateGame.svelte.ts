@@ -26,6 +26,10 @@ import { boardContentBox } from './boardFrameBox';
 import { FRAME_SEATS } from './frameSeats.generated';
 import { getReelRows, getReelYOffset } from './utils';
 import { sceneToMain } from './saloonLamps';
+import { shakeBoard } from './stateShake.svelte';
+import { fxDur } from './fxTiming';
+
+const FEATURE_LAND_HIT = new Set(['SP', 'GS', 'NW', 'SG', 'SO']);
 
 const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 	if (rawSymbol.name === 'S' || rawSymbol.name === 'SU') {
@@ -47,6 +51,9 @@ const onSymbolLand = ({ rawSymbol }: { rawSymbol: RawSymbol }) => {
 			type: 'soundOnce',
 			name: 'sfx_wild_land',
 		});
+	} else if (FEATURE_LAND_HIT.has(rawSymbol.name)) {
+		eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
+		shakeBoard({ intensity: 4, duration: fxDur(180) });
 	}
 };
 
@@ -171,6 +178,9 @@ export const stateGame = $state({
 	// bottom premiums). These aren't on the core reel board, so LockedSlots
 	// lights them up instead. Cleared on the next reveal.
 	slotWinPositions: [] as { reel: number; row: number }[],
+	// Incremented only on a real skim (`winDimShow`). Cycle key changes must
+	// not restart the two wipes / two whip cracks.
+	winLinkShineGen: 0,
 	// bottom cells that dropped a feature symbol this spin (Stretch / Split /
 	// Clone). Drives LockedSlots to open that cell and show the feature card
 	// (base game unlocks just this cell; bonus cells are already open). Cleared
@@ -284,6 +294,15 @@ const boardToWorld = (lx: number, ly: number) => {
 	};
 };
 
+const boardFromWorld = (wx: number, wy: number) => {
+	const b = boardLayout();
+	const s = b.scale || 1;
+	return {
+		x: b.pivot.x + (wx - b.x) / s,
+		y: b.pivot.y + (wy - b.y) / s,
+	};
+};
+
 const boardRaw = () =>
 	board.map((reel) => reel.reelState.symbols.map((reelSymbol) => reelSymbol.rawSymbol));
 
@@ -311,6 +330,7 @@ export const stateGameDerived = {
 	onSymbolLand,
 	boardLayout,
 	boardToWorld,
+	boardFromWorld,
 	boardRaw,
 	scatterLandIndex,
 	reelsSpinning,

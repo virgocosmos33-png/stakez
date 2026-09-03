@@ -2,9 +2,13 @@
 	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
-	import { Container, Rectangle } from 'pixi-svelte';
+	import { Container } from 'pixi-svelte';
 	import type { Filter } from 'pixi.js';
 
+	import CellClipMask from './CellClipMask.svelte';
+	import HighPayBg from './HighPayBg.svelte';
+	import LowLinkDrip from './LowLinkDrip.svelte';
+	import LowPayBg from './LowPayBg.svelte';
 	import Symbol from './Symbol.svelte';
 	import SymbolWrap from './SymbolWrap.svelte';
 	import { getContext } from '../game/context';
@@ -22,11 +26,31 @@
 		isNudgeSliding,
 		isWildFlipCovered,
 	} from '../game/boardCells';
-	import { SYMBOL_CARD_W } from '../game/constants';
-	import { fxDur } from '../game/fxTiming';
+	import { fxDur, fxWait } from '../game/fxTiming';
 	import { createGlassDentFilter } from '../game/glassDentFilter';
-	import { CRUSH_IN_MS, CRUSH_OUT_MS, DENT_PUNCH_MS, DENT_RESIDUAL, DENT_SETTLE_MS } from '../game/gunsmokeSpin';
+	import {
+		CRUSH_IN_MS,
+		CRUSH_OUT_MS,
+		DENT_PUNCH_MS,
+		DENT_RESIDUAL,
+		DENT_SETTLE_MS,
+		SPINNER_KNOCK_MS,
+		SPINNER_KNOCK_OUT_MS,
+		SPINNER_SPIN_MS,
+		SPINNER_WOBBLE_DELAY_MS,
+		SPINNER_WOBBLE_MS,
+		isHighPaySymbol,
+		isLowPaySymbol,
+		usesHighPayPlate,
+		isSpinnerBack,
+		spinnerFaceScale,
+		spinnerKnockOffset,
+		spinnerSpinTo,
+		spinnerYaw,
+		spinnerYawSign,
+	} from '../game/gunsmokeSpin';
 	import type { ReelSymbol } from '../game/stateGame.svelte';
+	import type { SymbolName } from '../game/types';
 
 	type Props = {
 		reelIndex: number;
@@ -39,7 +63,7 @@
 	const symbolInfo = $derived(
 		getSymbolInfo({ rawSymbol: props.reelSymbol.rawSymbol, state: props.reelSymbol.symbolState }),
 	);
-	const spinning = $derived(props.reelSymbol.symbolState === 'spin');
+	const reelSpinning = $derived(props.reelSymbol.symbolState === 'spin');
 	const covered = $derived(isNudgeCoveredCell(props.reelIndex, props.row));
 	const sliding = $derived(isNudgeSliding(props.reelIndex, props.row));
 	const bumping = $derived(isNudgeBumping(props.reelIndex, props.row));
@@ -48,7 +72,7 @@
 	const hide = $derived(
 		(covered && !sliding) ||
 			laneShut ||
-			(props.reelSymbol.rawSymbol.name === 'NW' && !spinning && !sliding) ||
+			(props.reelSymbol.rawSymbol.name === 'NW' && !reelSpinning && !sliding) ||
 			isWildFlipCovered(props.reelIndex, props.row),
 	);
 	const shoveY = $derived.by(() => {
@@ -66,6 +90,31 @@
 		props.reelIndex === lastReel && props.row === 1 ? context.stateGame.laneCardSwap : 0,
 	);
 	const pocketH = $derived(getCardHeight(props.reelIndex));
+	let holdFrom = $state<ReelSymbol['rawSymbol']['name'] | null>(null);
+	let revealed = $state(false);
+	const shownName = $derived(
+		holdFrom && !revealed ? holdFrom : props.reelSymbol.rawSymbol.name,
+	);
+	const highPay = $derived(isHighPaySymbol(shownName));
+	const breathing = $derived(
+		highPay && symbolInfo.type === 'spine' && props.reelSymbol.symbolState === 'postWin',
+	);
+	const lifting = $derived(
+		symbolInfo.type === 'spine' &&
+			(props.reelSymbol.symbolState === 'land' ||
+				props.reelSymbol.symbolState === 'win' ||
+				breathing),
+	);
+	/** Idle high-pay spines use the hat-open T-mask. BoardBase's static
+	 *  column clip is card-wide and would still shear the brim, so they
+	 *  sit on the unmasked animate layer. Spin sprites stay pocket-clipped. */
+	const shownInfo = $derived(
+		getSymbolInfo({
+			rawSymbol: { ...props.reelSymbol.rawSymbol, name: shownName },
+			state: props.reelSymbol.symbolState,
+		}),
+	);
+	const hatOut = $derived(highPay && shownInfo.type === 'spine');
 
 	const NO_FILTERS: Filter[] = [];
 	type Dent = ReturnType<typeof createGlassDentFilter>;
@@ -73,13 +122,26 @@
 	let dentOn = $state(false);
 	const dentAmt = new Tween(0);
 	const crush = new Tween(0);
+	const spin = new Tween(0);
+	const knock = new Tween(0);
+	const wobble = new Tween(0);
+	let knockDir = $state({ x: 0, y: 1 });
+	let targetSpin = $state(false);
 	const dentFilters = $derived(dentOn && dent ? [dent.filter] : NO_FILTERS);
 	const crushX = $derived(1 + 0.1 * crush.current);
 	const crushY = $derived(1 - 0.18 * crush.current);
+	const yaw = $derived(spinnerYaw(spin.current, wobble.current));
+	const face = $derived(spinnerFaceScale(yaw));
+	const knockOff = $derived(spinnerKnockOffset(knockDir.x, knockDir.y, knock.current));
 
 	$effect(() => {
 		if (!dent) return;
 		dent.uniforms.uStrength = dentAmt.current;
+	});
+
+	$effect(() => {
+		if (!holdFrom || revealed || !targetSpin) return;
+		if (isSpinnerBack(yaw)) revealed = true;
 	});
 
 	const ensureDent = () => {
@@ -102,20 +164,73 @@
 		});
 	};
 
+	const punchSpinner = (kx: number, ky: number) => {
+		const len = Math.hypot(kx, ky) || 1;
+		knockDir = { x: kx / len, y: ky / len };
+		targetSpin = true;
+		spin.set(0, { duration: 0 });
+		knock.set(0, { duration: 0 });
+		wobble.set(0, { duration: 0 });
+		void knock.set(1, { duration: fxDur(SPINNER_KNOCK_MS), easing: backOut }).then(() => {
+			void knock.set(0, { duration: fxDur(SPINNER_KNOCK_OUT_MS), easing: cubicOut });
+		});
+		void spin.set(spinnerYawSign(kx) * spinnerSpinTo, {
+			duration: fxDur(SPINNER_SPIN_MS),
+			easing: cubicOut,
+		});
+		void fxWait(SPINNER_WOBBLE_DELAY_MS).then(() =>
+			wobble.set(1, { duration: fxDur(SPINNER_WOBBLE_MS), easing: cubicOut }).then(() => {
+				targetSpin = false;
+				spin.set(0, { duration: 0 });
+				wobble.set(0, { duration: 0 });
+			}),
+		);
+	};
+
 	const clearDent = () => {
 		dentOn = false;
 		dentAmt.set(0, { duration: 0 });
 		crush.set(0, { duration: 0 });
+		spin.set(0, { duration: 0 });
+		knock.set(0, { duration: 0 });
+		wobble.set(0, { duration: 0 });
+		targetSpin = false;
+		holdFrom = null;
+		revealed = false;
 	};
 
 	context.eventEmitter.subscribeOnMount({
-		gunsmokeCellDent: ({ reel, row, hitX, hitY, seed }) => {
+		gunsmokeMorphHold: ({ reel, row, from }) => {
+			if (reel !== props.reelIndex || row !== props.row) return;
+			holdFrom = from;
+			revealed = false;
+		},
+		gunsmokeCellDent: ({ reel, row, hitX, hitY, seed, knockX: kx, knockY: ky }) => {
 			if (reel !== props.reelIndex || row !== props.row) return;
 			punchGlass(hitX, hitY, seed);
+			punchSpinner(kx ?? 0, ky ?? 1);
 		},
 		gunsmokeWoundsClear: () => clearDent(),
 		featureFxFallOut: () => clearDent(),
 	});
+
+	$effect(() => {
+		if (props.reelSymbol.symbolState !== 'spin') return;
+		holdFrom = null;
+		revealed = false;
+	});
+
+	const onSpinLayer = $derived(
+		lifting || targetSpin || hatOut || holdFrom != null,
+	);
+
+	const finish = () => {
+		if (props.reelSymbol.symbolState === 'win') props.reelSymbol.oncomplete();
+		if (props.reelSymbol.symbolState === 'land') {
+			props.reelSymbol.symbolState = 'static';
+			props.reelSymbol.oncomplete();
+		}
+	};
 
 	onDestroy(() => {
 		dent?.filter.destroy();
@@ -128,26 +243,47 @@
 	x={getSymbolX(props.reelIndex)}
 	y={props.reelSymbol.symbolY.current + getReelYOffset(props.reelIndex) + shoveY}
 	stay={sliding || bumping}
-	zIndex={sliding ? 5 : 0}
-	animating={symbolInfo.type === 'spine' &&
-		(props.reelSymbol.symbolState === 'land' || props.reelSymbol.symbolState === 'win')}
+	zIndex={sliding || targetSpin ? 5 : onSpinLayer ? 6 : 0}
+	animating={onSpinLayer}
 >
-	<Container alpha={hide ? 0 : 1} scale={{ x: crushX, y: crushY }}>
-		{#if props.reelIndex === lastReel && props.row === 1}
-			<Rectangle isMask anchor={0.5} width={SYMBOL_CARD_W} height={pocketH} backgroundColor={0xffffff} />
-		{/if}
-		<Container y={laneSwap * pocketH} filters={dentFilters}>
-			<Symbol
-				state={props.reelSymbol.symbolState}
-				rawSymbol={props.reelSymbol.rawSymbol}
-				oncomplete={() => {
-					if (props.reelSymbol.symbolState === 'win') props.reelSymbol.oncomplete();
-					if (props.reelSymbol.symbolState === 'land') {
-						props.reelSymbol.symbolState = 'static';
-						props.reelSymbol.oncomplete();
-					}
-				}}
-			/>
+	<Container alpha={hide ? 0 : 1} blendMode="normal">
+		<Container
+			x={knockOff.x}
+			y={knockOff.y}
+			scale={{ x: crushX * face.x, y: crushY * face.y }}
+			blendMode="normal"
+		>
+			{#if holdFrom}
+				<Container alpha={revealed ? 0 : 1} eventMode="none">
+					{@render card(holdFrom, isHighPaySymbol(holdFrom), 'static')}
+				</Container>
+				<Container alpha={revealed ? 1 : 0} eventMode="none">
+					{@render card('W', false, props.reelSymbol.symbolState)}
+				</Container>
+			{:else}
+				{@render card(shownName, hatOut, props.reelSymbol.symbolState)}
+			{/if}
 		</Container>
 	</Container>
 </SymbolWrap>
+
+{#snippet card(name: SymbolName, openHat: boolean, state: ReelSymbol['symbolState'])}
+	{#if usesHighPayPlate(name)}
+		<HighPayBg reelIndex={props.reelIndex} />
+	{:else if isLowPaySymbol(name)}
+		<LowPayBg reelIndex={props.reelIndex} />
+	{/if}
+	<Container blendMode="normal">
+		<CellClipMask reelIndex={props.reelIndex} {openHat} />
+		<Container y={laneSwap * pocketH} filters={dentFilters}>
+			<Symbol
+				{state}
+				rawSymbol={{ ...props.reelSymbol.rawSymbol, name }}
+				oncomplete={finish}
+			/>
+			{#if isLowPaySymbol(name)}
+				<LowLinkDrip reelIndex={props.reelIndex} row={props.row} />
+			{/if}
+		</Container>
+	</Container>
+{/snippet}

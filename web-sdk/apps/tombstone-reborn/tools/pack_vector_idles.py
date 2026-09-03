@@ -1,8 +1,11 @@
-"""Stamp the desktop TR2 symbol sheet onto the live v13 atlas in place.
+"""Stamp the organized Desktop symbol folders onto the live atlas.
 
-Does not invent a new atlas name. Same frame boxes, same asset keys.
-Copies Desktop/new symbols into VFXPACKSHEETS/tombstone-reborn-symbols, then
-stamps atlas + spine + paytable + feature PNGs.
+SOURCE OF TRUTH — only these three folders:
+  new symbols/symbol/high paying symbols
+  new symbols/symbol/low paying symbols
+  new symbols/symbol/special symbols
+
+Never HEAD painted busts. Never a restyle guess. Faces only, no plates.
 
 Run: python tools/pack_vector_idles.py
 """
@@ -19,6 +22,8 @@ import shutil
 
 from PIL import Image, ImageFilter
 
+import _symbol_faces as faces_lib
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 APP = os.path.normpath(os.path.join(HERE, ".."))
 REPO = os.path.normpath(os.path.join(APP, "..", "..", ".."))
@@ -34,26 +39,65 @@ NEW = os.path.join(
 CELL = 300
 CARD_H = 292
 CARD_W = round(CARD_H * 0.775)
-ATLAS = "symbolsStatic.v13"
+ATLAS = "symbolsStatic.v22"
+
+# Island crop of the 3+2 high sheet. Mapped by character, not prop order.
+ISLAND_HIGHS_DIR = os.path.join(
+	os.path.expanduser("~"),
+	"Documents",
+	"ISLAND CROP",
+	"output",
+	"81fd4c81-cb0e-4b3b-83b7-8521acd7874d",
+)
+ISLAND_HIGHS = {
+	"h1-gunslinger": "OpenAI Playground 2026-09-01 at 19.03.28.png",
+	"h2-duchess": "OpenAI Playground 2026-09-01 at 19.03.23.png",
+	"h3-butcher": "OpenAI Playground 2026-09-01 at 19.03.33.png",
+	"h4-card-shark": "OpenAI Playground 2026-09-01 at 20.03.38.png",
+	"h5-preacher": "OpenAI Playground 2026-09-01 at 19.03.48.png",
+}
+
+# Island crop of the 3+2 royal sheet. Top LTR = 10 / J / Q, bottom LTR = K / A.
+ISLAND_LOWS_DIR = os.path.join(
+	os.path.expanduser("~"),
+	"Documents",
+	"ISLAND CROP",
+	"output",
+	"164ab71d-a1f6-4eb8-8c24-5352c6366be5",
+)
+ISLAND_LOWS = {
+	"l1-bullet": "prop_05.png",
+	"l2-whiskey": "prop_04.png",
+	"l3-spur": "prop_03.png",
+	"l4-horseshoe": "prop_02.png",
+	"l5-dead-mans-hand": "prop_01.png",
+}
+RESTYLE_LOWS = {
+	"l1-bullet": "l1_ace.png",
+	"l2-whiskey": "l2_king.png",
+	"l3-spur": "l3_queen.png",
+	"l4-horseshoe": "l4_jack.png",
+	"l5-dead-mans-hand": "l5_ten.png",
+}
 
 # Sheet row1 LTR = H1-H5, row2 LTR = L1-L5, row3 LTR = W / SU / S / GS / SH.
 # Island names are not left-to-right; this map is from the art.
 PROP = {
-	"h1-gunslinger": "prop_03.png",
-	"h2-duchess": "prop_02.png",
-	"h3-butcher": "prop_04.png",
-	"h4-card-shark": "prop_05.png",
-	"h5-preacher": "prop_01.png",
-	"l1-bullet": "prop_08.png",
-	"l2-whiskey": "prop_06.png",
-	"l3-spur": "prop_09.png",
-	"l4-horseshoe": "prop_10.png",
-	"l5-dead-mans-hand": "prop_07.png",
-	"w-revolver": "prop_13.png",
-	"s-tombstone": "prop_12.png",
+	"h1-gunslinger": os.path.join("symbol", "high paying symbols", "OpenAI Playground 2026-09-01 at 03.33.35.png"),
+	"h2-duchess": os.path.join("symbol", "high paying symbols", "OpenAI Playground 2026-09-01 at 03.31.16.png"),
+	"h3-butcher": os.path.join("symbol", "high paying symbols", "OpenAI Playground 2026-09-01 at 03.30.59.png"),
+	"h4-card-shark": os.path.join("symbol", "high paying symbols", "OpenAI Playground 2026-09-01 at 03.31.09.png"),
+	"h5-preacher": os.path.join("symbol", "high paying symbols", "OpenAI Playground 2026-09-01 at 03.31.04.png"),
+	"l1-bullet": os.path.join("symbol", "low paying symbols", "prop_05.png"),
+	"l2-whiskey": os.path.join("symbol", "low paying symbols", "111b665c-0779-4d1e-b98e-13f226f09dd3 - Copy.png"),
+	"l3-spur": os.path.join("symbol", "low paying symbols", "prop_03.png"),
+	"l4-horseshoe": os.path.join("symbol", "low paying symbols", "prop_02.png"),
+	"l5-dead-mans-hand": os.path.join("symbol", "low paying symbols", "111b665c-0779-4d1e-b98e-13f226f09dd3.png"),
+	"w-revolver": os.path.join("symbol", "special symbols", "OpenAI Playground 2026-09-01 at 03.33.10.png"),
+	"s-tombstone": os.path.join("symbol", "special symbols", "OpenAI Playground 2026-09-01 at 03.32.28.png"),
 	"su-super-scatter": "prop_15.png",
-	"gs-gunsmoke": "prop_14.png",
-	"sh-mark": "prop_11.png",
+	"gs-gunsmoke": os.path.join("symbol", "special symbols", "OpenAI Playground 2026-09-01 at 03.32.19.png"),
+	"sh-mark": os.path.join("symbol", "special symbols", "OpenAI Playground 2026-09-01 at 03.32.39.png"),
 }
 
 READY = {
@@ -152,6 +196,28 @@ def vertical_smear(card: Image.Image, spread: int = 26, steps: int = 9) -> Image
     return out.filter(ImageFilter.GaussianBlur(1.2))
 
 
+PLATE_DIR = os.path.join(APP, "assets-raw", "cell_backplates")
+PLATE_HIGH = os.path.join(PLATE_DIR, "plate_high.png")
+PLATE_LOW = os.path.join(PLATE_DIR, "plate_low.png")
+HIGHS = {"h1.webp", "h2.webp", "h3.webp", "h4.webp", "h5.webp"}
+LOWS = {"l1.webp", "l2.webp", "l3.webp", "l4.webp", "l5.webp"}
+
+
+def _load_plate(path: str) -> Image.Image | None:
+    if not os.path.isfile(path):
+        return None
+    return Image.open(path).convert("RGBA")
+
+
+def stack_plate(face: Image.Image, plate: Image.Image | None) -> Image.Image:
+    if plate is None:
+        return face
+    cell = Image.new("RGBA", face.size, (0, 0, 0, 0))
+    cell.alpha_composite(plate.resize(face.size, Image.LANCZOS))
+    cell.alpha_composite(face)
+    return cell
+
+
 def load_ready() -> dict[str, Image.Image]:
     cards: dict[str, Image.Image] = {}
     for frame, path in READY.items():
@@ -159,9 +225,21 @@ def load_ready() -> dict[str, Image.Image]:
             print(f"  skip missing {path}")
             continue
         src = Image.open(path).convert("RGBA")
-        cards[frame] = fit_cell(src)
+        if frame in HIGHS:
+            cards[frame] = faces_lib.high_cell(src)
+        elif frame in LOWS:
+            cards[frame] = faces_lib.card_cell(src)
+        elif frame == "s.png":
+            cards[frame] = faces_lib.scatter_cell(src)
+        else:
+            cards[frame] = fit_cell(src)
         print(f"  {os.path.basename(os.path.dirname(path)):18s} {src.size} -> {frame}")
     return cards
+
+
+def stack_paying(faces: dict[str, Image.Image]) -> dict[str, Image.Image]:
+    # Faces only. The wood / blood cell backboards are retired.
+    return dict(faces)
 
 
 def stamp_atlas(dest_dir: str, cards: dict[str, Image.Image]) -> None:
@@ -233,6 +311,13 @@ def patch_spine(spine_dir: str, cards: dict[str, Image.Image]) -> None:
         webp = os.path.join(spine_dir, "mm_symbols.webp")
         if os.path.isfile(webp):
             _atomic_save(sheet, webp, lossless=True)
+        page = (lines[0] or "").strip()
+        if page and page not in {"mm_symbols.png", "mm_symbols.webp"}:
+            extra = os.path.join(spine_dir, page)
+            if page.endswith(".webp"):
+                _atomic_save(sheet, extra, lossless=True)
+            else:
+                _atomic_save(sheet, extra)
         print(f"  spine patched {n} -> {spine_dir}")
 
 
@@ -256,7 +341,8 @@ def write_features() -> None:
         if not os.path.isfile(path):
             print(f"  skip feature {name}")
             continue
-        card = fit_cell(Image.open(path).convert("RGBA"))
+        src_im = Image.open(path).convert("RGBA")
+        card = faces_lib.scatter_cell(src_im) if name == "tr_scatter.png" else fit_cell(src_im)
         for dest in MIRROR_DIRS:
             if not os.path.isdir(dest) and dest != MIRROR_DIRS[0]:
                 continue
@@ -284,17 +370,300 @@ def write_expanding_wild() -> None:
     print("  feature wr_wild_expand.png")
 
 
-if __name__ == "__main__":
-    print("Installing desktop sheet symbols onto live v13...")
-    install_kit()
-    cards = load_ready()
-    if not cards:
-        raise SystemExit("no ready idles")
-    for dest in ATLAS_DIRS:
-        stamp_atlas(dest, cards)
+RESTYLE_DIR = os.path.join(APP, "assets-raw", "symbol_restyle")
+RESTYLE_KIT = {
+    "h1-gunslinger": "h1_gunslinger.png",
+    "h2-duchess": "h2_duchess.png",
+    "h3-butcher": "h3_butcher.png",
+    "h4-card-shark": "h4_cardshark.png",
+    "h5-preacher": "h5_preacher.png",
+    "w-revolver": "w_wild.png",
+    "s-tombstone": "s_scatter.png",
+    "su-super-scatter": "su_super.png",
+    "gs-gunsmoke": "gs_gunsmoke.png",
+    "sh-mark": "sh_mark.png",
+}
+RESTYLE_FEATURES = {
+    "wr_wild.png": "w_wild.png",
+    "tr_scatter.png": "s_scatter.png",
+    "tr_scatter_super.png": "su_super.png",
+    "tr_gs.png": "gs_gunsmoke.png",
+    "tr_sh.png": "sh_mark.png",
+    "tr_sp.png": "sp_split.png",
+    "tr_nw.png": "nw_nudge.png",
+    "tr_ts.png": "ts_tombstone.png",
+    "tr_nudge_wild.png": "w_wild.png",
+}
+
+_restyle_highs = False
+
+
+def install_restyle() -> None:
+    os.makedirs(RESTYLE_DIR, exist_ok=True)
+    for slug, filename in RESTYLE_KIT.items():
+        src = os.path.join(RESTYLE_DIR, filename)
+        if not os.path.isfile(src):
+            print(f"  skip missing restyle {filename}")
+            continue
+        dest_dir = os.path.join(KIT, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        dest = os.path.join(dest_dir, "idle.png")
+        shutil.copy2(src, dest)
+        print(f"  restyle {filename} -> {slug}/idle.png")
+
+
+def write_restyle_features() -> None:
+    for name, filename in RESTYLE_FEATURES.items():
+        src = os.path.join(RESTYLE_DIR, filename)
+        if not os.path.isfile(src):
+            print(f"  skip feature {name}")
+            continue
+        src_im = Image.open(src).convert("RGBA")
+        card = faces_lib.scatter_cell(src_im) if name == "tr_scatter.png" else fit_cell(src_im)
+        for dest in MIRROR_DIRS:
+            if not os.path.isdir(dest) and dest != MIRROR_DIRS[0]:
+                continue
+            os.makedirs(dest, exist_ok=True)
+            _atomic_save(card, os.path.join(dest, name))
+        print(f"  feature {name}")
+
+
+HIGH_SPECIAL_SLUGS = (
+    "h1-gunslinger",
+    "h2-duchess",
+    "h3-butcher",
+    "h4-card-shark",
+    "h5-preacher",
+    "w-revolver",
+    "s-tombstone",
+    "gs-gunsmoke",
+    "sh-mark",
+)
+HIGH_SPECIAL_FRAMES = set(HIGHS) | {"w.png", "s.png"}
+
+
+def install_island_highs() -> None:
+    if not os.path.isdir(ISLAND_HIGHS_DIR):
+        raise SystemExit(f"missing island highs: {ISLAND_HIGHS_DIR}")
+    os.makedirs(RESTYLE_DIR, exist_ok=True)
+    for slug, filename in ISLAND_HIGHS.items():
+        src = os.path.join(ISLAND_HIGHS_DIR, filename)
+        if not os.path.isfile(src):
+            raise SystemExit(f"missing {src}")
+        dest_dir = os.path.join(KIT, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        shutil.copy2(src, os.path.join(dest_dir, "idle.png"))
+        restyle = RESTYLE_KIT.get(slug)
+        if restyle:
+            shutil.copy2(src, os.path.join(RESTYLE_DIR, restyle))
+        print(f"  island {filename} -> {slug}/idle.png")
+
+
+def install_island_lows() -> None:
+    if not os.path.isdir(ISLAND_LOWS_DIR):
+        raise SystemExit(f"missing island lows: {ISLAND_LOWS_DIR}")
+    os.makedirs(RESTYLE_DIR, exist_ok=True)
+    for slug, filename in ISLAND_LOWS.items():
+        src = os.path.join(ISLAND_LOWS_DIR, filename)
+        if not os.path.isfile(src):
+            raise SystemExit(f"missing {src}")
+        dest_dir = os.path.join(KIT, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        shutil.copy2(src, os.path.join(dest_dir, "idle.png"))
+        restyle = RESTYLE_LOWS.get(slug)
+        if restyle:
+            shutil.copy2(src, os.path.join(RESTYLE_DIR, restyle))
+        print(f"  island {filename} -> {slug}/idle.png")
+
+
+def install_highs_specials() -> None:
+    if os.path.isdir(ISLAND_HIGHS_DIR):
+        install_island_highs()
+    for slug in HIGH_SPECIAL_SLUGS:
+        if slug in ISLAND_HIGHS and os.path.isfile(os.path.join(KIT, slug, "idle.png")):
+            continue
+        src = os.path.join(NEW, PROP[slug])
+        if not os.path.isfile(src):
+            raise SystemExit(f"missing {src}")
+        dest_dir = os.path.join(KIT, slug)
+        os.makedirs(dest_dir, exist_ok=True)
+        dest = os.path.join(dest_dir, "idle.png")
+        shutil.copy2(src, dest)
+        print(f"  kit {os.path.basename(src)} -> {slug}/idle.png")
+
+
+_SYMBOL_FX_SUFFIX = (
+	"_plate",
+	"_clip",
+	"_aura",
+	"_glow",
+	"_streak",
+	"_ring",
+	"_wisp1",
+	"_wisp2",
+	"_wisp3",
+	"_shard1",
+	"_shard2",
+	"_shard3",
+	"_shard4",
+)
+
+
+def hide_plate_slots() -> None:
+    paying = [f"h{i}" for i in range(1, 6)] + [f"l{i}" for i in range(1, 6)] + ["w", "s"]
+    n = 0
     for dest in SPINE_DIRS:
-        patch_spine(dest, cards)
-    write_paytable(cards)
-    write_features()
-    write_expanding_wild()
+        for gid in paying:
+            path = os.path.join(dest, f"{gid}.json")
+            if not os.path.isfile(path):
+                continue
+            data = json.loads(open(path, encoding="utf-8").read())
+            hide_names = tuple(f"{gid}{sfx}" for sfx in _SYMBOL_FX_SUFFIX)
+            changed = False
+            for slot in data.get("slots") or []:
+                if slot.get("name") in hide_names and slot.get("attachment"):
+                    slot["attachment"] = None
+                    changed = True
+                if slot.get("blend"):
+                    del slot["blend"]
+                    changed = True
+            skins = data.get("skins") or []
+            if skins:
+                atts = skins[0].get("attachments") or {}
+                for slot_name in hide_names:
+                    if slot_name in atts:
+                        del atts[slot_name]
+                        changed = True
+            if changed:
+                with open(path, "w", encoding="utf-8", newline="\n") as handle:
+                    json.dump(data, handle, separators=(",", ":"))
+                n += 1
+    print(f"  hid plate/blend slots on {n} skeletons")
+
+
+def write_nudge_wild_from_wild() -> None:
+    wild = os.path.join(APP, "assets", "sprites", "mirror", "wr_wild.png")
+    if not os.path.isfile(wild):
+        return
+    card = Image.open(wild).convert("RGBA")
+    for dest in MIRROR_DIRS:
+        os.makedirs(dest, exist_ok=True)
+        _atomic_save(card, os.path.join(dest, "tr_nudge_wild.png"))
+    print("  feature tr_nudge_wild.png")
+
+
+if __name__ == "__main__":
+    lows_only = "--lows-only" in sys.argv
+    island_lows = "--island-lows" in sys.argv or lows_only
+    restyle = "--restyle" in sys.argv
+    highs_specials = "--highs-specials" in sys.argv
+    island_highs = "--island-highs" in sys.argv
+    no_plates = "--no-plates" in sys.argv
+    _restyle_highs = restyle or highs_specials or no_plates or island_highs
+    print("Installing desktop sheet symbols onto live v13...")
+    if island_lows:
+        print("  lows from island crop (A K Q J 10 plaques)")
+        install_island_lows()
+        faces = {k: v for k, v in load_ready().items() if k in LOWS}
+        if len(faces) != 5:
+            raise SystemExit(f"expected 5 low faces, got {sorted(faces)}")
+        stacked = stack_paying(faces)
+        for dest in ATLAS_DIRS:
+            stamp_atlas(dest, stacked)
+        for dest in SPINE_DIRS:
+            patch_spine(dest, faces)
+        write_paytable(stacked)
+        hide_plate_slots()
+        print("done")
+        raise SystemExit(0)
+    if island_highs:
+        print("  highs from island crop (faces only)")
+        install_island_highs()
+        faces = {k: v for k, v in load_ready().items() if k in HIGHS}
+        if len(faces) != 5:
+            raise SystemExit(f"expected 5 high faces, got {sorted(faces)}")
+        stacked = stack_paying(faces)
+        for dest in ATLAS_DIRS:
+            stamp_atlas(dest, stacked)
+        for dest in SPINE_DIRS:
+            patch_spine(dest, faces)
+        write_paytable(stacked)
+        hide_plate_slots()
+        print("done")
+        raise SystemExit(0)
+    if no_plates:
+        print("  faces only (no wood / blood backboards)")
+        install_kit()
+        faces = {k: v for k, v in load_ready().items() if k in HIGHS or k in LOWS}
+        stacked = stack_paying(faces)
+        for dest in ATLAS_DIRS:
+            stamp_atlas(dest, stacked)
+        for dest in SPINE_DIRS:
+            patch_spine(dest, faces)
+        write_paytable(stacked)
+        hide_plate_slots()
+        print("done")
+        raise SystemExit(0)
+    if highs_specials:
+        print("  highs + specials from desktop folders")
+        install_highs_specials()
+        faces = {k: v for k, v in load_ready().items() if k in HIGH_SPECIAL_FRAMES}
+        stacked = stack_paying(faces)
+        for dest in ATLAS_DIRS:
+            stamp_atlas(dest, stacked)
+        for dest in SPINE_DIRS:
+            patch_spine(dest, {k: v for k, v in faces.items() if k in HIGHS})
+        write_paytable(stacked)
+        write_features()
+        write_nudge_wild_from_wild()
+        write_expanding_wild()
+        print("done")
+        raise SystemExit(0)
+    if restyle:
+        print("  sticker restyle (highs + specials)")
+        install_restyle()
+        want = set(HIGHS) | {"w.png", "s.png"}
+        faces = {k: v for k, v in load_ready().items() if k in want and os.path.isfile(READY[k])}
+        stacked = stack_paying(faces)
+        for dest in ATLAS_DIRS:
+            stamp_atlas(dest, stacked)
+        for dest in SPINE_DIRS:
+            patch_spine(dest, {k: v for k, v in faces.items() if k in HIGHS})
+        write_paytable(stacked)
+        write_restyle_features()
+        write_expanding_wild()
+        print("done")
+        raise SystemExit(0)
+    if lows_only:
+        print("  lows only (A K Q J 10)")
+        for slug in (
+            "l1-bullet",
+            "l2-whiskey",
+            "l3-spur",
+            "l4-horseshoe",
+            "l5-dead-mans-hand",
+        ):
+            src = os.path.join(NEW, PROP[slug])
+            if not os.path.isfile(src):
+                raise SystemExit(f"missing {src}")
+            dest_dir = os.path.join(KIT, slug)
+            os.makedirs(dest_dir, exist_ok=True)
+            dest = os.path.join(dest_dir, "idle.png")
+            shutil.copy2(src, dest)
+            print(f"  kit {PROP[slug]} -> {slug}/idle.png")
+        faces = {k: v for k, v in load_ready().items() if k in LOWS}
+    else:
+        install_kit()
+        faces = load_ready()
+    if not faces:
+        raise SystemExit("no ready idles")
+    stacked = stack_paying(faces)
+    for dest in ATLAS_DIRS:
+        stamp_atlas(dest, stacked)
+    for dest in SPINE_DIRS:
+        patch_spine(dest, faces)
+    write_paytable(stacked)
+    if not lows_only:
+        write_features()
+        write_expanding_wild()
     print("done")

@@ -2,11 +2,21 @@
  * Gunsmoke cell-hit stamps. No live pistol. Rounds come in from off-screen
  * left, right, bottom-left and bottom-right (muzzle out of frame) into each
  * cell, then the art cracks and a hole stamps.
- * Hits are not a metronome: each volley gets a seeded paw---paw-paw
- * rhythm, never a stacked double. Specials (H1–H5) also get blood stains
- * clipped to the iron cell-frame sprite; the stains stay.
+ * Hits use the same GTA dumps as win-plate gunfire (planCelebClusterGaps):
+ * singles and 2–5 shot clusters, tight burst, then a breath. Seeded.
+ * Specials (H1–H5) also get blood stains clipped to the iron cell-frame;
+ * the stains stay.
  */
-import { CELL_PITCH_X, SYMBOL_CARD_W, SYMBOL_CARD_H, SYMBOL_SIZE, HIGH_SYMBOLS } from './constants';
+import {
+	CELL_PITCH_X,
+	HIGH_SYMBOLS,
+	LOW_SYMBOLS,
+	SPECIAL_SYMBOLS,
+	SYMBOL_CARD_H,
+	SYMBOL_CARD_W,
+	SYMBOL_SIZE,
+} from './constants';
+import { planCelebClusterGaps } from './celebGunfire';
 import { fxRandom } from './featureVfx';
 import { GUNSMOKE_ART } from './gunsmokeArt.generated';
 import type { SymbolName } from './types';
@@ -47,6 +57,49 @@ export const DENT_SETTLE_MS = 260;
 export const DENT_RESIDUAL = 0.46;
 export const CRUSH_IN_MS = 55;
 export const CRUSH_OUT_MS = 180;
+/** Metal range-spinner: knock, then yaw into depth (edge-on), then wobble stop. */
+export const SPINNER_KNOCK_MS = 70;
+export const SPINNER_KNOCK_OUT_MS = 240;
+export const SPINNER_KNOCK_PX = 16;
+export const SPINNER_TURNS = 3;
+export const SPINNER_SPIN_MS = 640;
+export const SPINNER_WOBBLE_MS = 320;
+export const SPINNER_WOBBLE_AMP = 0.16;
+/** Never collapse to a line — the plate still has thickness edge-on. */
+export const SPINNER_EDGE = 0.06;
+/** Hold the hit face long enough to read the spin before a wild cover. */
+export const SPINNER_HOLD_MS = 420;
+/** Wobble starts while the plate is still decelerating. */
+export const SPINNER_WOBBLE_DELAY_MS = SPINNER_SPIN_MS * 0.55;
+
+export const spinnerSpinTo = Math.PI * 2 * SPINNER_TURNS;
+
+/** Yaw around the vertical centre — face comes at you / goes away, not a 2D wheel. */
+export const spinnerYaw = (spin: number, wobble: number) => {
+	const decay = 1 - wobble;
+	return spin + Math.sin(wobble * Math.PI * 5) * SPINNER_WOBBLE_AMP * decay;
+};
+
+/** True on the back of the plate — the swap frame. */
+export const isSpinnerBack = (angle: number) => Math.cos(angle) < 0;
+
+/** scale.x = cos(yaw). Negative is the back of the plate. */
+export const spinnerFaceScale = (angle: number) => {
+	const facing = Math.cos(angle);
+	const edge = Math.max(Math.abs(facing), SPINNER_EDGE);
+	const depth = 1 - Math.abs(facing);
+	return {
+		x: (facing < 0 ? -1 : 1) * edge,
+		y: 1 + 0.1 * depth,
+	};
+};
+
+export const spinnerKnockOffset = (dirX: number, dirY: number, knock: number) => ({
+	x: dirX * SPINNER_KNOCK_PX * knock,
+	y: dirY * SPINNER_KNOCK_PX * 0.72 * knock,
+});
+
+export const spinnerYawSign = (knockX: number) => (knockX < 0 ? -1 : 1);
 
 export type MuzzleSide = 'left' | 'right' | 'bottomLeft' | 'bottomRight';
 
@@ -112,6 +165,16 @@ export const pickBullet = (travelAngle: number) => {
 
 export const isHighPaySymbol = (name: SymbolName) =>
 	(HIGH_SYMBOLS as readonly string[]).includes(name);
+
+export const isLowPaySymbol = (name: SymbolName) =>
+	(LOW_SYMBOLS as readonly string[]).includes(name);
+
+export const isSpecialSymbol = (name: SymbolName) =>
+	(SPECIAL_SYMBOLS as readonly string[]).includes(name);
+
+/** High-pay smoke/grunge plate. Specials share that plate. Lows use lowPayBg. */
+export const usesHighPayPlate = (name: SymbolName) =>
+	isHighPaySymbol(name) || isSpecialSymbol(name);
 
 /** Same shattered-glass holes as click-to-shoot — they stay on the cell. */
 export const GUNSMOKE_HOLE_KEYS = [
@@ -232,27 +295,22 @@ const shotsFromGaps = (count: number, seed: number, kinds: GapKind[]): WoundShot
 	});
 };
 
-const beatHoldGaps = (gaps: number, seed: number): GapKind[] => {
-	const kinds: GapKind[] = [];
-	if (gaps === 1) {
-		kinds.push(fxRandom(seed) < 0.45 ? 'hold' : 'beat');
-	} else if (gaps >= 2) {
-		const holdAt = Math.floor(fxRandom(seed + 5) * gaps);
-		for (let i = 0; i < gaps; i += 1) {
-			if (i === holdAt) kinds.push('hold');
-			else kinds.push(fxRandom(seed + 11 + i * 17) < 0.32 ? 'hold' : 'beat');
-		}
-	}
-	return kinds;
-};
-
 /**
- * Per-shot gaps for one volley. Uneven singles only — beat or hold, never a
- * stacked double. Seeded so the same book replays the same rhythm.
+ * Per-shot gaps for one volley. Same dumps as win celebration gunfire:
+ * paw-paw-paw, then a breath. Seeded so the same book replays the same rhythm.
  */
 export const planWoundRhythm = (count: number, seed: number): WoundShot[] => {
 	if (count <= 0) return [];
-	return shotsFromGaps(count, seed, beatHoldGaps(Math.max(0, count - 1), seed));
+	const celeb = planCelebClusterGaps(count, seed);
+	const kinds: GapKind[] = celeb.slice(0, Math.max(0, count - 1)).map((gap) =>
+		gap.burst ? 'burst' : gap.beatMs >= WOUND_HOLD_MS ? 'hold' : 'beat',
+	);
+	const shots = shotsFromGaps(count, seed, kinds);
+	return shots.map((shot, i) => {
+		const gap = celeb[i];
+		if (!gap) return shot;
+		return { ...shot, beatMs: gap.beatMs, burst: gap.burst };
+	});
 };
 
 /** Pack leftover throws so the last cluster is never a single stray knife. */

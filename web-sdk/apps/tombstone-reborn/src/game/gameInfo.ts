@@ -21,11 +21,11 @@ export const WHITE_ROOM_HIGH_SYMBOLS: PaySymbol[] = [
 ];
 
 export const WHITE_ROOM_LOW_SYMBOLS: PaySymbol[] = [
-	{ key: 'l1', name: 'Bullet', pays: [1, 0.4, 0.2, 0.1] },
-	{ key: 'l2', name: 'Whiskey', pays: [1, 0.4, 0.2, 0.1] },
-	{ key: 'l3', name: 'Spur', pays: [0.8, 0.3, 0.1, 0.1] },
-	{ key: 'l4', name: 'Horseshoe', pays: [0.8, 0.3, 0.1, 0.1] },
-	{ key: 'l5', name: 'Dead Man\u2019s Hand', pays: [0.6, 0.2, 0.1, 0.1] },
+	{ key: 'l1', name: 'Ace', pays: [1, 0.4, 0.2, 0.1] },
+	{ key: 'l2', name: 'King', pays: [1, 0.4, 0.2, 0.1] },
+	{ key: 'l3', name: 'Queen', pays: [0.8, 0.3, 0.1, 0.1] },
+	{ key: 'l4', name: 'Jack', pays: [0.8, 0.3, 0.1, 0.1] },
+	{ key: 'l5', name: 'Ten', pays: [0.6, 0.2, 0.1, 0.1] },
 ];
 
 export const WHITE_ROOM_SPECIALS: SpecialSymbol[] = [

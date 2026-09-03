@@ -16,10 +16,12 @@
 	import { BoardContext } from 'components-shared';
 
 	import { getContext } from '../game/context';
+	import { isHighPaySymbol } from '../game/gunsmokeSpin';
 	import BoardContainer from './BoardContainer.svelte';
 	import BoardMask from './BoardMask.svelte';
 	import BoardBase from './BoardBase.svelte';
 	import WinDim from './WinDim.svelte';
+	import WinLinkMark from './WinLinkMark.svelte';
 
 	const context = getContext();
 
@@ -51,7 +53,9 @@
 							window.setTimeout(resolve, 2500);
 						}),
 					]);
-					reelSymbol.symbolState = 'postWin';
+					reelSymbol.symbolState = isHighPaySymbol(reelSymbol.rawSymbol.name)
+						? 'postWin'
+						: 'static';
 				});
 
 			await Promise.all(getPromises());
@@ -75,4 +79,9 @@
 			<BoardBase />
 		</BoardContainer>
 	</BoardContext>
+
+	<!-- Over idle plates and faces. Highs live on the animate layer so the
+		hat clears the pocket clip; an earlier slot under that layer buried
+		the skim. Band hides before winFacesRise. -->
+	<WinLinkMark layer="wipe" />
 {/if}

@@ -24,10 +24,9 @@
 
 <script lang="ts">
 	/**
-	 * One full-reel NUDGE column per reel. The same tall card always slides:
-	 * the reel window shows the landed foot, and the NUDGE header seats on
-	 * the board lip. A growing mask would pin the header in the first cell.
-	 * Two nudges each keep their own totem.
+	 * One full-reel NUDGE coffin per reel. Closed lid first; after the
+	 * drop the cover slides down and the open interior + ways mark sit
+	 * inside. No old NUDGE header plaque.
 	 */
 	import { Texture } from 'pixi.js';
 	import { Tween } from 'svelte/motion';
@@ -36,12 +35,22 @@
 	import { Container, Sprite, Rectangle, BaseSprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_CARD_W, SYMBOL_CARD_H } from '../game/constants';
+	import { NUDGE_COFFIN_Z, SYMBOL_CARD_W, SYMBOL_CARD_H } from '../game/constants';
 	import { getCellCenterY, getCardHeight, getReelPocket, getReelRows } from '../game/utils';
 	import { fxDur, fxWait } from '../game/fxTiming';
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { shakeBoard } from '../game/stateShake.svelte';
-	import { FEATURE_ART } from '../game/featureVfx';
+	import {
+		FEATURE_ART,
+		FEATURE_FX,
+		FX,
+		fxRandom,
+		nudgeCoffinOpenKey,
+		puffFade,
+		seqFrame,
+	} from '../game/featureVfx';
+	import { playThemedOnce } from '../game/sfxTheme';
+	import FeatureFxSprite from './FeatureFxSprite.svelte';
 	import {
 		createFireRingFilter,
 		FIRE_RATIO,
@@ -52,9 +61,18 @@
 	import MultBadge from './MultBadge.svelte';
 	import BoardSpace from './BoardSpace.svelte';
 
-	const BADGE_RATIO = 199 / 512;
-	/** NUDGE plaque share of fx_nudge_column.png (header px / image h). */
-	const HEADER_FRAC = 200 / 2360;
+	/** Sheet canvas after uniform install (tools/install_nudge_coffin_sheet.py). */
+	const COFFIN_ART_W = 681;
+	const COFFIN_ART_H = 1674;
+	/** Width-only squeeze. Height stays the reel. */
+	const COFFIN_WIDTH_TIGHT = 0.81;
+	/** Ways mark sits on the crossed hands, not under the foot. */
+	const MULT_INSIDE = 0.60;
+	const LID_MS = 540;
+	/** Empty hold after the coffin seats, before the lid slides. */
+	const LID_HOLD_MS = 500;
+	const DUST_LIFE = 0.62;
+	const DUST_GAP = 0.12;
 	const COL_BOX_X = 0.58;
 	const COL_BOX_Y = 0.72;
 
@@ -63,21 +81,38 @@
 	type Totem = {
 		reel: number;
 		startRow: number;
+		/** Landed 2–9. Coffin art stays on this, not the doubled stamp. */
+		initialWays: number;
 		ways: number;
 		revealRow: Tween<number>;
 		badgePop: Tween<number>;
+		lid: Tween<number>;
 		ignite: Tween<number>;
 		fire: ReturnType<typeof createFireRingFilter>;
 		fireUniforms: RingUniforms;
 		fireClock: number;
+		dustEmit: number;
+	};
+
+	type LidDust = {
+		key: number;
+		reel: number;
+		x: number;
+		y: number;
+		life: number;
+		seed: number;
+		size: number;
+		dirt: boolean;
 	};
 
 	let totems = $state<Totem[]>([]);
+	let lidDust = $state<LidDust[]>([]);
 	const fallOut = new Tween(0);
 	let fireLast = 0;
+	let dustClock = 0;
+	let dustKey = 0;
 
 	const colW = SYMBOL_CARD_W;
-	const badgeH = colW * 0.86 * BADGE_RATIO;
 	const show = $derived(totems.length > 0);
 
 	const makeFire = () => {
@@ -99,17 +134,17 @@
 	const layoutOf = (reel: number) => {
 		const pocket = getReelPocket(reel);
 		const fullH = Math.max(1, pocket.bottom - pocket.top);
-		const headerH = fullH * (HEADER_FRAC / (1 - HEADER_FRAC));
-		const spriteH = headerH + fullH;
-		const totemTop = -headerH;
-		const totemBot = fullH + badgeH / 2;
+		const totemTop = 0;
+		const totemBot = fullH;
 		const totemH = Math.max(1, totemBot - totemTop);
+		const coffinH = fullH;
+		const coffinW = coffinH * (COFFIN_ART_W / COFFIN_ART_H) * COFFIN_WIDTH_TIGHT;
 		return {
 			cx: (pocket.left + pocket.right) / 2,
 			colTop: pocket.top,
 			fullH,
-			headerH,
-			spriteH,
+			coffinH,
+			coffinW,
 			cardH: getCardHeight(reel),
 			rows: getReelRows(reel),
 			fireY: (totemTop + totemBot) / 2,
@@ -195,30 +230,75 @@
 			({
 				reel: e.reel,
 				startRow,
+				initialWays: e.initialWays,
 				ways: e.initialWays,
 				revealRow: new Tween(reveal),
 				badgePop: new Tween(1),
+				lid: new Tween(0),
 				ignite: new Tween(0),
 				fireClock: 0,
+				dustEmit: 0,
 				...makeFire(),
 			} satisfies Totem);
 		totem.startRow = startRow;
+		totem.initialWays = e.initialWays;
 		totem.ways = e.initialWays;
 		totem.revealRow.set(reveal, { duration: 0 });
 		totem.badgePop.set(1, { duration: 0 });
+		totem.lid.set(0, { duration: 0 });
 		totem.ignite.set(0, { duration: 0 });
+		totem.dustEmit = 0;
 		fallOut.set(0, { duration: 0 });
 		coverStack(e.reel, startRow, reveal);
 		if (!existing) totems = [...totems, totem];
 		else totems = [...totems];
 	};
 
+	const spawnDust = (
+		reel: number,
+		x: number,
+		y: number,
+		seed: number,
+		size: number,
+		dirt = false,
+	) => {
+		dustKey += 1;
+		lidDust = [
+			...lidDust.filter((puff) => puff.life < 1),
+			{ key: dustKey, reel, x, y, life: 0, seed, size, dirt },
+		];
+	};
+
+	const kickLidDust = (totem: Totem) => {
+		const layout = layoutOf(totem.reel);
+		const slideY = slideYOf(totem.reel, totem.revealRow.current);
+		const coffinY = slideY - (layout.coffinH - layout.fullH) * 0.5;
+		for (let i = 0; i < 3; i++) {
+			const seed = totem.reel * 71 + i * 19 + 5;
+			spawnDust(
+				totem.reel,
+				(fxRandom(seed) - 0.5) * layout.coffinW * 0.62,
+				coffinY + layout.coffinH * (0.02 + fxRandom(seed + 1) * 0.08),
+				seed,
+				0.55 + fxRandom(seed + 2) * 0.35,
+				i === 2,
+			);
+		}
+		totem.dustEmit = dustClock;
+	};
+
+	const openLid = async (totem: Totem) => {
+		if (totem.lid.current > 0.95) return;
+		await fxWait(LID_HOLD_MS);
+		playThemedOnce('sfx_nudge_reveal', { forcePlay: true });
+		kickLidDust(totem);
+		await totem.lid.set(1, { duration: fxDur(LID_MS), easing: cubicIn });
+	};
+
 	const igniteFire = async (totem: Totem) => {
 		if (totem.ignite.current > 0.01 || totem.ignite.target === 1) return;
-		// Visual only. The fire bed is a hiss/crackle loop and reads as
-		// white-noise glitch on the nudge-ways book.
+		// Visual only. No slam — the lid already did the beat.
 		await totem.ignite.set(1, { duration: fxDur(240), easing: cubicIn });
-		shakeBoard({ intensity: 11, duration: fxDur(140) });
 	};
 
 	const douseFire = () => {
@@ -251,6 +331,7 @@
 		if (!totem) return;
 
 		if (e.fullReel) {
+			await openLid(totem);
 			punchWays(totem, e.finalWays);
 			await igniteFire(totem);
 			return;
@@ -268,11 +349,7 @@
 			const dist = Math.max(0.35, Math.abs(row - from));
 			const duration = fxDur(180 + 80 * dist);
 			coverStack(totem.reel, totem.startRow, Math.round(from));
-			context.eventEmitter.broadcast({
-				type: 'soundOnce',
-				name: 'sfx_reel_nudge',
-				forcePlay: true,
-			});
+			playThemedOnce('sfx_nudge', { forcePlay: true });
 			await Promise.all([
 				totem.revealRow.set(row, { duration, easing: cubicIn }),
 				shoveOut(totem.reel, Math.round(from), row, duration),
@@ -295,6 +372,8 @@
 			await thud(floor, e.finalWays, false);
 		}
 
+		await openLid(totem);
+		punchWays(totem, e.finalWays);
 		await igniteFire(totem);
 	};
 
@@ -308,12 +387,14 @@
 		},
 		nudgeWaysHide: () => {
 			douseFire();
+			lidDust = [];
 			totems = [];
 			clearCover();
 		},
 		featureFxFallOut: async () => {
 			douseFire();
 			await fallOutFeatureFx(fallOut, show);
+			lidDust = [];
 			totems = [];
 			clearCover();
 		},
@@ -326,6 +407,7 @@
 		const tick = (now: number) => {
 			const dt = fireLast ? now - fireLast : 16;
 			fireLast = now;
+			dustClock = now / 1000;
 			for (const totem of totems) {
 				const hot = totem.ignite.current;
 				const layout = layoutOf(totem.reel);
@@ -335,6 +417,37 @@
 				totem.fireUniforms.uProgress = hot;
 				totem.fireUniforms.uYScale = layout.fireYScale;
 				totem.fireUniforms.uFlash = 0;
+				const lid = totem.lid.current;
+				if (lid > 0.04 && lid < 0.97 && dustClock - totem.dustEmit >= DUST_GAP) {
+					totem.dustEmit = dustClock;
+					const slideY = slideYOf(totem.reel, totem.revealRow.current);
+					const coffinY = slideY - (layout.coffinH - layout.fullH) * 0.5;
+					const lipY = coffinY + lid * layout.coffinH;
+					const seed = totem.reel * 53 + Math.floor(lid * 40);
+					spawnDust(
+						totem.reel,
+						(fxRandom(seed) - 0.5) * layout.coffinW * 0.55,
+						lipY,
+						seed,
+						0.4 + fxRandom(seed + 3) * 0.32,
+					);
+					if (fxRandom(seed + 9) > 0.45) {
+						spawnDust(
+							totem.reel,
+							(fxRandom(seed + 7) > 0.5 ? 0.36 : -0.36) * layout.coffinW,
+							lipY + layout.cardH * 0.04,
+							seed + 11,
+							0.32 + fxRandom(seed + 8) * 0.22,
+							true,
+						);
+					}
+				}
+			}
+			if (lidDust.length) {
+				const step = dt / 1000 / DUST_LIFE;
+				lidDust = lidDust
+					.map((puff) => ({ ...puff, life: puff.life + step }))
+					.filter((puff) => puff.life < 1);
 			}
 			raf = requestAnimationFrame(tick);
 		};
@@ -343,49 +456,55 @@
 	});
 </script>
 
+<Container zIndex={NUDGE_COFFIN_Z} eventMode="none">
 <MainContainer>
 	<BoardSpace yOffset={fallOut.current}>
 		{#each totems as totem (totem.reel)}
 			{@const layout = layoutOf(totem.reel)}
 			{@const slideY = slideYOf(totem.reel, totem.revealRow.current)}
-			{@const revealBot = revealBotOf(totem.reel, totem.revealRow.current)}
-			{@const showHeader = totem.startRow === 1 || slideY > -layout.headerH * 0.35}
+			{@const coffinY = slideY - (layout.coffinH - layout.fullH) * 0.5}
+			{@const lid = totem.lid.current}
+			{@const badgeAlpha = Math.min(1, Math.max(0, (lid - 0.35) / 0.4))}
 			<Container x={layout.cx} y={layout.colTop}>
-				{#if showHeader}
-					<Container>
-						<Rectangle
-							isMask
-							y={-layout.headerH}
-							anchor={{ x: 0.5, y: 0 }}
-							width={colW}
-							height={layout.headerH}
-							backgroundColor={0xffffff}
-						/>
-						<Sprite
-							key={FEATURE_ART.nudgeColumn}
-							y={-layout.headerH}
-							anchor={{ x: 0.5, y: 0 }}
-							width={colW}
-							height={layout.spriteH}
-						/>
-					</Container>
-				{/if}
 				<Container>
 					<Rectangle
 						isMask
 						anchor={{ x: 0.5, y: 0 }}
-						width={colW}
+						width={layout.coffinW}
 						height={layout.fullH}
 						backgroundColor={0xffffff}
 					/>
 					<Sprite
-						key={FEATURE_ART.nudgeColumn}
-						y={slideY - layout.headerH}
+						key={nudgeCoffinOpenKey(totem.initialWays)}
+						y={coffinY}
 						anchor={{ x: 0.5, y: 0 }}
-						width={colW}
-						height={layout.spriteH}
+						width={layout.coffinW}
+						height={layout.coffinH}
+					/>
+					<Sprite
+						key={FEATURE_ART.nudgeCoffinCover}
+						y={coffinY + lid * layout.coffinH}
+						anchor={{ x: 0.5, y: 0 }}
+						width={layout.coffinW}
+						height={layout.coffinH}
 					/>
 				</Container>
+				{#each lidDust.filter((puff) => puff.reel === totem.reel) as puff (puff.key)}
+					{@const t = puff.life}
+					{@const span = layout.coffinW * (0.26 + t * 0.2) * puff.size}
+					<FeatureFxSprite
+						tex={puff.dirt
+							? FX.dirt[Math.floor(fxRandom(puff.seed + 4) * FX.dirt.length)]
+							: seqFrame(FX.dust, t)}
+						x={puff.x + (fxRandom(puff.seed) - 0.5) * layout.coffinW * 0.1 * t}
+						y={puff.y - layout.cardH * 0.16 * t}
+						width={span}
+						height={span}
+						rotation={fxRandom(puff.seed * 3) * Math.PI * 2}
+						alpha={(puff.dirt ? 0.34 : 0.4) * puffFade(t)}
+						tint={puff.dirt ? FEATURE_FX.powder : FEATURE_FX.sand}
+					/>
+				{/each}
 				{#if totem.ignite.current > 0.01}
 					<Container y={layout.fireY} filters={[totem.fire]}>
 						<BaseSprite
@@ -398,11 +517,13 @@
 				{/if}
 				<MultBadge
 					label={formatWaysMult(totem.ways)}
-					y={revealBot + badgeH * 0.15}
-					width={SYMBOL_CARD_W * 0.86}
+					y={coffinY + layout.coffinH * MULT_INSIDE}
+					width={SYMBOL_CARD_W * 0.58}
 					scale={totem.badgePop.current}
+					alpha={badgeAlpha}
 				/>
 			</Container>
 		{/each}
 	</BoardSpace>
 </MainContainer>
+</Container>

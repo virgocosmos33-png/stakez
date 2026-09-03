@@ -4,7 +4,7 @@
 
 	import ReelSymbol from './ReelSymbol.svelte';
 	import { getContext } from '../game/context';
-	import { getReelPocket } from '../game/utils';
+	import { getReelPocket, getReelWindow } from '../game/utils';
 	import { isNudgeCoveredReel } from '../game/boardCells';
 
 	const context = getContext();
@@ -13,8 +13,8 @@
 	// SymbolWrap only culls once a symbol's CENTER leaves the reel window, and
 	// BoardMask spans the whole board box, so 1.6x-tall spin smears on a short
 	// reel were streaking over the timber beams. The animate layer stays
-	// unmasked so win/land spines can rise off the board; nudge-covered reels
-	// keep their pocket clip there (the slide must vanish into its socket).
+	// unmasked so win/land spines can rise; nudge-covered reels keep their
+	// pocket clip (the slide must vanish).
 	const clipReel = (reel: number) =>
 		!boardContext.animate ||
 		isNudgeCoveredReel(reel) ||
@@ -24,13 +24,14 @@
 {#each context.stateGame.board as reel, reelIndex (reelIndex)}
 	{#if clipReel(reelIndex)}
 		{@const pocket = getReelPocket(reelIndex)}
+		{@const window = getReelWindow(reelIndex)}
 		<Container>
 			<Rectangle
 				isMask
 				x={pocket.left}
-				y={pocket.top}
+				y={window.top}
 				width={pocket.right - pocket.left}
-				height={pocket.bottom - pocket.top}
+				height={window.bottom - window.top}
 				backgroundColor={0xffffff}
 			/>
 			{#each reel.reelState.symbols as reelSymbol, row}

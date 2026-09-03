@@ -4,8 +4,7 @@
 	import { getSymbolInfo } from '../game/utils';
 	import SymbolSpineMain from './SymbolSpineMain.svelte';
 
-	// The template's gold 'payframe' win overlay was dropped with the Madam
-	// Mirror spine set: the win skeletons carry their own additive glow flash.
+	// Face only. Additive glow / aura / wisp slots stay detached.
 	type Props = {
 		symbolInfo: ReturnType<typeof getSymbolInfo>;
 		x?: number;

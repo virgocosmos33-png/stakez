@@ -17,7 +17,7 @@
 	import { Tween } from 'svelte/motion';
 	import { backOut, cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Rectangle } from 'pixi-svelte';
+	import { Container, Graphics } from 'pixi-svelte';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { filterSplitCells } from '../game/boardCells';
@@ -27,6 +27,9 @@
 	import { SYMBOL_SIZE, CELL_PITCH_X } from '../game/constants';
 	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
+	import { isHighPaySymbol, usesHighPayPlate } from '../game/gunsmokeSpin';
+	import CellClipMask from './CellClipMask.svelte';
+	import HighPayBg from './HighPayBg.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import BoardSpace from './BoardSpace.svelte';
 
@@ -44,6 +47,15 @@
 	let phase = $state<'idle' | 'charge' | 'flash' | 'reveal'>('idle');
 	let time = $state(0);
 	const morphing = $derived(phase !== 'idle');
+	const openHat = $derived(
+		(phase === 'reveal' && toName ? isHighPaySymbol(toName) : false) ||
+			(fromName ? isHighPaySymbol(fromName) : false),
+	);
+	const showHighPlate = $derived(
+		phase === 'reveal'
+			? Boolean(toName && usesHighPayPlate(toName))
+			: Boolean(fromName && usesHighPayPlate(fromName)),
+	);
 
 	const charge = new Tween(0);
 	const flash = new Tween(0);
@@ -243,13 +255,10 @@
 				{@const chargePulse = 1 + charge.current * 0.12 * (0.6 + 0.4 * Math.sin(time * 9 + cell.seed))}
 				{@const revealScale = 0.55 + 0.45 * reveal.current}
 				<Container x={cell.cx} y={cell.cy}>
-					<Rectangle
-						isMask
-						anchor={0.5}
-						width={CELL_PITCH_X}
-						height={SYMBOL_SIZE}
-						backgroundColor={0xffffff}
-					/>
+					<CellClipMask reelIndex={cell.reel} openHat={openHat} />
+					{#if showHighPlate}
+						<HighPayBg reelIndex={cell.reel} />
+					{/if}
 					<Graphics draw={drawBacking} />
 					{#if (phase === 'charge' || phase === 'flash') && fromName}
 						<Container scale={chargePulse}>

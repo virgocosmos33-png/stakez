@@ -1,15 +1,17 @@
 <script lang="ts">
 	/**
 	 * One timber ring: backgroundSPINE MAIN_FRAME, seated in scene cover-fit
-	 * like the plate. Cards live in the hole. Spine MAIN_FRAME stays hidden
-	 * so this ring is the only copy, above the reels.
+	 * like the plate. Cards live in the hole and draw ON TOP of this chrome
+	 * (BOARD_REELS_Z > BOARD_TIMBER_Z). Spine MAIN_FRAME stays hidden so this
+	 * ring is the only copy.
 	 */
 	import { Container, Sprite } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { CELL_PITCH_X } from '../game/constants';
+	import { BOARD_TIMBER_Z, CELL_PITCH_X } from '../game/constants';
 	import { FRAME_SEATS } from '../game/frameSeats.generated';
 	import { sceneToMain } from '../game/saloonLamps';
+	import { stateShake } from '../game/stateShake.svelte';
 	import { getCellLeft, getReelWindow, getReelRows } from '../game/utils';
 
 	type Props = { layer?: 'back' | 'ring' };
@@ -67,8 +69,8 @@
 {#if layer === 'back'}
 	<Container
 		zIndex={0}
-		x={layout.x}
-		y={layout.y}
+		x={layout.x + stateShake.x}
+		y={layout.y + stateShake.y}
 		pivot={layout.pivot}
 		scale={layout.scale}
 	>
@@ -84,11 +86,11 @@
 		{/each}
 	</Container>
 {:else}
-	<Container zIndex={3}>
+	<Container zIndex={BOARD_TIMBER_Z}>
 		<Sprite
 			key={frameKey}
-			x={timber.x}
-			y={timber.y}
+			x={timber.x + stateShake.x}
+			y={timber.y + stateShake.y}
 			width={timber.w}
 			height={timber.h}
 		/>

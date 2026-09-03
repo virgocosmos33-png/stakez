@@ -5,15 +5,17 @@ THE WHITE ROOM: each symbol id maps to a DISTINCT clinical-horror concept
 punch+wobble+wisp pack with only new textures/tints.
 
 Rig layers (draw order):
-    aura, card mesh, glow, clip, streak, ring, wisp x3 (dust/ash), shard x4
+    plate (H/L only), aura, card mesh, glow, clip, streak, ring, wisp x3, shard x4
 
 States (constants.ts):
     <id>          win concept motion
     <id>_land     land concept motion
-    <id>_postwin  looping mesh deform (concept wave language)
+    <id>_postwin  looping inhale (slight scale + lift, no mesh wave)
+    <id>_static   rest pose (plate + face)
     hm_break      Observation Pane intact -> cracked + porcelain shards
 
-static / spin / postWinStatic remain SPRITE states outside this rig.
+spin / postWinStatic remain SPRITE states (baked plate+face). H/L board
+static / land / win / postWin play this rig.
 Explosion uses symbols3/explosion (rebuilt by gen_white_room_explosion.py).
 
 GAME_CONFIG (from regenerate_assets) drives card_<id>_<slug>.png + White Room tints.
@@ -70,6 +72,23 @@ ATLAS_STATIC_DIR = os.path.normpath(
     os.path.join(HERE, "..", "static", "assets", "sprites", "symbolsStatic")
 )
 OUT_DIR = os.path.normpath(os.path.join(HERE, "..", "static", "assets", "spines", "mm_symbols"))
+PLATE_DIR = os.path.normpath(os.path.join(HERE, "..", "assets-raw", "cell_backplates"))
+PLATE_FILES = {
+    "plate_high": os.path.join(PLATE_DIR, "plate_high.png"),
+    "plate_low": os.path.join(PLATE_DIR, "plate_low.png"),
+}
+PLATE_FOR_GID = {
+    "h1": "plate_high",
+    "h2": "plate_high",
+    "h3": "plate_high",
+    "h4": "plate_high",
+    "h5": "plate_high",
+    "l1": "plate_low",
+    "l2": "plate_low",
+    "l3": "plate_low",
+    "l4": "plate_low",
+    "l5": "plate_low",
+}
 
 CELL = 300
 PADDING = 2
@@ -375,22 +394,17 @@ def make_shard(variant):
 
 
 def rig_slots(gid):
-    """Slot list in draw order (first = drawn behind)."""
-    return [
-        {"name": f"{gid}_aura", "bone": "card", "color": hex_rgba(TINTS[gid], 0),
-         "attachment": "fx_wisp", "blend": "additive"},
+    """Slot list in draw order (first = drawn behind). No cell backboard."""
+    slots = [
+        {"name": f"{gid}_aura", "bone": "card", "color": hex_rgba(TINTS[gid], 0)},
         {"name": gid, "bone": "card", "attachment": gid},
-        {"name": f"{gid}_glow", "bone": "card", "color": "ffffff00",
-         "attachment": gid, "blend": "additive"},
-        {"name": f"{gid}_clip", "bone": "card", "attachment": "clip"},
-        {"name": f"{gid}_streak", "bone": "streak", "color": white_rgba(0),
-         "attachment": "fx_streak", "blend": "additive"},
-        {"name": f"{gid}_ring", "bone": "ring", "color": hex_rgba(TINTS[gid], 0),
-         "attachment": "fx_ring", "blend": "additive"},
+        {"name": f"{gid}_glow", "bone": "card", "color": "ffffff00"},
+        {"name": f"{gid}_clip", "bone": "card"},
+        {"name": f"{gid}_streak", "bone": "streak", "color": white_rgba(0)},
+        {"name": f"{gid}_ring", "bone": "ring", "color": hex_rgba(TINTS[gid], 0)},
         *[
             {"name": f"{gid}_wisp{i}", "bone": f"wisp{i}",
-             "color": hex_rgba(TINTS[gid], 0), "attachment": "fx_wisp",
-             "blend": "additive"}
+             "color": hex_rgba(TINTS[gid], 0)}
             for i in (1, 2, 3)
         ],
         *[
@@ -399,6 +413,7 @@ def rig_slots(gid):
             for j in (1, 2, 3, 4)
         ],
     ]
+    return slots
 
 
 def rig_bones():
@@ -519,12 +534,13 @@ def skeleton_json(gid):
         "animations": {
             gid: win_animation(gid),
             f"{gid}_land": land_animation(gid),
+            f"{gid}_static": {"bones": {"card": {"scale": [{"x": 1.0, "y": 1.0}]}}},
         },
     }
     if gid == "hm":
         data["animations"]["hm_break"] = hm_break_animation()
     else:
-        # every paying/special card gets a looping postWin mesh ripple
+        # every paying/special card gets a looping postWin inhale
         data["animations"][f"{gid}_postwin"] = postwin_animation(gid)
     return data
 
@@ -556,6 +572,10 @@ def rebuild_atlas():
         region: build_cell(kind, ref, static_img, static_json)
         for region, (kind, ref) in all_regions.items()
     }
+    for region, path in PLATE_FILES.items():
+        if os.path.isfile(path):
+            cells[region] = Image.open(path).convert("RGBA").resize((CELL, CELL), Image.LANCZOS)
+            all_regions[region] = ("plate", path)
 
     # fx artwork (white, tinted at runtime by slot colors)
     fx = {

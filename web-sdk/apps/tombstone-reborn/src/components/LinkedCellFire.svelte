@@ -516,7 +516,7 @@ void main() {
 <script lang="ts">
 	import { onDestroy } from 'svelte';
 	import { Tween } from 'svelte/motion';
-	import { cubicOut, linear } from 'svelte/easing';
+	import { cubicOut } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
 	import { Container, BaseSprite } from 'pixi-svelte';
 
@@ -530,16 +530,18 @@ void main() {
 	import {
 		CELL_FIRE_CLIMB_MS,
 		CELL_FIRE_H,
+		CELL_FIRE_HEIGHT,
 		CELL_FIRE_TOP_OVERFLOW,
 		CELL_FIRE_W,
 		createCellFireFilter,
+		fireAttackEase,
 		type CellFireUniforms,
 	} from '../game/jsFireFrameFilter';
 	import BoardSpace from './BoardSpace.svelte';
 
 	const context = getContext();
 
-	// Bottom-to-top blaze. Shader already smoothsteps uReveal. Douse pulls it down.
+	// Bottom-to-top whoosh. Smooth cubic-out — no RMS stairs.
 	const IGNITE_MS = CELL_FIRE_CLIMB_MS;
 	const DOUSE_MS = 260;
 
@@ -598,6 +600,9 @@ void main() {
 	 */
 	let burning = false;
 	let burningCells = 0;
+	/** Persist across extra cells so the tongues do not rewind. */
+	let clockOrigin = 0;
+	let loopKick: number | null = null;
 
 	const startFire = (cellCount: number) => {
 		if (burning) {
@@ -609,13 +614,24 @@ void main() {
 		sound.stop({ name: 'sfx_fire_ignite' });
 		sound.stop({ name: 'sfx_fire_loop' });
 		playThemedOnce('sfx_fire_ignite', { forcePlay: true });
-		playThemedOnce('sfx_fire_loop', { forcePlay: true });
+		// The burn bed is a long file. Start it on the next frame so decode/start
+		// does not stall the first blaze paint.
+		if (loopKick != null) cancelAnimationFrame(loopKick);
+		loopKick = requestAnimationFrame(() => {
+			loopKick = null;
+			if (!burning) return;
+			playThemedOnce('sfx_fire_loop', { forcePlay: true });
+		});
 	};
 
 	const stopFire = (_withTail: boolean) => {
 		if (!burning) return;
 		burning = false;
 		burningCells = 0;
+		if (loopKick != null) {
+			cancelAnimationFrame(loopKick);
+			loopKick = null;
+		}
 		stopThemed('sfx_fire_ignite');
 		stopThemed('sfx_fire_loop');
 		sound.stop({ name: 'sfx_fire_ignite' });
@@ -640,7 +656,7 @@ void main() {
 			cells = [...cells, ...added];
 			startFire(cells.length);
 			if (ignite.current < 0.99) {
-				await ignite.set(1, { duration: fxDur(IGNITE_MS), easing: linear });
+				await ignite.set(1, { duration: fxDur(IGNITE_MS), easing: fireAttackEase });
 			}
 		},
 		cellFireHide: async () => {
@@ -668,41 +684,52 @@ void main() {
 	});
 
 	$effect(() => {
-		if (!cells.length) return;
+		if (!cells.length) {
+			clockOrigin = 0;
+			return;
+		}
+		if (!clockOrigin) clockOrigin = performance.now();
+		const origin = clockOrigin;
 		let raf = 0;
-		const start = performance.now();
 		const tick = (now: number) => {
-			const sec = (now - start) / 1000;
+			const sec = (now - origin) / 1000;
 			const progress = ignite.current;
 			const n = Math.min(cells.length, pool.length);
 			for (let i = 0; i < n; i++) {
 				pool[i].uniforms.uTime = sec + i * 0.37;
 				pool[i].uniforms.uIntensity = burstDim.current;
 				pool[i].uniforms.uReveal = progress;
+				pool[i].uniforms.uSize = CELL_FIRE_HEIGHT;
 			}
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
 		return () => cancelAnimationFrame(raf);
 	});
+
+	// Compile the fire program once at mount so the first blaze does not hitch.
+	const warmFilter = createCellFireFilter();
 </script>
 
 <!-- Over pocket wood / split faces, under slash and win panels. -->
 <Container zIndex={BOARD_FIRE_Z}>
 	<MainContainer>
 		<BoardSpace>
-		{#if ignite.current > 0.01}
-			{#each placed as cell, i (cell.key)}
-				<Container x={cell.cx} y={cell.cy - CELL_FIRE_TOP_OVERFLOW / 2} filters={[pool[i].filter]}>
-					<BaseSprite
-						texture={Texture.WHITE}
-						anchor={0.5}
-						width={CELL_FIRE_W}
-						height={CELL_FIRE_H + CELL_FIRE_TOP_OVERFLOW}
-					/>
-				</Container>
-			{/each}
-		{/if}
+		<Container x={-4096} y={-4096} alpha={0.01} eventMode="none">
+			<Container filters={[warmFilter]}>
+				<BaseSprite texture={Texture.WHITE} width={8} height={8} />
+			</Container>
+		</Container>
+		{#each placed as cell, i (cell.key)}
+			<Container x={cell.cx} y={cell.cy - CELL_FIRE_TOP_OVERFLOW / 2} filters={[pool[i].filter]}>
+				<BaseSprite
+					texture={Texture.WHITE}
+					anchor={0.5}
+					width={CELL_FIRE_W}
+					height={CELL_FIRE_H + CELL_FIRE_TOP_OVERFLOW}
+				/>
+			</Container>
+		{/each}
 		</BoardSpace>
 	</MainContainer>
 </Container>

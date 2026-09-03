@@ -48,5 +48,6 @@
 		key={props.symbolInfo.assetKey}
 		width={SYMBOL_SIZE * props.symbolInfo.sizeRatios.width}
 		height={SYMBOL_SIZE * props.symbolInfo.sizeRatios.height}
+		blendMode="normal"
 	/>
 </Container>

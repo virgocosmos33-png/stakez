@@ -56,11 +56,13 @@ export const THEMED_SFX: Partial<Record<SoundEffectName, ThemedSfx>> = {
 	sfx_lock_release: { src: file('sfx_lock_release'), durationMs: 180 },
 	sfx_ways_stretch: { src: file('sfx_ways_stretch'), durationMs: 280 },
 
-	sfx_fire_ignite: { src: drop('sfx_fire_ignite'), durationMs: 4101, rateLock: false },
+	sfx_fire_ignite: { src: '/assets/audio/sfx_fire_ignite.mp3?v=blazeup', durationMs: 1959, rateLock: false },
 	sfx_fire_loop: { src: drop('sfx_fire_loop'), durationMs: 109032, rateLock: false },
 	sfx_fire_flare: { src: file('sfx_fire_flare'), durationMs: 350 },
 	sfx_fire_out: { src: file('sfx_fire_out'), durationMs: 500 },
 	sfx_reel_nudge: { src: file('sfx_reel_nudge'), durationMs: 200 },
+	sfx_nudge: { src: '/assets/audio/sfx_nudge.mp3?v=nudge', durationMs: 967, rateLock: false },
+	sfx_nudge_reveal: { src: '/assets/audio/sfx_nudge_reveal.mp3?v=nudge', durationMs: 705, rateLock: false },
 	sfx_fuse_crackle: { src: file('sfx_fuse_crackle'), durationMs: 600 },
 	sfx_ember_whoosh: { src: file('sfx_ember_whoosh'), durationMs: 400 },
 	sfx_wild_explode: { src: file('sfx_wild_explode'), durationMs: 800 },
@@ -69,6 +71,7 @@ export const THEMED_SFX: Partial<Record<SoundEffectName, ThemedSfx>> = {
 	sfx_bonus_entry_small: { src: file('sfx_bonus_entry_small'), durationMs: 3000 },
 	sfx_bonus_entry_super: { src: file('sfx_bonus_entry_super'), durationMs: 3000 },
 	sfx_win_ways: { src: file('sfx_win_ways'), durationMs: 900 },
+	sfx_link_whip: { src: '/assets/audio/sfx_link_whip.mp3?v=firewhip', durationMs: 601, rateLock: false },
 	sfx_multiplier_up: { src: file('sfx_multiplier_up'), durationMs: 280 },
 	sfx_thunder: { src: file('sfx_thunder'), durationMs: 2500 },
 	sfx_shovel_strike_1: { src: file('sfx_shovel_strike_1'), durationMs: 200 },
@@ -98,7 +101,7 @@ const maybeRicochet = () => {
 
 export const playThemedOnce = (
 	name: SoundEffectName,
-	options?: { forcePlay?: boolean; volume?: number },
+	options?: { forcePlay?: boolean; volume?: number; ricochet?: boolean },
 ) => {
 	const spec = THEMED_SFX[name];
 	if (!spec || spec.loop) return false;
@@ -107,7 +110,7 @@ export const playThemedOnce = (
 		forcePlay: options?.forcePlay,
 		volume: options?.volume ?? spec.volume,
 	});
-	if (GUNSHOT_NAMES.has(name)) maybeRicochet();
+	if (GUNSHOT_NAMES.has(name) && options?.ricochet !== false) maybeRicochet();
 	return true;
 };
 

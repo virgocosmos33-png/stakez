@@ -1,12 +1,19 @@
 """THE WHITE ROOM per-symbol animation concepts for gen_symbol_spines.py.
 
 Each paying/special id maps to a distinct clinical-horror motion language so
-land / win / postWin do not share the Madam Mirror punch+wobble+wisp pack.
+land / win do not share the Madam Mirror punch+wobble+wisp pack. High-pay
+win is a grow (bigger + lift, no thrash). postWin holds that size with a
+shared inhale, not a mesh wave.
 """
 
 from __future__ import annotations
 
 import math
+
+# High-pay win / postWin: grow out of the pocket. Not White Room squash.
+GROW_IDS = {"h1", "h2", "h3", "h4", "h5"}
+WIN_GROW_END = 1.12
+WIN_GROW_LIFT = 8
 
 # Concept ids drive land/win/postWin builders in gen_symbol_spines.py
 CONCEPT_BY_GID = {
@@ -321,7 +328,31 @@ def land_animation(gid, tint):
 # ---------------------------------------------------------------- win
 
 
+def win_grow_animation():
+    """High-pay win: one grow toward camera, then sit at the inhale size."""
+    return {
+        "bones": {
+            "card": {
+                "scale": [
+                    {"x": 1.0, "y": 1.0},
+                    {"time": 0.18, "x": 1.20, "y": 1.20},
+                    {"time": 0.40, "x": 1.14, "y": 1.14},
+                    {"time": 0.68, "x": WIN_GROW_END, "y": WIN_GROW_END},
+                ],
+                "translate": [
+                    {},
+                    {"time": 0.18, "y": 14},
+                    {"time": 0.40, "y": 10},
+                    {"time": 0.68, "y": WIN_GROW_LIFT},
+                ],
+            }
+        }
+    }
+
+
 def win_animation(gid, tint):
+    if gid in GROW_IDS:
+        return win_grow_animation()
     concept = CONCEPT_BY_GID.get(gid, "tile_crack_a")
 
     if concept == "restraint_snap":
@@ -899,87 +930,53 @@ def hm_break_animation(tint):
     return {"slots": slots, "bones": bones}
 
 
-# ---------------------------------------------------------------- postWin mesh
+# ---------------------------------------------------------------- postWin breath
 
 
 def postwin_animation(gid, mesh_grid=4):
-    """Looping mesh deform — concept-specific wave language."""
-    concept = CONCEPT_BY_GID.get(gid, "tile_crack_a")
-    n = mesh_grid
-    cols = n + 1
+    """Looping inhale — the whole plated card grows a little and lifts.
 
-    if concept == "restraint_snap":
-        period, steps, amp_y, amp_x = 1.8, 14, 10.0, 16.0  # panic tremor
-        mode = "tremor"
-    elif concept == "clinical_glare":
-        period, steps, amp_y, amp_x = 2.4, 10, 4.0, 2.0  # fluorescent flicker
-        mode = "flicker"
-    elif concept == "grin_lunge":
-        period, steps, amp_y, amp_x = 2.2, 12, 22.0, 8.0  # jaw twitch
-        mode = "jaw"
-    elif concept == "doorway_void":
-        period, steps, amp_y, amp_x = 3.0, 12, 14.0, 14.0  # radial breath
-        mode = "radial"
-    elif concept == "memory_glitch":
-        period, steps, amp_y, amp_x = 1.6, 16, 12.0, 18.0  # jitter
-        mode = "glitch"
-    elif concept.startswith("tile_crack"):
-        period, steps, amp_y, amp_x = 2.8, 12, 8.0, 4.0  # hairline breathe
-        mode = "crack"
-    elif concept == "skin_seal":
-        period, steps, amp_y, amp_x = 2.6, 12, 16.0, 10.0  # skin crawl
-        mode = "crawl"
-    elif concept == "ash_dissolve":
-        period, steps, amp_y, amp_x = 3.2, 14, 20.0, 10.0  # ash drift
-        mode = "drift"
-    else:
-        period, steps, amp_y, amp_x = 2.6, 12, 12.0, 8.0
-        mode = "crawl"
-
-    keys = []
-    for step in range(steps + 1):
-        p = step / steps
-        travel = 2 * math.pi * p
-        env = 0.5 - 0.5 * math.cos(2 * math.pi * p)
-        # glitch/flicker: discontinuous envelope spikes
-        if mode == "glitch":
-            env = 0.35 + 0.65 * abs(math.sin(travel * 3))
-        elif mode == "flicker":
-            env = 0.15 + 0.85 * (1.0 if (step % 3) else 0.25) * (0.5 - 0.5 * math.cos(travel))
-        deltas = []
-        for row in range(cols):
-            for col in range(cols):
-                nx = (col / n) * 2 - 1
-                ny = 1 - (row / n) * 2
-                damp = 0.55 + 0.45 * (1 - max(abs(nx), abs(ny)))
-                if mode == "tremor":
-                    dx = amp_x * env * math.sin(travel * 4 + ny * 2) * damp
-                    dy = amp_y * env * math.sin(travel * 5 + nx * 3) * damp * 0.5
-                elif mode == "jaw":
-                    dx = amp_x * env * math.sin(travel + ny) * damp * 0.4
-                    dy = amp_y * env * math.sin(travel + math.pi * ny) * max(0, -ny) * damp
-                elif mode == "radial":
-                    r = math.sqrt(nx * nx + ny * ny) + 1e-6
-                    dx = amp_x * env * (nx / r) * math.sin(travel) * damp
-                    dy = amp_y * env * (ny / r) * math.sin(travel) * damp
-                elif mode == "glitch":
-                    dx = amp_x * env * (1 if (col + step) % 2 == 0 else -1) * 0.35 * damp
-                    dy = amp_y * env * math.sin(travel * 2 + col) * 0.2 * damp
-                elif mode == "crack":
-                    dx = amp_x * env * math.sin(travel + nx * 0.5) * damp * 0.3
-                    dy = amp_y * env * math.sin(travel + abs(nx) * math.pi) * damp
-                elif mode == "drift":
-                    dx = amp_x * env * math.sin(travel + ny) * damp
-                    dy = amp_y * env * (0.5 + 0.5 * math.sin(travel + nx)) * damp
-                elif mode == "flicker":
-                    dx = amp_x * env * math.sin(travel) * damp * 0.2
-                    dy = amp_y * env * math.cos(travel) * damp
-                else:  # crawl
-                    dx = amp_x * env * math.sin(travel + math.pi * 0.9 * nx + 0.6 * ny) * damp
-                    dy = amp_y * env * math.sin(travel + math.pi * 1.1 * ny) * damp
-                deltas += [round(dx, 2), round(dy, 2)]
-        key = {"offset": 0, "vertices": deltas}
-        if step > 0:
-            key["time"] = round(p * period, 4)
-        keys.append(key)
-    return {"attachments": {"default": {gid: {gid: {"deform": keys}}}}}
+    No mesh wave. Scale reads as coming toward camera; a few pixels of Y
+    keep the top proud of the timber instead of getting shaved off.
+    mesh_grid is unused (kept so gen_symbol_spines can still pass it).
+    """
+    del mesh_grid
+    if gid in GROW_IDS:
+        return {
+            "bones": {
+                "card": {
+                    "scale": [
+                        {"x": WIN_GROW_END, "y": WIN_GROW_END},
+                        {"time": 0.40, "x": 1.16, "y": 1.16},
+                        {"time": 1.00, "x": 1.13, "y": 1.13},
+                        {"time": 1.80, "x": WIN_GROW_END, "y": WIN_GROW_END},
+                    ],
+                    "translate": [
+                        {"y": WIN_GROW_LIFT},
+                        {"time": 0.40, "y": 10},
+                        {"time": 1.00, "y": 9},
+                        {"time": 1.80, "y": WIN_GROW_LIFT},
+                    ],
+                }
+            }
+        }
+    return {
+        "bones": {
+            "card": {
+                "scale": [
+                    {"x": 1.0, "y": 1.0},
+                    {"time": 0.38, "x": 1.08, "y": 1.08},
+                    {"time": 0.95, "x": 1.07, "y": 1.07},
+                    {"time": 1.45, "x": 1.03, "y": 1.03},
+                    {"time": 1.8, "x": 1.0, "y": 1.0},
+                ],
+                "translate": [
+                    {},
+                    {"time": 0.38, "y": 7},
+                    {"time": 0.95, "y": 6},
+                    {"time": 1.45, "y": 2},
+                    {"time": 1.8, "y": 0},
+                ],
+            }
+        }
+    }

@@ -1,444 +1,459 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { Tween } from 'svelte/motion';
+	import { backOut, cubicIn, cubicOut } from 'svelte/easing';
 	import { Rectangle as HitRectangle } from 'pixi.js';
-	import { Container, Graphics, Rectangle, Sprite, Text } from 'pixi-svelte';
+	import { Container, Rectangle, Sprite, Text } from 'pixi-svelte';
+	import { LoadingProgress } from 'components-pixi';
 	import { OnHotkey } from 'components-shared';
 	import { OnPressFullScreen } from 'components-layout';
-	import { stateUrlDerived } from 'state-shared';
 
 	import { getContext } from '../game/context';
-	import {
-		TR_INK_BLOOD,
-		estimateTextWidth,
-		trCssFont,
-		trHeroTitleStyle,
-		trLabelStyle,
-		type TypographyRole,
-	} from '../game/typography';
+	import { fxDur, fxWait } from '../game/fxTiming';
+	import { TR_INK_BONE, TR_INK_IRON, fitFontSize, trLabelStyle } from '../game/typography';
+	import PreloadStreetSmoke from './PreloadStreetSmoke.svelte';
 
 	type Props = {
+		ready: boolean;
 		oncontinue: () => void;
 	};
 
-	type Card = {
-		headline: string;
-		art: 'scatter' | 'cards' | 'wildreel' | 'levels' | 'maxwin';
+	type FeatureCard = {
+		title: string;
+		body: string;
+		art: string;
 	};
-
-	type TextSeg = { text: string; hl: boolean };
 
 	const props: Props = $props();
 	const context = getContext();
 
-	// Same chrome language as paytable / buy-confirm / bonus level banner.
-	//
-	// TYPE ROLES: the four instructional cards are multi-line rules copy that has
-	// to stay readable and keep its red highlight tokens, so they use the
-	// condensed label face. The max-win card is the one true hero title here —
-	// text-only, single idea, rendered at 1.8x — so it takes the western display
-	// face with the metallic fill and iron outline.
-	const HEADLINE_WEIGHT = '700';
-	const BRAND_INK = 0x0a0a0a;
-	const BRAND_COPY = 0xece8df;
-	// Highlight ink, shared by the emphasised copy tokens and the chrome that
-	// frames them (chevron stroke, page dots) so the card reads as one palette.
-	// Was a magenta carried over from the cloned game, which has no business in a
-	// graveyard western.
-	const BRAND_RED = TR_INK_BLOOD;
-	const LETTER_SPACING = 2;
-	const CTA_RATIO = 282 / 780;
-	const CLOSE_RATIO = 1;
-	const CHEVRON_RATIO = 302 / 282;
-
-	// Highlight tokens from existing mechanic copy (no invented rules text).
-	const HL_TOKENS = [
-		'30,000X', 'BONUS MODES', 'HUGE WAY CONNECTIONS', '3+',
-		'STRETCH', 'SPLIT', 'CLONE', 'WILD',
-	];
-	// longest tokens first so longer phrases win over substrings on the same line
-	const HL_TOKENS_SORTED = [...HL_TOKENS].sort((a, b) => b.length - a.length);
-
-	// feature walkthrough cards — THE WHITE ROOM mechanics only, drawn with the
-	// exact in-game card art (never the legacy Madam Mirror atlas pieces).
-	const CARDS: Card[] = [
-		{ headline: 'LAND 3+ SCATTERS\nTO ENTER BONUS MODES', art: 'scatter' },
-		{ headline: 'SEALED CELLS FIRE\nSTRETCH, SPLIT, CLONE\nAND WILD CARDS', art: 'cards' },
-		{ headline: 'EXPANDING WILDS TURN\nWHOLE REELS WILD\nAND STACK THE WAYS', art: 'wildreel' },
-		{ headline: 'COMBINED MECHANICS FOR\nHUGE WAY CONNECTIONS', art: 'levels' },
+	const CARDS: FeatureCard[] = [
 		{
-			// stake.us social mode prohibits "bet" wording
-			headline: stateUrlDerived.social() ? 'WIN UP TO\n30,000X YOUR PLAY' : 'WIN UP TO\n30,000X YOUR BET',
-			art: 'maxwin',
+			title: 'THE WAKE',
+			body: '3 BONUS TOMBSTONES\nUNLOCK 10 BONUS SPINS',
+			art: 'trScatter',
+		},
+		{
+			title: 'THE RECKONING',
+			body: 'A SUPER SCATTER OPENS\nTHE LAST-REEL LANE',
+			art: 'trScatterSuper',
+		},
+		{
+			title: 'SPLIT',
+			body: 'ONE SYMBOL GAINS EXTRA WAYS\nTHEN TURNS WILD',
+			art: 'trSP',
+		},
+		{
+			title: 'GUNSMOKE',
+			body: 'EVERY COPY OF ONE SYMBOL\nTURNS WILD',
+			art: 'trGS',
+		},
+		{
+			title: 'NUDGE WAYS',
+			body: 'NUDGES DOWN INTO WILDS\nAND GROWS THE WAYS',
+			art: 'trNW',
+		},
+		{
+			title: 'THE REVOLVER',
+			body: 'WILD ON EVERY WAY\nAND THE LAST-REEL LANE',
+			art: 'wrWild',
 		},
 	];
 
+	const ACTIVE_RATIO = 823 / 479;
+	const SIDE_RATIO = 572 / 298;
+	const ARROW_RATIO = 305 / 180;
+	const CONTINUE_RATIO = 165 / 784;
+	const CARD_ART_TOP = 0.22;
+	const CARD_ART_BOT = 0.62;
+	const CARD_TITLE_Y = 0.925;
+	const CARD_BODY_MAX_BOTTOM = 0.86;
+	const CARD_ART_W = 0.66;
+	const BODY_TRACK = 0.3;
+	const BG_W = 1536;
+	const BG_H = 1024;
+	const LOGO_ASPECT = 717 / 1514;
+	const CARD_DROP_MS = 480;
+	const LOGO_DROP_MS = 520;
+	const LAND_MS = 240;
+	const CHROME_MS = 280;
+
 	let index = $state(0);
+	let settled = $state(false);
+	const logoDrop = new Tween(0);
+	const cardDrop = new Tween(0);
+	const logoSquash = new Tween(1);
+	const cardSquash = new Tween(1);
+	const chromeIn = new Tween(0);
 
 	const canvas = $derived(context.stateLayoutDerived.canvasSizes());
 	const centerX = $derived(canvas.width * 0.5);
-	const unit = $derived(Math.min(canvas.width, canvas.height));
+	const portrait = $derived(canvas.height / canvas.width > 1.15);
+	const bgFit = $derived.by(() => {
+		const scale = Math.max(canvas.width / BG_W, canvas.height / BG_H);
+		return { width: BG_W * scale, height: BG_H * scale };
+	});
+	const stageW = $derived(Math.max(160, canvas.width * (portrait ? 0.94 : 0.86)));
+	const logoW = $derived(Math.min(stageW * 0.36, canvas.height * 0.16 / LOGO_ASPECT, 340));
+	const logoH = $derived(logoW * LOGO_ASPECT);
+	const logoY = $derived(Math.max(logoH * 0.52 + 10, canvas.height * 0.08));
 
-	// LOGO / PLATE / CONTINUE are one vertical block, centred in the canvas.
-	//
-	// Everything used to be sized off `unit` (the SHORTER canvas edge), which on
-	// a portrait phone is the width — so the whole stack came out phone-width
-	// tall and sat marooned in the middle of a very tall screen. Widths now come
-	// off the canvas width, capped against the height so a wide desktop canvas
-	// does not turn the panel into a billboard, and the plate takes whatever
-	// vertical room the logo and button leave behind.
-	const contentW = $derived(Math.min(canvas.width * 0.94, canvas.height * 0.95));
-	const blockBudget = $derived(canvas.height * 0.92);
-	const gap = $derived(Math.min(canvas.height * 0.022, unit * 0.035));
+	const continueW = $derived(Math.min(stageW * 0.48, canvas.width * 0.36));
+	const continueH = $derived(continueW * CONTINUE_RATIO);
+	const barW = $derived(Math.min(continueW * 0.86, 480));
+	const barH = $derived(barW * (87 / 492));
+	const continueY = $derived(canvas.height - continueH * 0.5 - Math.max(10, canvas.height * 0.02));
 
-	// sheriff wordmark — bloody wanted-poster type (1514×717)
-	const LOGO_RATIO = 717 / 1514;
-	const logoWidth = $derived(Math.min(contentW * 0.62, (blockBudget * 0.22) / LOGO_RATIO));
-	const logoHeight = $derived(logoWidth * LOGO_RATIO);
+	const cardTop = $derived(logoY + logoH * 0.5 + Math.max(10, canvas.height * 0.02));
+	const cardBot = $derived(continueY - continueH * 0.5 - Math.max(36, canvas.height * 0.07));
+	const cardBudgetH = $derived(Math.max(120, cardBot - cardTop));
+	const cardY = $derived((cardTop + cardBot) * 0.5);
 
-	const ctaW = $derived(Math.min(contentW * 0.5, 380));
-	const ctaH = $derived(ctaW * CTA_RATIO);
-
-	const plateW = $derived(contentW);
-	// never taller than it is wide, or the content inside strands in empty plate
-	const plateH = $derived(
-		Math.min(plateW, Math.max(unit * 0.26, blockBudget - logoHeight - ctaH - gap * 2)),
+	const cardGap = $derived(Math.max(8, stageW * 0.016));
+	const arrowPad = $derived(Math.max(10, stageW * 0.014));
+	const rawCenterH = $derived(
+		Math.min(cardBudgetH, portrait ? stageW * 0.92 * ACTIVE_RATIO : cardBudgetH),
 	);
-	const blockH = $derived(logoHeight + gap + plateH + gap + ctaH);
-	const blockTop = $derived(Math.max(canvas.height * 0.03, (canvas.height - blockH) * 0.5));
+	const rawCenterW = $derived(rawCenterH / ACTIVE_RATIO);
+	const rawSideH = $derived(rawCenterH * (portrait ? 0 : 0.84));
+	const rawSideW = $derived(rawSideH / SIDE_RATIO);
+	const rawArrowH = $derived(rawCenterH * 0.22);
+	const rawArrowW = $derived(rawArrowH / ARROW_RATIO);
+	const rawRow = $derived(
+		rawCenterW +
+			(portrait ? 0 : (rawSideW + cardGap) * 2) +
+			(rawArrowW + arrowPad) * 2,
+	);
+	const cardScale = $derived(Math.min(1, (stageW * 0.96) / Math.max(1, rawRow)));
+	const aW = $derived(rawCenterW * cardScale);
+	const aH = $derived(rawCenterH * cardScale);
+	const sW = $derived(rawSideW * cardScale);
+	const sH = $derived(rawSideH * cardScale);
+	const arrowH = $derived(rawArrowH * cardScale);
+	const arrowW = $derived(rawArrowW * cardScale);
+	const sideSpan = $derived(portrait ? 0 : sW + cardGap * cardScale);
+	const arrowX = $derived(aW * 0.5 + sideSpan + arrowPad * cardScale + arrowW * 0.5);
 
-	const logoY = $derived(blockTop);
-	const plateTop = $derived(blockTop + logoHeight + gap);
-	const plateY = $derived(plateTop + plateH * 0.5);
-	const buttonY = $derived(plateTop + plateH + gap + ctaH * 0.5);
+	const cardBottom = $derived(cardY + aH * 0.5);
+	const dotSize = $derived(Math.min(stageW * 0.038, 28));
+	const dotsY = $derived(
+		Math.min(
+			continueY - continueH * 0.5 - dotSize * 0.7,
+			cardBottom + Math.max(10, aH * 0.035) + dotSize * 0.5,
+		),
+	);
 
-	// the art has to live inside the plate, so it tracks the plate, not the canvas.
-	// The 0.29 also keeps the widest card (a 2.2x triptych) clear of the chevrons.
-	const artSize = $derived(Math.min(plateW * 0.29, plateH * 0.42));
-	// max-win card is text-only: the headline sits dead centre at ~1.8x size
-	const isMaxwin = $derived(CARDS[index].art === 'maxwin');
-	const fontSize = $derived(plateW * 0.048 * (isMaxwin ? 1.8 : 1));
-	const lineHeight = $derived(plateW * 0.064 * (isMaxwin ? 1.8 : 1));
+	const logoOff = $derived(-(1 - logoDrop.current) * canvas.height * 0.7);
+	const cardOff = $derived(-(1 - cardDrop.current) * canvas.height * 0.92);
+	const logoSx = $derived(2 - logoSquash.current);
+	const cardSx = $derived(2 - cardSquash.current);
+	const logoYNow = $derived(logoY + logoOff);
+	const cardYNow = $derived(cardY + cardOff);
+	const pointer = $derived(settled ? 'static' : 'none');
 
-	// zones inside the plate (origin = plate centre, +y = down)
-	const headlineY = $derived(-plateH * 0.31);
-	const artY = $derived(plateH * 0.14);
-	// 0.44, not 0.4: at 0.4 the dot row brushed the art frame's pink border on
-	// short plates — this drops it into the clear band above the plate edge.
-	const dotsY = $derived(plateH * 0.44);
+	const finishDrop = () => {
+		logoDrop.set(1, { duration: 0 });
+		cardDrop.set(1, { duration: 0 });
+		chromeIn.set(1, { duration: 0 });
+		logoSquash.set(1, { duration: 0 });
+		cardSquash.set(1, { duration: 0 });
+		settled = true;
+	};
 
-	const closeSize = $derived(Math.min(canvas.width * 0.09, 64));
-	const chevronSize = $derived(Math.min(plateW * 0.12, 84));
-	const chevronH = $derived(chevronSize * CHEVRON_RATIO);
-
-	const previous = () => (index = (index - 1 + CARDS.length) % CARDS.length);
-	const next = () => (index = (index + 1) % CARDS.length);
-	// tap / Space advances; last card exits. CONTINUE / close always exit.
+	const previous = () => {
+		if (!settled) return;
+		index = (index - 1 + CARDS.length) % CARDS.length;
+	};
+	const next = () => {
+		if (!settled) return;
+		index = (index + 1) % CARDS.length;
+	};
 	const advance = () => {
-		if (index >= CARDS.length - 1) props.oncontinue();
-		else next();
-	};
-	const exit = () => props.oncontinue();
-
-	const drawPlate = (graphics: import('pixi.js').Graphics) => {
-		const w = plateW;
-		const h = plateH;
-		const r = Math.min(unit * 0.01, 8);
-		// buy-confirm / bet-menu shell — distressed dark, not plain glass grey
-		graphics.roundRect(-w * 0.5, -h * 0.5, w, h, r);
-		graphics.fill({ color: 0x0a0c10, alpha: 0.94 });
-		graphics.roundRect(-w * 0.5, -h * 0.5, w, h, r);
-		graphics.stroke({ width: Math.max(2, unit * 0.0035), color: 0x2a3038, alpha: 1 });
-		const inset = Math.max(4, unit * 0.008);
-		graphics.roundRect(-w * 0.5 + inset, -h * 0.5 + inset, w - inset * 2, h - inset * 2, Math.max(2, r - 2));
-		graphics.stroke({ width: 1, color: 0xece8df, alpha: 0.14 });
-		graphics.roundRect(-w * 0.5 + 1, -h * 0.5 + 1, w - 2, h - 2, r);
-		graphics.stroke({ width: 1, color: 0xffffff, alpha: 0.06 });
-	};
-
-	const artFrameW = $derived(
-		CARDS[index].art === 'cards' || CARDS[index].art === 'wildreel' || CARDS[index].art === 'levels'
-			? artSize * 2.2
-			: artSize,
-	);
-	const drawArtFrame = (graphics: import('pixi.js').Graphics) => {
-		const pad = artSize * 0.08;
-		const w = artFrameW + pad * 2;
-		const h = artSize + pad * 2;
-		graphics.roundRect(-w * 0.5, -h * 0.5, w, h, 3);
-		graphics.stroke({ width: Math.max(2, unit * 0.004), color: BRAND_RED, alpha: 0.85 });
-	};
-
-	const drawDots = (graphics: import('pixi.js').Graphics) => {
-		const gap = unit * 0.035;
-		const radius = unit * 0.0075;
-		CARDS.forEach((_, dotIndex) => {
-			const x = (dotIndex - (CARDS.length - 1) / 2) * gap;
-			graphics.circle(x, 0, radius);
-			graphics.fill({ color: dotIndex === index ? BRAND_RED : 0x5c5854, alpha: 1 });
-		});
-	};
-
-	/** which type role the current card's headline renders in */
-	const headlineRole = $derived<TypographyRole>(isMaxwin ? 'display' : 'label');
-
-	const measureCanvas = typeof document !== 'undefined' ? document.createElement('canvas') : null;
-	const measure = (text: string, size: number, role: TypographyRole) => {
-		if (!text) return 0;
-		const ctx = measureCanvas?.getContext('2d');
-		const tracking = Math.max(0, text.length - 1) * LETTER_SPACING;
-		if (!ctx) return estimateTextWidth(text, { role, fontSize: size }) + tracking;
-		ctx.font = trCssFont(role, size, role === 'label' ? HEADLINE_WEIGHT : undefined);
-		return ctx.measureText(text).width + tracking;
-	};
-
-	const segmentLine = (line: string): TextSeg[] => {
-		const upper = line.toUpperCase();
-		const segs: TextSeg[] = [];
-		let i = 0;
-		while (i < line.length) {
-			let hit: { token: string; at: number } | null = null;
-			for (const token of HL_TOKENS_SORTED) {
-				const at = upper.indexOf(token, i);
-				if (at === -1) continue;
-				if (!hit || at < hit.at || (at === hit.at && token.length > hit.token.length)) {
-					hit = { token, at };
-				}
-			}
-			if (!hit) {
-				segs.push({ text: line.slice(i), hl: false });
-				break;
-			}
-			if (hit.at > i) segs.push({ text: line.slice(i, hit.at), hl: false });
-			segs.push({ text: line.slice(hit.at, hit.at + hit.token.length), hl: true });
-			i = hit.at + hit.token.length;
+		if (!settled) {
+			finishDrop();
+			return;
 		}
-		return segs.filter((s) => s.text.length > 0);
+		if (index >= CARDS.length - 1) {
+			if (props.ready) props.oncontinue();
+			return;
+		}
+		next();
+	};
+	const exit = () => {
+		if (!settled) {
+			finishDrop();
+			return;
+		}
+		if (props.ready) props.oncontinue();
 	};
 
-	const headlineLayout = $derived.by(() => {
-		const lines = CARDS[index].headline.split('\n');
-		const size = fontSize;
-		const lh = lineHeight;
-		const totalH = (lines.length - 1) * lh;
-		return lines.map((line, li) => {
-			const segs = segmentLine(line);
-			const widths = segs.map((s) => measure(s.text, size, headlineRole));
-			const totalW = widths.reduce((a, b) => a + b, 0);
-			let x = -totalW * 0.5;
-			const placed = segs.map((s, si) => {
-				const px = x;
-				x += widths[si];
-				return { ...s, x: px };
-			});
-			return { y: li * lh - totalH * 0.5, segs: placed };
-		});
+	onMount(() => {
+		let cancelled = false;
+		const run = async () => {
+			logoDrop.set(0, { duration: 0 });
+			cardDrop.set(0, { duration: 0 });
+			chromeIn.set(0, { duration: 0 });
+			logoSquash.set(1, { duration: 0 });
+			cardSquash.set(1, { duration: 0 });
+			await logoDrop.set(1, { duration: fxDur(LOGO_DROP_MS), easing: cubicIn });
+			if (cancelled || settled) return;
+			logoSquash.set(0.94, { duration: 0 });
+			void logoSquash.set(1, { duration: fxDur(LAND_MS), easing: backOut });
+			await logoDrop.set(1.03, { duration: fxDur(60) });
+			if (cancelled || settled) return;
+			await logoDrop.set(1, { duration: fxDur(160), easing: cubicOut });
+			if (cancelled || settled) return;
+			await fxWait(60);
+			if (cancelled || settled) return;
+			await cardDrop.set(1, { duration: fxDur(CARD_DROP_MS), easing: cubicIn });
+			if (cancelled || settled) return;
+			cardSquash.set(0.92, { duration: 0 });
+			void cardSquash.set(1, { duration: fxDur(LAND_MS), easing: backOut });
+			await cardDrop.set(1.03, { duration: fxDur(60) });
+			if (cancelled || settled) return;
+			await cardDrop.set(1, { duration: fxDur(160), easing: cubicOut });
+			if (cancelled || settled) return;
+			await chromeIn.set(1, { duration: fxDur(CHROME_MS), easing: cubicOut });
+			if (!cancelled) settled = true;
+		};
+		void run();
+		return () => {
+			cancelled = true;
+		};
 	});
 
-	// On the max-win hero card the metallic fill IS the emphasis, so highlight
-	// tokens stop needing their own colour; the rules cards keep the red.
-	const headlineStyle = (highlighted: boolean) =>
-		isMaxwin
-			? trHeroTitleStyle({
-					fontSize,
-					metal: 'gold',
-					align: 'left',
-					letterSpacing: LETTER_SPACING,
-				})
-			: trLabelStyle({
-					fontWeight: HEADLINE_WEIGHT,
-					fontSize,
-					fill: highlighted ? BRAND_RED : BRAND_COPY,
-					align: 'left',
-					letterSpacing: LETTER_SPACING,
-				});
+	const cardAt = (offset: number) => CARDS[(index + offset + CARDS.length) % CARDS.length];
+
+	const localY = (frac: number, height: number) => (frac - 0.5) * height;
+	const artBox = (width: number, height: number) => {
+		const wellH = (CARD_ART_BOT - CARD_ART_TOP) * height;
+		const wellW = width * CARD_ART_W;
+		const size = Math.min(wellW, wellH * 0.88);
+		return { y: localY((CARD_ART_TOP + CARD_ART_BOT) * 0.5, height), size };
+	};
+	const cardTitleStyle = (cardW: number) =>
+		trLabelStyle({
+			fontWeight: '700',
+			fontSize: Math.max(12, cardW * 0.082),
+			fill: TR_INK_IRON,
+			align: 'center',
+			letterSpacing: 0.8,
+		});
+	const cardBody = (cardW: number, cardH: number, text: string) => {
+		const longest = text.split('\n').reduce((a, b) => (a.length >= b.length ? a : b));
+		const size = fitFontSize(longest, {
+			role: 'label',
+			base: Math.min(cardW * 0.08, cardH * 0.04),
+			maxWidth: cardW * 0.82,
+			min: 11,
+			letterSpacing: BODY_TRACK,
+		});
+		const lineH = size * 1.16;
+		const blockH = lineH * 2;
+		const maxBottom = cardH * CARD_BODY_MAX_BOTTOM;
+		const centerFromTop = Math.min(cardH * 0.74, maxBottom - blockH * 0.5);
+		return {
+			y: centerFromTop - cardH * 0.5,
+			style: trLabelStyle({
+				fontWeight: '700',
+				fontSize: size,
+				fill: TR_INK_BONE,
+				align: 'center',
+				letterSpacing: BODY_TRACK,
+				lineHeight: lineH,
+				stroke: { color: TR_INK_IRON, width: Math.max(2, size * 0.14), join: 'round' },
+			}),
+		};
+	};
+	const activeArt = $derived(artBox(aW, aH));
+	const sideArt = $derived(artBox(sW, sH));
+	const bodyPrev = $derived(cardBody(sW, sH, cardAt(-1).body));
+	const bodyActive = $derived(cardBody(aW, aH, cardAt(0).body));
+	const bodyNext = $derived(cardBody(sW, sH, cardAt(1).body));
 </script>
 
-<!-- dark scrim over the loading painting (full-bleed padded cell) -->
-<Rectangle
-	{...canvas}
-	backgroundColor={0x050308}
-	backgroundAlpha={0.55}
-/>
-
-<!-- game logo up top -->
+<Rectangle {...canvas} backgroundColor={0x050308} backgroundAlpha={1} />
 <Sprite
-	key="mirrorLogo"
-	anchor={{ x: 0.5, y: 0 }}
+	key="preloadBg"
+	anchor={0.5}
 	x={centerX}
-	y={logoY}
-	width={logoWidth}
-	height={logoHeight}
+	y={canvas.height * 0.5}
+	width={bgFit.width}
+	height={bgFit.height}
+	eventMode="none"
 />
-
-<!-- opaque brand shell — headline, art and dots stack inside it -->
-<Container x={centerX} y={plateY}>
-	<Graphics draw={drawPlate} />
-	<!-- magenta edge bleeds (same accent as buy-confirm / bet menu) -->
-	<Sprite
-		key="uiAccentStain"
-		anchor={{ x: 0.5, y: 0.5 }}
-		x={-plateW * 0.48}
-		y={0}
-		width={unit * 0.06}
-		height={plateH * 0.72}
-		alpha={0.85}
-		eventMode="none"
-	/>
-	<Sprite
-		key="uiAccentStain"
-		anchor={{ x: 0.5, y: 0.5 }}
-		x={plateW * 0.48}
-		y={0}
-		width={unit * 0.06}
-		height={plateH * 0.72}
-		alpha={0.85}
-		angle={180}
-		eventMode="none"
-	/>
-
-	<!-- headline — upper zone (dead centre on the text-only max-win card) -->
-	<Container y={isMaxwin ? 0 : headlineY}>
-		{#each headlineLayout as line}
-			{#each line.segs as seg}
-				<Text
-					anchor={{ x: 0, y: 0.5 }}
-					x={seg.x}
-					y={line.y}
-					text={seg.text}
-					eventMode="none"
-					style={headlineStyle(seg.hl)}
-				/>
-			{/each}
-		{/each}
-	</Container>
-
-	<!-- card art — middle zone (the max-win card is text-only, no art) -->
-	{#if !isMaxwin}
-		<Container y={artY}>
-			<Graphics draw={drawArtFrame} />
-			{#if CARDS[index].art === 'scatter'}
-				<!-- the 1st scatter face; the atlas s.png is the old wordless head -->
-				<Sprite key="wrScatter1" anchor={0.5} width={artSize} height={artSize} />
-			{:else if CARDS[index].art === 'cards'}
-				<!-- the three feature cards the sealed cells actually deal -->
-				<Sprite key="wrStretch" anchor={0.5} x={-artSize * 0.78} width={artSize * 0.72} height={artSize * 0.72} />
-				<Sprite key="wrSplit" anchor={0.5} width={artSize * 0.9} height={artSize * 0.9} />
-				<Sprite key="wrClone" anchor={0.5} x={artSize * 0.78} width={artSize * 0.72} height={artSize * 0.72} />
-			{:else if CARDS[index].art === 'wildreel'}
-				<!-- wrWild is the straitjacket card the board actually deals; the
-					rising-arrow variant is the Expanding Wild that takes a reel -->
-				<Sprite key="wrWild" anchor={0.5} x={-artSize * 0.58} width={artSize * 0.8} height={artSize * 0.8} />
-				<Sprite key="wrWildExpand" anchor={0.5} width={artSize} height={artSize} />
-				<Sprite key="wrWild" anchor={0.5} x={artSize * 0.58} width={artSize * 0.8} height={artSize * 0.8} />
-			{:else if CARDS[index].art === 'levels'}
-				<!-- stretch + expanding wild + split: the cards that stack on one reel -->
-				<Sprite key="wrStretch" anchor={0.5} x={-artSize * 0.78} width={artSize * 0.72} height={artSize * 0.72} />
-				<Sprite key="wrWildExpand" anchor={0.5} width={artSize * 0.9} height={artSize * 0.9} />
-				<Sprite key="wrSplit" anchor={0.5} x={artSize * 0.78} width={artSize * 0.72} height={artSize * 0.72} />
-			{/if}
-		</Container>
-	{/if}
-
-	<!-- page dots — bottom of plate -->
-	<Container y={dotsY}>
-		<Graphics draw={drawDots} />
-	</Container>
-</Container>
-
-<!-- close X — skip remaining cards into game -->
 <Container
-	x={centerX + plateW * 0.5 - closeSize * 0.65}
-	y={plateY - plateH * 0.5 + closeSize * 0.65}
-	eventMode="static"
-	cursor="pointer"
-	hitArea={new HitRectangle(-closeSize / 2, -closeSize / 2, closeSize, closeSize)}
-	onpointerup={exit}
+	x={centerX - bgFit.width * 0.5}
+	y={canvas.height * 0.5 - bgFit.height * 0.5}
+	eventMode="none"
 >
-	<Sprite
-		key="uiBtnCloseMagenta"
-		anchor={0.5}
-		width={closeSize}
-		height={closeSize * CLOSE_RATIO}
-		eventMode="none"
-	/>
-	<Text
-		anchor={0.5}
-		text="×"
-		eventMode="none"
-		style={trLabelStyle({
-			fontWeight: HEADLINE_WEIGHT,
-			fontSize: closeSize * 0.72,
-			fill: BRAND_INK,
-		})}
-	/>
+	<PreloadStreetSmoke width={bgFit.width} height={bgFit.height} />
 </Container>
-
-<!-- tap empty area advances; arrows / CONTINUE mount after so they stay clickable -->
+<Container
+	x={centerX}
+	y={logoYNow}
+	scale={{ x: logoSx, y: logoSquash.current }}
+	eventMode="none"
+>
+	<Sprite key="mirrorLogo" anchor={0.5} width={logoW} height={logoH} eventMode="none" />
+</Container>
 <OnPressFullScreen onpress={advance} />
 
-<!-- prev / next — blank magenta chevron plates + Impact glyphs -->
-<Container
-	x={centerX - plateW * 0.43}
-	y={plateY + artY}
-	eventMode="static"
-	cursor="pointer"
-	hitArea={new HitRectangle(-chevronSize / 2, -chevronH / 2, chevronSize, chevronH)}
-	onpointerup={previous}
->
-	<Sprite key="uiChevronPlate" anchor={0.5} width={chevronSize} height={chevronH} eventMode="none" />
-	<Text
+{#if !portrait}
+	<Container
+		x={centerX - (aW * 0.5 + cardGap * cardScale + sW * 0.5)}
+		y={cardYNow}
+		scale={{ x: cardSx, y: cardSquash.current }}
+		alpha={0.78}
+	>
+		<Sprite key="preloadCardSideL" anchor={0.5} width={sW} height={sH} eventMode="none" />
+		<Sprite
+			key={cardAt(-1).art}
+			anchor={0.5}
+			y={sideArt.y}
+			width={sideArt.size}
+			height={sideArt.size}
+			eventMode="none"
+		/>
+		<Text
+			anchor={0.5}
+			y={bodyPrev.y}
+			text={cardAt(-1).body}
+			eventMode="none"
+			style={bodyPrev.style}
+		/>
+		<Text
+			anchor={0.5}
+			y={localY(CARD_TITLE_Y, sH)}
+			text={cardAt(-1).title}
+			eventMode="none"
+			style={cardTitleStyle(sW)}
+		/>
+	</Container>
+{/if}
+
+<Container x={centerX} y={cardYNow} scale={{ x: cardSx, y: cardSquash.current }}>
+	<Sprite key="preloadCardActive" anchor={0.5} width={aW} height={aH} eventMode="none" />
+	<Sprite
+		key={cardAt(0).art}
 		anchor={0.5}
-		text="<"
+		y={activeArt.y}
+		width={activeArt.size}
+		height={activeArt.size}
 		eventMode="none"
-		style={trLabelStyle({
-			fontWeight: HEADLINE_WEIGHT,
-			fontSize: chevronSize * 0.55,
-			fill: BRAND_INK,
-		})}
 	/>
-</Container>
-<Container
-	x={centerX + plateW * 0.43}
-	y={plateY + artY}
-	eventMode="static"
-	cursor="pointer"
-	hitArea={new HitRectangle(-chevronSize / 2, -chevronH / 2, chevronSize, chevronH)}
-	onpointerup={next}
->
-	<Sprite key="uiChevronPlate" anchor={0.5} width={chevronSize} height={chevronH} eventMode="none" />
 	<Text
 		anchor={0.5}
-		text=">"
+		y={bodyActive.y}
+		text={cardAt(0).body}
 		eventMode="none"
-		style={trLabelStyle({
-			fontWeight: HEADLINE_WEIGHT,
-			fontSize: chevronSize * 0.55,
-			fill: BRAND_INK,
-		})}
+		style={bodyActive.style}
+	/>
+	<Text
+		anchor={0.5}
+		y={localY(CARD_TITLE_Y, aH)}
+		text={cardAt(0).title}
+		eventMode="none"
+		style={cardTitleStyle(aW)}
 	/>
 </Container>
 
-<!-- CONTINUE — magenta CTA plate (same as buy-confirm / bonus level banner) -->
+{#if !portrait}
+	<Container
+		x={centerX + (aW * 0.5 + cardGap * cardScale + sW * 0.5)}
+		y={cardYNow}
+		scale={{ x: cardSx, y: cardSquash.current }}
+		alpha={0.78}
+	>
+		<Sprite key="preloadCardSideR" anchor={0.5} width={sW} height={sH} eventMode="none" />
+		<Sprite
+			key={cardAt(1).art}
+			anchor={0.5}
+			y={sideArt.y}
+			width={sideArt.size}
+			height={sideArt.size}
+			eventMode="none"
+		/>
+		<Text
+			anchor={0.5}
+			y={bodyNext.y}
+			text={cardAt(1).body}
+			eventMode="none"
+			style={bodyNext.style}
+		/>
+		<Text
+			anchor={0.5}
+			y={localY(CARD_TITLE_Y, sH)}
+			text={cardAt(1).title}
+			eventMode="none"
+			style={cardTitleStyle(sW)}
+		/>
+	</Container>
+{/if}
+
 <Container
-	x={centerX}
-	y={buttonY}
-	eventMode="static"
+	x={centerX - arrowX}
+	y={cardYNow}
+	scale={{ x: cardSx, y: cardSquash.current }}
+	eventMode={pointer}
 	cursor="pointer"
-	hitArea={new HitRectangle(-ctaW / 2, -ctaH / 2, ctaW, ctaH)}
-	onpointerup={exit}
+	hitArea={new HitRectangle(-arrowW / 2, -arrowH / 2, arrowW, arrowH)}
+	onpointerup={previous}
 >
-	<Sprite key="uiCtaActivate" anchor={0.5} width={ctaW} height={ctaH} eventMode="none" />
-	<Text
-		anchor={0.5}
-		text="CONTINUE"
-		eventMode="none"
-		style={trLabelStyle({
-			fontWeight: HEADLINE_WEIGHT,
-			fontSize: ctaH * 0.42,
-			fill: BRAND_INK,
-			letterSpacing: 3,
-		})}
-	/>
+	<Sprite key="preloadArrowLeft" anchor={0.5} width={arrowW} height={arrowH} eventMode="none" />
 </Container>
+<Container
+	x={centerX + arrowX}
+	y={cardYNow}
+	scale={{ x: cardSx, y: cardSquash.current }}
+	eventMode={pointer}
+	cursor="pointer"
+	hitArea={new HitRectangle(-arrowW / 2, -arrowH / 2, arrowW, arrowH)}
+	onpointerup={next}
+>
+	<Sprite key="preloadArrowRight" anchor={0.5} width={arrowW} height={arrowH} eventMode="none" />
+</Container>
+
+<Container x={centerX} y={dotsY} alpha={chromeIn.current}>
+	{#each CARDS as _card, dotIndex}
+		<Sprite
+			key={dotIndex === index ? 'preloadDotOn' : 'preloadDotOff'}
+			anchor={0.5}
+			x={(dotIndex - (CARDS.length - 1) / 2) * dotSize * 1.45}
+			width={dotIndex === index ? dotSize * 1.15 : dotSize * 0.72}
+			height={dotIndex === index ? dotSize * 1.15 : dotSize * 0.72}
+			eventMode="none"
+		/>
+	{/each}
+</Container>
+
+{#if props.ready}
+	<Container
+		x={centerX}
+		y={continueY}
+		alpha={chromeIn.current}
+		eventMode={pointer}
+		cursor="pointer"
+		hitArea={new HitRectangle(-continueW / 2, -continueH / 2, continueW, continueH)}
+		onpointerup={exit}
+	>
+		<Sprite key="preloadContinue" anchor={0.5} width={continueW} height={continueH} eventMode="none" />
+	</Container>
+{:else}
+	<Container x={centerX} y={continueY} alpha={chromeIn.current}>
+		<LoadingProgress width={barW} height={barH}>
+			{#snippet background(sizes)}
+				<Sprite key="progressBarBackground.png" {...sizes} />
+			{/snippet}
+			{#snippet progress(sizes)}
+				<Sprite key="progressBar.png" {...sizes} />
+			{/snippet}
+			{#snippet frame(sizes)}
+				<Sprite key="progressBarFrame.png" {...sizes} />
+			{/snippet}
+		</LoadingProgress>
+	</Container>
+{/if}
 
 <OnHotkey hotkey="Space" onpress={advance} />
 <OnHotkey hotkey="ArrowLeft" onpress={previous} />

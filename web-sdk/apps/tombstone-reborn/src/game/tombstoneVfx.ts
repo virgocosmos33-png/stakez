@@ -63,10 +63,22 @@ export const VFX = {
 } as const;
 
 /**
+ * CSS cell-card mark gold (`--c` / `--c2` on `.fx-corner`).
+ * Same pair as the gold rim under paying cards and the split slash.
+ * The ways skim wipe is the high-pay grunge plate through Febucci fire,
+ * additive only. Not this flat gold.
+ */
+export const CELL_MARK = {
+	gold: 0xffb628,
+	goldDeep: 0x8a5300,
+} as const;
+
+/**
  * Accent per feature — dark iron only. No brass, no spentBrass, no dust: warm
  * accents still read as yellow on screen. `split` was blood rust, which is what
  * put red ticks on the corner brackets; the three features are separated by
- * iron value now, not by hue.
+ * iron value now, not by hue. Gunsmoke pre-hit uses CELL_MARK gold corners,
+ * not this iron snap.
  */
 export const TARGET_ACCENT: Record<'split' | 'clone' | 'stretch', number> = {
 	split: TOMBSTONE_FX.ironEdge,

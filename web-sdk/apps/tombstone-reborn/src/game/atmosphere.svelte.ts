@@ -1,6 +1,6 @@
 /**
- * Nolimit-style room grade: base is monochrome, small bonus warms up,
- * big bonus burns. Drives BOTH the saloon plate and the wood board.
+ * Spine room stays in authored colour. Bonus only adds heat.
+ * Do not desaturate the western scene — that is not in the Spine project.
  */
 import { Tween } from 'svelte/motion';
 import { cubicInOut } from 'svelte/easing';
@@ -22,15 +22,14 @@ const TARGETS: Record<
 	Atmosphere,
 	{ sat: number; warm: number; ember: number; smoke: number; fire: number }
 > = {
-	base: { sat: 0, warm: 0, ember: 0, smoke: 0, fire: 0 },
-	// bonus plates are already painted — do not re-grade them
-	small: { sat: 1, warm: 0, ember: 0, smoke: 0, fire: 0 },
-	super: { sat: 1, warm: 0, ember: 0, smoke: 0, fire: 0 },
+	base: { sat: 1, warm: 0, ember: 0, smoke: 0, fire: 0 },
+	small: { sat: 1, warm: 0.85, ember: 0.28, smoke: 0, fire: 0 },
+	super: { sat: 1, warm: 1, ember: 0.7, smoke: 0.75, fire: 0.7 },
 };
 
 const FADE = { duration: 720, easing: cubicInOut };
 
-export const atmoSat = new Tween(0);
+export const atmoSat = new Tween(1);
 export const atmoWarm = new Tween(0);
 export const atmoEmber = new Tween(0);
 export const atmoSmoke = new Tween(0);
@@ -54,14 +53,15 @@ export const atmosphereFromState = (): Atmosphere => {
 };
 
 export const setAtmosphere = (next: Atmosphere) => {
-	if (stateGame.atmosphere === next) return;
-	stateGame.atmosphere = next;
 	const t = TARGETS[next];
-	atmoSat.set(t.sat, FADE);
-	atmoWarm.set(t.warm, FADE);
-	atmoEmber.set(t.ember, FADE);
-	atmoSmoke.set(t.smoke, FADE);
-	atmoFire.set(t.fire, FADE);
+	const same = stateGame.atmosphere === next;
+	if (!same) stateGame.atmosphere = next;
+	const fade = same ? { duration: 0 } : FADE;
+	atmoSat.set(t.sat, fade);
+	atmoWarm.set(t.warm, fade);
+	atmoEmber.set(t.ember, fade);
+	atmoSmoke.set(t.smoke, fade);
+	atmoFire.set(t.fire, fade);
 };
 
 export const syncAtmosphere = (hint?: Atmosphere) => {

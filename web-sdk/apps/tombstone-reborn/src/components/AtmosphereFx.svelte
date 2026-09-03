@@ -1,8 +1,7 @@
 <script lang="ts" module>
 	/**
-	 * Shared grade + inferno filters. Same look on the saloon and the timber:
-	 * desaturate in base, warm colour in small bonus, ember + drifting smoke
-	 * in the big bonus.
+	 * Shared grade + inferno filters. Spine room stays in colour.
+	 * Bonus adds warm / ember. Never start desaturated.
 	 */
 	import { Filter, Texture } from 'pixi.js';
 
@@ -123,7 +122,7 @@ void main() {
 			gl: { vertex: VERTEX, fragment: GRADE_FRAGMENT, name: 'tr-atmosphere-grade' },
 			resources: {
 				gradeUniforms: {
-					uSat: { value: 0, type: 'f32' },
+					uSat: { value: 1, type: 'f32' },
 					uWarm: { value: 0, type: 'f32' },
 					uEmber: { value: 0, type: 'f32' },
 					uTime: { value: 0, type: 'f32' },

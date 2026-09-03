@@ -1,19 +1,16 @@
 <script lang="ts">
 	import { type Texture, type VideoSource } from 'pixi.js';
-	import { Container, Rectangle, Sprite } from 'pixi-svelte';
+	import { Rectangle } from 'pixi-svelte';
 	import { FadeContainer } from 'components-pixi';
 	import { SECOND } from 'constants-shared/time';
 
 	import { getContext } from '../game/context';
-	import SaloonScene, { BG_PLATE_FILTERS, SCENE_ART, tickBgGrade } from './SaloonScene.svelte';
-	import AtmosphereFx from './AtmosphereFx.svelte';
+	import SaloonScene from './SaloonScene.svelte';
 
 	const context = getContext();
 
-	// ONE ambient SCENE: ready-made backgroundSPINE western room.
-	// Barrel lamp is off in base and on in bonus. Drop a seamless loop at
-	// static/assets/sprites/scene/scene_bg.mp4 and register it as `sceneBgAnim`
-	// to replace the still room with video.
+	// Ready backgroundSPINE western room. Color, red_filter, smoke, and fire
+	// all live on that scene. Do not grade it to grey.
 	const videoTextureOf = (key: string) =>
 		context.stateApp.loadedAssets?.[key] as Texture | undefined;
 
@@ -26,40 +23,13 @@
 		if (video.paused) video.play().catch(() => {});
 	};
 
-	const coverProps = (art: { width: number; height: number }) => {
-		const canvas = context.stateLayoutDerived.canvasSizes();
-		const scale = Math.max(canvas.width / art.width, canvas.height / art.height);
-		return {
-			anchor: 0.5,
-			x: canvas.width / 2,
-			y: canvas.height / 2,
-			width: art.width * scale,
-			height: art.height * scale,
-		};
-	};
-
-	const sceneVideoReady = $derived(videoTextureOf('sceneBgAnim') !== undefined);
-
 	$effect(() => {
 		playLoop('sceneBgAnim');
-	});
-
-	// Snap grade to the atmosphere target. Do not tick uTime every frame —
-	// that used to keep the full-screen blur stack dirty for no visual gain.
-	$effect(() => {
-		tickBgGrade(0, 1, 0, 0);
 	});
 </script>
 
 <Rectangle {...context.stateLayoutDerived.canvasSizes()} backgroundColor={0x000000} zIndex={-3} />
 
 <FadeContainer show={true} duration={SECOND} zIndex={-2}>
-	{#if sceneVideoReady}
-		<Container filters={BG_PLATE_FILTERS}>
-			<Sprite key="sceneBgAnim" {...coverProps(SCENE_ART)} />
-		</Container>
-	{:else}
-		<SaloonScene />
-	{/if}
-	<AtmosphereFx />
+	<SaloonScene />
 </FadeContainer>

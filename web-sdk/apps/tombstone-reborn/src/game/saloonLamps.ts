@@ -1,6 +1,6 @@
 import { HANGING_LAMPS } from './hangingLamps.generated';
 
-/** Live plate is western_scene2 (Crystal 2684). Layout seats: Desktop western_scene2.psd ×2. */
+/** Live plate is western_scene (Spine 2×). Overlay seats from that skeleton. */
 
 export const SCENE_ART = { width: 2684, height: 1784 } as const;
 

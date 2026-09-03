@@ -1010,9 +1010,9 @@
   }
  },
  "meta": {
-  "app": "pack_v18_symbols.py",
+  "app": "wire_tombstone_symbols.py",
   "version": "1.0",
-  "image": "symbolsStatic.v18.webp",
+  "image": "symbolsStatic.v15.webp",
   "format": "RGBA8888",
   "size": {
    "w": 1210,

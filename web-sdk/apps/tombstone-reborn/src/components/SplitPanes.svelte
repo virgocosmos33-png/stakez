@@ -13,8 +13,9 @@
 	import { Tween } from 'svelte/motion';
 	import { cubicIn, linear } from 'svelte/easing';
 	import { MainContainer } from 'components-layout';
-	import { Container, Graphics, Rectangle, Sprite } from 'pixi-svelte';
+	import { Container, Graphics, Sprite } from 'pixi-svelte';
 	import { playThemedOnce } from '../game/sfxTheme';
+	import CellClipMask from './CellClipMask.svelte';
 
 	import { fallOutFeatureFx } from '../game/featureFallOut.svelte';
 	import { fxDur, fxWait } from '../game/fxTiming';
@@ -40,8 +41,12 @@
 		drawSlashLip,
 		type SplitDripKey,
 	} from '../game/splitSlash';
+	import { shakeBoard } from '../game/stateShake.svelte';
 	import { TOMBSTONE_FX } from '../game/tombstoneVfx';
 	import { formatWaysMult } from '../game/waysFormat';
+	import { isLowPaySymbol, usesHighPayPlate } from '../game/gunsmokeSpin';
+	import HighPayBg from './HighPayBg.svelte';
+	import LowPayBg from './LowPayBg.svelte';
 	import RedGlowMark from './RedGlowMark.svelte';
 	import SymbolSprite from './SymbolSprite.svelte';
 	import BoardSpace from './BoardSpace.svelte';
@@ -161,7 +166,7 @@
 	);
 
 	const punchCell = async (cell: SplitCell) => {
-		await cell.pulse.set(1.055, { duration: fxDur(SLASH.hitMs * 0.35) });
+		await cell.pulse.set(1.16, { duration: fxDur(SLASH.hitMs * 0.35) });
 		if (!slashAlive) return;
 		await cell.pulse.set(1, { duration: fxDur(SLASH.hitMs * 0.65) });
 	};
@@ -200,6 +205,11 @@
 		const fresh = cells.filter((cell) => cell.fresh);
 		if (!fresh.length) return;
 		playThemedOnce('sfx_split', { forcePlay: true });
+		void fxWait(SLASH.hitMs).then(() => {
+			if (!slashAlive) return;
+			playThemedOnce('sfx_split_hit', { forcePlay: true });
+			shakeBoard({ intensity: 12, duration: fxDur(170) });
+		});
 		await Promise.all(fresh.map((cell) => slashCell(cell)));
 	};
 
@@ -248,8 +258,13 @@
 	{@const split = cell.split.current}
 	<Container x={cell.cx} y={cell.cy} scale={cell.pulse.current}>
 		<Graphics draw={drawUnderGlow} />
+		{#if usesHighPayPlate(cell.name)}
+			<HighPayBg reelIndex={cell.reel} />
+		{:else if isLowPaySymbol(cell.name)}
+			<LowPayBg reelIndex={cell.reel} />
+		{/if}
 		<Container>
-			<Rectangle isMask anchor={0.5} width={CARD_W} height={CARD_H} backgroundColor={0xffffff} />
+			<CellClipMask reelIndex={cell.reel} openHat={isHigh} />
 			<SymbolSprite {symbolInfo} />
 		</Container>
 		<Container alpha={split}>
@@ -262,7 +277,7 @@
 	{@const split = cell.split.current}
 	<Container x={cell.cx} y={cell.cy} scale={cell.pulse.current}>
 		<Container>
-			<Rectangle isMask anchor={0.5} width={CARD_W} height={CARD_H} backgroundColor={0xffffff} />
+			<CellClipMask reelIndex={cell.reel} />
 			<Container rotation={SLASH_ROT}>
 				{#if cell.marked}
 					<Sprite

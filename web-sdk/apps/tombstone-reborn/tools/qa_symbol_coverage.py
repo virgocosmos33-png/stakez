@@ -233,6 +233,17 @@ def frontend_symbol_keys() -> dict[str, set[str]]:
 			raise SystemExit(f"constants.ts: cannot resolve binding {binding} for {name}")
 		per_symbol[name] = {key, blur_of(key)}
 
+	# platedStates(<binding>, 'H1', 'h1') -> spine on the board, baked card + blur
+	for name, binding, spine_key in re.findall(
+		r"^\t(\w+):\s*platedStates\((\w+),\s*'(\w+)',",
+		body,
+		re.M,
+	):
+		key = bindings.get(binding)
+		if not key:
+			raise SystemExit(f"constants.ts: cannot resolve binding {binding} for {name}")
+		per_symbol[name] = {key, blur_of(key), spine_key}
+
 	# explicit literal blocks: { static: <binding>, spin: blurState('x'), ... }
 	for match in re.finditer(r"^\t([A-Z][A-Z0-9_]*):\s*\{(.*?)^\t\},", body, re.S | re.M):
 		name, block = match.group(1), match.group(2)

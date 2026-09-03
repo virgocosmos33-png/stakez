@@ -1,44 +1,44 @@
 /**
- * Scene-space seats from backgroundSPINE/spine-scene MAIN_FRAME.
- * Canvas 1342×892 (1×), scaled ×2 into SCENE_ART 2684×1784.
- * Plaques = extracted layer pixels (box + pallet). Lamps stay Spine — nails only.
+ * Scene-space seats from assets/spines/western_scene (Spine setup pose).
+ * Canvas 1342×892 (1×), scaled ×2 into SCENE_ART.
+ * Plaques / lamps / board follow the skeleton the user edited. Do not use placement.json.
  */
 export const FRAME_SEATS = {
-	source: "C:\\Users\\Emex33\\Documents\\fire frame vfx\\backgroundSPINE\\spine-scene",
+	source: "C:\\Users\\Emex33\\Documents\\tombstone reborn\\web-sdk\\apps\\tombstone-reborn\\assets\\spines\\western_scene",
 	psd: { width: 1342, height: 892 },
 	scale: 2,
 	board: { left: 620, top: 272, right: 2070, bottom: 1496 },
-	/** Interior hole of MAIN_FRAME at 2×. */
+	/** Interior hole of MAIN_FRAME at 2×. Tracks the board if that bone moved. */
 	pocket: { left: 750, top: 374, right: 1966, bottom: 1392 },
 	/** Stepped hole bands in SCENE_ART (one connected island, not 6 separate windows). */
 	holeColumns: [
-		{ id: 'r0', rows: 3, left: 750, top: 504, right: 956, bottom: 1256 },
-		{ id: 'r12', rows: 4, left: 956, top: 376, right: 1346, bottom: 1390 },
-		{ id: 'r34', rows: 2, left: 1356, top: 634, right: 1760, bottom: 1128 },
-		{ id: 'r5', rows: 1, left: 1760, top: 762, right: 1966, bottom: 1000 },
+		{ id: 'r0', rows: 3, left: 750.0, top: 504.0, right: 956.0, bottom: 1256.0 },
+		{ id: 'r12', rows: 4, left: 956.0, top: 376.0, right: 1346.0, bottom: 1390.0 },
+		{ id: 'r34', rows: 2, left: 1356.0, top: 634.0, right: 1760.0, bottom: 1128.0 },
+		{ id: 'r5', rows: 1, left: 1760.0, top: 762.0, right: 1966.0, bottom: 1000.0 }
 	],
 	beam: { left: 36, top: 106, right: 2658, bottom: 258 },
 	chains: [
-		{ id: "hang-0", left: 698, top: 186, right: 730, bottom: 488 },
-		{ id: "hang-1", left: 906, top: 182, right: 938, bottom: 326 },
-		{ id: "hang-2", left: 1372, top: 186, right: 1404, bottom: 326 }
+		{ id: "hang-0", left: 698.0, top: 186.0, right: 730.0, bottom: 488.0 },
+		{ id: "hang-1", left: 906.0, top: 182.0, right: 938.0, bottom: 326.0 },
+		{ id: "hang-2", left: 1372.0, top: 186.0, right: 1404.0, bottom: 326.0 }
 	],
 	lamps: {
 		L: {
-			hangX: 258,
-			hangY: 146,
-			left: 196,
-			top: 146,
-			right: 320,
-			bottom: 610,
+			hangX: 258.0,
+			hangY: 146.0,
+			left: 196.0,
+			top: 146.0,
+			right: 320.0,
+			bottom: 610.0,
 		},
 		R: {
-			hangX: 2438,
-			hangY: 146,
-			left: 2376,
-			top: 146,
-			right: 2500,
-			bottom: 610,
+			hangX: 2438.0,
+			hangY: 146.0,
+			left: 2376.0,
+			top: 146.0,
+			right: 2500.0,
+			bottom: 610.0,
 		},
 	},
 	plaques: {

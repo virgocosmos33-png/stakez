@@ -31,8 +31,11 @@
 
 	import { getContext } from '../game/context';
 	import { SYMBOL_SIZE } from '../game/constants';
+	import { planCelebGunfire } from '../game/celebGunfire';
+	import { fxRandom } from '../game/featureVfx';
 	import { celebPlateDurationMs, getTiersPassed } from '../game/winCelebrationMap';
 	import { waysLabel } from '../game/waysFormat';
+	import { playThemedOnce } from '../game/sfxTheme';
 	import { playExternalOnce } from 'utils-sound';
 	import { resumeModeBeds } from '../game/bonusBgm';
 	import {
@@ -142,14 +145,15 @@
 	// Each plate finishes its own count with gunshots. `left` is the fraction
 	// of COUNT TIME reserved for the volley (not of the amount) so shots
 	// start early instead of dumping at the end of an ease-in. Scene length
-	// stays plateDwellMs — the volley just owns more of it.
+	// stays plateDwellMs — the volley just owns more of it. Rhythm is
+	// GTA-style clusters (planCelebGunfire), never an even 1-by-1 beat.
 	const SHOT_SCENES = [
-		{ left: 0.62, shots: 6, jitter: false },
-		{ left: 0.64, shots: 8, jitter: false },
-		{ left: 0.66, shots: 10, jitter: false },
-		{ left: 0.68, shots: 12, jitter: false },
-		{ left: 0.7, shots: 14, jitter: false },
-		{ left: 0.72, shots: 16, jitter: true, shotsMin: 14, shotsMax: 18 },
+		{ left: 0.62, shots: 6 },
+		{ left: 0.64, shots: 8 },
+		{ left: 0.66, shots: 10 },
+		{ left: 0.68, shots: 12 },
+		{ left: 0.7, shots: 14 },
+		{ left: 0.72, shots: 16, shotsMin: 14, shotsMax: 18 },
 	] as const;
 	type AmountHit = {
 		id: number;
@@ -176,19 +180,6 @@
 
 	const sceneShotPlan = (index: number) =>
 		SHOT_SCENES[Math.min(Math.max(index, 0), SHOT_SCENES.length - 1)];
-
-	const buildShotValues = (from: number, to: number, count: number) => {
-		const span = Math.max(0, to - from);
-		const n = Math.max(1, count);
-		if (span <= 0) return [to];
-		const weights = Array.from({ length: n }, (_, i) => 0.55 + ((i * 13 + 7) % 9) * 0.07);
-		const sum = weights.reduce((total, weight) => total + weight, 0);
-		let acc = from;
-		return weights.map((weight, i) => {
-			acc = i === n - 1 ? to : acc + (span * weight) / sum;
-			return acc;
-		});
-	};
 
 	const fireAmountShot = (value: number) => {
 		countMult = value;
@@ -229,8 +220,7 @@
 		const liveFlash = amountHits.filter((hit) => hit.kind === 'flash' && hit.life.current > 0.02);
 		amountHits = [...holes, ...liveFlash, flash, hole];
 
-		context.eventEmitter.broadcast({ type: 'soundStop', name: 'sfx_celeb_stamp' });
-		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_celeb_stamp', forcePlay: true });
+		playThemedOnce('sfx_gunshot', { forcePlay: true, ricochet: false, volume: 0.3 });
 	};
 
 	const armShotVolley = (
@@ -238,27 +228,12 @@
 		to: number,
 		remainMs: number,
 		plan: (typeof SHOT_SCENES)[number],
+		seed: number,
 	) => {
-		const count = plan.jitter
-			? plan.shotsMin + Math.floor(Math.random() * (plan.shotsMax - plan.shotsMin + 1))
-			: plan.shots;
-		const values = buildShotValues(from, to, count);
-		// Pace the volley across the remaining % of this plate. Floor at
-		// 280ms a shot so later plates (6–15 hits) cannot machine-gun.
-		const budget = Math.max(remainMs, 280 * values.length);
-		const t0 = performance.now();
-		if (plan.jitter) {
-			const gaps = values.map(() => 0.35 + Math.random() * 1.7);
-			const gapSum = gaps.reduce((total, gap) => total + gap, 0);
-			let at = t0;
-			shotPlan = values.map((value, i) => {
-				at += (gaps[i] / gapSum) * budget;
-				return { at, value };
-			});
-		} else {
-			const gap = budget / values.length;
-			shotPlan = values.map((value, i) => ({ at: t0 + (i + 1) * gap, value }));
-		}
+		const lo = 'shotsMin' in plan ? plan.shotsMin : plan.shots;
+		const hi = 'shotsMax' in plan ? plan.shotsMax : plan.shots;
+		const count = lo + Math.floor(fxRandom(seed) * (hi - lo + 1));
+		shotPlan = planCelebGunfire(from, to, count, remainMs, seed + 29, performance.now());
 		shotCursor = 0;
 	};
 
@@ -317,11 +292,12 @@
 
 	const SCENE_CUT_SFX = '/assets/audio/sfx_celeb_scene_cut.mp3';
 
-	const playStageMusic = (target: number) => {
+	const playStageMusic = (target: number, opts?: { cut?: boolean }) => {
 		silenceOldCelebrationAudio();
 		const cue = stageCue(target);
 		sceneGen += 1;
-		playExternalOnce(SCENE_CUT_SFX);
+		// First plate after ways-shine must not crack another hit SFX.
+		if (opts?.cut !== false) playExternalOnce(SCENE_CUT_SFX);
 		if (!isCelebSceneBgm(cue)) return;
 		playCelebSceneBgm(cue);
 	};
@@ -448,10 +424,9 @@
 
 	let time = $state(0);
 	onMount(() => {
-		// Takeover owns music: kill Madam winlevel/celeb SFX, start the bed at stage 1
-		playStageMusic(0);
-		pop.set(1, { duration: 0 });
-		pop.set(0, { duration: 900, easing: cubicOut });
+		// Takeover owns music. No scene-cut / starburst punch on first plate —
+		// that landed as a third hit right after the ways whip.
+		playStageMusic(0, { cut: false });
 		zoom.set(intensity.push, { duration: plateDwellMs(0), easing: cubicOut });
 		let raf = 0;
 		const start = performance.now();
@@ -487,6 +462,7 @@
 								finalMult,
 								MAX_RECOUNT_DURATION * plan.left,
 								plan,
+								Math.floor(finalMult * 17) + 511,
 							);
 							drainShots(now);
 						} else {
@@ -515,6 +491,7 @@
 								segment.to,
 								segment.duration * plan.left,
 								plan,
+								Math.floor(segment.from * 1000 + segment.to * 17) + segIndex * 97,
 							);
 							drainShots(now);
 						} else {

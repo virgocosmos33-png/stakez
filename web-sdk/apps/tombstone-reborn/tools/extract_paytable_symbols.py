@@ -21,12 +21,14 @@ SRC = os.path.join(APP, "assets-src", "assets")
 ATLAS_DIR = os.path.join(STATIC, "sprites", "symbolsStatic")
 MIRROR = os.path.join(STATIC, "sprites", "mirror")
 OUT_DIRS = (
+	os.path.join(APP, "assets", "paytable"),
 	os.path.join(STATIC, "paytable"),
+	os.path.join(APP, "assets-src", "paytable"),
 	os.path.join(SRC, "paytable"),
 )
 
-ATLAS_JSON = "symbolsStatic.v25.json"
-ATLAS_IMAGE = "symbolsStatic.v25.webp"
+ATLAS_JSON = "symbolsStatic.v13.json"
+ATLAS_IMAGE = "symbolsStatic.v13.webp"
 
 WANTED = {
 	"h1.webp": "h1",

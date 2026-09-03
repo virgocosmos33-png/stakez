@@ -160,6 +160,22 @@ export const getRowPitch = (reelIndex: number) => {
 export const getCellCenterY = (reelIndex: number, rowIndex: number) =>
 	getReelYOffset(reelIndex) + (rowIndex - 0.5) * getRowPitch(reelIndex);
 
+/** Board-local point → visible cell, or null if the click missed a card. */
+export const cellAtBoardLocal = (lx: number, ly: number) => {
+	const reels = stateGame.board.length;
+	for (let reel = 0; reel < reels; reel += 1) {
+		const cx = getSymbolX(reel);
+		if (Math.abs(lx - cx) > SYMBOL_CARD_W / 2) continue;
+		const rows = getReelRows(reel);
+		const halfH = getCardHeight(reel) / 2;
+		for (let row = 1; row <= rows; row += 1) {
+			const cy = getCellCenterY(reel, row);
+			if (Math.abs(ly - cy) <= halfH) return { reel, row };
+		}
+	}
+	return null;
+};
+
 /** Painted card height inside this reel's current row pitch. The 300×300
  *  atlas frame only uses 292px of height (SYMBOL_CARD_H); stretch scales it
  *  with the pitch so the pocket still hugs the art. */
@@ -215,10 +231,8 @@ export const getSymbolInfo = ({
 	const level = rawSymbol.level;
 	const map = SYMBOL_INFO_MAP[rawSymbol.name];
 	const info = map[state];
-	// Land (and any other spine state) is the BASE-game skeleton — one
-	// texture, no small/super variant. Playing that on a bonus deal then
-	// flipping to the leveled sprite is the mid-spin face-swap. Keep the
-	// leveled card for the whole drop.
+	// Land / win / static spines share the same live face + plate. A leveled
+	// bonus face still cannot swap onto that skeleton mid-drop.
 	if (level && level !== 'base' && info?.type === 'spine') {
 		return levelFace(map.static, level);
 	}

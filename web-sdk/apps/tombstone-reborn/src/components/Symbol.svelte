@@ -18,7 +18,6 @@
 	const context = getContext();
 	const symbolInfo = $derived(getSymbolInfo({ rawSymbol: props.rawSymbol, state: props.state }));
 	const isSprite = $derived(symbolInfo.type === 'sprite');
-
 </script>
 
 {#if isSprite}
@@ -31,13 +30,13 @@
 	/>
 {:else}
 	<SymbolSpine
-		loop={props.loop}
+		loop={props.loop ?? props.state === 'postWin'}
 		{symbolInfo}
 		x={props.x}
 		y={props.y}
 		listener={{
 			complete: props.oncomplete,
-			event: (_, event) => {
+			event: (_entry: unknown, event: { data?: { name?: string } }) => {
 				if (event.data?.name === 'wildExplode') {
 					context.eventEmitter?.broadcast({ type: 'soundOnce', name: 'sfx_wild_explode' });
 				}

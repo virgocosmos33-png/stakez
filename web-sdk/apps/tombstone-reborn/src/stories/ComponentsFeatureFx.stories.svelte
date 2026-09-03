@@ -8,9 +8,9 @@
 	//                 2 panes = 1 cut, 3 panes = 2 cuts. 6+ is one symbol plus a count.
 	//   shovel dig break — the digUp spade drives in and the cell cracks open in a
 	//                       burst of dirt and smoke at the point of impact.
-	//   gunsmoke wounds — bullet + smoke + glass dent + hole; irregular
-	//                     uneven singles, never a double; specials stain the
-	//                     iron cell frame (clipping mask), and the stain stays.
+	//   gunsmoke wounds — bullet + smoke + glass dent + hole; same GTA dumps
+	//                     as win-plate gunfire (clusters + breath); specials
+	//                     stain the iron cell frame, and the stain stays.
 	const { Story } = defineMeta({
 		title: 'COMPONENTS/FeatureFx',
 	});
@@ -27,6 +27,7 @@
 
 	import Game from '../components/Game.svelte';
 	import { getContext, setContext } from '../game/context';
+	import { fxWait } from '../game/fxTiming';
 	import { planWoundRhythm, volleySeed } from '../game/gunsmokeSpin';
 	import { forceStorySpeed } from './playStory';
 
@@ -89,16 +90,23 @@
 			const hit = hits[i];
 			if (!hit) continue;
 			const shot = rhythm[i];
-			await context.eventEmitter.broadcastAsync({
+			const fire = context.eventEmitter.broadcastAsync({
 				type: 'gunsmokeWound',
 				reel: hit.reel,
 				row: hit.row,
 				blood: hit.blood,
 				name: hit.name,
-				beatMs: shot?.beatMs,
+				beatMs: 0,
 				flightScale: shot?.flightScale,
 				side: shot?.side,
 			});
+			if (shot?.burst) {
+				void fire;
+				if ((shot.beatMs ?? 0) > 0) await fxWait(shot.beatMs);
+				continue;
+			}
+			await fire;
+			if ((shot?.beatMs ?? 0) > 0) await fxWait(shot.beatMs);
 		}
 	};
 

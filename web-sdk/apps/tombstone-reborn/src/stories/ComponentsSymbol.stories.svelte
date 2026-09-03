@@ -24,9 +24,8 @@
 	import { CanvasSizeRectangle, MainContainer } from 'components-layout';
 	import { StoryLocale } from 'components-storybook';
 
-	import SymbolSprite from '../components/SymbolSprite.svelte';
+	import Symbol from '../components/Symbol.svelte';
 	import { getContext, setContext } from '../game/context';
-	import { getSymbolInfo } from '../game/utils';
 	import { SYMBOL_SIZE } from '../game/constants';
 	import type { SymbolName, SymbolState } from '../game/types';
 
@@ -61,7 +60,7 @@
 				<MainContainer>
 					{@const main = context.stateLayoutDerived.mainLayout()}
 					<Container x={main.width / 2} y={main.height / 2}>
-						<SymbolSprite {state} symbolInfo={getSymbolInfo({ rawSymbol: { name }, state })} />
+						<Symbol {state} rawSymbol={{ name }} />
 						<Text
 							anchor={0.5}
 							y={SYMBOL_SIZE * 0.72}
@@ -92,7 +91,7 @@
 								x={(col - (COLS - 1) / 2) * CELL}
 								y={(row - (rows - 1) / 2) * CELL}
 							>
-								<SymbolSprite symbolInfo={getSymbolInfo({ rawSymbol: { name }, state: 'static' })} />
+								<Symbol state="static" rawSymbol={{ name }} />
 								<Text anchor={0.5} y={SYMBOL_SIZE * 0.58} text={name} style={LABEL_STYLE} />
 							</Container>
 						{/each}

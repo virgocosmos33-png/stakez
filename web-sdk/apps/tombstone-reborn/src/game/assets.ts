@@ -1,10 +1,10 @@
 export default {
-	// Madam Mirror symbol spines (new schema). Shared atlas mm_symbols; each
-	// rig is authored 1:1 (scale 1, unlike the legacy scale-2 template rigs)
-	// with win / land / postWin animations and class-tinted FX layers. The
-	// card is a deformable mesh so postWin ripples the artwork itself.
+	// Paying H/L spines. Shared atlas mm_symbols; each rig is 1:1 with a wood
+	// or bloody plate slot under the live face, plus win / land / postWin /
+	// static tracks. Preload: settled board cells are these skeletons.
 	H1: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/h1.json', import.meta.url).href,
@@ -13,6 +13,7 @@ export default {
 	},
 	H2: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/h2.json', import.meta.url).href,
@@ -21,6 +22,7 @@ export default {
 	},
 	H3: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/h3.json', import.meta.url).href,
@@ -29,6 +31,7 @@ export default {
 	},
 	H4: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/h4.json', import.meta.url).href,
@@ -37,6 +40,7 @@ export default {
 	},
 	H5: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/h5.json', import.meta.url).href,
@@ -45,6 +49,7 @@ export default {
 	},
 	L1: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/l1.json', import.meta.url).href,
@@ -53,6 +58,7 @@ export default {
 	},
 	L2: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/l2.json', import.meta.url).href,
@@ -61,6 +67,7 @@ export default {
 	},
 	L3: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/l3.json', import.meta.url).href,
@@ -69,6 +76,7 @@ export default {
 	},
 	L4: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/l4.json', import.meta.url).href,
@@ -77,6 +85,7 @@ export default {
 	},
 	L5: {
 		type: 'spine',
+		preload: true,
 		src: {
 			atlas: new URL('../../assets/spines/mm_symbols/mm_symbols.atlas', import.meta.url).href,
 			skeleton: new URL('../../assets/spines/mm_symbols/l5.json', import.meta.url).href,
@@ -171,6 +180,54 @@ export default {
 		src: new URL('../../assets/sprites/loadingParticles/loadingParticles.json', import.meta.url).href,
 		preload: true,
 	},
+	// Preload / intro chrome. Street plate only — logo, cards, and continue
+	// sit on it. Preload:true so the loading screen can paint the carousel
+	// before the rest of the pack.
+	preloadBg: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/bg.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadCardActive: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/card_active.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadCardSideL: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/card_side_l.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadCardSideR: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/card_side_r.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadArrowLeft: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/arrow_left.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadArrowRight: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/arrow_right.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadContinue: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/continue.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadDotOn: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/dot_on.png', import.meta.url).href,
+		preload: true,
+	},
+	preloadDotOff: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/preload/dot_off.png', import.meta.url).href,
+		preload: true,
+	},
 	// template 'freeSpins' + 'winSmall' localized-plate atlases removed:
 	// western FREE SPINS / YOU WON / TOTAL WIN lettering. Win amounts render as
 	// bitmap-font text on the WinCelebration plates; there is no free-spin
@@ -200,9 +257,8 @@ export default {
 	// tools/qa_symbol_coverage.py fails if any symbol asset stops being preloaded.
 	symbolsStatic: {
 		type: 'sprites',
-		// Live deck is still the v13 atlas keys. Scenario vector idles are
-		// stamped in place by tools/pack_vector_idles.py (H1-H5, L1-L4 so far).
-		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v13.json', import.meta.url).href,
+		// Live deck from Desktop new symbols/symbol/{high,low,special}.
+		src: new URL('../../assets/sprites/symbolsStatic/symbolsStatic.v22.json', import.meta.url).href,
 		preload: true,
 	},
 	// --- ambient SCENE --------------------------------------------------------
@@ -314,8 +370,8 @@ export default {
 	westernScene: {
 		type: 'spine',
 		src: {
-			atlas: '/assets/spines/western_scene/western_scene.atlas',
-			skeleton: '/assets/spines/western_scene/western_scene.json',
+			atlas: '/assets/spines/western_scene/western_scene.atlas?v=props5',
+			skeleton: '/assets/spines/western_scene/western_scene.json?v=props5',
 			scale: 1,
 		},
 		preload: true,
@@ -419,14 +475,17 @@ export default {
 		src: new URL('../../assets/sprites/fx/win_celeb_holes.json', import.meta.url).href,
 		preload: true,
 	},
+	// Super-bonus fire motes: additive rise plate over the room.
+	// Not lazy — a timed-out lazy webm is why the fire vanished.
+	emberRise: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/ember_rise.webm', import.meta.url).href,
+	},
 	// Super-bonus room smoke: studio plate, black keyed. Played as a dual
 	// decoder in SeamlessVideoLoop so the seam never lands on screen.
-	// Static URL + lazy: a preload webm hangs the boot loader the same way
-	// the celeb mp4s did. Background already waits on `smokeReady`.
 	roomSmoke: {
 		type: 'sprite',
-		src: '/assets/sprites/fx/room_smoke.webm',
-		lazy: true,
+		src: new URL('../../assets/sprites/fx/room_smoke.webm', import.meta.url).href,
 	},
 	// BONUS-ENTRY BANNER hero plates, one per real buy mode — DEAD MAN'S HAND for
 	// bonus_small (80x, the six-card special bar awake) and OPEN GRAVE for
@@ -459,7 +518,8 @@ export default {
 	// bonuses are single enhanced spins — so the five overlays that rendered
 	// these were dead code and are deleted along with the .webp files. There is
 	// deliberately no replacement key: do not re-register these.
-	// Brand mark: bloody sheriff wordmark (TOMBSTONE / REBORN).
+	// Brand mark: bloody sheriff wordmark (TOMBSTONE / REBORN). Used on the
+	// preload carousel and the in-game HUD.
 	mirrorLogo: {
 		type: 'sprite',
 		src: new URL('../../assets/sprites/mirror/tr_logo.png', import.meta.url).href,
@@ -603,11 +663,34 @@ export default {
 		src: new URL('../../assets/sprites/fx/fx_nudge_fire.png', import.meta.url).href,
 		preload: true,
 	},
-	// Full-reel NUDGE WAYS totem. One tall iron column (NUDGE plaque +
-	// one vertical coffin, foot down), clipped in NudgeWays.
-	fxNudgeColumn: {
+	highPayBg: {
 		type: 'sprite',
-		src: new URL('../../assets/sprites/fx/fx_nudge_column.png', import.meta.url).href,
+		src: new URL('../../assets/sprites/fx/high_pay_bg.png', import.meta.url).href,
+		preload: true,
+	},
+	lowPayBg: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/low_pay_bg.png', import.meta.url).href,
+		preload: true,
+	},
+	fxNudgeCoffinCover: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_nudge_coffin_cover.png', import.meta.url).href,
+		preload: true,
+	},
+	fxNudgeCoffinOpen: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_nudge_coffin_open.png', import.meta.url).href,
+		preload: true,
+	},
+	fxNudgeCoffinGold: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_nudge_coffin_gold.png', import.meta.url).href,
+		preload: true,
+	},
+	fxNudgeCoffinJewel: {
+		type: 'sprite',
+		src: new URL('../../assets/sprites/fx/fx_nudge_coffin_jewel.png', import.meta.url).href,
 		preload: true,
 	},
 	trSH: {

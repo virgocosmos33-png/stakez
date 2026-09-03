@@ -127,6 +127,33 @@ export const PORTRAIT_MAIN_SIZES = {
 };
 
 export const HIGH_SYMBOLS = GEN_HIGH_SYMBOLS;
+export const LOW_SYMBOLS = ['L1', 'L2', 'L3', 'L4', 'L5'] as const;
+export const SPECIAL_SYMBOLS = [
+	'W',
+	'S',
+	'SU',
+	'SP',
+	'GS',
+	'TS',
+	'NW',
+	'SG',
+	'SO',
+	'DU',
+	'CF',
+	'SH',
+	'SS',
+	'STRETCH',
+	'SPLIT',
+	'CLONE',
+	'HM',
+	'ME',
+] as const;
+
+/** High-pay inhale / hat crown may rise this much past the cell roof. */
+export const BREATHE_TOP_FRAC = 0.22;
+/** Green zone: hat + brim + upper hair. Open the top AND the top-sides.
+ *  Below this (shoulders / chest) stays the red cell-pocket clip. */
+export const HAT_OPEN_FRAC = 0.42;
 
 export const INITIAL_SYMBOL_STATE: SymbolState = 'static';
 
@@ -195,12 +222,13 @@ export const zIndexes = {
 
 /**
  * Board stack z (one sortable parent in Game.svelte). Nested zIndex does not
- * compete at App. Once timber is pinned above 0, every board FX must sit in
- * this stack above it — FeatureBurst / muzzle sparks at default 0 go under
- * boardFrameSmall. Hits stay above timber + reels, under the door (12).
+ * compete at App. Timber and win rims stay UNDER the reels so gold chrome
+ * never paints across a face. The scan wipe alone sits OVER the card.
  */
 export const BOARD_TIMBER_Z = 1;
 export const BOARD_REELS_Z = 2;
+/** Settled cards may paint this far over the iron slot-frame lip. */
+export const SLOT_FRAME_LIP = 16;
 export const BOARD_HIT_Z = 11;
 export const GUNSMOKE_WOUND_Z = 11;
 /** Framed split faces. Under the cell blaze so fire licks over the pocket wood. */
@@ -209,6 +237,8 @@ export const SPLIT_CELL_Z = 13;
 export const BOARD_FIRE_Z = 15;
 /** Slash, drips, ways stamp. Above the fire, under win panels. */
 export const SPLIT_KNIFE_Z = 16;
+/** Parked NUDGE coffin. Above fire rings and win rims, under the HUD. */
+export const NUDGE_COFFIN_Z = 17;
 
 const explosion = {
 	type: 'spine',
@@ -252,25 +282,36 @@ const meStatic = { type: 'sprite', assetKey: 'me.png', sizeRatios: { width: 1, h
 const hmIntactStatic = { type: 'sprite', assetKey: 'hm_intact.png', sizeRatios: { width: 1, height: 1 } };
 const hmCrackedStatic = { type: 'sprite', assetKey: 'hm_cracked.png', sizeRatios: { width: 1, height: 1 } };
 
-// One v13 card for static, land, win. Land used to play the mm_symbols
-// spine (colored painterly faces) then snap to the atlas — that swap is
-// the bug. SymbolSprite already does the land squash.
+// Paying H/L cards are two layers: wood plate (LOW) or bloody plate (HIGH)
+// under the live vector face. Board states play the mm_symbols spine so land /
+// win / postWin move both slots together. The atlas sprite is the same stack
+// flattened — spin smear, postWinStatic (SplitPanes / clone) and the paytable
+// read that, so they cannot snap to a different face.
 const blurState = (cardAssetKey: string) => ({
 	type: 'sprite',
 	assetKey: cardAssetKey.replace('.', '_blur.'),
 	sizeRatios: { width: 1, height: 1.6 },
 });
 
-const cardStates = (
+const spineAnim = (assetKey: string, animationName: string) => ({
+	type: 'spine' as const,
+	assetKey,
+	animationName,
+	sizeRatios: { width: 1, height: 1 },
+});
+
+const platedStates = (
 	card: { type: string; assetKey: string; sizeRatios: { width: number; height: number } },
+	assetKey: string,
+	anim: string,
 ) => ({
 	explosion,
-	win: card,
-	postWin: card,
+	win: spineAnim(assetKey, anim),
+	postWin: spineAnim(assetKey, `${anim}_postwin`),
 	postWinStatic: card,
-	static: card,
+	static: spineAnim(assetKey, `${anim}_static`),
 	spin: blurState(card.assetKey),
-	land: card,
+	land: spineAnim(assetKey, `${anim}_land`),
 });
 
 /** One face per scatter landing position, keyed the same 1..5 as the scatter
@@ -321,16 +362,16 @@ const scatterStatic = {
 };
 
 export const SYMBOL_INFO_MAP = {
-	H1: cardStates(h1Static),
-	H2: cardStates(h2Static),
-	H3: cardStates(h3Static),
-	H4: cardStates(h4Static),
-	H5: cardStates(h5Static),
-	L1: cardStates(l1Static),
-	L2: cardStates(l2Static),
-	L3: cardStates(l3Static),
-	L4: cardStates(l4Static),
-	L5: cardStates(l5Static),
+	H1: platedStates(h1Static, 'H1', 'h1'),
+	H2: platedStates(h2Static, 'H2', 'h2'),
+	H3: platedStates(h3Static, 'H3', 'h3'),
+	H4: platedStates(h4Static, 'H4', 'h4'),
+	H5: platedStates(h5Static, 'H5', 'h5'),
+	L1: platedStates(l1Static, 'L1', 'l1'),
+	L2: platedStates(l2Static, 'L2', 'l2'),
+	L3: platedStates(l3Static, 'L3', 'l3'),
+	L4: platedStates(l4Static, 'L4', 'l4'),
+	L5: platedStates(l5Static, 'L5', 'l5'),
 	// WILD is sprite-only (like HM/ME): the generated straitjacket card is shown
 	// in every state; the pulse/land squash comes from SymbolSprite, and the
 	// wild-rise / explode FX are owned by the wildReel/madamsEye handlers.

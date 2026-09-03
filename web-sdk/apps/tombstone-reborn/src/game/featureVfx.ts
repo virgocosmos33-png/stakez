@@ -34,9 +34,22 @@ export const FEATURE_ART = {
 	riderFrame: 'fxRiderFrame',
 	/** oak-and-iron nameplate the nudge/bounty multiplier is struck on */
 	multPlaque: 'fxMultPlaque',
-	/** full-reel NUDGE WAYS totem — slides down; header seats on the board */
-	nudgeColumn: 'fxNudgeColumn',
+	/** Closed lid — slides down to reveal the open interior. */
+	nudgeCoffinCover: 'fxNudgeCoffinCover',
+	/** Open coffin, bone skeleton. NUDGE ways 2–3. */
+	nudgeCoffinOpen: 'fxNudgeCoffinOpen',
+	/** Open coffin, gold skeleton. NUDGE ways 4–6. */
+	nudgeCoffinGold: 'fxNudgeCoffinGold',
+	/** Open coffin, gold + jewelry. NUDGE ways 7–9. */
+	nudgeCoffinJewel: 'fxNudgeCoffinJewel',
 } as const;
+
+/** NUDGE lands 2–9. Art follows the land, not the doubled ways stamp. */
+export const nudgeCoffinOpenKey = (initialWays: number) => {
+	if (initialWays >= 7) return FEATURE_ART.nudgeCoffinJewel;
+	if (initialWays >= 4) return FEATURE_ART.nudgeCoffinGold;
+	return FEATURE_ART.nudgeCoffinOpen;
+};
 
 /**
  * Frame indices into the `tombstoneFeatureVfx` spritesheet.

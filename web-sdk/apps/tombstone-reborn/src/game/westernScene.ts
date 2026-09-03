@@ -1,3 +1,5 @@
+import { WESTERN_SCENE_SEATS } from './westernSceneSeats.generated';
+
 /** Duck-type the ready TR2 western skeleton. Never use instanceof —
  *  app vs pixi-svelte can load two copies of spine-pixi-v8. */
 export const isWesternSceneSkeleton = (data: unknown) => {
@@ -21,13 +23,13 @@ export const WESTERN_PLAQUE_SLOTS = [
 	'Layer_9',
 ] as const;
 
-/** Scene lanterns include their own chains. HangingLamps already paints those. */
+/** Street hanging lamps. HangingLamps paints those. Sitting barrel lantern
+ *  stays on this skeleton so the porch lamp is lit in base, not bonus-only. */
 export const WESTERN_LAMP_SLOTS = [
 	'left_hanging_lamp',
 	'right_hanging_lamp',
 	'left_hanging_lamp_light',
 	'right_hanging_lamp_light',
-	'lantern_dim_light',
 ] as const;
 
 /** FREE SPINS hangers. Hidden in base so empty chains do not hang with no plaque. */
@@ -51,35 +53,34 @@ export const WESTERN_SIGN_SLOTS = [
 	'sign_highlight',
 ] as const;
 
-/** Duplicate full plate + red_filter. Sky / clouds / town stay on the skeleton
- *  in their PSD Z order (Layer_12 → clouds → Layer_11). */
-export const WESTERN_STREET_SLOTS = [
-	'background',
-	'red_filter',
-] as const;
+/** Old flatten plate only. red_filter stays on the skeleton — scene-viewer
+ *  sets that slot's alpha (Base 45% / Bonus 80%). Do not hide it. */
+export const WESTERN_STREET_SLOTS = ['background'] as const;
 
 /**
- * PSD "clouds marquee" on bone `bg`, attachment (592.5, 247), 4189×440.
- * Idle is rotate-only, so CloudsMarquee slides the existing slots.
+ * PSD "clouds marquee" on bone `bg`. Idle is rotate-only, so CloudsMarquee
+ * slides the existing slots. homeX comes from the live western_scene skin.
  */
 export const WESTERN_CLOUD_MARQUEE = {
 	slots: ['background_clouds', 'background_clouds_2'] as const,
-	homeX: 592.5,
+	homeX: WESTERN_SCENE_SEATS.cloudHomeX,
 	artW: 4189,
 	/** 1× px / second, right → left */
 	speed: 42,
 } as const;
 
 /**
- * Viewer FX panel: smoke ON, fire OFF, density 8, speed 1.00x.
- * https://github.com/brandnitions-dev/TR2-Spine-Background-scene
+ * FX panel from the ready Spine scene lamp_state.json — not a local guess.
+ * smoke true, fire true, density 48, speed 1.
+ * backgroundSPINE/spine-scene/lamp_state.json
+ * assets/spines/western_scene/lamp_state.json
  */
 export const WESTERN_SCENE_FX = {
 	viewW: 1342,
 	viewH: 892,
 	smoke: true,
-	fire: false,
-	density: 8,
+	fire: true,
+	density: 48,
 	speed: 1,
 } as const;
 
@@ -93,16 +94,8 @@ export const WESTERN_RED_FILTER = {
 /** Viewer barrel lamp Glow slider 0.40x. On in bonus only. */
 export const WESTERN_BARREL_LUMEN = 0.4;
 
-/**
- * lantern_dim_light seat in SCENE_ART (Spine 1× Y-up → 2× Y-down).
- * Bone lantern_dim (1308, 283) + attachment (-0.36, 66.95), 420×420.
- */
-export const WESTERN_BARREL_GLOW = {
-	x: (1308 - 0.36) * 2,
-	y: (892 - (283 + 66.95)) * 2,
-	w: 420 * 2,
-	h: 420 * 2,
-} as const;
+/** lantern_dim_light seat in SCENE_ART. From the live western_scene skeleton. */
+export const WESTERN_BARREL_GLOW = WESTERN_SCENE_SEATS.barrelGlow;
 
 /** `idle` rotate keys from TR2-Spine-Background-scene/spine-scene/skeleton.json. */
 type IdleRotateKey = {

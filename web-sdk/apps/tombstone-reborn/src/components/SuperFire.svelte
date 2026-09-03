@@ -122,6 +122,7 @@
 		layer.addChild(s);
 		return s;
 	});
+	layer.zIndex = 8;
 	parent.addToParent(layer);
 
 	onMount(() => {
@@ -166,6 +167,10 @@
 			raf = requestAnimationFrame(tick);
 		};
 		raf = requestAnimationFrame(tick);
-		return () => cancelAnimationFrame(raf);
+		return () => {
+			cancelAnimationFrame(raf);
+			layer.parent?.removeChild(layer);
+			layer.destroy({ children: true });
+		};
 	});
 </script>

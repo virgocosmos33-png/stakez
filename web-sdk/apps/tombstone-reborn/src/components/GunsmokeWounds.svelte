@@ -25,6 +25,14 @@
 				hitX: number;
 				hitY: number;
 				seed: number;
+				knockX?: number;
+				knockY?: number;
+		  }
+		| {
+				type: 'gunsmokeMorphHold';
+				reel: number;
+				row: number;
+				from: SymbolName;
 		  }
 		| { type: 'gunsmokeWoundsClear' };
 </script>
@@ -57,9 +65,20 @@
 		WOUND_BEAT_MS,
 		CRUSH_IN_MS,
 		CRUSH_OUT_MS,
+		SPINNER_HOLD_MS,
+		SPINNER_KNOCK_MS,
+		SPINNER_KNOCK_OUT_MS,
+		SPINNER_SPIN_MS,
+		SPINNER_WOBBLE_DELAY_MS,
+		SPINNER_WOBBLE_MS,
 		fpsMuzzlePoint,
 		frameBloodLayers,
 		pickBullet,
+		spinnerFaceScale,
+		spinnerKnockOffset,
+		spinnerSpinTo,
+		spinnerYaw,
+		spinnerYawSign,
 		woundImpact,
 		type WoundLayer,
 	} from '../game/gunsmokeSpin';
@@ -76,6 +95,10 @@
 		pop: Tween<number>;
 		splash: Tween<number>;
 		crush: Tween<number>;
+		spin: Tween<number>;
+		knock: Tween<number>;
+		wobble: Tween<number>;
+		knockDir: { x: number; y: number };
 	};
 	type Round = {
 		id: number;
@@ -106,6 +129,12 @@
 			scale: 0.8 + 0.2 * wound.pop.current,
 			crushX: 1 + 0.1 * wound.crush.current,
 			crushY: 1 - 0.18 * wound.crush.current,
+			face: spinnerFaceScale(spinnerYaw(wound.spin.current, wound.wobble.current)),
+			knockOff: spinnerKnockOffset(
+				wound.knockDir.x,
+				wound.knockDir.y,
+				wound.knock.current,
+			),
 		})),
 	);
 
@@ -183,12 +212,23 @@
 		});
 	};
 
-	const stampHole = async (reel: number, row: number, blood: boolean) => {
+	const stampHole = async (
+		reel: number,
+		row: number,
+		blood: boolean,
+		knockX = 0,
+		knockY = 1,
+	) => {
 		const key = `${reel}-${row}-${wounds.length}`;
 		const pop = new Tween(0);
 		const splash = new Tween(0);
 		const crush = new Tween(0);
+		const spin = new Tween(0);
+		const knock = new Tween(0);
+		const wobble = new Tween(0);
 		const impact = woundImpact(reel, row + wounds.length * 3, blood);
+		const len = Math.hypot(knockX, knockY) || 1;
+		const knockDir = { x: knockX / len, y: knockY / len };
 		wounds = [
 			...wounds,
 			{
@@ -199,6 +239,10 @@
 				pop,
 				splash,
 				crush,
+				spin,
+				knock,
+				wobble,
+				knockDir,
 			},
 		];
 		context.eventEmitter.broadcast({
@@ -208,12 +252,27 @@
 			hitX: impact.hitX,
 			hitY: impact.hitY,
 			seed: impact.seed,
+			knockX,
+			knockY,
 		});
 		void crush.set(1, { duration: fxDur(CRUSH_IN_MS), easing: backOut }).then(() => {
 			void crush.set(0, { duration: fxDur(CRUSH_OUT_MS), easing: cubicOut });
 		});
+		void knock.set(1, { duration: fxDur(SPINNER_KNOCK_MS), easing: backOut }).then(() => {
+			void knock.set(0, { duration: fxDur(SPINNER_KNOCK_OUT_MS), easing: cubicOut });
+		});
+		void spin.set(spinnerYawSign(knockX) * spinnerSpinTo, {
+			duration: fxDur(SPINNER_SPIN_MS),
+			easing: cubicOut,
+		});
+		void fxWait(SPINNER_WOBBLE_DELAY_MS).then(() =>
+			wobble.set(1, { duration: fxDur(SPINNER_WOBBLE_MS), easing: cubicOut }),
+		);
 		if (blood) paintStain(splash);
-		await pop.set(1, { duration: fxDur(160), easing: backOut });
+		await Promise.all([
+			pop.set(1, { duration: fxDur(160), easing: backOut }),
+			fxWait(SPINNER_HOLD_MS),
+		]);
 	};
 
 	const stampFrameBlood = (reel: number, row: number) => {
@@ -231,6 +290,10 @@
 				pop,
 				splash,
 				crush,
+				spin: new Tween(0),
+				knock: new Tween(0),
+				wobble: new Tween(0),
+				knockDir: { x: 0, y: 1 },
 			},
 		];
 		paintStain(splash);
@@ -254,8 +317,11 @@
 		const to = { x: getSymbolX(reel), y: getCellCenterY(reel, row) };
 		context.eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_gunshot', forcePlay: true });
 		await flyRound(from, to, flightScale);
+		const dx = to.x - from.x;
+		const dy = to.y - from.y;
+		const len = Math.hypot(dx, dy) || 1;
 		hangSmoke(to.x, to.y, -Math.PI / 2, reel * 19 + row * 7);
-		await stampHole(reel, row, blood);
+		await stampHole(reel, row, blood, dx / len, dy / len);
 		if (beatMs > 0) await fxWait(beatMs);
 	};
 
@@ -308,19 +374,28 @@
 					/>
 				{/each}
 				{#each placed as wound (wound.key)}
-					<Container x={wound.x} y={wound.y} scale={{ x: wound.crushX, y: wound.crushY }}>
-						{#each wound.holes as layer, i (`${wound.key}-hole-${i}`)}
-							<Sprite
-								key={layer.key}
-								x={layer.x}
-								y={layer.y}
-								anchor={0.5}
-								width={layer.width}
-								height={layer.height}
-								rotation={layer.rotation}
-								alpha={layer.alpha * wound.pop.current}
-							/>
-						{/each}
+					<Container x={wound.x} y={wound.y}>
+						<Container
+							x={wound.knockOff.x}
+							y={wound.knockOff.y}
+							scale={{
+								x: wound.crushX * wound.face.x,
+								y: wound.crushY * wound.face.y,
+							}}
+						>
+							{#each wound.holes as layer, i (`${wound.key}-hole-${i}`)}
+								<Sprite
+									key={layer.key}
+									x={layer.x}
+									y={layer.y}
+									anchor={0.5}
+									width={layer.width}
+									height={layer.height}
+									rotation={layer.rotation}
+									alpha={layer.alpha * wound.pop.current}
+								/>
+							{/each}
+						</Container>
 						{#if wound.bloods.length}
 							<Container>
 								<Sprite

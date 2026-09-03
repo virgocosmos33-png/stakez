@@ -19,6 +19,7 @@
 	} from '../game/gameInfo';
 	import { applyHudTheme } from '../game/hudInit';
 	import { stateShake } from '../game/stateShake.svelte';
+	import { BOARD_REELS_Z, BOARD_TIMBER_Z } from '../game/constants';
 	import { LANE_DOOR_Z } from '../game/laneDoor';
 	import EnableSound from './EnableSound.svelte';
 	import EnableGameActor from './EnableGameActor.svelte';
@@ -43,7 +44,7 @@
 	import NudgeSlide from './NudgeSlide.svelte';
 	import NudgeWays from './NudgeWays.svelte';
 	import FeatureBurst from './FeatureBurst.svelte';
-	import WinSweep from './WinSweep.svelte';
+	import WinLinkMark from './WinLinkMark.svelte';
 	import TapToSkip from './TapToSkip.svelte';
 	import BonusEntry from './BonusEntry.svelte';
 	import RoomAtmosphere from './RoomAtmosphere.svelte';
@@ -175,15 +176,21 @@
 					<SpecialBar layer="hud" />
 				</Container>
 			</Container>
-			<BoardPlate layer="back" />
 		</MainContainer>
 
-		<!-- The baked timber ring rides ABOVE the reels (z 3): cards dropping
-			through a window that outgrows the authored ring pass BEHIND the
-			planks instead of painting over them. -->
+		<!-- Timber + win rim UNDER the cards. Wipe lives inside Board,
+			over idle plates and faces. -->
 		<MainContainer>
-			<Board />
-			<BoardPlate layer="ring" />
+			<Container sortableChildren>
+				<BoardPlate layer="back" />
+				<BoardPlate layer="ring" />
+				<Container zIndex={BOARD_TIMBER_Z}>
+					<WinLinkMark layer="rim" />
+				</Container>
+				<Container zIndex={BOARD_REELS_Z}>
+					<Board />
+				</Container>
+			</Container>
 			<Anticipations />
 		</MainContainer>
 
@@ -207,7 +214,7 @@
 		<!-- Legacy sideways nudge (old books only). -->
 		<NudgeSlide />
 
-		<!-- NUDGE WAYS: full-reel totem slides down; header seats on the board. -->
+		<!-- NUDGE WAYS: coffin sits above cell fire and win rims (NUDGE_COFFIN_Z). -->
 		<NudgeWays />
 
 		<!-- GUNSMOKE / TOMBSTONE / BOUNTY western bursts. -->
@@ -219,7 +226,7 @@
 		<!-- GUNSMOKE: every copy of one symbol morphs into the revolver WILD. -->
 		<CloneMorph />
 
-		<!-- Any symbol becoming a WILD flips to show the bottle on the back. -->
+		<!-- GUNSMOKE wilds drop in from above; other wilds still flip. -->
 		<WildFlip />
 
 		<!-- Marks the symbols a feature is about to hit. -->
@@ -239,8 +246,6 @@
 		<!-- BoardFramePlasma REMOVED: freegame fluorescent frame overlay was blamed
 			for dashed cutlines; real dashes were baked into mirror_frame_wide.png
 			lips (see tools/strip_frame_quilt_dashes.py). Do not remount. -->
-
-		<WinSweep />
 
 		<!-- SCREEN-LEVEL PRESENTATION — one zIndex layer ABOVE the cell effects.
 			CellFlameBorder (9) / CellLightning (10) carry a zIndex so stretch /

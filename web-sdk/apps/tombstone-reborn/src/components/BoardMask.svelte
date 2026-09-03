@@ -2,7 +2,7 @@
 	import { Rectangle } from 'pixi-svelte';
 
 	import { getContext } from '../game/context';
-	import { SYMBOL_SIZE } from '../game/constants';
+	import { SLOT_FRAME_LIP, SYMBOL_SIZE } from '../game/constants';
 	import { getReelRows, getReelYOffset } from '../game/utils';
 
 	type Props = { debug?: boolean };
@@ -24,7 +24,10 @@
 			extraTop = Math.max(extraTop, -top);
 			extraBot = Math.max(extraBot, bottom - boxH);
 		}
-		return { extraTop, extraBot };
+		return {
+			extraTop: extraTop + SLOT_FRAME_LIP,
+			extraBot: extraBot + SLOT_FRAME_LIP,
+		};
 	});
 </script>
 

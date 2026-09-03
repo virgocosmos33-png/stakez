@@ -3,6 +3,7 @@
 
 	export type EmitterEventWinDim =
 		| { type: 'winDimShow'; positions: Position[] }
+		| { type: 'winFacesRise'; positions: Position[] }
 		| { type: 'winDimHide' }
 		| { type: 'winCycleSet'; wins: Position[][] }
 		| { type: 'winCycleStart' }
@@ -24,6 +25,7 @@
 	import { SYMBOL_CARD_W } from '../game/constants';
 	import { getSymbolX, getCellCenterY, getCardHeight } from '../game/utils';
 	import { fxNum } from '../game/fx.generated';
+	import { isHighPaySymbol } from '../game/gunsmokeSpin';
 
 	const context = getContext();
 
@@ -50,10 +52,7 @@
 				const symbol = symbols[row];
 				if (!symbol) continue;
 				const on = keys.has(`${reelIndex}-${row}`);
-				if (on) {
-					if (symbol.symbolState === 'static') symbol.symbolState = 'postWin';
-					continue;
-				}
+				if (on) continue;
 				if (
 					symbol.symbolState === 'postWin' ||
 					symbol.symbolState === 'postWinStatic' ||
@@ -74,6 +73,7 @@
 		await dimAlpha.set(0, { duration: 180 });
 		active = false;
 		winKeys = new Set();
+		context.stateGame.slotWinPositions = [];
 	};
 
 	const runGlintCycle = async () => {
@@ -102,8 +102,19 @@
 			stopCycle();
 			lightGroup(positions);
 			winKeys = keysOf(positions);
+			context.stateGame.winLinkShineGen += 1;
+			context.stateGame.slotWinPositions = positions;
 			active = true;
 			dimAlpha.set(DIM_ALPHA, { duration: 100 });
+		},
+		// After the skim. High-pay Spine rises on the animate layer, over the wipe.
+		winFacesRise: ({ positions }) => {
+			for (const cell of positions) {
+				const symbol = context.stateGame.board[cell.reel]?.reelState.symbols[cell.row];
+				if (!symbol) continue;
+				if (!isHighPaySymbol(symbol.rawSymbol.name)) continue;
+				if (symbol.symbolState === 'static') symbol.symbolState = 'postWin';
+			}
 		},
 		winDimHide: hide,
 		winCycleSet: ({ wins }) => {

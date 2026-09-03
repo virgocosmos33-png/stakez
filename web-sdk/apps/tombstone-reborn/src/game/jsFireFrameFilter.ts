@@ -15,10 +15,28 @@ const SCALE = SYMBOL_CARD_H / PROTO_CELL_H;
 export const CELL_FIRE_W = PROTO_WRAP_W * SCALE;
 export const CELL_FIRE_H = PROTO_WRAP_H * SCALE;
 /** Extra canvas above the wrap so tongues overflow the cell top. Never clip. */
-const PROTO_TOP_OVERFLOW = 130;
+const PROTO_TOP_OVERFLOW = 240;
 export const CELL_FIRE_TOP_OVERFLOW = PROTO_TOP_OVERFLOW * SCALE;
 
-export const CELL_FIRE_CLIMB_MS = 500;
+/**
+ * Timed to `fire blaze up.mp3` peak (~480ms). The old running-max RMS table
+ * held for ~140ms then snapped — that was the hitch. Cubic-out is C1-smooth
+ * and still whooshes (fast start, settle into the hold).
+ */
+export const CELL_FIRE_CLIMB_MS = 480;
+
+/** Proto is 1. Set back to 1 to undo the density bump. */
+export const CELL_FIRE_DENSITY = 1.18;
+
+/** Proto is 1. Tongue height. Set back to 1 to undo. */
+export const CELL_FIRE_HEIGHT = 2.2;
+
+/** Continuous blaze-up. No plateaus, no end snap. */
+export const fireAttackEase = (t: number) => {
+	const x = t < 0 ? 0 : t > 1 ? 1 : t;
+	const r = 1 - x;
+	return 1 - r * r * r;
+};
 
 const VERTEX = `
 in vec2 aPosition;
@@ -63,6 +81,7 @@ uniform vec4 uOutputFrame;
 uniform float uTime;
 uniform float uReveal;
 uniform float uIntensity;
+uniform float uSize;
 
 float hash(vec2 p) {
     return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
@@ -131,12 +150,12 @@ float embers(vec2 uv, float time, float mask, float density) {
 }
 
 vec2 entry_mask(vec2 uv, vec2 box, float progress) {
+    // Tween owns the ease. Extra hermite + a fat soft band made the whoosh crawl.
     float p = clamp(progress, 0.0, 1.0);
-    p = p * p * (3.0 - 2.0 * p);
-    float soft = 0.3;
-    float front_y = mix(-box.y - 0.25, box.y + 0.4, p);
-    float lit = 1.0 - smoothstep(front_y - soft, front_y + soft * 1.15, uv.y);
-    float front = 1.0 - smoothstep(0.0, 0.32, abs(uv.y - front_y));
+    float soft = 0.12;
+    float front_y = mix(-box.y - 0.16, box.y + 0.26, p);
+    float lit = 1.0 - smoothstep(front_y - soft, front_y + soft, uv.y);
+    float front = 1.0 - smoothstep(0.0, 0.18, abs(uv.y - front_y));
     return vec2(clamp(lit, 0.0, 1.0), clamp(front, 0.0, 1.0));
 }
 
@@ -173,9 +192,9 @@ void main() {
     float gLen = length(grad);
     grad = gLen > 1e-5 ? grad / gLen : vec2(0.0, 1.0);
 
-    float dens = 1.0;
-    float size = 1.0;
-    float thickMul = 1.0;
+    float dens = ${CELL_FIRE_DENSITY.toFixed(2)};
+    float size = max(uSize, 0.01);
+    float thickMul = ${(1 + (CELL_FIRE_DENSITY - 1) * 0.55).toFixed(2)};
 
     vec2 np = uv * vec2(2.8, 3.6) * dens;
     np.y -= t * 2.6;
@@ -201,7 +220,7 @@ void main() {
     float lateral = abs(dlt.x);
 
     float maxRise = (0.05 + n * 0.22 + tongues * 0.2) * size;
-    maxRise *= 1.0 + max(grad.y, 0.0) * 0.55;
+    maxRise *= 1.0 + max(grad.y, 0.0) * 0.85;
     maxRise *= 1.0 - max(-grad.y, 0.0) * 0.45;
 
     float maxLat = (0.02 + body * 0.035 + wisps * 0.02) * thickMul;
@@ -264,7 +283,7 @@ void main() {
     col += c_hot * core_soft * 0.75;
     col += c_hot * front * fire * 0.85;
 
-    float flash = smoothstep(0.88, 1.0, uReveal) * (1.0 - step(1.0, uReveal));
+    float flash = smoothstep(0.88, 0.96, uReveal) * (1.0 - smoothstep(0.96, 1.0, uReveal));
     col += c_hot * flash * (fire + core) * 1.1;
 
     float ember_zone = lit * outside * smoothstep(0.25 * size, 0.0, d_out) * smoothstep(0.0, 0.12, fire + core);
@@ -283,6 +302,7 @@ export type CellFireUniforms = {
 	uTime: number;
 	uReveal: number;
 	uIntensity: number;
+	uSize: number;
 };
 
 export const createCellFireFilter = () => {
@@ -293,6 +313,7 @@ export const createCellFireFilter = () => {
 				uTime: { value: 0, type: 'f32' },
 				uReveal: { value: 0, type: 'f32' },
 				uIntensity: { value: 1, type: 'f32' },
+				uSize: { value: CELL_FIRE_HEIGHT, type: 'f32' },
 			},
 		},
 	});

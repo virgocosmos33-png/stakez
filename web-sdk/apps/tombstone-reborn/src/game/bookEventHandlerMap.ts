@@ -2,8 +2,9 @@ import _ from 'lodash';
 import { tick } from 'svelte';
 
 import { recordBookEvent, checkIsMultipleRevealEvents, type BookEventHandlerMap } from 'utils-book';
-import { stateBet, stateBetDerived } from 'state-shared';
+import { stateBet } from 'state-shared';
 import { fxWait, fxDur, fxHold } from './fxTiming';
+import { SHINE_CAP_MS, SHINE_MONEY_STING_MS } from './shineTiming';
 
 import { SYMBOL_SIZE } from './constants';
 import { eventEmitter } from './eventEmitter';
@@ -17,7 +18,6 @@ import type { MusicName, SoundEffectName } from './sound';
 import { stateGame, stateGameDerived } from './stateGame.svelte';
 import { syncAtmosphere } from './atmosphere.svelte';
 import { shakeBoard } from './stateShake.svelte';
-import { isMegaWin } from './winConnection';
 import type { BookEvent, BookEventOfType, BookEventContext } from './typesBookEvent';
 import type { Position, RawSymbol, SymbolName } from './types';
 
@@ -176,6 +176,9 @@ export const presentWinCelebration = async (amount: number, waysOverride?: numbe
 	const ways = waysOverride ?? connectedWays;
 
 	eventEmitter.broadcast({ type: 'winShow' });
+	// Small ways: sting after the overlay is up. Playing it on shine-end
+	// stacked on the whip tail and read as a third lash on the board.
+	if (celebration.type === 'small') await fxWait(SHINE_MONEY_STING_MS);
 	winLevelSoundsPlay({ winLevelData: celebration });
 	await eventEmitter.broadcastAsync({
 		type: 'winUpdate',
@@ -211,6 +214,9 @@ const punchNudgeWays = (cells: { reel: number; multiplier?: number }[]) => {
 	}
 };
 
+/** After the fire whoosh holds, before the slash. 0.5s at 1x. */
+const SPLIT_AFTER_FIRE_MS = 500;
+
 /** shared by split / splitGang / splitOutlaws: mark the targets, stamp the
  * per-cell ways multipliers, tear the panes apart, climb the WAYS rail.
  * The SPLIT card itself is slashed into a stacked wild with the same factor. */
@@ -240,6 +246,7 @@ const applySplit = async (
 			type: 'cellFireShow',
 			cells: lockCells,
 		});
+		await fxWait(SPLIT_AFTER_FIRE_MS);
 	} else {
 		await eventEmitter.broadcastAsync({
 			type: 'targetLockShow',
@@ -282,17 +289,17 @@ const applySplit = async (
 	eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 	punchNudgeWays(cells);
 	if ('added' in bookEvent && (bookEvent.added ?? 0) > 0 && bookEvent.winMult != null) {
-		tickWinMultHud(bookEvent.winMult);
+		setWinMultHud(bookEvent.winMult);
 	}
 	await fxHold();
 };
 
-/** Hide the reel face, settle to WILD under that cover, then flip the overlay.
- *  Settling first without a cover lets the new WILD peek (and the flip then
- *  paints a second copy on top). Same grammar as nudge: swap under a cover. */
+/** Hide the reel card, settle to WILD under that cover, then yaw the overlay.
+ *  Face and pocket plate spin together and crossfade so wood → smoke and
+ *  paying face → revolver stay full. No drop. No edge-on hole. */
 const playWildFlip = async (
 	cells: { reel: number; row: number; from?: SymbolName }[],
-	opts?: { shoot?: boolean; afterShot?: boolean },
+	opts?: { shoot?: boolean },
 ) => {
 	const visible = filterVisibleCells(cells);
 	if (!visible.length) return;
@@ -318,14 +325,14 @@ const playWildFlip = async (
 			type: 'wildFlipShow',
 			cells: faces,
 			shoot: opts?.shoot,
-			afterShot: opts?.afterShot,
 		});
 	} finally {
 		stateGame.wildFlipCover = [];
 	}
 };
 
-/** GUNSMOKE: each pistol hit stamps that cell and flips it to WILD, then the next. */
+/** GUNSMOKE: hold the old face, settle WILD under it, stamp. The card yaws
+ *  and reveals the revolver on the back — plate rides the same spin. */
 const playGunsmokeShoot = async (
 	cells: { reel: number; row: number }[],
 	from: SymbolName,
@@ -335,12 +342,30 @@ const playGunsmokeShoot = async (
 	if (!visible.length) return;
 	const blood = isHighPaySymbol(from);
 	const rhythm = planWoundRhythm(visible.length, volleySeed(visible));
-	for (let i = 0; i < visible.length; i += 1) {
-		const cell = visible[i];
-		if (!cell) continue;
-		const shot = rhythm[i];
-		shakeBoard({ intensity: 4 + (shot?.flightScale ?? 1) * 2, duration: fxDur(90) });
-		opts?.onShot?.();
+	const paintWild = (cell: { reel: number; row: number }) => {
+		const faces = filterVisibleCells([{ ...cell, from }]);
+		if (!faces.length) return;
+		const newBoard = rawBoardCopy();
+		faces.forEach(({ reel, row }) => {
+			if (newBoard[reel]?.[row]) {
+				newBoard[reel][row] = { ...newBoard[reel][row], name: 'W' };
+			}
+		});
+		eventEmitter.broadcast({ type: 'boardSettle', board: newBoard });
+		parkCells(faces);
+	};
+	const playOne = async (
+		cell: { reel: number; row: number },
+		shot: (typeof rhythm)[number] | undefined,
+		_burst: boolean,
+	) => {
+		eventEmitter.broadcast({
+			type: 'gunsmokeMorphHold',
+			reel: cell.reel,
+			row: cell.row,
+			from,
+		});
+		paintWild(cell);
 		await eventEmitter.broadcastAsync({
 			type: 'gunsmokeWound',
 			reel: cell.reel,
@@ -351,7 +376,24 @@ const playGunsmokeShoot = async (
 			flightScale: shot?.flightScale,
 			side: shot?.side,
 		});
-		await playWildFlip([{ ...cell, from }], { afterShot: true });
+		eventEmitter.broadcast({
+			type: 'targetLockHide',
+			cells: [{ reel: cell.reel, row: cell.row }],
+		});
+	};
+	for (let i = 0; i < visible.length; i += 1) {
+		const cell = visible[i];
+		if (!cell) continue;
+		const shot = rhythm[i];
+		shakeBoard({ intensity: 4 + (shot?.flightScale ?? 1) * 2, duration: fxDur(90) });
+		opts?.onShot?.();
+		const burst = shot?.burst === true;
+		if (burst) {
+			void playOne(cell, shot, true);
+			if ((shot?.beatMs ?? 0) > 0) await fxWait(shot.beatMs);
+			continue;
+		}
+		await playOne(cell, shot, false);
 		if ((shot?.beatMs ?? 0) > 0) await fxWait(shot.beatMs);
 	}
 };
@@ -465,61 +507,44 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		await spinning;
 	},
 	winInfo: async (bookEvent: BookEventOfType<'winInfo'>) => {
-		const betCost = stateBetDerived.betCost();
-		const megaWin = bookEvent.wins.find((win) => isMegaWin(win.win, betCost));
-
 		// every way that paid, across all winning symbols — used by the
 		// celebration only. The hanging WAYS plaque stays on the full-board count.
 		connectedWays = bookEvent.wins.reduce((total, win) => total + (win.meta?.ways ?? 0), 0);
 
-		// Shine stays silent. The gold ways / amount overlay plays the dramatic
-		// sting once in presentWinCelebration — a harmonica chirp here used to
-		// fire first and make a small win sound cheerful.
-
 		// Split holes, badges and cell fire stay up through the shine — they
 		// are this spin's state. Fall-out on the next reveal is what clears them.
 
-		// The pre-money shine never holds the count-up hostage: each type's beat
-		// is capped, and a click/tap fast-forwards straight to the money.
-		const SHINE_CAP_MS = 750;
-		let skipped = false;
+		// One skim for the whole pay: two wipes, two cracks, rim stays.
+		// Per-symbol winDimShow used to restart the whip after group 1.
 		let resolveSkip: () => void = () => {};
 		const skipPromise = new Promise<void>((resolve) => (resolveSkip = resolve));
-		const onSkip = () => {
-			skipped = true;
-			resolveSkip();
-		};
+		const onSkip = () => resolveSkip();
 		window.addEventListener('pointerdown', onSkip, { capture: true });
 
 		const winGroups = groupWinsBySymbol(bookEvent.wins);
+		const shineCells: Position[] = [];
+		const shineSeen = new Set<string>();
+		for (const group of winGroups) {
+			for (const cell of group) {
+				const key = `${cell.reel}-${cell.row}`;
+				if (shineSeen.has(key)) continue;
+				shineSeen.add(key);
+				shineCells.push(cell);
+			}
+		}
 
 		try {
-			for (const positions of winGroups) {
-				if (skipped) break;
-				eventEmitter.broadcast({ type: 'winDimShow', positions });
-				eventEmitter.broadcast({ type: 'winSweep', positions });
-				await Promise.race([
-					animateSymbols({ positions }),
-					fxWait(SHINE_CAP_MS),
-					skipPromise,
-				]);
-			}
-
-			// mega-win lightning telegraph — after symbol anims, before the money
-			if (megaWin && !skipped) {
-				// Tombstone: no White Room clinical whiteout — just the thunder sting
-				eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_thunder' });
-				shakeBoard({ intensity: 10, duration: fxDur(280) });
-				await Promise.race([fxWait(320), skipPromise]);
+			if (shineCells.length) {
+				eventEmitter.broadcast({ type: 'winDimShow', positions: shineCells });
+				await Promise.race([fxWait(SHINE_CAP_MS), skipPromise]);
+				eventEmitter.broadcast({ type: 'winFacesRise', positions: shineCells });
 			}
 		} finally {
 			window.removeEventListener('pointerdown', onSkip, { capture: true });
 		}
 
-		// Hold the last shine group. Do NOT start the idle cycle here — it used
-		// to run under the celebration overlay (lantern sweep + dim every beat)
-		// and hitch every winning Storybook. presentWinCelebration starts it
-		// after the takeover closes.
+		// Hold the shine cells. Cycle starts after the money overlay closes,
+		// and must not re-arm the whip (see winLinkShineGen).
 		eventEmitter.broadcast({ type: 'winCycleSet', wins: winGroups });
 	},
 	// ------------------------------------------------------------------
@@ -536,8 +561,6 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			syncAtmosphere('super');
 		}
 		if (bookEvent.cells.length > 0) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
-			shakeBoard({ intensity: 4, duration: fxDur(180) });
 			await fxWait(350);
 		}
 	},
@@ -551,11 +574,8 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			syncAtmosphere('super');
 		}
 		if (bookEvent.cells.length > 0) {
-			eventEmitter.broadcast({ type: 'soundOnce', name: 'sfx_special_hit' });
-			shakeBoard({ intensity: 4, duration: fxDur(180) });
-			// Do not lock every planted card here — each following feature
-			// locks its own targets. A board-wide lock then a second lock is
-			// the stacked-reticle glitch.
+			// Land hit already fired in onSymbolLand. Do not slam again
+			// after the spin — that is the delayed extra impact.
 			await fxHold();
 		}
 	},
@@ -586,11 +606,11 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 			return;
 		}
 
-		// mark every copy while it is still the old symbol
+		// gold CSS corners sit on the old faces until each shot resolves
 		await eventEmitter.broadcastAsync({
 			type: 'targetLockShow',
 			cells: cells.map(({ reel, row }) => ({ reel, row })),
-			tone: 'clone',
+			tone: 'gunsmoke',
 		});
 
 		const added = bookEvent.added ?? 0;
@@ -604,6 +624,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 				tickWinMultHud(running);
 			},
 		});
+		eventEmitter.broadcast({ type: 'targetLockHide' });
 		if (added > 0) setWinMultHud(endMult);
 		await animateSymbols({ positions: cells });
 
@@ -722,7 +743,7 @@ export const bookEventHandlerMap: BookEventHandlerMap<BookEvent, BookEventContex
 		eventEmitter.broadcast({ type: 'waysCounterUpdate', ways: bookEvent.totalWays });
 		punchNudgeWays(splitCells);
 		if ((bookEvent.added ?? 0) > 0 && bookEvent.winMult != null) {
-			tickWinMultHud(bookEvent.winMult);
+			setWinMultHud(bookEvent.winMult);
 		}
 		await fxHold();
 	},
